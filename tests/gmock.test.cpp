@@ -1,3 +1,11 @@
+#include "testsCommon.h"
+
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
 #include <chrono>
 #include <cstdlib>
 #include <functional>
@@ -7,8 +15,6 @@
 #include <thread>
 #include <vector>
 #include <algorithm>
-
-#include "testsCommon.h"
 
 #ifndef __has_include
   static_assert(false, "__has_include not supported");

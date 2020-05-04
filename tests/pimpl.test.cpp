@@ -1,4 +1,12 @@
-#include "core/pimpl.hpp"
+#include "testsCommon.h"
+
+#if !defined(USE_CATCH_TEST)
+#warning "use USE_CATCH_TEST"
+// default
+#define USE_CATCH_TEST 1
+#endif // !defined(USE_CATCH_TEST)
+
+#include "basis/core/pimpl.hpp"
 
 #include <chrono>
 #include <cstdlib>
@@ -8,8 +16,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-#include "testsCommon.h"
 
 #ifndef __has_include
   static_assert(false, "__has_include not supported");

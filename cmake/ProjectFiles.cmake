@@ -4,6 +4,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/application/app_runners.h
   ${BASIS_DIR}/application/app_runners.cc
   #
+  ${BASIS_DIR}/icu_util.hpp
+  ${BASIS_DIR}/icu_util.cc
+  #
   ${BASIS_DIR}/application/application.hpp
   ${BASIS_DIR}/application/application.cc
   #

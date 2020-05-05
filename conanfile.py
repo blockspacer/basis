@@ -44,9 +44,9 @@ class basis_conan_project(ConanFile):
         "debug=False",
         "enable_tests=True",
         "enable_sanitizers=False",
-        "*:integration=catch" # for FakeIt,
+        "*:integration=catch", # for FakeIt,
         # chromium_base
-        "*:use_alloc_shim=True"
+        "chromium_base:use_alloc_shim=True",
     )
 
     # Custom attributes for Bincrafters recipe conventions

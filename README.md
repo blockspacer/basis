@@ -22,7 +22,7 @@ CONAN_REVISIONS_ENABLED=1 \
         -s build_type=Debug \
         --profile clang \
         --build missing \
-        -o enable_tests=True \
+        -e basis:enable_tests=True \
         -o openssl:shared=True
 ```
 

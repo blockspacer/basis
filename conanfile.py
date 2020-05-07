@@ -3,6 +3,9 @@ import traceback
 import os
 import shutil
 
+# if you using python less than 3 use from distutils import strtobool
+from distutils.util import strtobool
+
 # conan runs the methods in this order:
 # config_options(),
 # configure(),
@@ -35,14 +38,12 @@ class basis_conan_project(ConanFile):
     options = {
         "shared": [True, False],
         "debug": [True, False],
-        "enable_tests": [True, False],
         "enable_sanitizers": [True, False]
     }
 
     default_options = (
         "shared=False",
         "debug=False",
-        "enable_tests=True",
         "enable_sanitizers=False",
         "*:integration=catch", # for FakeIt,
         # chromium_base
@@ -50,6 +51,27 @@ class basis_conan_project(ConanFile):
         # chromium_tcmalloc
         "chromium_tcmalloc:use_alloc_shim=True",
     )
+
+    # build-only option
+    # see https://github.com/conan-io/conan/issues/6967
+    # conan ignores changes in environ, so
+    # use `conan remove` if you want to rebuild package
+    def _environ_option(self, name, default = 'true'):
+      env_val = 'true'.lower() # default, must be lowercase!
+      # allow both lowercase and uppercase
+      if "ENABLE_TESTS" in os.environ:
+        env_val = os.getenv(name.upper())
+      elif "enable_tests" in os.environ:
+        env_val = os.getenv(name.lower())
+      # strtobool:
+      #   True values are y, yes, t, true, on and 1;
+      #   False values are n, no, f, false, off and 0.
+      #   Raises ValueError if val is anything else.
+      #   see https://docs.python.org/3/distutils/apiref.html#distutils.util.strtobool
+      return bool(strtobool(env_val))
+
+    def _is_tests_enabled(self):
+      return self._environ_option("ENABLE_TESTS", default = 'true')
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "."
@@ -81,7 +103,7 @@ class basis_conan_project(ConanFile):
         self.build_requires("cmake_platform_detection/master@conan/stable")
         self.build_requires("cmake_build_options/master@conan/stable")
 
-        if self.options.enable_tests:
+        if self._is_tests_enabled():
             self.build_requires("catch2/[>=2.1.0]@bincrafters/stable")
             self.build_requires("FakeIt/[>=2.0.5]@gasuketsu/stable")
 
@@ -117,12 +139,13 @@ class basis_conan_project(ConanFile):
 
         def add_cmake_option(var_name, value):
             value_str = "{}".format(value)
-            var_value = "ON" if value_str == 'True' else "OFF" if value_str == 'False' else value_str
+            var_value = "ON" if bool(strtobool(value_str)) else "OFF"
+            self.output.info('added cmake definition %s = %s' % (var_name, var_value))
             cmake.definitions[var_name] = var_value
 
-        add_cmake_option("ENABLE_SANITIZERS", self.options.enable_sanitizers)
+        add_cmake_option("ENABLE_TESTS", self._is_tests_enabled())
 
-        add_cmake_option("ENABLE_TESTS", self.options.enable_tests)
+        add_cmake_option("ENABLE_SANITIZERS", self.options.enable_sanitizers)
 
         cmake.configure(build_folder=self._build_subfolder)
 
@@ -152,7 +175,7 @@ class basis_conan_project(ConanFile):
         # -j flag for parallel builds
         cmake.build(args=["--", "-j%s" % cpu_count])
 
-        if self.options.enable_tests:
+        if self._is_tests_enabled():
           self.output.info('Running tests')
           cmake.build(args=["--target", "run_all_tests", "--", "-j%s" % cpu_count])
           #self.run('ctest --parallel %s' % (cpu_count))
@@ -161,7 +184,6 @@ class basis_conan_project(ConanFile):
     # Importing files copies files from the local store to your project.
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
-        self.output.info("CONAN_IMPORT_PATH is ${CONAN_IMPORT_PATH}")
         self.copy("license*", dst=dest, ignore_case=True)
         self.copy("*.dll", dst=dest, src="bin")
         self.copy("*.so*", dst=dest, src="bin")

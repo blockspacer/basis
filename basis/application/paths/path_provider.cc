@@ -88,7 +88,6 @@ bool PathProvider(int key, base::FilePath* result)
         return false;
       }
     }
-      return true;
 
     default:
       return false;

@@ -211,6 +211,12 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(gmock
     "${gmock_deps}" "${GTEST_TEST_ARGS}" "test_main_gtest")
 
+  set ( i18n_deps
+    i18n.test.cpp
+  )
+  tests_add_executable(i18n
+    "${i18n_deps}" "${GTEST_TEST_ARGS}" "test_main_gtest")
+
   set ( fakeit_deps
     fakeit.test.cpp
   )

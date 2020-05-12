@@ -34,40 +34,38 @@ class Location;
 namespace gloer {
 namespace log {
 
-struct CustomConsoleSink;
-
-/**
- * Supported log levels: DEBUG, INFO, WARNING, FATAL
- *
- * Example usage:
- *
- * @code{.cpp}
- * LOG(WARNING) << "This log " << "call";
- * @endcode
- **/
-class Logger {
-public:
-  Logger();
-
-  //Logger(bool enableConsoleSink, bool enableFileSink);
-
-  ~Logger();
-
-  void shutdown();
-
-  void initLogging(const std::string& log_file = "");
-
-private:
-  //bool enableConsoleSink_ = true;
-
-  //bool enableFileSink_ = true;
-
-  std::string log_prefix_ = "server";
-
-  std::string log_directory_ = "";
-
-  std::string log_default_id_ = "";
-};
+///**
+// * Supported log levels: DEBUG, INFO, WARNING, FATAL
+// *
+// * Example usage:
+// *
+// * @code{.cpp}
+// * LOG(WARNING) << "This log " << "call";
+// * @endcode
+// **/
+//class Logger {
+//public:
+//  Logger();
+//
+//  //Logger(bool enableConsoleSink, bool enableFileSink);
+//
+//  ~Logger();
+//
+//  void shutdown();
+//
+//  void initLogging(const std::string& log_file = "");
+//
+//private:
+//  //bool enableConsoleSink_ = true;
+//
+//  //bool enableFileSink_ = true;
+//
+//  std::string log_prefix_ = "server";
+//
+//  std::string log_directory_ = "";
+//
+//  std::string log_default_id_ = "";
+//};
 
 bool VlogIsOnForLocation(const base::Location& from_here, int verbose_level);
 

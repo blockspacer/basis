@@ -1,4 +1,4 @@
-#include "basis/icu_util.hpp"
+#include "basis/icu_util.hpp" // IWYU pragma: associated
 
 #include <base/logging.h>
 #include <base/path_service.h>

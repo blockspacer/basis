@@ -10,6 +10,7 @@
 #endif
 
 #include "log/Logger.hpp"
+#include "log_util.hpp"
 
 #include <base/logging.h>
 #include <base/i18n/icu_util.h>
@@ -158,8 +159,9 @@ int main(int argc, char* argv[]) {
 
   initI18n();
 
-  gloer::log::Logger logger; // inits Logger
-  LOG(INFO) << "created Logger...";
+  basis::initLogging(
+    "" // logFile
+  );
 
   // If the LogWorker is initialized then at scope exit the g3::shutDownLogging() will be called.
   // This is important since it protects from LOG calls from static or other entities that will go
@@ -168,12 +170,10 @@ int main(int argc, char* argv[]) {
   // It can also be called manually:
   at_exit.RegisterTask(base::BindOnce(
     []
-    (gloer::log::Logger& logger)
+    ()
     {
-      LOG(INFO) << "shutdown Logger...";
-      logger.shutdown();
+      LOG(INFO) << "shutdown...";
     }
-    , std::ref(logger)
   ));
 #endif // USE_CATCH_TEST || defined(GTEST_NO_SUITE)
 

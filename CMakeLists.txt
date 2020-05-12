@@ -153,8 +153,8 @@ add_relative_include_dir(${STATIC_LIB_NAME} PRIVATE PRIVATE "basis")
 add_relative_include_dir(${STATIC_LIB_NAME} PUBLIC PUBLIC "")
 
 list(APPEND USED_3DPARTY_LIBS
-    ${base_LIB}
-    ${build_util_LIB}
+  ${base_LIB}
+  ${build_util_LIB}
 )
 
 set_property(TARGET ${STATIC_LIB_NAME} PROPERTY CXX_STANDARD 17)

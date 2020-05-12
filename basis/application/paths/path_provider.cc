@@ -11,7 +11,8 @@
 #include <base/files/file_path.h>
 
 namespace {
-base::FilePath GetOrCreateDirectory(application::paths::AppPathId path_id)
+
+static base::FilePath GetOrCreateDirectory(application::paths::AppPathId path_id)
 {
   std::unique_ptr<char[]> path(new char[PLATFORM_FILE_MAX_PATH]);
   path[0] = '\0';
@@ -27,6 +28,7 @@ base::FilePath GetOrCreateDirectory(application::paths::AppPathId path_id)
   }
   return base::FilePath();
 }
+
 }  // namespace
 
 namespace application {

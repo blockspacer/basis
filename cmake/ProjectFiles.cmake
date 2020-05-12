@@ -10,6 +10,21 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/icu_util.hpp
   ${BASIS_DIR}/icu_util.cc
   #
+  ${BASIS_DIR}/cmd_util.hpp
+  ${BASIS_DIR}/cmd_util.cc
+  #
+  ${BASIS_DIR}/thread_pool_util.hpp
+  ${BASIS_DIR}/thread_pool_util.cc
+  #
+  ${BASIS_DIR}/tracing_util.hpp
+  ${BASIS_DIR}/tracing_util.cc
+  #
+  ${BASIS_DIR}/log_util.hpp
+  ${BASIS_DIR}/log_util.cc
+  #
+  ${BASIS_DIR}/scoped_log_run_time.hpp
+  ${BASIS_DIR}/scoped_log_run_time.cc
+  #
   ${BASIS_DIR}/application/application.hpp
   ${BASIS_DIR}/application/application.cc
   #

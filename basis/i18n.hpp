@@ -20,6 +20,7 @@
 
 namespace i18n {
 
+/// \note you must init ICU before i18n
 class I18n {
 public:
   I18n(const char* locale = nullptr);

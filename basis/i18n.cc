@@ -47,15 +47,21 @@ I18n::I18n(const char* pref_locale)
       = base::UTF16ToASCII(
           base::i18n::MessageFormatter::FormatWithNumberedArgs(
         pattern, "example.com", 1));
-    DCHECK_EQ("The cert for example.com expired yesterday.", result);
+    DCHECK_EQ(
+      "The cert for example.com expired yesterday.", result)
+      << "maybe you forgot to init ICU before i18n?";
     result = base::UTF16ToASCII(
       base::i18n::MessageFormatter::FormatWithNumberedArgs(
         pattern, "example.com", 7));
-    DCHECK_EQ("The cert for example.com expired a week ago.", result);
+    DCHECK_EQ(
+      "The cert for example.com expired a week ago.", result)
+      << "maybe you forgot to init ICU before i18n?";
     result = base::UTF16ToASCII(
       base::i18n::MessageFormatter::FormatWithNumberedArgs(
         pattern, "example.com", 15));
-    DCHECK_EQ("The cert for example.com expired 15 days ago.", result);
+    DCHECK_EQ(
+      "The cert for example.com expired 15 days ago.", result)
+      << "maybe you forgot to init ICU before i18n?";
   }
 }
 

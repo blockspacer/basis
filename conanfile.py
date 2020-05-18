@@ -72,7 +72,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
                        "scripts/*", "tools/*", "codegen/*", "assets/*",
                        "docs/*", "licenses/*", "patches/*", "resources/*",
                        "submodules/*", "thirdparty/*", "third-party/*",
-                       "third_party/*", "base/*", "build/*", "basis/*")
+                       "third_party/*", "basis/*")
 
     settings = "os", "compiler", "build_type", "arch"
 

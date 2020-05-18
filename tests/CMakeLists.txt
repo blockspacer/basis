@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.13.3 FATAL_ERROR )
 
-set(ROOT_PROJECT_NAME ${STATIC_LIB_NAME})
+set(ROOT_PROJECT_NAME ${PROJECT_NAME})
 set(ROOT_PROJECT_LIB ${STATIC_LIB_NAME})
 set(${ROOT_PROJECT_NAME}_CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 
@@ -36,7 +36,7 @@ list(APPEND TESTS_3DPARTY_LIBS
     CONAN_PKG::catch2
     ${ROOT_PROJECT_NAME}-catch2-root # so FakeIt will be able to see 'catch.hpp'
     ${USED_3DPARTY_LIBS}
-    ${ROOT_PROJECT_NAME}-test-includes
+    ${ROOT_PROJECT_LIB}-test-includes
 )
 
 include( testRunner ) # start tests as CMake targets

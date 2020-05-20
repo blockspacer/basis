@@ -166,15 +166,29 @@ namespace pimpl {
       typename T
       , size_t Size
       , size_t Alignment
-      , SizePolicy SizePolicy = SizePolicy::Exact
-      , AlignPolicy AlignPolicy = AlignPolicy::Exact
+      , SizePolicy SizePolicyType = SizePolicy::Exact
+      , AlignPolicy AlignPolicyType = AlignPolicy::Exact
     >
   class FastPimpl {
 
-    // Required wrapper for if constexpr
+    /* Required wrapper for if constexpr
+     *
+     * Is dependent on a template parameter.
+     * Is used in static_assert in a false branch to produce a compile error
+     * with message containing provided type.
+     * See an example with dependent_false at https://en.cppreference.com/w/cpp/language/if
+     *
+     * if constexpr (std::is_same<T, someType1>) {
+     * } else if constexpr (std::is_same<T, someType2>) {
+     * } else {
+     *     static_assert(dependent_false<T>::value, "unknown type");
+     * }
+     */
     template<class U>
     struct dependent_false : std::false_type {};
 
+    // wrap static_assert into static_validate
+    // for console message with desired sizeof in case of error
     /// \note static_assert used only for compile-time checks, so
     /// also don't forget to provide some runtime checks by assert-s
     /// \note we use template,
@@ -188,30 +202,32 @@ namespace pimpl {
     static
     void static_validate() noexcept
     {
-      if constexpr (AlignPolicy == AlignPolicy::AtLeast)
+      if constexpr (AlignPolicyType == AlignPolicy::AtLeast)
       {
         static_assert(
           Alignment >= ActualAlignment
-          , "Alignment must be at least alignof(T)");
+          , "Pimpl: Alignment must be at least alignof(T)");
       }
-      else if constexpr (AlignPolicy == AlignPolicy::Exact)
+      else if constexpr (AlignPolicyType == AlignPolicy::Exact)
       {
         static_assert(
           Alignment == ActualAlignment
-          , "Alignment must be at exactly alignof(T)");
+          , "Pimpl: Alignment must be at exactly alignof(T)");
       }
       else
       {
+        // dependent_false yields false only if
+        // previous if branches yield false
         static_assert(dependent_false<T>::value);
       }
 
-      if constexpr (SizePolicy == SizePolicy::AtLeast)
+      if constexpr (SizePolicyType == SizePolicy::AtLeast)
       {
         static_assert(
           Size >= ActualSize
           , "Pimpl: sizeof(T) must be at least 'Size'");
       }
-      else if constexpr (SizePolicy == SizePolicy::Exact)
+      else if constexpr (SizePolicyType == SizePolicy::Exact)
       {
         static_assert(
           Size == ActualSize
@@ -219,6 +235,8 @@ namespace pimpl {
       }
       else
       {
+        // dependent_false yields false only if
+        // previous if branches yield false
         static_assert(dependent_false<T>::value);
       }
     }
@@ -233,17 +251,17 @@ namespace pimpl {
     static
     void debug_runtime_validate() noexcept
     {
-      if constexpr (AlignPolicy == AlignPolicy::AtLeast)
+      if constexpr (AlignPolicyType == AlignPolicy::AtLeast)
       {
         assert(Alignment >= ActualAlignment
-          && "Alignment must be at least alignof(T)"
+          && "Pimpl: Alignment must be at least alignof(T)"
           && " Alignment:" &&  Alignment
           && " alignment_of<T>:" &&  std::alignment_of<T>::value);
       }
-      else if constexpr (AlignPolicy == AlignPolicy::Exact)
+      else if constexpr (AlignPolicyType == AlignPolicy::Exact)
       {
         assert(Alignment == ActualAlignment
-          && "Alignment must be at exactly alignof(T)"
+          && "Pimpl: Alignment must be at exactly alignof(T)"
           && " Alignment:" &&  Alignment
           && " alignment_of<T>:" &&  std::alignment_of<T>::value);
       }
@@ -253,14 +271,14 @@ namespace pimpl {
           && "Wrong AlignPolicy");
       }
 
-      if constexpr (SizePolicy == SizePolicy::AtLeast)
+      if constexpr (SizePolicyType == SizePolicy::AtLeast)
       {
         assert(Size >= ActualSize
           && "Pimpl: sizeof(T) must be at least 'Size'"
           && " Size:" && Size
           && " sizeof<T>:" && sizeof(T));
       }
-      else if constexpr (SizePolicy == SizePolicy::Exact)
+      else if constexpr (SizePolicyType == SizePolicy::Exact)
       {
         assert(Size == ActualSize
           && "Pimpl: sizeof(T) must be exactly 'Size'"

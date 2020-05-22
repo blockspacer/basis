@@ -14,12 +14,11 @@
 #endif // PIMPL_DEBUG_VALUE_MEMBER
 #endif // NDEBUG
 
-#include <cassert>
 #include <cstddef>
 #include <type_traits>
 #include <utility>
 
-#if PIMPL_DEBUG_VALUE_MEMBER
+#if defined(PIMPL_DEBUG_VALUE_MEMBER) || !defined(NDEBUG)
 #include <cassert>
 #endif // PIMPL_DEBUG_VALUE_MEMBER
 
@@ -105,37 +104,53 @@
 // Instead of putting the implementation details of classes in the header,
 // you move it into a source file (compilation unit).
 
+
 // Typical usage:
 //
 // // Foo.h:
+// #include <basis/core/pimpl.hpp>
+//
 // class Foo {
 // public:
 //   Foo();
+//
 //   ~Foo();
+//
 //   int foo();
+//
 // private:
+//   class FooImpl;
+//
 //   pimpl::FastPimpl<
-//     class FooImpl
-//     , /*Size*/1
-//     , /*Alignment*/1
-//   > m_impl;
+//       FooImpl
+//       , /*Size*/1
+//       , /*Alignment*/1
+//     > m_impl;
 // };
 //
 // // Foo.cpp:
-// class FooImpl
+// #include "Foo.h"
+//
+// class Foo::FooImpl
 // {
 //  public:
 //   FooImpl() = default;
+//
 //   ~FooImpl() = default;
+//
 //   int foo();
 // };
 //
-// int FooImpl::foo() {
-//   return 123;
+// int Foo::FooImpl::foo() {
+//   return 1234;
 // }
 //
-// Foo::Foo() = default;
-// Foo::~Foo() = default;
+// Foo::Foo()
+// {}
+//
+// Foo::~Foo()
+// {}
+//
 // int Foo::foo() {
 //   return m_impl->foo();
 // }

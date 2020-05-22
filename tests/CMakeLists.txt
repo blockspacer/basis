@@ -203,6 +203,7 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   set ( pimpl_deps
     pimpl.test.cpp
+    pimpl.impl.cpp
   )
   tests_add_executable(${ROOT_PROJECT_NAME}-pimpl
     "${pimpl_deps}" "${CATCH2_TEST_ARGS}" "${test_main_catch}")

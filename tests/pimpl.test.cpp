@@ -1,5 +1,7 @@
 #include "testsCommon.h"
 
+#include "Foo.h"
+
 #if !defined(USE_CATCH_TEST)
 #warning "use USE_CATCH_TEST"
 // default
@@ -32,44 +34,11 @@
 #  endif
 #endif
 
-// Foo.h:
-class Foo {
-public:
-  Foo();
-  ~Foo();
-  int foo();
-private:
-  pimpl::FastPimpl<
-      class FooImpl
-      , /*Size*/1
-      , /*Alignment*/1
-    > m_impl;
-};
-
-// Foo.cpp:
-class FooImpl
-{
- public:
-  FooImpl() = default;
-  ~FooImpl() = default;
-  int foo();
-};
-
-int FooImpl::foo() {
-  return 123;
-}
-
-Foo::Foo() = default;
-Foo::~Foo() = default;
-int Foo::foo() {
-  return m_impl->foo();
-}
-
 SCENARIO("pimpl", "[basic]") {
 
   GIVEN("FastPimplExample") {
     Foo foo;
 
-    REQUIRE(foo.foo() == 123);
+    REQUIRE(foo.foo() == 1234);
   }
 }

@@ -100,6 +100,13 @@
 // in the translation unit where |T| is defined.
 // You can access members of T using Pimpl's pointer-like interface.
 
+// Constructors, destructors and assignment operators of
+// the front-end class holding the PImpl instance as a member must be
+// defined in a place where T is a complete type - usually
+// the .cpp file that includes T's definition.
+// So, you cannot use the compiler-generated special member functions,
+// and it is necessary to define even empty destructors in the .cpp file.
+
 // PIMPL idiom may be used to to reduce the includes of a header.
 // Instead of putting the implementation details of classes in the header,
 // you move it into a source file (compilation unit).
@@ -156,6 +163,9 @@
 // }
 
 namespace pimpl {
+  /// \note with SizePolicy::Exact your code becomes less portable,
+  /// because different compilers may use different sizes and alignments
+  /// for the same type.
   enum class SizePolicy {
     Exact,  // Size == sizeof(T)
     AtLeast // Size >= sizeof(T)
@@ -204,6 +214,8 @@ namespace pimpl {
 
     // wrap static_assert into static_validate
     // for console message with desired sizeof in case of error
+    /// \note Usage is completely safe,
+    /// as the size and alignment are validated at compile time.
     /// \note static_assert used only for compile-time checks, so
     /// also don't forget to provide some runtime checks by assert-s
     /// \note we use template,
@@ -256,6 +268,14 @@ namespace pimpl {
       }
     }
 
+    /// \note Using PImpl instances in the front-end class
+    /// makes revisions of the latter potentially binary incompatible,
+    /// if the size or alignment of the implementation object changes.
+    /// You can mitigate this issue by providing a larger size
+    /// than necessary, at the expense of wasted memory,
+    /// so prefer SizePolicy::AtLeast where possible.
+    /// \note |debug_runtime_validate| checks that
+    /// revisions are binary compatible, but only in Debug builds
 #if !defined(NDEBUG)
     template<
       std::size_t ActualSize
@@ -324,7 +344,14 @@ namespace pimpl {
       return Alignment;
     }
 public:
-    // Default constructor constructs T into storage, so T must be defined
+    // Default constructor constructs T into storage,
+    // so T must be defined
+    // This class mimicks value semantics,
+    // not pointer semantics. In particular,
+    // the class invariant is that a PImpl object holds
+    // a fully constructed T object at any time.
+    // Its constructor forwards the arguments directly
+    // to T's constructor.
     template<typename... Args>
     FastPimpl(Args&&... args)
     {
@@ -342,10 +369,11 @@ public:
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
+      /// \note must call ~T() manually
       Destruct();
     }
 
-    // Copy
+    // Copy constructor
     FastPimpl(const FastPimpl& rhs)
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
@@ -357,19 +385,7 @@ public:
 #endif // PIMPL_DEBUG_VALUE_MEMBER
     }
 
-    // Copy assign
-    FastPimpl& operator=(const FastPimpl& rhs)
-    {
-      PIMPL_VALIDATE(sizeof(T), alignof(T));
-
-      if (this != &rhs) {
-        CopyAssign(rhs);
-      }
-
-      return *this;
-    }
-
-    // Move
+    // Move constructor
     FastPimpl(FastPimpl&& rhs)
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
@@ -381,7 +397,19 @@ public:
 #endif // PIMPL_DEBUG_VALUE_MEMBER
     }
 
-    // Move assign
+    // Copy assignment operator
+    FastPimpl& operator=(const FastPimpl& rhs)
+    {
+      PIMPL_VALIDATE(sizeof(T), alignof(T));
+
+      if (this != &rhs) {
+        CopyAssign(rhs);
+      }
+
+      return *this;
+    }
+
+    // Move assignment operator
     FastPimpl& operator=(FastPimpl&& rhs)
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
@@ -394,17 +422,12 @@ public:
       return *this;
     }
 
-    // Accessors
-
     // casts |aligned_storage_t| to |T*|
     inline /* use `inline` to eleminate function call overhead */
     T* placement_cast() noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
-      /// \todo replace reinterpret_cast with checked_reinterpret_cast
-      static_assert(sizeof(T) == Size,
-                    "cast requires source and destination to be the same size");
       return reinterpret_cast<T*>(&storage_);
     }
 
@@ -414,12 +437,10 @@ public:
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
-      /// \todo replace reinterpret_cast with checked_reinterpret_cast
-      static_assert(sizeof(T) == Size,
-                    "cast requires source and destination to be the same size");
       return reinterpret_cast<const T*>(&storage_);
     }
 
+    // Returns the implementation object for member access.
     T* operator->() noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
@@ -427,6 +448,7 @@ public:
       return placement_cast();
     }
 
+    // Returns the implementation object for member access (const overload).
     const T* operator->() const noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
@@ -434,6 +456,7 @@ public:
       return placement_cast();
     }
 
+    // Returns the implementation object.
     T& operator*() noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
@@ -441,6 +464,7 @@ public:
       return *placement_cast();
     }
 
+    // Returns the implementation object (const overload).
     const T& operator*() const noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
@@ -449,6 +473,7 @@ public:
     }
 
 private:
+    // Construct implementation object, forwarding arguments
     template<typename... Args>
     inline /* use `inline` to eleminate function call overhead */
     void Construct(Args&&... args) noexcept
@@ -506,6 +531,10 @@ private:
     /// (comparing to dynamic heap allocation approach where impl may be in heap,
     /// but the class may be in stack or another region in heap)
     /// \see about `Data Locality` https://gameprogrammingpatterns.com/data-locality.html
+    /// \note Keep in mind that since the implementation objects
+    /// are constructed in-place, they increase the size of
+    /// the front-end object. Its copy and move operations are
+    /// thus more expensive than simple pointer copy.
     std::aligned_storage_t<Size, Alignment> storage_;
   };
 

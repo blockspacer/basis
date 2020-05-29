@@ -161,6 +161,7 @@ add_relative_include_dir(${STATIC_LIB_NAME} PUBLIC PUBLIC "")
 list(APPEND USED_3DPARTY_LIBS
   ${base_LIB}
   ${build_util_LIB}
+  CONAN_PKG::doctest
 )
 
 set_property(TARGET ${STATIC_LIB_NAME} PROPERTY CXX_STANDARD 17)

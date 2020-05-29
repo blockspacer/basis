@@ -7,6 +7,10 @@ list(APPEND CMAKE_MODULE_PATH ${CURRENT_CMAKE_DIR})
 # find_package(... REQUIRED)
 find_package(chromium_base REQUIRED)
 
+find_package(doctest)
+find_package(gtest)
+find_package(corrade)
+
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
 # uses Config.cmake or a -config.cmake file

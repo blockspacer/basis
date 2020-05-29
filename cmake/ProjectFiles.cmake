@@ -7,6 +7,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/i18n.hpp
   ${BASIS_DIR}/i18n.cc
   #
+  ${BASIS_DIR}/doctest_util.hpp
+  ${BASIS_DIR}/doctest_util.cc
+  #
   ${BASIS_DIR}/icu_util.hpp
   ${BASIS_DIR}/icu_util.cc
   #

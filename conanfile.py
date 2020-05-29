@@ -97,6 +97,8 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         # see use_test_support option in base
         self.requires("gtest/[>=1.8.0]@bincrafters/stable")
 
+        self.requires("doctest/[>=2.3.8]")
+
         #if self.settings.os == "Linux":
         #    self.requires("chromium_dynamic_annotations/master@conan/stable")
 
@@ -104,7 +106,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
 
         self.requires("corrade/2019.10@magnum/stable")
 
-        self.requires("flatbuffers/1.11.0@google/stable")
+        #self.requires("flatbuffers/1.11.0@google/stable")
 
         #self.requires("flatc_conan/v1.11.0@conan/stable")
 
@@ -115,6 +117,13 @@ class basis_conan_project(conan_build_helper.CMakePackage):
 
         cmake.definitions["CONAN_AUTO_INSTALL"] = 'OFF'
 
+        no_doctest = (str(self.settings.build_type).lower() != "debug"
+          and str(self.settings.build_type).lower() != "relwithdebinfo")
+        if no_doctest:
+          cmake.definitions["DOCTEST_CONFIG_DISABLE"] = '1'
+          self.output.info('Disabled DOCTEST')
+
+        cmake.definitions["CONAN_AUTO_INSTALL"] = 'OFF'
         if self.options.shared:
             cmake.definitions["BUILD_SHARED_LIBS"] = "ON"
 

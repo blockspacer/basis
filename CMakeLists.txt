@@ -161,8 +161,11 @@ add_relative_include_dir(${STATIC_LIB_NAME} PUBLIC PUBLIC "")
 list(APPEND USED_3DPARTY_LIBS
   ${base_LIB}
   ${build_util_LIB}
-  CONAN_PKG::doctest
 )
+
+# POSITION_INDEPENDENT_CODE for -fPIC
+set_property(TARGET ${STATIC_LIB_NAME}
+  PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 set_property(TARGET ${STATIC_LIB_NAME} PROPERTY CXX_STANDARD 17)
 
@@ -189,6 +192,10 @@ target_link_libraries(${STATIC_LIB_NAME} PRIVATE
   ${USED_3DPARTY_LIBS}
   #CONAN_PKG::chromium_base
   #CONAN_PKG::chromium_build_util
+)
+
+target_link_libraries(${STATIC_LIB_NAME} PUBLIC
+  CONAN_PKG::doctest
 )
 
 set(DEBUG_LIBRARY_SUFFIX "-d")

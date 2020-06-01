@@ -15,7 +15,9 @@ private:
 
   pimpl::FastPimpl<
       FooImpl
-      , /*Size*/1
+      , /*Size*/40
       , /*Alignment*/1
+      , pimpl::SizePolicy::AtLeast
+      , pimpl::AlignPolicy::AtLeast
     > m_impl;
 };

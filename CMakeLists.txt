@@ -9,7 +9,13 @@ project(${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
   LANGUAGES CXX C)
 
-set(STATIC_LIB_NAME ${PROJECT_NAME}-static)
+# Hack to depend NOT on CONAN_PKG::libname, but on libname directly
+# See for details
+# https://docs.conan.io/en/latest/developing_packages/workspaces.html
+set(${PROJECT_NAME}_LOCAL_BUILD FALSE CACHE BOOL "${PROJECT_NAME}_LOCAL_BUILD")
+message(STATUS "${PROJECT_NAME}_LOCAL_BUILD=${${PROJECT_NAME}_LOCAL_BUILD}")
+
+set(STATIC_LIB_NAME ${PROJECT_NAME})
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
@@ -97,6 +103,12 @@ else()
   message (FATAL_ERROR "must use conan")
 endif()
 
+find_package( EXPAT REQUIRED )
+message(STATUS "EXPAT_LIBRARIES = ${EXPAT_LIBRARIES}")
+
+find_package( ZLIB REQUIRED )
+message(STATUS "ZLIB_LIBRARIES = ${ZLIB_LIBRARIES}")
+
 find_package(cmake_platform_detection REQUIRED)
 run_cmake_platform_detection()
 
@@ -131,11 +143,11 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/)
 
 set(BASIS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/basis")
 
-include(cmake/PlatformChecks)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformChecks.cmake)
 
-include(cmake/CommonOptions)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CommonOptions.cmake)
 
-include(cmake/ProjectFiles)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ProjectFiles.cmake)
 
 add_library(${STATIC_LIB_NAME}-test-includes INTERFACE)
 
@@ -198,7 +210,7 @@ target_link_libraries(${STATIC_LIB_NAME} PUBLIC
   CONAN_PKG::doctest
 )
 
-set(DEBUG_LIBRARY_SUFFIX "-d")
+set(DEBUG_LIBRARY_SUFFIX "")
 set_target_properties(${STATIC_LIB_NAME}
   PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /lib
@@ -208,7 +220,7 @@ set_target_properties(${STATIC_LIB_NAME}
 )
 
 # install and export steps
-include(cmake/Exports)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 
 if(ENABLE_TESTS)
   add_subdirectory( tests )

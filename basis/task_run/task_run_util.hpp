@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <base/logging.h>
 #include <base/location.h>

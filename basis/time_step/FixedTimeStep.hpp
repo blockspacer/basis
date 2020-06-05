@@ -100,7 +100,7 @@ namespace basis {
     }
 
   private:
-    /// \note lag measures how far the game’s clock
+    /// \note lag measures how far the game clock
     /// is behind compared to the real world
     std::chrono::nanoseconds lag_{0};
 

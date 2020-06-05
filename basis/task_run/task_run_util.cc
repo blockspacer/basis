@@ -1,4 +1,4 @@
-﻿#include "task_run_util.hpp" // IWYU pragma: associated
+#include "task_run_util.hpp" // IWYU pragma: associated
 
 #include <base/macros.h>
 #include <base/callback.h>

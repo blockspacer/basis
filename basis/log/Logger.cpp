@@ -1,4 +1,4 @@
-﻿#include "Logger.hpp" // IWYU pragma: associated
+#include "Logger.hpp" // IWYU pragma: associated
 
 #include <base/location.h>
 

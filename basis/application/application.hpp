@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "basis/application/paths/path_provider.hpp"
 #include "basis/application/paths/application_paths.hpp"

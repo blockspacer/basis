@@ -28,7 +28,7 @@
 // DOCTEST_CONFIG_IMPLEMENTATION_IN_DLL:
 // In the case of programs comprised of multiple binaries
 // (shared objects), the DOCTEST_CONFIG_IMPLEMENTATION_IN_DLL
-// identifier can be used – then only a single binary
+// identifier can be used ï¿½ then only a single binary
 // should provide the test runner implementation.
 // Even plugins that are loaded by the program
 // after it has started will properly register their tests

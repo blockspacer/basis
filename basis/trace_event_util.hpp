@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define TRACE_EVENT_LOC(from_here) \
   TRACE_EVENT0("headless", \

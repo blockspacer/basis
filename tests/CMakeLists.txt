@@ -21,6 +21,12 @@ endif()
 
 set( GTEST_TEST_ARGS --gtest_shuffle)
 
+# Run ALL tests with verbose output
+# Usage: cmake --build build --target run_all_tests
+add_custom_target(${ROOT_PROJECT_NAME}_run_all_tests
+    DEPENDS ${ROOT_PROJECT_LIB}
+)
+
 add_library(${ROOT_PROJECT_NAME}-catch2-root INTERFACE)
 target_include_directories( ${ROOT_PROJECT_NAME}-catch2-root SYSTEM INTERFACE
   ${CONAN_CATCH2_ROOT}/include/catch2 )
@@ -122,6 +128,67 @@ macro(tests_add_executable target source_list TEST_ARGS TEST_LIB)
 
   add_test_command_targets( ${target} )
 
+  if(ENABLE_VALGRIND)
+    # |base::TestSuite| tries to kill test process
+    # but valgrind wraps process, so nothing to kill
+    target_compile_definitions( ${target} PUBLIC
+      GTEST_NO_SUITE=1) # TODO: valgrind may not support chromium base, FIXME. And remove GTEST_NO_SUITE
+  endif(ENABLE_VALGRIND)
+
+  # USAGE:
+  # cmake -E time cmake --build . --target TARGET_NAME_run_valgrind
+  valgrind_enabler(
+    IS_ENABLED
+      ${ENABLE_VALGRIND}
+    STANDALONE_TARGET
+      ${target}
+    EXTRA_OPTIONS # see https://valgrind.org/docs/manual/manual-core.html
+      # When enabled, Valgrind will trace into sub-processes
+      # initiated via the exec system call.
+      # This is necessary for multi-process programs.
+      --trace-children=yes
+      # --leak-check=full:
+      # each individual leak will be shown in detail
+      --leak-check=full
+      # --show-leak-kinds=all:
+      # Show all of "definite, indirect, possible, reachable"
+      # leak kinds in the "full" report.
+      --show-leak-kinds=all
+      # --track-origins=yes:
+      # Favor useful output over speed.
+      # This tracks the origins of uninitialized values,
+      # which could be very useful for memory errors.
+      # Consider turning off if Valgrind is unacceptably slow.
+      --track-origins=yes
+      # --verbose:
+      # Can tell you about unusual behavior of your program.
+      # Repeat for more verbosity.
+      --verbose
+      --show-reachable=yes
+      # When enabled, Valgrind stops reporting errors
+      # after 10,000,000 in total, or 1,000 different ones,
+      # have been seen.
+      --error-limit=yes
+      # is option is particularly useful with C++ programs,
+      # as it prints out the suppressions with mangled names,
+      # as required.
+      --gen-suppressions=all
+      # Write to a file.
+      # Useful when output exceeds terminal space.
+      --log-file=${CMAKE_CURRENT_BINARY_DIR}/${target}_valgrind_raw.log
+      # executable
+      $<TARGET_FILE:${target}>
+      # arguments of executable
+      ${TEST_ARGS}
+    VERBOSE
+    REQUIRED
+  )
+  if(ENABLE_VALGRIND AND ENABLE_VALGRIND_TESTS)
+    add_dependencies(${ROOT_PROJECT_NAME}_run_all_tests
+      ${target}_run_valgrind
+    )
+  endif(ENABLE_VALGRIND AND ENABLE_VALGRIND_TESTS)
+
   if(AUTORUN_TESTS)
     add_test_autostarter( ${target} )
   endif()
@@ -154,6 +221,13 @@ target_link_libraries(${test_main_catch} PUBLIC
 target_compile_definitions( ${test_main_catch} PUBLIC
   "-DUSE_CATCH_TEST=1" )
 
+if(ENABLE_VALGRIND)
+  # |base::TestSuite| tries to kill test process
+  # but valgrind wraps process, so nothing to kill
+  target_compile_definitions( ${test_main_catch} PUBLIC
+    GTEST_NO_SUITE=1) # TODO: valgrind may not support chromium base, FIXME. And remove GTEST_NO_SUITE
+endif(ENABLE_VALGRIND)
+
 set(test_main_gtest "${ROOT_PROJECT_NAME}-test_main_gtest")
 add_library( ${test_main_gtest} OBJECT
   main.cpp
@@ -180,6 +254,13 @@ target_link_libraries(${test_main_gtest} PUBLIC
 
 target_compile_definitions( ${test_main_gtest} PUBLIC
   "-DUSE_GTEST_TEST=1" )
+
+if(ENABLE_VALGRIND)
+  # |base::TestSuite| tries to kill test process
+  # but valgrind wraps process, so nothing to kill
+  target_compile_definitions( ${test_main_gtest} PUBLIC
+    GTEST_NO_SUITE=1) # TODO: valgrind may not support chromium base, FIXME. And remove GTEST_NO_SUITE
+endif(ENABLE_VALGRIND)
 
 #target_link_libraries( test_main PUBLIC
 #  sol2::sol2_single Catch FakeIt boost_beast nlohmann_json microsoft_gsl boost_outcome better_enums )
@@ -240,13 +321,10 @@ add_custom_command( TARGET ${ROOT_PROJECT_NAME}-pimpl POST_BUILD
 
 enable_testing()
 
-# Run ALL tests with verbose output
-# Usage: cmake --build build --target run_all_tests
-add_custom_target(${ROOT_PROJECT_NAME}_run_all_tests
-    DEPENDS ${ROOT_PROJECT_LIB} ${ALL_TESTS_LIST_VERBOSE}
-)
 foreach(target IN LISTS ALL_TESTS_LIST_VERBOSE)
-  add_dependencies(${ROOT_PROJECT_NAME}_run_all_tests ${target})
+  add_dependencies(${ROOT_PROJECT_NAME}_run_all_tests
+    ${target}
+  )
 endforeach()
 
 option(ENABLE_CODE_COVERAGE "ENABLE CODE COVERAGE" OFF)
@@ -277,18 +355,6 @@ if (ENABLE_CODE_COVERAGE)
   message("added make code coverage for ${PROJECT_NAME}_coverage")
 else()
   message(WARNING "code coverage off")
-endif()
-
-option(ENABLE_VALGRIND_TESTS "ENABLE CODE COVERAGE" OFF)
-if (ENABLE_VALGRIND_TESTS)
-  find_program( CMAKE_MEMORYCHECK_COMMAND valgrind )
-  set( CMAKE_MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
-  #set( MEMORYCHECK_SUPPRESSIONS_FILE "${PROJECT_SOURCE_DIR}/valgrind_suppress.txt" )
-
-  get_property(check_all_dir TARGET check_all PROPERTY RUNTIME_OUTPUT_DIRECTORY)
-  add_memcheck_test( memcheck_all_tests "${check_all_dir}/check_all" )
-else()
-  message(WARNING "valgrind tests off")
 endif()
 
 #find_package(Sanitizers)

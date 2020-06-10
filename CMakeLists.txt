@@ -19,6 +19,46 @@ set(STATIC_LIB_NAME ${PROJECT_NAME})
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
+option(ENABLE_VALGRIND
+  "Enable valgrind" OFF)
+
+# TODO: __do_global_dtors_aux, base::debug::CollectStackTrace
+option(ENABLE_VALGRIND_TESTS
+  "Enable valgrind for unit tests" OFF)
+
+# see https://github.com/Ericsson/codechecker/blob/master/tools/report-converter/README.md#undefined-behaviour-sanitizer
+# NOTE: Compile with -g and -fno-omit-frame-pointer
+# to get proper debug information in your binary.
+# NOTE: Run your program with environment variable UBSAN_OPTIONS=print_stacktrace=1.
+# see https://github.com/google/sanitizers/wiki/SanitizerCommonFlags
+option(ENABLE_UBSAN
+  "Enable Undefined Behaviour Sanitizer" OFF)
+
+# see https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer
+# see https://github.com/Ericsson/codechecker/blob/master/tools/report-converter/README.md#address-sanitizer
+# NOTE: Compile with -g and -fno-omit-frame-pointer
+# to get proper debug information in your binary.
+# NOTE: use ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=suppr.txt
+# NOTE: You need the ASAN_OPTIONS=symbolize=1
+# to turn on resolving addresses in object code
+# to source code line numbers and filenames.
+# This option is implicit for Clang but it won't do any harm.
+# see https://github.com/google/sanitizers/wiki/SanitizerCommonFlags
+option(ENABLE_ASAN
+  "Enable Address Sanitizer" OFF)
+
+# see https://github.com/Ericsson/codechecker/blob/master/tools/report-converter/README.md#memory-sanitizer
+# NOTE: Compile with -g and -fno-omit-frame-pointer
+# to get proper debug information in your binary.
+option(ENABLE_MSAN
+  "Enable Memory Sanitizer" OFF)
+
+# see https://github.com/Ericsson/codechecker/blob/master/tools/report-converter/README.md#thread-sanitizer
+# NOTE: Compile with -g
+# to get proper debug information in your binary.
+option(ENABLE_TSAN
+  "Enable Thread Sanitizer" OFF)
+
 # Hack to depend NOT on CONAN_PKG::libname, but on libname directly
 # See for details
 # https://docs.conan.io/en/latest/developing_packages/workspaces.html
@@ -36,6 +76,32 @@ message(STATUS "LOCAL_BUILD=${LOCAL_BUILD}")
 # 2 <resource_name>_BINARY_DIR
 #   specifies where is the default build directory for the downloaded sources.
 include(FetchContent)
+
+set(FetchContent_cmake_utils "cmake_utils")
+FetchContent_Declare(
+  ${FetchContent_cmake_utils}
+  PREFIX external_dependencies/${FetchContent_cmake_utils}
+  GIT_REPOSITORY https://github.com/blockspacer/cmake_utils.git
+  GIT_TAG origin/master
+  # Disable warning about detached HEAD https://stackoverflow.com/a/36794768
+  GIT_CONFIG        advice.detachedHead=false
+  SOURCE_DIR        "${CMAKE_BINARY_DIR}/${FetchContent_cmake_utils}"
+  BINARY_DIR        "${CMAKE_BINARY_DIR}/${FetchContent_cmake_utils}-build"
+  CMAKE_ARGS        "-Wno-dev"
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND     ""
+  INSTALL_COMMAND   ""
+  TEST_COMMAND      ""
+)
+FetchContent_GetProperties(${FetchContent_cmake_utils})
+if (NOT ${FetchContent_cmake_utils}_POPULATED)
+  # Populate command can be used only once for every resource
+  # during cmake configuration, which explains the conditional above.
+  FetchContent_Populate(${FetchContent_cmake_utils})
+endif()
+message(STATUS "${FetchContent_cmake_utils}_SOURCE_DIR = ${${FetchContent_cmake_utils}_SOURCE_DIR}")
+message(STATUS "${FetchContent_cmake_utils}_BINARY_DIR = ${${FetchContent_cmake_utils}_BINARY_DIR}")
+include(${${FetchContent_cmake_utils}_SOURCE_DIR}/Utils.cmake)
 
 set(FetchContent_conan_auto_install "conan_auto_install")
 FetchContent_Declare(
@@ -115,6 +181,21 @@ run_cmake_platform_detection()
 find_package(cmake_build_options REQUIRED)
 setup_default_build_type(RELEASE)
 setup_cmake_build_options(RELEASE DEBUG)
+
+find_package(cmake_helper_utils REQUIRED)
+
+if(ENABLE_MSAN OR ENABLE_TSAN OR ENABLE_ASAN OR ENABLE_UBSAN)
+  find_package(cmake_sanitizers REQUIRED)
+endif()
+
+#if(ENABLE_ASAN
+#   OR ENABLE_TSAN
+#   OR ENABLE_MSAN
+#   OR ENABLE_UBSAN
+#   #OR ENABLE_VALGRIND # TODO: valgrind support
+#   )
+#  list(APPEND BASIS_PUBLIC_DEFINES MEMORY_TOOL_REPLACES_ALLOCATOR=1)
+#endif()
 
 if(NOT TARGET CONAN_PKG::chromium_base)
   message(FATAL_ERROR "Use chromium_base from conan")
@@ -196,8 +277,11 @@ target_compile_definitions(${STATIC_LIB_NAME} PRIVATE
   ${BASIS_PRIVATE_DEFINES}
 )
 
+# TODO: DISABLE_DOCTEST
+list(APPEND BASIS_INTERFACE_DEFINES DISABLE_DOCTEST=1)
+
 target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
-  ${BASIS_PUBLIC_DEFINES}
+  ${BASIS_INTERFACE_DEFINES}
 )
 
 target_link_libraries(${STATIC_LIB_NAME} PRIVATE
@@ -206,9 +290,10 @@ target_link_libraries(${STATIC_LIB_NAME} PRIVATE
   #CONAN_PKG::chromium_build_util
 )
 
-target_link_libraries(${STATIC_LIB_NAME} PUBLIC
-  CONAN_PKG::doctest
-)
+# TODO: DISABLE_DOCTEST
+#target_link_libraries(${STATIC_LIB_NAME} PUBLIC
+#  CONAN_PKG::doctest
+#)
 
 set(DEBUG_LIBRARY_SUFFIX "")
 set_target_properties(${STATIC_LIB_NAME}
@@ -218,6 +303,61 @@ set_target_properties(${STATIC_LIB_NAME}
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /bin
     OUTPUT_NAME "${STATIC_LIB_NAME}$<$<CONFIG:Debug>:${DEBUG_LIBRARY_SUFFIX}>"
 )
+
+## ---------------------------- valgrind -------------------------------- ##
+
+if(ENABLE_VALGRIND)
+  check_valgrind_config()
+endif()
+
+## ---------------------------- sanitizers -------------------------------- ##
+
+if(ENABLE_MSAN OR ENABLE_TSAN OR ENABLE_ASAN OR ENABLE_UBSAN)
+  # use llvm_tools from conan
+  find_program_helper(llvm-symbolizer
+    PATHS
+      #${CONAN_BIN_DIRS}
+      ${CONAN_BIN_DIRS_LLVM_TOOLS}
+    NO_SYSTEM_ENVIRONMENT_PATH
+    NO_CMAKE_SYSTEM_PATH
+    ${ARGUMENTS_UNPARSED_ARGUMENTS}
+    REQUIRED
+    OUT_VAR LLVM_SYMBOLIZER_PROGRAM
+    VERBOSE TRUE
+  )
+
+  check_sanitizer_options(
+    ENABLE_TSAN ${ENABLE_TSAN}
+    ENABLE_ASAN ${ENABLE_ASAN}
+    ENABLE_MSAN ${ENABLE_MSAN}
+    ENABLE_UBSAN ${ENABLE_UBSAN}
+    LLVM_SYMBOLIZER_PROGRAM ${LLVM_SYMBOLIZER_PROGRAM}
+  )
+endif()
+
+if(ENABLE_MSAN)
+  message(STATUS "enabling MSAN on ${STATIC_LIB_NAME}")
+  add_msan_static_link(${STATIC_LIB_NAME})
+  add_msan_flags(${STATIC_LIB_NAME})
+endif(ENABLE_MSAN)
+
+if(ENABLE_TSAN)
+  message(STATUS "enabling TSAN on ${STATIC_LIB_NAME}")
+  add_tsan_static_link(${STATIC_LIB_NAME})
+  add_tsan_flags(${STATIC_LIB_NAME})
+endif(ENABLE_TSAN)
+
+if(ENABLE_ASAN)
+  message(STATUS "enabling ASAN on ${STATIC_LIB_NAME}")
+  add_asan_static_link(${STATIC_LIB_NAME})
+  add_asan_flags(${STATIC_LIB_NAME})
+endif(ENABLE_ASAN)
+
+if(ENABLE_UBSAN)
+  message(STATUS "enabling UBSAN on ${STATIC_LIB_NAME}")
+  add_ubsan_static_link(${STATIC_LIB_NAME})
+  add_ubsan_flags(${STATIC_LIB_NAME})
+endif(ENABLE_UBSAN)
 
 # install and export steps
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)

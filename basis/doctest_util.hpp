@@ -3,6 +3,8 @@
 // DISABLE_DOCTEST: custom macro
 #if !defined(DISABLE_DOCTEST)
 
+#error "TODO: DOCTEST NOT SUPPORTED"
+
 /// \note define DOCTEST_* macro before `doctest.h`
 #include "basis/doctest_common.hpp"
 

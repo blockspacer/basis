@@ -149,7 +149,7 @@ if (CONAN_AUTO_INSTALL)
     set(conan_build_type "Debug")
   endif()
   conan_auto_install(
-    CONAN_OPTIONS "--profile=${CONAN_PROFILE} -s build_type=${conan_build_type} --build=missing -o openssl:shared=True"
+    CONAN_OPTIONS "--profile=${CONAN_PROFILE} -s build_type=${conan_build_type} -s llvm_tools:build_type=Release --build=missing -o openssl:shared=True"
     #FORCE
   )
 endif()

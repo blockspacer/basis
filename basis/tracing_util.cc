@@ -2,6 +2,7 @@
 
 #include <base/logging.h>
 #include <base/path_service.h>
+#include <base/memory/ref_counted_memory.h>
 #include <base/files/file_util.h>
 #include <base/trace_event/trace_event.h>
 #include <base/trace_event/trace_buffer.h>
@@ -18,11 +19,38 @@
 #include <base/trace_event/memory_infra_background_whitelist.h>
 #include <base/trace_event/process_memory_dump.h>
 
+namespace {
+
+static const char kTraceJsonStart[]
+  = "{\"traceEvents\":[";
+
+static const char kTraceJsonEnd[]
+  = "]}";
+
+void onTraceDataCollected(
+  base::File& _output_file
+  , base::Closure quit_closure
+  , base::trace_event::TraceResultBuffer* in_trace_buffer
+  , const scoped_refptr<base::RefCountedString>&
+  json_events_str
+  , bool has_more_events)
+{
+  DCHECK(in_trace_buffer);
+  in_trace_buffer->AddFragment(json_events_str->data());
+  if (!has_more_events) {
+    quit_closure.Run();
+  } else {
+    _output_file.WriteAtCurrentPos(",", 1);
+  }
+}
+
+}  // namespace
+
 namespace basis {
 
 void initTracing(
   const bool auto_start_tracer
-  , const std::string event_categories)
+  , const std::string& event_categories)
 {
   // Used by out-of-process heap-profiling. When malloc is profiled by an
   // external process, that process will be responsible for emitting metrics on
@@ -260,6 +288,91 @@ void initTracing(
   //        << "MemoryDumpRequest finished";
   //    }
   //));
+}
+
+void writeTraceReport(
+  const base::FilePath &output_filepath)
+{
+  DCHECK(base::trace_event::TraceLog::GetInstance());
+
+  /// \note call that function only if tracing enabled
+  {
+    const bool need_write_tracing_report
+      = base::trace_event::TraceLog::GetInstance()->IsEnabled();
+    DCHECK(need_write_tracing_report);
+    if(!need_write_tracing_report) {
+      LOG(ERROR)
+        << "unable to write tracing report "
+           "while tracing is disabled";
+      return;
+    }
+  }
+
+  // disable writing of new tracing data
+  // before flush of trace report
+  base::trace_event::TraceLog::GetInstance()->SetDisabled();
+
+  base::trace_event::TraceResultBuffer trace_buffer;
+
+  // Start JSON output.
+  // This resets all internal state, so you can reuse
+  // the TraceResultBuffer by calling Start.
+  trace_buffer.Start();
+
+  base::File output_file(
+    output_filepath
+    /// \note create file if not exists
+    , base::File::FLAG_CREATE_ALWAYS
+      | base::File::FLAG_WRITE);
+
+  output_file.WriteAtCurrentPos(
+    kTraceJsonStart, strlen(kTraceJsonStart));
+
+  // output to file
+  trace_buffer.SetOutputCallback(
+    base::Bind(
+      []
+        (base::File& _output_file
+        , const std::string& data)
+      {
+        _output_file.WriteAtCurrentPos(
+          data.c_str()
+          , static_cast<int>(data.length()));
+      }
+      , std::ref(output_file)
+      )
+    );
+
+  base::trace_event::MemoryDumpManager::GetInstance()
+    ->TeardownForTracing();
+
+  base::RunLoop trace_run_loop{};
+
+  base::trace_event::TraceLog::GetInstance()->Flush(
+    base::BindRepeating(
+      &onTraceDataCollected
+      , std::ref(output_file)
+      , trace_run_loop.QuitClosure(),
+      base::Unretained(&trace_buffer)));
+
+  trace_run_loop.Run();
+
+  // When all fragments have been added,
+  // call Finish to complete the JSON
+  // formatted output.
+  trace_buffer.Finish();
+
+  CHECK(output_file.IsValid());
+
+  output_file.WriteAtCurrentPos(
+    kTraceJsonEnd, strlen(kTraceJsonEnd));
+
+  output_file.Close();
+
+  LOG(INFO)
+    << "tracing report written into file: "
+    << output_filepath
+    << ". You can open resulting file in chrome://tracing";
 }
 
 }  // namespace basis

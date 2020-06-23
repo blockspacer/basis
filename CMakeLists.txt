@@ -197,8 +197,13 @@ target_link_libraries(${STATIC_LIB_NAME} PRIVATE
 #  CONAN_PKG::doctest
 #)
 
+# see https://doc.magnum.graphics/corrade/corrade-cmake.html#corrade-cmake-subproject
+find_package(Corrade REQUIRED PluginManager)
+
 target_link_libraries(${STATIC_LIB_NAME} PUBLIC
   CONAN_PKG::boost
+  CONAN_PKG::entt
+  Corrade::PluginManager
 )
 
 set(DEBUG_LIBRARY_SUFFIX "")

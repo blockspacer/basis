@@ -42,7 +42,7 @@ doctest::Context initDoctest(
   // apply command line - argc / argv
   ctx.applyCommandLine(argc, argv);
 
-  // override - don't break in the debugger
+  // override - do not break in the debugger
   ctx.setOption("no-breaks", true);
 
   return std::move(ctx);

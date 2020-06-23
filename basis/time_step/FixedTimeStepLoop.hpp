@@ -116,7 +116,7 @@ public:
 
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
-  [[nodiscard]] /* don't ignore return value */
+  [[nodiscard]] /* do not ignore return value */
   inline /* `inline` to eleminate function call overhead */
   basis::FixedTimeStep& time_step_ref() noexcept {
     return time_step_;
@@ -206,7 +206,7 @@ public:
     /// we can use extrapolation between update() calls
     /// \note extrapolation may be wrong when it is used between update() calls,
     /// but it is less noticeable than the stuttering you get
-    /// if you don't extrapolate at all.
+    /// if you do not extrapolate at all.
     /// \see https://gameprogrammingpatterns.com/game-loop.html
     const std::chrono::nanoseconds remaining_lag
       = time_step_.lag();
@@ -240,13 +240,13 @@ public:
     }
   }
 
-  //[[nodiscard]] /* don't ignore return value */
+  //[[nodiscard]] /* do not ignore return value */
   //bool run() noexcept;
   //
-  //[[nodiscard]] /* don't ignore return value */
+  //[[nodiscard]] /* do not ignore return value */
   //bool stop() noexcept;
 
-  [[nodiscard]] /* don't ignore return value */
+  [[nodiscard]] /* do not ignore return value */
   bool run() noexcept {
     is_running_ = true;
     time_step_.update_clock(basis::FixedTimeStep::clock::now());
@@ -268,7 +268,7 @@ public:
     return /* done without error */ true;
   }
 
-  [[nodiscard]] /* don't ignore return value */
+  [[nodiscard]] /* do not ignore return value */
   bool stop() noexcept {
     is_running_ = false;
     return /* done without error */ true;

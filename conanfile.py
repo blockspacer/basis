@@ -165,6 +165,13 @@ class basis_conan_project(conan_build_helper.CMakePackage):
     def requirements(self):
         self.requires("boost/1.71.0@dev/stable")
 
+        self.requires("corrade/2019.10@magnum/stable")
+
+        # \note dispatcher must be thread-safe,
+        # so use entt after patch https://github.com/skypjack/entt/issues/449
+        # see https://github.com/skypjack/entt/commit/74f3df83dbc9fc4b43b8cfb9d71ba02234bd5c4a
+        self.requires("entt/3.3.2")
+
         self.requires("chromium_build_util/master@conan/stable")
         
         # see use_test_support option in base

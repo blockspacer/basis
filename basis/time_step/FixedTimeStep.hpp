@@ -50,7 +50,7 @@ namespace basis {
 
     /// \note large `inline` functions cause Cache misses
     /// and affect efficiency negatively, so keep it small
-    [[nodiscard]] /* don't ignore return value */
+    [[nodiscard]] /* do not ignore return value */
     inline /* `inline` to eleminate function call overhead */
     std::chrono::nanoseconds elapsed_dt_since(
       const clock::time_point& tp) const noexcept {
@@ -62,7 +62,7 @@ namespace basis {
 
     /// \note large `inline` functions cause Cache misses
     /// and affect efficiency negatively, so keep it small
-    [[nodiscard]] /* don't ignore return value */
+    [[nodiscard]] /* do not ignore return value */
     inline /* `inline` to eleminate function call overhead */
     bool is_update_required() const noexcept {
       return (lag_ >= fps_);
@@ -77,7 +77,7 @@ namespace basis {
 
     /// \note large `inline` functions cause Cache misses
     /// and affect efficiency negatively, so keep it small
-    [[nodiscard]] /* don't ignore return value */
+    [[nodiscard]] /* do not ignore return value */
     inline /* `inline` to eleminate function call overhead */
     delta_time_t fixed_dt() const noexcept {
       return fixed_delta_time_;
@@ -85,7 +85,7 @@ namespace basis {
 
     /// \note large `inline` functions cause Cache misses
     /// and affect efficiency negatively, so keep it small
-    [[nodiscard]] /* don't ignore return value */
+    [[nodiscard]] /* do not ignore return value */
     inline /* `inline` to eleminate function call overhead */
     std::chrono::nanoseconds lag() const noexcept {
       return lag_;
@@ -93,7 +93,7 @@ namespace basis {
 
     /// \note large `inline` functions cause Cache misses
     /// and affect efficiency negatively, so keep it small
-    [[nodiscard]] /* don't ignore return value */
+    [[nodiscard]] /* do not ignore return value */
     inline /* `inline` to eleminate function call overhead */
     std::chrono::nanoseconds fixed_tickrate() const noexcept {
       return fixed_tickrate_;

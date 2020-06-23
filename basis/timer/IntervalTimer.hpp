@@ -9,7 +9,7 @@ namespace basis {
 //  in main loop you want to update sub-systems with some interval,
 //  so you can pass elapsed frame time_dt to IntervalTimer::Update
 //  and use IntervalTimer::Passed to check if sub-systems update interval reached,
-//  then don't forget to call IntervalTimer::Reset()
+//  then do not forget to call IntervalTimer::Reset()
 struct IntervalTimer
 {
  public:

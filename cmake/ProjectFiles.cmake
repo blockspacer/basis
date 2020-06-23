@@ -4,6 +4,15 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/application/app_runners.h
   ${BASIS_DIR}/application/app_runners.cc
   #
+  ${BASIS_DIR}/base_environment.hpp
+  ${BASIS_DIR}/base_environment.cc
+  #
+  ${BASIS_DIR}/path_provider.hpp
+  ${BASIS_DIR}/path_provider.cc
+  #
+  ${BASIS_DIR}/PluginManager.hpp
+  ${BASIS_DIR}/PluginManager.cc
+  #
   ${BASIS_DIR}/boost_command_line.hpp
   ${BASIS_DIR}/boost_command_line.cc
   #

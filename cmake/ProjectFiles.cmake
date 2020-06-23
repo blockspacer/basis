@@ -4,6 +4,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/application/app_runners.h
   ${BASIS_DIR}/application/app_runners.cc
   #
+  ${BASIS_DIR}/boost_command_line.hpp
+  ${BASIS_DIR}/boost_command_line.cc
+  #
   ${BASIS_DIR}/i18n.hpp
   ${BASIS_DIR}/i18n.cc
   #

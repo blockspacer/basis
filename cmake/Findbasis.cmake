@@ -6,8 +6,13 @@ list(APPEND CMAKE_MODULE_PATH ${CURRENT_CMAKE_DIR})
 # NOTE: some packages may be optional (platform-specific, etc.)
 # find_package(... REQUIRED)
 find_package(chromium_base REQUIRED)
+find_package(boost QUIET)
 
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
+
+if(NOT TARGET CONAN_PKG::boost)
+  message(FATAL_ERROR "Use boost from conan")
+endif()
 
 if(NOT TARGET CONAN_PKG::basis)
   message(FATAL_ERROR "Use basis from conan")

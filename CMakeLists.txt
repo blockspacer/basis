@@ -158,9 +158,26 @@ endif()
 target_compile_options(${STATIC_LIB_NAME} PRIVATE
   $<$<CXX_COMPILER_ID:GNU>:-Wall>)
 
-target_compile_definitions(${STATIC_LIB_NAME} PRIVATE
+target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
   ${BASIS_PRIVATE_DEFINES}
+  # https://stackoverflow.com/a/30877725
+  BOOST_SYSTEM_NO_DEPRECATED
+  BOOST_ERROR_CODE_HEADER_ONLY
+  # TODO: make program_options work without rtti (boost::bad_any_cast)
+  #BOOST_NO_RTTI
+  #BOOST_NO_TYPEID
+  # TODO
+  #BOOST_NO_EXCEPTIONS
 )
+
+# without rtti you will get error:
+# ERROR: boost::bad_any_cast: failed conversion using boost::any_cast
+set_source_files_properties(
+  ${BASIS_DIR}/boost_command_line.hpp
+  ${BASIS_DIR}/boost_command_line.cc
+  PROPERTIES
+    COMPILE_FLAGS
+      -frtti)
 
 # TODO: DISABLE_DOCTEST
 list(APPEND BASIS_INTERFACE_DEFINES DISABLE_DOCTEST=1)
@@ -179,6 +196,10 @@ target_link_libraries(${STATIC_LIB_NAME} PRIVATE
 #target_link_libraries(${STATIC_LIB_NAME} PUBLIC
 #  CONAN_PKG::doctest
 #)
+
+target_link_libraries(${STATIC_LIB_NAME} PUBLIC
+  CONAN_PKG::boost
+)
 
 set(DEBUG_LIBRARY_SUFFIX "")
 set_target_properties(${STATIC_LIB_NAME}

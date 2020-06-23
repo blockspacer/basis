@@ -47,21 +47,6 @@
 #include <sstream>
 #include <string.h>
 
-// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
-// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
-#if __has_include(<filesystem>)
-#include <filesystem>
-#else
-#include <experimental/filesystem>
-#endif // __has_include
-
-#if __has_include(<filesystem>)
-namespace fs = std::filesystem;
-#else
-namespace fs = std::experimental::filesystem;
-#endif // __has_include
-
 namespace basis {
 
 ScopedBaseEnvironment::ScopedBaseEnvironment()
@@ -249,10 +234,13 @@ bool ScopedBaseEnvironment::init(
   {
     CHECK(!outDir.empty());
     base::SetCurrentDirectory(outDir);
-    DCHECK(base::FilePath{fs::current_path().string()} == outDir);
+    base::FilePath current_path;
+    const bool curDirOk =
+      base::GetCurrentDirectory(&current_path);
+    DCHECK(curDirOk);
     VLOG(9)
         << "Current path is "
-        << fs::current_path();
+        << current_path;
   }
 
   return

@@ -10,6 +10,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/path_provider.hpp
   ${BASIS_DIR}/path_provider.cc
   #
+  ${BASIS_DIR}/cmd_util.hpp
+  ${BASIS_DIR}/cmd_util.cc
+  #
   ${BASIS_DIR}/PluginManager.hpp
   ${BASIS_DIR}/PluginManager.cc
   #

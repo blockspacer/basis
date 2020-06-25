@@ -85,8 +85,9 @@ class AppRunners {
     getTaskRunner(
       AppRunners::ID identifier) WARN_UNUSED_RESULT;
 
+  // register task runner globally with key
   static void
-    setTaskRunner(const AppRunners::ID& identifier
+    registerGlobalTaskRunner(const AppRunners::ID& identifier
       , scoped_refptr<base::SequencedTaskRunner> task_runner);
 
   // Callable on any thread runner.

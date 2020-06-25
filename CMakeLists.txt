@@ -175,6 +175,8 @@ target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
 set_source_files_properties(
   ${BASIS_DIR}/boost_command_line.hpp
   ${BASIS_DIR}/boost_command_line.cc
+  ${BASIS_DIR}/cmd_util.hpp
+  ${BASIS_DIR}/cmd_util.cc
   PROPERTIES
     COMPILE_FLAGS
       -frtti)

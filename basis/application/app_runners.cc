@@ -87,7 +87,7 @@ AppRunners::getTaskRunner(AppRunners::ID identifier)
 
 // static
 void
-AppRunners::setTaskRunner(const AppRunners::ID& identifier
+AppRunners::registerGlobalTaskRunner(const AppRunners::ID& identifier
       , scoped_refptr<base::SequencedTaskRunner> task_runner)
       {
   DCHECK_GE(identifier, 0);

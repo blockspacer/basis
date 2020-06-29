@@ -168,6 +168,8 @@ target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
   #BOOST_NO_TYPEID
   # TODO
   #BOOST_NO_EXCEPTIONS
+  # TODO: DISABLE_DOCTEST
+  DISABLE_DOCTEST=1
 )
 
 # without rtti you will get error:
@@ -180,13 +182,6 @@ set_source_files_properties(
   PROPERTIES
     COMPILE_FLAGS
       -frtti)
-
-# TODO: DISABLE_DOCTEST
-list(APPEND BASIS_INTERFACE_DEFINES DISABLE_DOCTEST=1)
-
-target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
-  ${BASIS_INTERFACE_DEFINES}
-)
 
 target_link_libraries(${STATIC_LIB_NAME} PRIVATE
   ${USED_3DPARTY_LIBS}

@@ -165,7 +165,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
     def requirements(self):
         self.requires("boost/1.71.0@dev/stable")
 
-        self.requires("corrade/2019.10@magnum/stable")
+        self.requires("corrade/2020.06@magnum/stable")
 
         # \note dispatcher must be thread-safe,
         # so use entt after patch https://github.com/skypjack/entt/issues/449
@@ -187,8 +187,6 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         #    self.requires("chromium_dynamic_annotations/master@conan/stable")
 
         self.requires("chromium_base/master@conan/stable")
-
-        self.requires("corrade/2019.10@magnum/stable")
 
         #self.requires("flatbuffers/1.11.0@google/stable")
 

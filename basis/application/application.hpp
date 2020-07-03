@@ -31,16 +31,6 @@ class ApplicationObserver {
         const bool has_focus)
           = 0;
 
-  //virtual
-  //  void
-  //    onAppPause()
-  //      = 0;
-  //
-  //virtual
-  //  void
-  //    OnAppUnpause()
-  //      = 0;
-
  private:
   DISALLOW_COPY_AND_ASSIGN(ApplicationObserver);
 };
@@ -94,11 +84,11 @@ class Application {
   // wait for `application.signalOnLoad()`
   bool
     waitForLoad(
-      const base::TimeDelta& timeout);
+      const base::TimeDelta& timeout); /// \todo remove
 
   /// \todo remove and use Promise::All()
   void
-    signalOnLoad();
+    signalOnLoad(); /// \todo remove
 
   application::ApplicationState
     getApplicationState()
@@ -126,7 +116,7 @@ private:
       base::ObserverListThreadSafe<ApplicationObserver>
     > observers_;
 
-  base::WaitableEvent app_loaded_;
+  base::WaitableEvent app_loaded_; /// \todo remove
 
   DISALLOW_COPY_AND_ASSIGN(Application);
 };

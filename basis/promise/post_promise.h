@@ -23,6 +23,7 @@
 #include "base/bind_helpers.h"
 #include "base/location.h"
 #include "base/memory/ref_counted.h"
+#include "base/message_loop/message_loop.h"
 #include "base/task_runner.h"
 #include "base/task/post_task.h"
 #include "base/threading/sequenced_task_runner_handle.h"
@@ -89,6 +90,8 @@ auto PostPromise(const Location& from_here
 // that will be executed when synchronous task will be done.
 // That approach may not work with async tasks
 // (async tasks may require ManualPromiseResolver).
+// i.e. async task can return immediately and callback
+// for it can be called not in proper moment in time
 template <template <typename> class CallbackType,
           typename TaskReturnType,
           typename = EnableIfIsBaseCallback<CallbackType>>
@@ -120,14 +123,20 @@ scoped_refptr<base::internal::AbstractPromise>
 
 template <typename ResolveType>
 void waitForPromiseResolve(
-  const Promise<ResolveType, NoReject>& promise)
+  base::Promise<ResolveType, base::NoReject>& promise
+  , scoped_refptr<base::SequencedTaskRunner> signal_task_runner)
 {
   base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
     , base::WaitableEvent::InitialState::NOT_SIGNALED);
 
+  // `wait` and `signal` must be different sequence
+  DCHECK(signal_task_runner
+    != base::MessageLoop::current()->task_runner());
+
   promise
-  .ThenHere(FROM_HERE,
-    base::BindOnce(&base::WaitableEvent::Signal, base::Unretained(&event)));
+  .ThenOn(signal_task_runner
+     , FROM_HERE
+     , base::BindOnce(&base::WaitableEvent::Signal, base::Unretained(&event)));
 
   // The SequencedTaskRunner guarantees that
   // |event| will only be signaled after |task| is executed.

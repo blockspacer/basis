@@ -22,7 +22,8 @@ class ApplicationObserver {
   virtual
     void
       onStateChange(
-        const application::ApplicationState state)
+        const application::ApplicationState new_state
+        , const application::ApplicationState prev_state)
           = 0;
 
   virtual
@@ -55,7 +56,7 @@ class Application {
   // Notify |Observer|s
   void
     notifyStateChange(
-      const application::ApplicationState& state);
+      const application::ApplicationState& new_state);
 
   // Notify |Observer|s
   void
@@ -99,6 +100,7 @@ class Application {
     setApplicationState(
       application::ApplicationState state);
 
+  // only |application::kApplicationStateStarted| has focus
   bool
     HasFocus(application::ApplicationState state);
 

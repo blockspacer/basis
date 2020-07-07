@@ -34,13 +34,20 @@ Application::~Application()
 
 void
   Application::notifyStateChange(
-    const application::ApplicationState& state)
+    const application::ApplicationState& new_state)
 {
+  using ApplicationState
+    = application::ApplicationState;
+
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+  const ApplicationState& prev_state
+    = application_state_;
 
   observers_->Notify(FROM_HERE
     , &ApplicationObserver::onStateChange
-    , state);
+    , new_state
+    , prev_state);
 }
 
 void
@@ -179,7 +186,9 @@ void
 
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  NOTREACHED() << "application does not support the pause().";
+  DCHECK(application_state_ == application::kApplicationStateStarted);
+
+  setApplicationState(application::kApplicationStatePaused);
 }
 
 void
@@ -265,7 +274,9 @@ void
 
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  NOTREACHED() << "application does not support the resume().";
+  DCHECK(application_state_ == application::kApplicationStatePaused);
+
+  setApplicationState(application::kApplicationStateStarted);
 }
 
 ApplicationState

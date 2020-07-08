@@ -124,7 +124,8 @@ scoped_refptr<base::internal::AbstractPromise>
 template <typename ResolveType>
 void waitForPromiseResolve(
   base::Promise<ResolveType, base::NoReject>& promise
-  , scoped_refptr<base::SequencedTaskRunner> signal_task_runner)
+  , scoped_refptr<base::SequencedTaskRunner> signal_task_runner
+  , const base::TimeDelta& wait_delta = base::TimeDelta::Max())
 {
   base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
     , base::WaitableEvent::InitialState::NOT_SIGNALED);
@@ -140,7 +141,7 @@ void waitForPromiseResolve(
 
   // The SequencedTaskRunner guarantees that
   // |event| will only be signaled after |task| is executed.
-  event.Wait();
+  event.TimedWait(wait_delta);
 }
 
 template <template <typename> class CallbackType,

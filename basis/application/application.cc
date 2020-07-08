@@ -6,34 +6,34 @@
 
 namespace application {
 
-ApplicationObserver::ApplicationObserver() = default;
+ApplicationStateObserver::ApplicationStateObserver() = default;
 
-ApplicationObserver::~ApplicationObserver() = default;
+ApplicationStateObserver::~ApplicationStateObserver() = default;
 
 #define STATE_STRING(state)                                             \
   base::StringPrintf("%s (%d)", \
     application::GetApplicationStateString(state), \
     static_cast<int>(state))
 
-Application::Application()
-  : observers_(new base::ObserverListThreadSafe<ApplicationObserver>())
-  , app_loaded_(base::WaitableEvent::ResetPolicy::MANUAL,
-                base::WaitableEvent::InitialState::NOT_SIGNALED)
+ApplicationStateManager::ApplicationStateManager()
+  : observers_(new base::ObserverListThreadSafe<ApplicationStateObserver>())
+  //, app_loaded_(base::WaitableEvent::ResetPolicy::MANUAL,
+  //              base::WaitableEvent::InitialState::NOT_SIGNALED)
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
 
-  // init threading before |Application| constructor
+  // init threading before |ApplicationStateManager| constructor
   DCHECK(base::MessageLoopCurrent::Get());
 }
 
-Application::~Application()
+ApplicationStateManager::~ApplicationStateManager()
 {
   DCHECK(application_state_ == application::kApplicationStateStopped);
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
 void
-  Application::notifyStateChange(
+  ApplicationStateManager::notifyStateChange(
     const application::ApplicationState& new_state)
 {
   using ApplicationState
@@ -45,24 +45,26 @@ void
     = application_state_;
 
   observers_->Notify(FROM_HERE
-    , &ApplicationObserver::onStateChange
-    , new_state
-    , prev_state);
+    , &ApplicationStateObserver::onStateChange
+    , application::ApplicationStateTransition{
+      new_state
+      , prev_state
+    });
 }
 
 void
-  Application::notifyFocusChange(
+  ApplicationStateManager::notifyFocusChange(
     const bool has_focus)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   observers_->Notify(FROM_HERE
-    , &ApplicationObserver::onFocusChange
+    , &ApplicationStateObserver::onFocusChange
     , has_focus);
 }
 
 void
-  Application::setApplicationState(
+  ApplicationStateManager::setApplicationState(
     application::ApplicationState state)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -140,7 +142,7 @@ void
 }
 
 bool
-  Application::HasFocus(
+  ApplicationStateManager::HasFocus(
     application::ApplicationState state)
 {
   switch (state) {
@@ -160,7 +162,7 @@ bool
 }
 
 void
-  Application::initialize()
+  ApplicationStateManager::initialize()
 {
   TRACE_EVENT0("headless", "Application::initialize()");
 
@@ -170,9 +172,9 @@ void
 }
 
 void
-  Application::teardown()
+  ApplicationStateManager::stop()
 {
-  TRACE_EVENT0("headless", "Application::teardown()");
+  TRACE_EVENT0("headless", "Application::stop()");
 
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
@@ -180,7 +182,7 @@ void
 }
 
 void
-  Application::pause()
+  ApplicationStateManager::pause()
 {
   TRACE_EVENT0("headless", "Application::pause()");
 
@@ -192,7 +194,7 @@ void
 }
 
 void
-  Application::start()
+  ApplicationStateManager::start()
 {
   TRACE_EVENT0("headless", "Application::start()");
 
@@ -205,8 +207,8 @@ void
 }
 
 void
-  Application::addObserver(
-    ApplicationObserver* observer)
+  ApplicationStateManager::addObserver(
+    ApplicationStateObserver* observer)
 {
   TRACE_EVENT0("headless", "Application::addObserver()");
 
@@ -218,8 +220,8 @@ void
 }
 
 void
-  Application::removeObserver(
-    ApplicationObserver* observer)
+  ApplicationStateManager::removeObserver(
+    ApplicationStateObserver* observer)
 {
   TRACE_EVENT0("headless", "Application::removeObserver()");
 
@@ -231,7 +233,7 @@ void
 }
 
 void
-  Application::suspend()
+  ApplicationStateManager::suspend()
 {
   TRACE_EVENT0("headless", "Application::suspend()");
 
@@ -244,31 +246,10 @@ void
 
   // resourse unloading here
   setApplicationState(application::kApplicationStateSuspended);
-
-  app_loaded_.Reset();
-}
-
-bool
-  Application::waitForLoad(
-    const base::TimeDelta& timeout)
-{
-  TRACE_EVENT0("headless", "Application::waitForLoad()");
-
-  return app_loaded_.TimedWait(timeout);
 }
 
 void
-  Application::signalOnLoad()
-{
-  TRACE_EVENT0("headless", "Application::signalOnLoad()");
-
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-
-  app_loaded_.Signal();
-}
-
-void
-  Application::resume()
+  ApplicationStateManager::resume()
 {
   TRACE_EVENT0("headless", "Application::resume()");
 
@@ -280,7 +261,7 @@ void
 }
 
 ApplicationState
-  Application::getApplicationState()
+  ApplicationStateManager::getApplicationState()
     const
     noexcept
 {

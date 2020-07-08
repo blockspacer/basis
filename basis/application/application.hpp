@@ -12,18 +12,24 @@
 
 namespace application {
 
-class ApplicationObserver {
+struct ApplicationStateTransition
+{
+  application::ApplicationState new_state;
+
+  application::ApplicationState prev_state;
+};
+
+class ApplicationStateObserver {
  public:
-  ApplicationObserver();
+  ApplicationStateObserver();
 
   virtual
-    ~ApplicationObserver();
+    ~ApplicationStateObserver();
 
   virtual
     void
       onStateChange(
-        const application::ApplicationState new_state
-        , const application::ApplicationState prev_state)
+        const application::ApplicationStateTransition stateTransition)
           = 0;
 
   virtual
@@ -33,25 +39,25 @@ class ApplicationObserver {
           = 0;
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(ApplicationObserver);
+  DISALLOW_COPY_AND_ASSIGN(ApplicationStateObserver);
 };
 
-class Application {
+class ApplicationStateManager {
  public:
-  Application();
+  ApplicationStateManager();
 
-  ~Application();
+  ~ApplicationStateManager();
 
   // Add a non owning pointer
   void
     addObserver(
-      ApplicationObserver* observer);
+      ApplicationStateObserver* observer);
 
   // Does nothing if the |observer| is
   // not in the list of known observers.
   void
     removeObserver(
-      ApplicationObserver* observer);
+      ApplicationStateObserver* observer);
 
   // Notify |Observer|s
   void
@@ -66,8 +72,10 @@ class Application {
   void
     initialize();
 
+  // |stop| is teardown
+  // i.e. not same as |pause|
   void
-    teardown();
+    stop();
 
   void
     suspend();
@@ -80,16 +88,6 @@ class Application {
 
   void
     start();
-
-  /// \todo remove and use Promise::All()
-  // wait for `application.signalOnLoad()`
-  bool
-    waitForLoad(
-      const base::TimeDelta& timeout); /// \todo remove
-
-  /// \todo remove and use Promise::All()
-  void
-    signalOnLoad(); /// \todo remove
 
   application::ApplicationState
     getApplicationState()
@@ -111,16 +109,14 @@ private:
   application::ApplicationState application_state_
     = application::kApplicationStatePreloading;
 
-  friend class ApplicationObserver;
+  friend class ApplicationStateObserver;
 
   /// \note ObserverListThreadSafe may be ued from multiple threads
   const scoped_refptr<
-      base::ObserverListThreadSafe<ApplicationObserver>
+      base::ObserverListThreadSafe<ApplicationStateObserver>
     > observers_;
 
-  base::WaitableEvent app_loaded_; /// \todo remove
-
-  DISALLOW_COPY_AND_ASSIGN(Application);
+  DISALLOW_COPY_AND_ASSIGN(ApplicationStateManager);
 };
 
 } // namespace application

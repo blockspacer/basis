@@ -129,7 +129,8 @@ void
   DLOG(INFO) << __FUNCTION__ << ": " << STATE_STRING(application_state_)
              << " -> " << STATE_STRING(state);
   application_state_ = state;
-  DCHECK(application_state_ != application::kApplicationStateTotal);
+  DCHECK_NE(application_state_
+    , application::kApplicationStateTotal);
 
   notifyStateChange(application_state_);
 
@@ -168,7 +169,10 @@ void
 
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  DCHECK(application_state_ == application::kApplicationStatePreloading);
+  /// \note no need to call setApplicationState
+  /// cause |kApplicationStatePreloading| is initial state
+  DCHECK_EQ(application_state_
+    , application::kApplicationStatePreloading);
 }
 
 void
@@ -188,7 +192,8 @@ void
 
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  DCHECK(application_state_ == application::kApplicationStateStarted);
+  DCHECK_EQ(application_state_
+    , application::kApplicationStateStarted);
 
   setApplicationState(application::kApplicationStatePaused);
 }
@@ -201,7 +206,8 @@ void
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   // resources must be loaded
-  DCHECK(application_state_ == application::kApplicationStatePreloading);
+  DCHECK_EQ(application_state_
+    , application::kApplicationStatePreloading);
 
   setApplicationState(application::kApplicationStateStarted);
 }
@@ -255,7 +261,8 @@ void
 
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  DCHECK(application_state_ == application::kApplicationStatePaused);
+  DCHECK_EQ(application_state_
+    , application::kApplicationStatePaused);
 
   setApplicationState(application::kApplicationStateStarted);
 }
@@ -265,7 +272,8 @@ ApplicationState
     const
     noexcept
 {
-  DCHECK(application_state_ != application::kApplicationStateTotal);
+  DCHECK_NE(application_state_
+    , application::kApplicationStateTotal);
   return application_state_;
 }
 

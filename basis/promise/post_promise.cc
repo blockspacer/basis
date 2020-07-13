@@ -46,6 +46,8 @@ PassedPromise PostPromiseInternal(
   if (!internal::PostPromiseHelperInternal(
         task_runner, from_here, promise, delay))
   {
+    /// \todo return false if Post(Delayed)Task failed
+    DCHECK(false);
     return PassedPromise();
   }
 

@@ -514,11 +514,13 @@ void AbstractPromise::OnRejectMakeDependantsUseCurriedPrerequisite(
 
 void AbstractPromise::DispatchPromise() {
   if (task_runner_) {
-    task_runner_->PostDelayedTask(
+    const bool postTaskOk = task_runner_->PostDelayedTask(
       from_here_
       , BindOnce([](WrappedPromise promise) { promise.Execute(); },
                std::move(WrappedPromise(this))),
       /*delay*/ TimeDelta());
+    /// \todo return false if Post(Delayed)Task failed
+    DCHECK(postTaskOk);
   } else {
     Execute();
   }

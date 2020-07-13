@@ -151,7 +151,15 @@ bool ScopedBaseEnvironment::init(
   /// \todo
   // init allocator https://github.com/aranajhonny/chromium/blob/caf5bcb822f79b8997720e589334266551a50a13/content/app/content_main_runner.cc#L512
 
+  // Enables 'terminate on heap corruption' flag. Helps protect against heap
+  // overflow. Has no effect if the OS doesn't provide the necessary facility.
+  /// \note On Linux, there nothing to do AFAIK.
   base::EnableTerminationOnHeapCorruption();
+
+#if DCHECK_IS_ON()
+  // Turns on process termination if memory runs out.
+  base::EnableTerminationOnOutOfMemory();
+#endif // DCHECK_IS_ON()
 
   base::FeatureList::InitializeInstance(
     std::string(), std::string());

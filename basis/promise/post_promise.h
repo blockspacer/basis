@@ -75,12 +75,19 @@ auto PostDelayedPromise(const Location& from_here,
   );
 }
 
+// Wraps synchronous task into promise
+// that will be executed when synchronous task will be done.
+// That approach may not work with async tasks
+// (async tasks may require ManualPromiseResolver).
+// i.e. async task can return immediately and callback
+// for it can be called not in proper moment in time
 template <typename CallbackT>
 auto PostPromise(const Location& from_here
   , TaskRunner* task_runner
   , CallbackT&& task
   , TimeDelta delay = TimeDelta())
 {
+  DCHECK(task_runner);
   return PostDelayedPromise(
     from_here, task_runner, std::forward<CallbackT>(task), delay);
 }
@@ -121,6 +128,8 @@ scoped_refptr<base::internal::AbstractPromise>
   return promise;
 }
 
+/// \note waits on posted task runner,
+/// so pass different `signalling` task runner to prevent deadlocks
 template <typename ResolveType>
 void waitForPromiseResolve(
   base::Promise<ResolveType, base::NoReject>& promise

@@ -1,28 +1,21 @@
 #include "basis/scoped_log_run_time.hpp" // IWYU pragma: associated
 
-#include <base/logging.h>
+#include <base/timer/elapsed_timer.h>
 
 namespace basis {
 
-ScopedLogRunTime::ScopedLogRunTime(
-  std::chrono::steady_clock::time_point chrono_then)
-  : chrono_then_(chrono_then)
+ScopedLogRunTime::ScopedLogRunTime()
+  : timer_(std::make_unique<base::ElapsedTimer>())
 {}
 
 basis::ScopedLogRunTime::~ScopedLogRunTime()
 {
-  long int diff_ms
-      = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - chrono_then_)
-      .count();
-  long int diff_ns
-      = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now() - chrono_then_)
-      .count();
+  base::TimeDelta elapsed_delta = timer_->Elapsed();
+
   DLOG(INFO)
-      << "Done in : "
-      << diff_ms << " milliseconds"
-      <<" (" << diff_ns << " nanoseconds)";
+    << "Done in : "
+    << elapsed_delta.InMilliseconds() << " milliseconds"
+    <<" (" << elapsed_delta.InNanoseconds() << " nanoseconds)";
 }
 
 }  // namespace basis

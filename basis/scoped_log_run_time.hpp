@@ -1,20 +1,23 @@
 #pragma once
 
-#include <chrono>
-#include <base/logging.h>
+#include <base/macros.h>
+
+#include <memory>
+
+namespace base {
+class ElapsedTimer;
+} // namespace base
 
 namespace basis {
 
 class ScopedLogRunTime {
 public:
-  ScopedLogRunTime(
-    std::chrono::steady_clock::time_point chrono_then
-      = std::chrono::steady_clock::now());
+  ScopedLogRunTime();
 
   ~ScopedLogRunTime();
 
 private:
-  std::chrono::steady_clock::time_point chrono_then_;
+  std::unique_ptr<base::ElapsedTimer> timer_;
 
   DISALLOW_COPY_AND_ASSIGN(ScopedLogRunTime);
 };

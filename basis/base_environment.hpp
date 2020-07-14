@@ -12,7 +12,10 @@
 #include <string>
 #include <vector>
 
-namespace base { class SingleThreadTaskRunner; }
+namespace base {
+class FeatureList;
+class SingleThreadTaskRunner;
+} // namespace base
 
 namespace entt { class dispatcher; }
 

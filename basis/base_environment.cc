@@ -11,6 +11,8 @@
 #include <basis/thread_pool_util.hpp>
 #include <basis/tracing_util.hpp>
 
+#include <base/base_switches.h>
+#include <base/command_line.h>
 #include <base/process/memory.h>
 #include <base/base_paths.h>
 #include <base/bind.h>
@@ -161,8 +163,49 @@ bool ScopedBaseEnvironment::init(
   base::EnableTerminationOnOutOfMemory();
 #endif // DCHECK_IS_ON()
 
-  base::FeatureList::InitializeInstance(
-    std::string(), std::string());
+  std::unique_ptr<base::FeatureList> feature_list
+    = std::make_unique<base::FeatureList>();
+
+  // configure |base::FeatureList|
+  {
+    std::string default_enable_features
+      = base::JoinString({}, ",");
+
+    std::string default_disable_features =
+      base::JoinString({}, ",");
+
+    base::CommandLine* command_line
+      = base::CommandLine::ForCurrentProcess();
+
+    /// \usage --enable-features=console_terminal,remote_console
+    std::string cmd_enabled =
+        command_line->GetSwitchValueASCII(
+          switches::kEnableFeatures);
+    if(cmd_enabled.empty()) {
+      cmd_enabled = default_enable_features;
+    }
+
+    /// \usage --disable-features=console_terminal,remote_console
+    std::string cmd_disabled =
+        command_line->GetSwitchValueASCII(
+          switches::kDisableFeatures);
+    if(cmd_disabled.empty()) {
+      cmd_disabled = default_disable_features;
+    }
+
+    // Initialize the FeatureList from the command line.
+    feature_list->InitializeFromCommandLine(cmd_enabled, cmd_disabled);
+
+    /// \note you can override features like so:
+    /// feature_list
+    ///   ->RegisterOverride(kFeatureConsoleTerminalName
+    ///       , base::FeatureList::OVERRIDE_ENABLE_FEATURE
+    ///       , nullptr // field trial
+    /// );
+  }
+
+  base::FeatureList::SetInstance(
+    std::move(feature_list));
 
   basis::initLogging(
     "" // logFile

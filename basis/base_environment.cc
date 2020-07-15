@@ -27,6 +27,8 @@
 #include <base/message_loop/message_loop.h>
 #include <base/message_loop/message_loop_current.h>
 #include <base/metrics/statistics_recorder.h>
+#include <base/metrics/field_trial.h>
+#include <base/metrics/histogram.h>
 #include <base/path_service.h>
 #include <base/run_loop.h>
 #include <base/sampling_heap_profiler/sampling_heap_profiler.h>
@@ -211,6 +213,10 @@ bool ScopedBaseEnvironment::init(
     "" // logFile
     );
 
+#if DCHECK_IS_ON()
+  base::FieldTrial::EnableBenchmarking();
+#endif // DCHECK_IS_ON()
+
   if(!base::PathExists(dir_exe_.Append(icuFileName))) {
     LOG(ERROR)
         << "unable to load icu i18n data file: "
@@ -279,6 +285,8 @@ bool ScopedBaseEnvironment::init(
   // UMA_HISTOGRAM_BOOLEAN("App.BoolTest()", false);
   // UMA_HISTOGRAM_COUNTS_100("App.TestCounts", 11);
   // UMA_HISTOGRAM_LONG_TIMES("App.TimeNow()", base::TimeDelta::FromMinutes(5));
+  // UMA_HISTOGRAM_ENUMERATION("Login", OFFLINE_AND_ONLINE, NUM_SUCCESS_REASONS);
+  // base::UmaHistogramMemoryLargeMB("HeapProfiler.Malloc", malloc_usage_mb);
   base::StatisticsRecorder::InitLogOnShutdown();
 
   // set current path

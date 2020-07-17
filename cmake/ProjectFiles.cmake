@@ -43,6 +43,28 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/scoped_log_run_time.hpp
   ${BASIS_DIR}/scoped_log_run_time.cc
   #
+  ${BASIS_DIR}/strong_alias.hpp
+  ${BASIS_DIR}/immutable.hpp
+  ${BASIS_DIR}/weak_handle.hpp
+  ${BASIS_DIR}/enum_set.hpp
+  ${BASIS_DIR}/polymorphic_downcast.hpp
+  ${BASIS_DIR}/ltrace.hpp
+  #
+  ${BASIS_DIR}/stats_table.hpp
+  ${BASIS_DIR}/stats_table.cc
+  #
+  ${BASIS_DIR}/periodic_prioritized_task_heap.hpp
+  ${BASIS_DIR}/periodic_prioritized_task_heap.cc
+  #
+  ${BASIS_DIR}/status/status.hpp
+  ${BASIS_DIR}/status/status.cc
+  ${BASIS_DIR}/status/statusor.hpp
+  ${BASIS_DIR}/status/statusor.cc
+  ${BASIS_DIR}/status/status_macros.hpp
+  ${BASIS_DIR}/status/status_macros.cc
+  ${BASIS_DIR}/status/posix_error_space.hpp
+  ${BASIS_DIR}/status/posix_error_space.cc
+  #
   ${BASIS_DIR}/application/application.hpp
   ${BASIS_DIR}/application/application.cc
   #
@@ -89,25 +111,24 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/promise/then_and_catch_executor.cc
   ${BASIS_DIR}/promise/then_and_catch_executor.h
   #
+  #
   ${BASIS_DIR}/core/numeric_static_cast.hpp
   ${BASIS_DIR}/core/pimpl.hpp
-  ${BASIS_DIR}/immutable.hpp
-  ${BASIS_DIR}/weak_handle.hpp
-  ${BASIS_DIR}/enum_set.hpp
-  ${BASIS_DIR}/polymorphic_downcast.hpp
-  ${BASIS_DIR}/ltrace.hpp
-  ${BASIS_DIR}/periodic_prioritized_task_heap.hpp
-  ${BASIS_DIR}/periodic_prioritized_task_heap.cc
+  #
   ${BASIS_DIR}/time_step/FixedTimeStep.hpp
   ${BASIS_DIR}/time_step/FixedTimeStep.cpp
   ${BASIS_DIR}/time_step/FixedTimeStepLoop.hpp
   ${BASIS_DIR}/time_step/FixedTimeStepLoop.cpp
+  #
   ${BASIS_DIR}/timer/IntervalTimer.hpp
   ${BASIS_DIR}/timer/IntervalTimer.cpp
+  #
   ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.hpp
   ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.cpp
+  #
   ${BASIS_DIR}/log/Logger.cpp
   ${BASIS_DIR}/log/Logger.hpp
+  #
   ${BASIS_DIR}/task_run/task_run_util.cc
   ${BASIS_DIR}/task_run/task_run_util.hpp
 )

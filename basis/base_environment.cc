@@ -233,18 +233,19 @@ bool ScopedBaseEnvironment::init(
     nullptr // locale
     );
 
+  // see |base::RecommendedMaxNumberOfThreadsInThreadGroup|
   {
     const int num_cores
       = base::SysInfo::NumberOfProcessors();
     const int kBackgroundMaxThreads
     /// \note based on command-line paramater
       = 1 + threadsNum;
-    const int maxByDemandWorkerThreadsInPool
+    const int kMaxByDemandWorkerThreadsInPool
     /// \note based on command-line paramater
       = 1 + threadsNum;
     const int kForegroundMaxThreads
       = std::max(
-          kBackgroundMaxThreads + maxByDemandWorkerThreadsInPool
+          kMaxByDemandWorkerThreadsInPool
           , num_cores - 1);
     CHECK(kForegroundMaxThreads >= 1)
       << "Unable to register foreground threads."

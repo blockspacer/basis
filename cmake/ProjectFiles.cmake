@@ -56,6 +56,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/periodic_prioritized_task_heap.hpp
   ${BASIS_DIR}/periodic_prioritized_task_heap.cc
   #
+  ${BASIS_DIR}/task/periodic_task_executor.hpp
+  ${BASIS_DIR}/task/periodic_task_executor.cc
+  #
   ${BASIS_DIR}/status/status.hpp
   ${BASIS_DIR}/status/status.cc
   ${BASIS_DIR}/status/statusor.hpp

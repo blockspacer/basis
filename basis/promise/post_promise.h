@@ -30,6 +30,10 @@
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/bind.h"
 
+#include <boost/asio.hpp>
+
+#include <boost/beast/core.hpp>
+
 namespace base {
 
 namespace internal {
@@ -40,6 +44,16 @@ PostPromiseInternal(TaskRunner* task_runner,
                     internal::PromiseExecutor::Data&& executor_data,
                     TimeDelta delay);
 
+BASE_EXPORT PassedPromise
+PostPromiseInternal(const boost::asio::executor& executor,
+                    const Location& from_here,
+                    internal::PromiseExecutor::Data&& executor_data);
+
+BASE_EXPORT PassedPromise
+PostPromiseInternal(boost::asio::io_context& context,
+                    const Location& from_here,
+                    internal::PromiseExecutor::Data&& executor_data);
+
 // wraps `task.Execute` into `base::OnceClosure`
 // used to execute task wrapped in promise
 base::OnceClosure ClosureExecutePromise(base::WrappedPromise task);
@@ -49,6 +63,14 @@ bool PostPromiseHelperInternal(TaskRunner* task_runner
   , const Location& from_here
   , scoped_refptr<AbstractPromise> promise
   , TimeDelta delay);
+
+bool PostPromiseHelperInternal(const boost::asio::executor& executor
+  , const Location& from_here
+  , scoped_refptr<AbstractPromise> promise);
+
+bool PostPromiseHelperInternal(boost::asio::io_context& context
+  , const Location& from_here
+  , scoped_refptr<AbstractPromise> promise);
 
 }  // namespace internal
 
@@ -92,6 +114,95 @@ auto PostPromise(const Location& from_here
     from_here, task_runner, std::forward<CallbackT>(task), delay);
 }
 
+template <typename CallbackT>
+auto PostDelayedPromiseOnExecutor(const Location& from_here,
+                     const boost::asio::executor& executor,
+                     CallbackT task) {
+  // Extract properties from |task| callback.
+  using CallbackTraits = internal::CallbackTraits<std::decay_t<CallbackT>>;
+  using ReturnedPromiseResolveT = typename CallbackTraits::ResolveType;
+  using ReturnedPromiseRejectT = typename CallbackTraits::RejectType;
+  using ReturnedPromise =
+      Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
+  return ReturnedPromise(
+    internal::PostPromiseInternal(
+     executor, from_here,
+     internal::PromiseExecutor::Data(
+       in_place_type_t<
+         internal::PostTaskExecutor<
+           typename CallbackTraits::ReturnType>>(),
+       internal::ToCallbackBase(std::move(task))))
+  );
+}
+
+// Wraps synchronous task into promise
+// that will be executed when synchronous task will be done.
+// That approach may not work with async tasks
+// (async tasks may require ManualPromiseResolver).
+// i.e. async task can return immediately and callback
+// for it can be called not in proper moment in time
+/**
+ * \example
+  DCHECK(ws_sess);
+  const boost::asio::executor& executor
+    = ws_sess->ref_stream().get_executor();
+
+  return
+    somePromise()
+  .ThenHere(FROM_HERE,
+    base::BindOnce(
+      /// \note returns promise,
+      /// so we will wait for NESTED promise
+      &PostPromiseAsio<
+        const boost::asio::executor
+        , base::OnceClosure
+      >
+      , FROM_HERE
+      /// \note |doStartSessionAcceptor| callback
+      /// must prolong lifetime of |executor|
+      , executor
+      , std::move(doStartSessionAcceptor)
+    ) // BindOnce
+  ) // ThenHere
+ **/
+template <typename CallbackT>
+auto PostPromiseAsio(const Location& from_here
+  , const boost::asio::executor& executor
+  , CallbackT&& task)
+{
+  return PostDelayedPromiseOnExecutor(
+    from_here, executor, std::forward<CallbackT>(task));
+}
+
+template <typename CallbackT>
+auto PostDelayedPromiseOnContext(const Location& from_here,
+                     boost::asio::io_context& context,
+                     CallbackT task) {
+  // Extract properties from |task| callback.
+  using CallbackTraits = internal::CallbackTraits<std::decay_t<CallbackT>>;
+  using ReturnedPromiseResolveT = typename CallbackTraits::ResolveType;
+  using ReturnedPromiseRejectT = typename CallbackTraits::RejectType;
+  using ReturnedPromise =
+      Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
+  return ReturnedPromise(
+    internal::PostPromiseInternal(
+     context, from_here,
+     internal::PromiseExecutor::Data(
+       in_place_type_t<
+         internal::PostTaskExecutor<
+           typename CallbackTraits::ReturnType>>(),
+       internal::ToCallbackBase(std::move(task))))
+  );
+}
+
+template <typename CallbackT>
+auto PostPromiseAsio(const Location& from_here
+  , boost::asio::io_context& context
+  , CallbackT&& task)
+{
+  return PostDelayedPromiseOnContext(
+    from_here, context, std::forward<CallbackT>(task));
+}
 
 // Wraps synchronous task into promise
 // that will be executed when synchronous task will be done.

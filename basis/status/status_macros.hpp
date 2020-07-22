@@ -394,6 +394,55 @@ class MakeErrorStream {
 #define RETURN_OK() \
   return ::util::Status::OK
 
+// A macro for simplify checking and logging a condition. The error code
+// return here is the one that matches the most of the uses.
+#define CHECK_RETURN_IF_FALSE(cond) \
+  if (LIKELY(cond)) {    \
+  } else /* NOLINT */               \
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "'" << #cond << "' is false. "
+
+// A simple class to explicitly cast the return value of an ::util::Status
+// to bool.
+class BooleanStatus {
+ public:
+  BooleanStatus(::util::Status status) : status_(status) {}  // NOLINT
+  // Implicitly cast to bool.
+  operator bool() const { return status_.ok(); }
+  inline ::util::Status status() const { return status_; }
+ private:
+  ::util::Status status_;
+};
+
+inline const std::string FixMessage(const std::string& msg) {
+  std::string str = msg;
+  std::size_t found = str.find_last_not_of(" \t\f\v\n\r");
+  if (found != std::string::npos) {
+    str.erase(found + 1);
+    if (str.back() != '.' && str.back() != '!' && str.back() != '?' &&
+        str.back() != ';' && str.back() != ':' && str.back() != ',') {
+      str += ". ";
+    } else {
+      str += " ";
+    }
+  } else {
+    str.clear();
+  }
+
+  return str;
+}
+
+// A macro for simplifying creation of a new error or appending new info to an
+// error based on the return value of a function that returns ::util::Status.
+#define APPEND_STATUS_IF_ERROR(out, expr)                                      \
+  if (const BooleanStatus __ret = (expr)) {                                    \
+  } else /* NOLINT */                                                          \
+    out = APPEND_ERROR(!out.ok() ? out : __ret.status().StripMessage())        \
+              .without_logging()                                               \
+          << (out.error_message().empty() || out.error_message().back() == ' ' \
+                  ? ""                                                         \
+                  : " ")                                                       \
+          << FixMessage(__ret.status().error_message())
+
 // Wraps a ::util::Status so it can be assigned and used in an if-statement.
 // Implicitly converts from status and to bool.
 namespace internal {

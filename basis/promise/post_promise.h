@@ -154,19 +154,18 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
       /// \note returns promise,
       /// so we will wait for NESTED promise
       &PostPromiseAsio<
-        const boost::asio::executor
-        , base::OnceClosure
+        base::OnceClosure
       >
       , FROM_HERE
       /// \note |doStartSessionAcceptor| callback
       /// must prolong lifetime of |executor|
-      , executor
+      , COPIED(executor)
       , std::move(doStartSessionAcceptor)
     ) // BindOnce
   ) // ThenHere
  **/
 template <typename CallbackT>
-auto PostPromiseAsio(const Location& from_here
+auto PostPromiseOnAsioExecutor(const Location& from_here
   , const boost::asio::executor& executor
   , CallbackT&& task)
 {
@@ -196,7 +195,7 @@ auto PostDelayedPromiseOnContext(const Location& from_here,
 }
 
 template <typename CallbackT>
-auto PostPromiseAsio(const Location& from_here
+auto PostPromiseOnAsioContext(const Location& from_here
   , boost::asio::io_context& context
   , CallbackT&& task)
 {

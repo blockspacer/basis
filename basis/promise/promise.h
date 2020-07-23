@@ -807,9 +807,10 @@ class Promises {
   template <typename Resolve, typename Reject>
   static Promise<Resolve, Reject> All(const Location& from_here,
                                       Promise<Resolve, Reject> promise) {
-    //DCHECK(false)
-    //  << "only one Promise passed to Promise::All from "
-    //  << from_here.ToString();
+    // log about possible error
+    DVLOG(9)
+      << "only one Promise passed to Promise::All from "
+      << from_here.ToString();
     return promise;
   }
 
@@ -866,9 +867,10 @@ class Promises {
   template <typename Resolve, typename Reject>
   static Promise<Resolve, Reject> Race(const Location& from_here,
                                       Promise<Resolve, Reject> promise) {
-    //DCHECK(false)
-    //  << "only one Promise passed to Promise::Race from "
-    //  << from_here.ToString();
+    // log about possible error
+    DVLOG(9)
+      << "only one Promise passed to Promise::Race from "
+      << from_here.ToString();
     return promise;
   }
 };

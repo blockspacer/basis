@@ -18,6 +18,7 @@
 #include <type_traits>
 
 #include "base/macros.h"
+#include "base/logging.h"
 
 namespace util {
 
@@ -53,10 +54,38 @@ class ScopedCleanup {
   // copied and bound to the function; the result must be a nullary function.
   template<typename T, typename... Args>
   explicit ScopedCleanup(T callable, const Args&... args)
-      : active_(true), cleanup_(::std::bind(callable, args...)) {}
+      : active_(true), cleanup_(::std::bind(callable, args...))
+  {
+    DCHECK(cleanup_);
+  }
+
+  ScopedCleanup(
+    ScopedCleanup&& other)
+  {
+    active_ = std::move(other.active_);
+    cleanup_ = std::move(other.cleanup_);
+    DCHECK(cleanup_);
+
+    /// \note can not run moved out |cleanup_|
+    other.active_ = false;
+  }
+
+  ScopedCleanup& operator=(
+    ScopedCleanup&& other)
+  {
+    active_ = std::move(other.active_);
+    cleanup_ = std::move(other.cleanup_);
+    DCHECK(cleanup_);
+
+    /// \note can not run moved out |cleanup_|
+    other.active_ = false;
+
+    return *this;
+  }
 
   virtual ~ScopedCleanup() {
     if (active_) {
+      DCHECK(cleanup_);
       cleanup_();
     }
   }

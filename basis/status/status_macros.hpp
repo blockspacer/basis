@@ -374,9 +374,10 @@ class MakeErrorStream {
 #define MAKE_ERROR_HERE(from_here, ...) \
   ::util::status_macros::MakeErrorStream(from_here.file_name(), from_here.line_number(), ##__VA_ARGS__)
 
-// Return a new error based on an existing error, with an additional string
-// appended.  Otherwise behaves like MAKE_ERROR, including logging the error by
-// default.
+// Return a new error based on an existing error,
+// with an additional string appended.
+// Otherwise behaves like MAKE_ERROR,
+// including logging the error by default.
 // Requires !status.ok().
 // Example:
 //   status = APPEND_ERROR(status) << ", more details";
@@ -396,7 +397,7 @@ class MakeErrorStream {
 
 // A macro for simplify checking and logging a condition. The error code
 // return here is the one that matches the most of the uses.
-#define CHECK_RETURN_IF_FALSE(cond) \
+#define RETURN_ERR_IF_FALSE(cond) \
   if (LIKELY(cond)) {    \
   } else /* NOLINT */               \
     return MAKE_ERROR(ERR_INVALID_PARAM) << "'" << #cond << "' is false. "

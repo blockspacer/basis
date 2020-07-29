@@ -116,8 +116,8 @@ class Status final {
   // Instead of:
   //   if (overall_status.ok()) overall_status = new_status
   // Use:
-  //   overall_status.Update(new_status);
-  void Update(const Status& new_status);
+  //   overall_status.UpdateIfOk(new_status);
+  void UpdateIfOk(const Status& new_status);
 
   // Clear this status object to contain the OK code and no error message.
   void Clear();
@@ -331,7 +331,7 @@ inline Status& Status::operator=(const Status& x) {
   return *this;
 }
 
-inline void Status::Update(const Status& new_status) {
+inline void Status::UpdateIfOk(const Status& new_status) {
   if (ok()) {
     *this = new_status;
   }

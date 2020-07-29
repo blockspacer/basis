@@ -101,6 +101,10 @@ class basis_conan_project(conan_build_helper.CMakePackage):
 
     settings = "os", "compiler", "build_type", "arch"
 
+    # sets cmake variables required to use clang 10 from conan
+    def _is_compile_with_llvm_tools_enabled(self):
+      return self._environ_option("COMPILE_WITH_LLVM_TOOLS", default = 'false')
+
     # installs clang 10 from conan
     def _is_llvm_tools_enabled(self):
       return self._environ_option("ENABLE_LLVM_TOOLS", default = 'false')
@@ -118,6 +122,9 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         if lower_build_type != "release" and not self._is_llvm_tools_enabled():
             self.output.warn('enable llvm_tools for Debug builds')
 
+        if self._is_compile_with_llvm_tools_enabled() and not self._is_llvm_tools_enabled():
+            raise ConanInvalidConfiguration("llvm_tools must be enabled")
+
         if self.options.enable_valgrind:
             self.options["chromium_base"].enable_valgrind = True
 
@@ -130,15 +137,31 @@ class basis_conan_project(conan_build_helper.CMakePackage):
 
         if self.options.enable_ubsan:
             self.options["chromium_base"].enable_ubsan = True
+            self.options["chromium_libxml"].enable_ubsan = True
+            self.options["boost"].enable_ubsan = True
+            if self._is_tests_enabled():
+              self.options["conan_gtest"].enable_ubsan = True
 
         if self.options.enable_asan:
             self.options["chromium_base"].enable_asan = True
+            self.options["chromium_libxml"].enable_asan = True
+            self.options["boost"].enable_asan = True
+            if self._is_tests_enabled():
+              self.options["conan_gtest"].enable_asan = True
 
         if self.options.enable_msan:
             self.options["chromium_base"].enable_msan = True
+            self.options["chromium_libxml"].enable_msan = True
+            self.options["boost"].enable_msan = True
+            if self._is_tests_enabled():
+              self.options["conan_gtest"].enable_msan = True
 
         if self.options.enable_tsan:
             self.options["chromium_base"].enable_tsan = True
+            self.options["chromium_libxml"].enable_tsan = True
+            self.options["boost"].enable_tsan = True
+            if self._is_tests_enabled():
+              self.options["conan_gtest"].enable_tsan = True
 
     def build_requirements(self):
         self.build_requires("cmake_platform_detection/master@conan/stable")
@@ -178,7 +201,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         self.requires("chromium_libxml/master@conan/stable")
 
         # see use_test_support option in base
-        self.requires("gtest/[>=1.8.0]@bincrafters/stable")
+        self.requires("conan_gtest/release-1.10.0@conan/stable")
 
         # TODO: support doctest
         #self.requires("doctest/[>=2.3.8]")
@@ -230,6 +253,8 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             cmake.definitions["BUILD_SHARED_LIBS"] = "ON"
 
         self.add_cmake_option(cmake, "ENABLE_TESTS", self._is_tests_enabled())
+
+        self.add_cmake_option(cmake, "COMPILE_WITH_LLVM_TOOLS", self._is_compile_with_llvm_tools_enabled())
 
         cmake.configure(build_folder=self._build_subfolder)
 

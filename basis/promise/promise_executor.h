@@ -52,7 +52,7 @@ class BASE_EXPORT PromiseExecutor {
         : vtable_(other.vtable_), storage_(other.storage_) {
 #if DCHECK_IS_ON()
       other.vtable_ = nullptr;
-#endif
+#endif // DCHECK_IS_ON()
     }
 
     Data(const Data& other) = delete;
@@ -130,7 +130,7 @@ class BASE_EXPORT PromiseExecutor {
   ArgumentPassingType RejectArgumentPassingType() const;
   bool CanResolve() const;
   bool CanReject() const;
-#endif
+#endif // DCHECK_IS_ON()
 
   // Invokes the associate callback for |promise|. If the callback was
   // cancelled it should call |promise->OnCanceled()|. If the callback
@@ -144,6 +144,29 @@ class BASE_EXPORT PromiseExecutor {
 
  private:
   struct VTable {
+    // constexpr constructor because |vtable_| constexpr variable
+    // i.e. `constexpr variable cannot have non-literal type`
+    constexpr VTable(
+      void (*destructor_)(void* self)
+      , PrerequisitePolicy prerequsite_policy_
+      , bool (*is_cancelled_)(const void* self)
+#if DCHECK_IS_ON()
+      , ArgumentPassingType (*resolve_argument_passing_type_)(const void* self)
+      , ArgumentPassingType (*reject_argument_passing_type_)(const void* self)
+      , bool (*can_resolve_)(const void* self)
+      , bool (*can_reject_)(const void* self)
+#endif // DCHECK_IS_ON()
+      , void (*execute_)(void* self, AbstractPromise* promise))
+      : destructor(destructor_)
+      , prerequsite_policy(prerequsite_policy_)
+      , is_cancelled(is_cancelled_)
+      , resolve_argument_passing_type(resolve_argument_passing_type_)
+      , reject_argument_passing_type(reject_argument_passing_type_)
+      , can_resolve(can_resolve_)
+      , can_reject(can_reject_)
+      , execute(execute_)
+    {}
+
     void (*destructor)(void* self);
     PrerequisitePolicy prerequsite_policy;
     bool (*is_cancelled)(const void* self);
@@ -152,7 +175,7 @@ class BASE_EXPORT PromiseExecutor {
     ArgumentPassingType (*reject_argument_passing_type)(const void* self);
     bool (*can_resolve)(const void* self);
     bool (*can_reject)(const void* self);
-#endif
+#endif // DCHECK_IS_ON()
     void (*execute)(void* self, AbstractPromise* promise);
 
    private:
@@ -196,7 +219,7 @@ class BASE_EXPORT PromiseExecutor {
     static bool CanReject(const void* self) {
       return static_cast<const DerivedType*>(self)->CanReject();
     }
-#endif
+#endif // DCHECK_IS_ON()
 
     static void Execute(void* self, AbstractPromise* promise) {
       return static_cast<DerivedType*>(self)->Execute(promise);
@@ -211,7 +234,7 @@ class BASE_EXPORT PromiseExecutor {
         &VTableHelper::RejectArgumentPassingType,
         &VTableHelper::CanResolve,
         &VTableHelper::CanReject,
-#endif
+#endif // DCHECK_IS_ON()
         &VTableHelper::Execute,
     };
   };

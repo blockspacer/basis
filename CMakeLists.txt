@@ -33,11 +33,24 @@ if (CONAN_AUTO_INSTALL)
   else()
     set(conan_build_type "Debug")
   endif()
+  # You can use `EXTRA_CONAN_AUTO_INSTALL_OPTIONS` like so:
+  # cmake .. -DCONAN_AUTO_INSTALL=ON -DEXTRA_CONAN_AUTO_INSTALL_OPTIONS="--build missing" -DCMAKE_BUILD_TYPE=Debug
   conan_auto_install(
-    CONAN_OPTIONS "--profile=${CONAN_PROFILE} -s build_type=${conan_build_type} -s llvm_tools:build_type=Release --build=missing -o openssl:shared=True"
+    CONAN_OPTIONS "--profile=${CONAN_PROFILE} -s build_type=${conan_build_type} -s llvm_tools:build_type=Release --build=missing -o openssl:shared=True ${EXTRA_CONAN_AUTO_INSTALL_OPTIONS}"
     #FORCE
   )
 endif()
+
+if(COMPILE_WITH_LLVM_TOOLS)
+  message(STATUS
+    "Using COMPILE_WITH_LLVM_TOOLS")
+  # do not check compile in conanbuildinfo
+  # cause we will switch to other compiler after conan install
+  set(CONAN_DISABLE_CHECK_COMPILER ON)
+else(COMPILE_WITH_LLVM_TOOLS)
+  message(STATUS
+    "Disabled COMPILE_WITH_LLVM_TOOLS")
+endif(COMPILE_WITH_LLVM_TOOLS)
 
 if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/)
@@ -72,6 +85,32 @@ find_package(cmake_helper_utils REQUIRED)
 if(ENABLE_MSAN OR ENABLE_TSAN OR ENABLE_ASAN OR ENABLE_UBSAN)
   find_package(cmake_sanitizers REQUIRED)
 endif()
+
+if(ENABLE_MSAN)
+  add_msan_flags()
+endif(ENABLE_MSAN)
+
+if(ENABLE_TSAN)
+  add_tsan_flags()
+endif(ENABLE_TSAN)
+
+if(ENABLE_ASAN)
+  add_asan_flags()
+endif(ENABLE_ASAN)
+
+if(ENABLE_UBSAN)
+  add_ubsan_flags()
+endif(ENABLE_UBSAN)
+
+if(COMPILE_WITH_LLVM_TOOLS)
+  message(STATUS
+    "Using COMPILE_WITH_LLVM_TOOLS")
+  # force change CMAKE_*_COMPILER and CMAKE_LINKER to clang from conan
+  compile_with_llvm_tools() # from cmake_helper_utils (conan package)
+else(COMPILE_WITH_LLVM_TOOLS)
+  message(STATUS
+    "Disabled COMPILE_WITH_LLVM_TOOLS")
+endif(COMPILE_WITH_LLVM_TOOLS)
 
 #if(ENABLE_ASAN
 #   OR ENABLE_TSAN

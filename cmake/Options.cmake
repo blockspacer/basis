@@ -15,6 +15,9 @@ option(ENABLE_VALGRIND
 option(ENABLE_VALGRIND_TESTS
   "Enable valgrind for unit tests" OFF)
 
+option(COMPILE_WITH_LLVM_TOOLS
+  "Enable clang from llvm_tools (conan package)" OFF)
+
 # see https://github.com/Ericsson/codechecker/blob/master/tools/report-converter/README.md#undefined-behaviour-sanitizer
 # NOTE: Compile with -g and -fno-omit-frame-pointer
 # to get proper debug information in your binary.

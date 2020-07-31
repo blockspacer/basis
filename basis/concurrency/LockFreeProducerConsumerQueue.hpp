@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <memory>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <cstddef>
@@ -45,6 +44,18 @@ constexpr auto kIsMobile = false;
 constexpr auto kIsLinux = true;
 #else
 constexpr auto kIsLinux = false;
+#endif
+
+#if __cpp_exceptions
+#include <exception>
+#include <stdexcept>
+# define __try      try
+# define __catch(X) catch(X)
+# define __throw_exception_again throw
+#else
+# define __try      if (true)
+# define __catch(X) if (false)
+# define __throw_exception_again
 #endif
 
 namespace basis {
@@ -195,7 +206,11 @@ struct LockFreeProducerConsumerQueue {
         writeIndex_(0) {
     assert(size >= 2);
     if (!records_) {
+#if __cpp_exceptions
       throw std::bad_alloc();
+#else
+      assert(false);
+#endif
     }
   }
 

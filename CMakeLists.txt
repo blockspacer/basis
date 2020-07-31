@@ -138,9 +138,7 @@ else()
 endif()
 
 find_package(chromium_base REQUIRED)
-if(TARGET chromium_base::chromium_base-static)
-  set(base_LIB chromium_base::chromium_base-static)
-else()
+if(NOT TARGET ${base_LIB})
   message(FATAL_ERROR "not supported: using system provided chromium_base library")
 endif()
 
@@ -209,6 +207,7 @@ target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
   #BOOST_NO_EXCEPTIONS
   # TODO: DISABLE_DOCTEST
   DISABLE_DOCTEST=1
+  BOOST_ASIO_STANDALONE=1
 )
 
 # without rtti you will get error:

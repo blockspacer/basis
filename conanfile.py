@@ -139,6 +139,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_base"].enable_ubsan = True
             self.options["chromium_libxml"].enable_ubsan = True
             self.options["boost"].enable_ubsan = True
+            self.options["corrade"].enable_ubsan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_ubsan = True
 
@@ -146,6 +147,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_base"].enable_asan = True
             self.options["chromium_libxml"].enable_asan = True
             self.options["boost"].enable_asan = True
+            self.options["corrade"].enable_asan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_asan = True
 
@@ -153,6 +155,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_base"].enable_msan = True
             self.options["chromium_libxml"].enable_msan = True
             self.options["boost"].enable_msan = True
+            self.options["corrade"].enable_msan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_msan = True
 
@@ -160,6 +163,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_base"].enable_tsan = True
             self.options["chromium_libxml"].enable_tsan = True
             self.options["boost"].enable_tsan = True
+            self.options["corrade"].enable_tsan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_tsan = True
 
@@ -188,7 +192,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
     def requirements(self):
         self.requires("boost/1.71.0@dev/stable")
 
-        self.requires("corrade/2020.06@magnum/stable")
+        self.requires("corrade/v2020.06@conan/stable")
 
         # \note dispatcher must be thread-safe,
         # so use entt after patch https://github.com/skypjack/entt/issues/449

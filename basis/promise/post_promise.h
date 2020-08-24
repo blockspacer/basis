@@ -229,12 +229,12 @@ scoped_refptr<base::internal::AbstractPromise>
     base::internal::AbstractPromise::CreateNoPrerequisitePromise(
         from_here, base::RejectPolicy::kMustCatchRejection,
         base::internal::DependentList::ConstructUnresolved(),
-        std::move(base::internal::PromiseExecutor::Data(
+        base::internal::PromiseExecutor::Data(
           base::in_place_type_t<
               base::internal::PostTaskExecutor<TaskReturnType>>(),
           base::internal::ToCallbackBase(
             std::move(task)
-          ))));
+          )));
   return promise;
 }
 

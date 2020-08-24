@@ -132,6 +132,31 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/log/Logger.cpp
   ${BASIS_DIR}/log/Logger.hpp
   #
-  ${BASIS_DIR}/task_run/task_run_util.cc
-  ${BASIS_DIR}/task_run/task_run_util.hpp
+  ${BASIS_DIR}/task/task_util.cc
+  ${BASIS_DIR}/task/task_util.hpp
+  #
+  ${BASIS_DIR}/task/periodic_check.cc
+  ${BASIS_DIR}/task/periodic_check.hpp
+  #
+  ${BASIS_DIR}/move_only.hpp
+  #
+  ${BASIS_DIR}/unowned_ptr.hpp
+  #
+  ${BASIS_DIR}/unowned_ref.hpp
+  #
+  ${BASIS_DIR}/promise_collection.hpp
+  #
+  ${BASIS_DIR}/ECS/simulation_registry.cc
+  ${BASIS_DIR}/ECS/simulation_registry.hpp
+  #
+  ${BASIS_DIR}/ECS/global_context.cc
+  ${BASIS_DIR}/ECS/global_context.hpp
+  #
+  ${BASIS_DIR}/ECS/unsafe_context.cc
+  ${BASIS_DIR}/ECS/unsafe_context.hpp
+  #
+  ${BASIS_DIR}/ECS/sequence_local_context.cc
+  ${BASIS_DIR}/ECS/sequence_local_context.hpp
+  #
+  ${BASIS_DIR}/ECS/ecs.hpp
 )

@@ -61,22 +61,6 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         "chromium_base:use_alloc_shim=True",
         # chromium_tcmalloc
         "chromium_tcmalloc:use_alloc_shim=True",
-        # boost
-        "boost:without_atomic=True",
-        "boost:without_chrono=True",
-        "boost:without_container=True",
-        "boost:without_context=True",
-        "boost:without_coroutine=True",
-        "boost:without_graph=True",
-        "boost:without_graph_parallel=True",
-        "boost:without_log=True",
-        "boost:without_math=True",
-        "boost:without_mpi=True",
-        "boost:without_serialization=True",
-        "boost:without_test=True",
-        "boost:without_timer=True",
-        "boost:without_type_erasure=True",
-        "boost:without_wave=True",
     )
 
     # Custom attributes for Bincrafters recipe conventions
@@ -134,6 +118,13 @@ class basis_conan_project(conan_build_helper.CMakePackage):
            or self.options.enable_tsan:
             if not self._is_llvm_tools_enabled():
                 raise ConanInvalidConfiguration("sanitizers require llvm_tools")
+
+        if self.options.enable_ubsan \
+           or self.options.enable_asan \
+           or self.options.enable_msan \
+           or self.options.enable_tsan:
+            if not self.options["boost"].no_exceptions:
+                raise ConanInvalidConfiguration("sanitizers require boost without exceptions")
 
         if self.options.enable_ubsan:
             self.options["chromium_base"].enable_ubsan = True

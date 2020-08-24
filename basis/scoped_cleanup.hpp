@@ -48,7 +48,7 @@ namespace util {
 //  ScopedCleanup bump{[fd]() { ::close(fd); }};
 //
 // This class is thread-compatible.
-class ScopedCleanup {
+class ScopedCleanup final {
  public:
   // Makes a ScopedCleanup from a callback function.  The args parameters are
   // copied and bound to the function; the result must be a nullary function.
@@ -83,7 +83,7 @@ class ScopedCleanup {
     return *this;
   }
 
-  virtual ~ScopedCleanup() {
+  ~ScopedCleanup() {
     if (active_) {
       DCHECK(cleanup_);
       cleanup_();

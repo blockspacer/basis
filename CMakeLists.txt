@@ -64,7 +64,7 @@ if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
     NO_OUTPUT_DIRS
     )
 else()
-  message (FATAL_ERROR "must use conan")
+  message (FATAL_ERROR "must use conan: ${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
 endif()
 
 find_package( EXPAT REQUIRED )
@@ -134,12 +134,12 @@ find_package(chromium_build_util REQUIRED)
 if(TARGET chromium_build_util::chromium_build_util-static)
   set(build_util_LIB "chromium_build_util::chromium_build_util-static")
 else()
-  message(FATAL_ERROR "not supported: using system provided chromium_build_util library")
+  message(FATAL_ERROR "not supported ${build_util_LIB}: using system provided chromium_build_util library")
 endif()
 
 find_package(chromium_base REQUIRED)
 if(NOT TARGET ${base_LIB})
-  message(FATAL_ERROR "not supported: using system provided chromium_base library")
+  message(FATAL_ERROR "not supported ${base_LIB}: using system provided chromium_base library")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/)
@@ -210,21 +210,8 @@ target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
   BOOST_ASIO_STANDALONE=1
 )
 
-# without rtti you will get error:
-# ERROR: boost::bad_any_cast: failed conversion using boost::any_cast
-set_source_files_properties(
-  ${BASIS_DIR}/boost_command_line.hpp
-  ${BASIS_DIR}/boost_command_line.cc
-  ${BASIS_DIR}/cmd_util.hpp
-  ${BASIS_DIR}/cmd_util.cc
-  PROPERTIES
-    COMPILE_FLAGS
-      -frtti)
-
-target_link_libraries(${STATIC_LIB_NAME} PRIVATE
+target_link_libraries(${STATIC_LIB_NAME} PUBLIC
   ${USED_3DPARTY_LIBS}
-  #CONAN_PKG::chromium_base
-  #CONAN_PKG::chromium_build_util
 )
 
 # TODO: DISABLE_DOCTEST

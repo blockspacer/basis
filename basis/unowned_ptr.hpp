@@ -78,7 +78,10 @@ public:
 
     checkForLifetimeIssues();
     if (*this != other) {
-      pObj_ = other.Get();
+      if(pObj_ != other.Get())
+      {
+        pObj_ = other.Get();
+      }
       DCHECK(pObj_);
     }
   }
@@ -91,7 +94,10 @@ public:
 
     checkForLifetimeIssues();
     if (*this != other) {
-      pObj_ = other.Get();
+      if(pObj_ != other.Get())
+      {
+        pObj_ = other.Get();
+      }
       DCHECK(pObj_);
     }
     return *this;
@@ -103,9 +109,11 @@ public:
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
 
-    DCHECK(that);
     checkForLifetimeIssues();
-    pObj_ = that;
+    if(pObj_ != that)
+    {
+      pObj_ = that;
+    }
     return *this;
   }
 
@@ -117,7 +125,10 @@ public:
 
     checkForLifetimeIssues();
     if (*this != that) {
-      pObj_ = that.Get();
+      if(pObj_ != that.Get())
+      {
+        pObj_ = that.Get();
+      }
       DCHECK(pObj_);
     }
     return *this;
@@ -171,7 +182,7 @@ public:
   }
 
   /// \note Do not do stupid things like
-  /// `delete unownedPtr.Get();`
+  /// `delete unownedPtr.Get();` // WRONG
   NOT_THREAD_SAFE_FUNCTION()
   T* Get() const
   {

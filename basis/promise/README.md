@@ -660,45 +660,6 @@ Promises::Race(promises)
        }));
 ```
 
-## TODO
-
-add https://chromium.googlesource.com/chromium/src/+/a99236876d4f2dca9046645c70d06be3da9fed7f/base/promise/race_promise_executor.h
-see PromiseExecutor::PrerequisitePolicy::kAny
-
-```cpp
-  scoped_refptr<AbstractPromise> p1 =
-      ThenPromise(FROM_HERE, p0)
-          .With(BindOnce(
-              [](scoped_refptr<AbstractPromise> p2, AbstractPromise* p) {
-                p->emplace(std::move(p2));
-              },
-              p2))
-          .With(PrerequisitePolicy::kAny);
-```
-
-or better use
-
-```cpp
-  PromiseSettingsBuilder AnyPromise(
-      Location from_here,
-      std::vector<internal::DependentList::Node> prerequisite_list) {
-    PromiseSettingsBuilder builder(
-        from_here, std::make_unique<AbstractPromise::AdjacencyList>(
-                       std::move(prerequisite_list)));
-    builder.With(PrerequisitePolicy::kAny)
-        .With(BindOnce([](AbstractPromise* p) {
-          AbstractPromise* first_settled = p->GetFirstSettledPrerequisite();
-          if (first_settled && first_settled->IsRejected()) {
-            p->emplace(Rejected<void>());
-            return;
-          }
-
-          p->emplace(Resolved<void>());
-        }));
-    return builder;
-  }
-```
-
 ```cpp
 RejectPolicy::kCatchNotRequired or by Posting a Task with a kCatchNotRequired trait:
 

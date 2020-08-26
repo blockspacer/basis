@@ -110,9 +110,9 @@ void
   PeriodicCheckUntil::startPeriodicTimer(
     const CheckPeriod& checkPeriod)
 {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  LOG_CALL(DVLOG(99));
 
-  LOG(INFO) << "(PeriodicCheckUntil) startup";
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   DCHECK(!timer_.IsRunning());
 
@@ -129,9 +129,9 @@ void
   PeriodicCheckUntil::restart_timer(
     const CheckPeriod& checkPeriod)
 {
-  DCHECK(task_runner_->RunsTasksInCurrentSequence());
+  LOG_CALL(DVLOG(99));
 
-  LOG(INFO) << "(PeriodicCheckUntil) restart_timer";
+  DCHECK(task_runner_->RunsTasksInCurrentSequence());
 
   // It's safe to destroy or restart Timer on another sequence after Stop().
   timer_.Stop();
@@ -155,13 +155,12 @@ void
 
   DCHECK(task_runner_->RunsTasksInCurrentSequence());
 
+  DCHECK(checkNotifyTask_);
   if(checkNotifyTask_.Run())
   {
-    LOG(INFO)
-      << "application is quitting...";
-
     NotifyObservers();
 
+    DCHECK(checkShutdownTask_);
     if(checkShutdownTask_.Run())
     {
       shutdown();
@@ -175,7 +174,7 @@ void
 void
   PeriodicCheckUntil::shutdown()
 {
-  LOG(INFO) << "(PeriodicCheckUntil) shutdown";
+  LOG_CALL(DVLOG(99));
 
   if(timer_.IsRunning())
   {
@@ -202,6 +201,7 @@ PeriodicCheckUntilTime::PeriodicCheckUntilTime(
             = base::Time::Now() > endTime;
           if(isExpired)
           {
+            DCHECK(expiredCallback);
             expiredCallback.Run();
 
             // will notify observers
@@ -277,6 +277,8 @@ void setPeriodicTimeoutCheckerOnSequence(
   , const PeriodicCheckUntil::CheckPeriod& checkPeriod
   , const std::string& errorText)
 {
+  LOG_CALL(DVLOG(99));
+
   DCHECK(task_runner);
 
   base::RepeatingClosure errorCallback
@@ -313,6 +315,8 @@ void setPeriodicTimeoutCheckerOnSequence(
 
 void unsetPeriodicTimeoutCheckerOnSequence()
 {
+  LOG_CALL(DVLOG(99));
+
   auto sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         FROM_HERE, base::SequencedTaskRunnerHandle::Get());

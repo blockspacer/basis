@@ -21,7 +21,8 @@ namespace util {
 // 3. Can construct from std::ref and std::cref
 //    (like std::reference_wrapper)
 //
-// 4. Assignment do NOT rebind the internal pointer
+// 4. Assignment can change internal pointer,
+//    but only if UnownedRef was not initialized
 //    (NOT like std::reference_wrapper)
 //
 // 5. Because |UnownedRef| expected to be NOT modified after construction,
@@ -42,12 +43,17 @@ public:
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
 
-    // can be changed only if not initialized
-    DCHECK(!pObj_);
+    DCHECK(!pObj_)
+      << "UnownedRef construction can change internal pointer,"
+      << " but only if UnownedRef was not initialized."
+      << " You may want to create new UnownedRef.";
 
     checkForLifetimeIssues();
     if (*this != other) {
-      pObj_ = other.Get();
+      if(pObj_ != other.Get())
+      {
+        pObj_ = other.Get();
+      }
       DCHECK(pObj_);
     }
   }
@@ -58,12 +64,16 @@ public:
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
 
-    // can be changed only if not initialized
-    DCHECK(!pObj_);
+    DCHECK(!pObj_)
+      << "UnownedRef assignment can change internal pointer,"
+      << " but only if UnownedRef was not initialized."
+      << " You may want to create new UnownedRef.";
 
     checkForLifetimeIssues();
     if (*this != that) {
-      pObj_ = that.Get();
+      if(pObj_ != that.Get()) {
+        pObj_ = that.Get();
+      }
       DCHECK(pObj_);
     }
     return *this;
@@ -102,6 +112,28 @@ public:
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
 
     checkForLifetimeIssues();
+  }
+
+  // Use to change stored |UnownedRef| only in specific
+  // places like move assignment operator.
+  // Avoid `reset()` if you can
+  // because |UnownedRef| expected
+  // to be NOT changed after construction
+  // (but some patterns like object pool require
+  // possibility of modification to avoid allocations).
+  NOT_THREAD_SAFE_FUNCTION()
+  void reset(
+    UNOWNED_LIFETIME(T*) that)
+  {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
+    // it is reference, so can not be nullptr
+    DCHECK(that);
+
+    checkForLifetimeIssues();
+    if(pObj_ != that) {
+      pObj_ = that;
+    }
   }
 
   bool operator==(const UnownedRef& that) const
@@ -150,7 +182,7 @@ public:
   }
 
   /// \note Do not do stupid things like
-  /// `delete unownedRef.Get();`
+  /// `delete unownedRef.Get();` // WRONG
   T* Get() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);

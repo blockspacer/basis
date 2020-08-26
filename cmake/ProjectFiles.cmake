@@ -158,5 +158,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/ECS/sequence_local_context.cc
   ${BASIS_DIR}/ECS/sequence_local_context.hpp
   #
+  ${BASIS_DIR}/ECS/asio_registry.cc
+  ${BASIS_DIR}/ECS/asio_registry.hpp
+  #
   ${BASIS_DIR}/ECS/ecs.hpp
 )

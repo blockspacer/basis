@@ -11,6 +11,8 @@
 #include <base/synchronization/waitable_event.h>
 #include <base/observer_list_threadsafe.h>
 
+#include <boost/asio.hpp>
+
 #include <vector>
 #include <optional>
 
@@ -103,5 +105,25 @@ private:
  private:
   DISALLOW_COPY_AND_ASSIGN(PeriodicTaskExecutor);
 };
+
+// executes task periodically on |task_runner|
+/// \note do not forget to call |startPeriodicTaskExecutorOnSequence|
+void setPeriodicTaskExecutorOnSequence(
+  const base::Location& from_here
+  , scoped_refptr<base::SequencedTaskRunner> task_runner
+  , base::RepeatingClosure updateCallback);
+
+// executes task periodically on |task_runner|,
+// but also calls |::boost::asio::post| on |executor|
+void setPeriodicTaskExecutorOnAsioExecutor(
+  const base::Location& from_here
+  , scoped_refptr<base::SequencedTaskRunner> task_runner
+  , const ::boost::asio::executor& executor
+  , base::RepeatingClosure updateCallback);
+
+void startPeriodicTaskExecutorOnSequence(
+  const base::TimeDelta& endTimeDelta);
+
+void unsetPeriodicTaskExecutorOnSequence();
 
 } // namespace basis

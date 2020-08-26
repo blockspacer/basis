@@ -17,11 +17,18 @@
 #include <base/trace_event/trace_event.h>
 #include <base/compiler_specific.h>
 
+#include <basis/ECS/sequence_local_context.hpp>
 #include <basis/promise/promise.h>
 #include <basis/promise/helpers.h>
 #include <basis/promise/post_task_executor.h>
 #include <basis/trace_event_util.hpp>
 #include <basis/application/application_configuration.hpp>
+
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/asio/io_context_strand.hpp>
+
+#include <boost/beast.hpp>
 
 namespace basis {
 
@@ -49,9 +56,9 @@ void
   PeriodicTaskExecutor::startPeriodicTimer(
     const base::TimeDelta& checkPeriod)
 {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  LOG_CALL(DVLOG(99));
 
-  LOG(INFO) << "(PeriodicTaskExecutor) startup";
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   DCHECK(!timer_.IsRunning());
 
@@ -68,9 +75,9 @@ void
   PeriodicTaskExecutor::restart_timer(
     const base::TimeDelta& checkPeriod)
 {
-  DCHECK(task_runner_->RunsTasksInCurrentSequence());
+  LOG_CALL(DVLOG(99));
 
-  LOG(INFO) << "(PeriodicTaskExecutor) restart_timer";
+  DCHECK(task_runner_->RunsTasksInCurrentSequence());
 
   // It's safe to destroy or restart Timer on another sequence after Stop().
   timer_.Stop();
@@ -89,18 +96,121 @@ void
   TRACE_EVENT0("headless"
     , "PeriodicTaskExecutor_runOnce");
 
+  DVLOG(9999)
+    << "(PeriodicTaskExecutor) runOnce...";
+
   DCHECK(task_runner_->RunsTasksInCurrentSequence());
 
+  DCHECK(periodic_task_);
   periodic_task_.Run();
+
+  DVLOG(9999)
+    << "(PeriodicTaskExecutor) finished runOnce...";
 }
 
 void
   PeriodicTaskExecutor::shutdown()
 {
+  LOG_CALL(DVLOG(99));
+
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   LOG(INFO) << "(PeriodicTaskExecutor) shutdown";
   timer_.Stop();
+}
+
+void setPeriodicTaskExecutorOnSequence(
+  const base::Location& from_here
+  , scoped_refptr<base::SequencedTaskRunner> task_runner
+  , base::RepeatingClosure updateCallback)
+{
+  LOG_CALL(DVLOG(99));
+
+  DCHECK(task_runner);
+
+  auto sequenceLocalContext
+    = ECS::SequenceLocalContext::getSequenceLocalInstance(
+        from_here, task_runner);
+
+  DCHECK(sequenceLocalContext);
+  PeriodicTaskExecutor& result
+    = sequenceLocalContext->set_once<PeriodicTaskExecutor>(
+        from_here
+        , "Timeout.PeriodicTaskExecutor." + from_here.ToString()
+        , task_runner
+        , std::move(updateCallback)
+      );
+  ignore_result(result);
+}
+
+void setPeriodicTaskExecutorOnAsioExecutor(
+  const base::Location& from_here
+  , scoped_refptr<base::SequencedTaskRunner> task_runner
+  , const ::boost::asio::executor& executor
+  , base::RepeatingClosure updateCallback)
+{
+  LOG_CALL(DVLOG(99));
+
+  DCHECK(task_runner);
+
+  setPeriodicTaskExecutorOnSequence(
+    from_here
+    , task_runner
+    , base::BindRepeating(
+        []
+        (base::RepeatingClosure updateCallback
+         , const ::boost::asio::executor& executor)
+        {
+          LOG_CALL(DVLOG(99));
+          DCHECK(executor);
+          ::boost::asio::post(
+            executor
+            , std::bind(
+              []
+              (base::RepeatingClosure updateCallback)
+              {
+                LOG_CALL(DVLOG(99));
+                DCHECK(updateCallback);
+                updateCallback.Run();
+              }
+              , COPIED(updateCallback)
+            )
+          );
+          LOG_CALL(DVLOG(99));
+        }
+        , COPIED(updateCallback)
+        , COPIED(executor)
+      )
+  );
+}
+
+void startPeriodicTaskExecutorOnSequence(
+  const base::TimeDelta& endTimeDelta)
+{
+  LOG_CALL(DVLOG(99));
+
+  auto sequenceLocalContext
+    = ECS::SequenceLocalContext::getSequenceLocalInstance(
+        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+
+  DCHECK(sequenceLocalContext);
+  PeriodicTaskExecutor& periodicTaskExecutor
+    = sequenceLocalContext->ctx<PeriodicTaskExecutor>(FROM_HERE);
+
+  periodicTaskExecutor.startPeriodicTimer(
+    base::TimeDelta::FromMilliseconds(500));
+}
+
+void unsetPeriodicTaskExecutorOnSequence()
+{
+  LOG_CALL(DVLOG(99));
+
+  auto sequenceLocalContext
+    = ECS::SequenceLocalContext::getSequenceLocalInstance(
+        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+
+  DCHECK(sequenceLocalContext);
+  sequenceLocalContext->unset<PeriodicTaskExecutor>(FROM_HERE);
 }
 
 } // namespace basis

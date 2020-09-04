@@ -19,6 +19,7 @@
 #include <base/memory/weak_ptr.h>
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
+#include <base/rvalue_cast.h>
 
 #include <vector>
 #include <string>
@@ -47,6 +48,35 @@ class UnsafeTypeContext
 
   ~UnsafeTypeContext();
 
+  UnsafeTypeContext(
+    UnsafeTypeContext&& other)
+    : UnsafeTypeContext()
+    {
+      vars_ = base::rvalue_cast(other.vars_);
+
+      /// \note do not move |sequence_checker_|
+      DETACH_FROM_SEQUENCE(sequence_checker_);
+    }
+
+  // Move assignment operator
+  //
+  // MOTIVATION
+  //
+  // To use type as ECS component
+  // it must be `move-constructible` and `move-assignable`
+  UnsafeTypeContext& operator=(UnsafeTypeContext&& rhs)
+  {
+    if (this != &rhs)
+    {
+      vars_ = base::rvalue_cast(rhs.vars_);
+
+      /// \note do not move |sequence_checker_|
+      DETACH_FROM_SEQUENCE(sequence_checker_);
+    }
+
+    return *this;
+  }
+
   /*! @brief Alias declaration for type identifiers. */
   using id_type = ENTT_ID_TYPE;
 
@@ -73,7 +103,7 @@ class UnsafeTypeContext
   Type & set_var(const std::string& debug_name, Args &&... args)
   {
     unset_var<Type>();
-    vars.push_back(
+    vars_.push_back(
       variable_data
       {
         entt::type_info<Type>::id()
@@ -91,7 +121,7 @@ class UnsafeTypeContext
 #if !DCHECK_IS_ON()
     ignore_result(debug_name);
 #endif // DCHECK_IS_ON()
-    return *static_cast<Type *>(vars.back().value.get());
+    return *static_cast<Type *>(vars_.back().value.get());
   }
 
   /**
@@ -101,10 +131,10 @@ class UnsafeTypeContext
   template<typename Type>
   void unset_var()
   {
-    vars.erase(
+    vars_.erase(
       std::remove_if(
-        vars.begin()
-        , vars.end()
+        vars_.begin()
+        , vars_.end()
         , [](auto &&var) {
 #if DCHECK_IS_ON()
             if(var.type_id == entt::type_info<Type>::id())
@@ -117,7 +147,7 @@ class UnsafeTypeContext
             return var.type_id == entt::type_info<Type>::id();
           }
       )
-      , vars.end()
+      , vars_.end()
     );
   }
 
@@ -153,13 +183,13 @@ class UnsafeTypeContext
   const Type * try_ctx_var() const
   {
     auto it = std::find_if(
-      vars.cbegin()
-      , vars.cend()
+      vars_.cbegin()
+      , vars_.cend()
       , [](auto &&var)
         {
           return var.type_id == entt::type_info<Type>::id();
         });
-    return it == vars.cend()
+    return it == vars_.cend()
       ? nullptr
       : static_cast<const Type *>(it->value.get());
   }
@@ -226,29 +256,34 @@ class UnsafeTypeContext
   template<typename Func>
   void ctx_var(Func func) const
   {
-    for(auto pos = vars.size(); pos; --pos) {
-      func(vars[pos-1].type_id);
+    for(auto pos = vars_.size(); pos; --pos) {
+      func(vars_[pos-1].type_id);
     }
   }
 
-  std::vector<variable_data>& ref_vars()
+  std::vector<variable_data>& vars()
   {
-    return vars;
+    return vars_;
+  }
+
+  const std::vector<variable_data>& vars() const
+  {
+    return vars_;
   }
 
   size_t size() const
   {
-    return vars.size();
+    return vars_.size();
   }
 
   bool empty() const
   {
-    return vars.empty();
+    return vars_.empty();
   }
 
  private:
   // Stores objects in the context of the registry.
-  std::vector<variable_data> vars{};
+  std::vector<variable_data> vars_{};
 
   SEQUENCE_CHECKER(sequence_checker_);
 

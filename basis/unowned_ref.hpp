@@ -28,7 +28,7 @@ namespace util {
 // 5. Because |UnownedRef| expected to be NOT modified after construction,
 //    it is more thread-safe than |UnownedPtr|
 
-template <class T>
+template <class Type>
 class UnownedRef
 {
 public:
@@ -123,7 +123,7 @@ public:
   // possibility of modification to avoid allocations).
   NOT_THREAD_SAFE_FUNCTION()
   void reset(
-    UNOWNED_LIFETIME(T*) that)
+    UNOWNED_LIFETIME(Type*) that)
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
 
@@ -154,7 +154,7 @@ public:
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
-    return std::less<T*>()(Get(), that.Get());
+    return std::less<Type*>()(Get(), that.Get());
   }
 
   template <typename U>
@@ -173,7 +173,7 @@ public:
     return !(*this == &that);
   }
 
-  T& Ref() const
+  Type& Ref() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
@@ -183,14 +183,14 @@ public:
 
   /// \note Do not do stupid things like
   /// `delete unownedRef.Get();` // WRONG
-  T* Get() const
+  Type* Get() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     return pObj_;
   }
 
-  T& operator*() const
+  Type& operator*() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
@@ -198,7 +198,7 @@ public:
     return *pObj_;
   }
 
-  T* operator->() const
+  Type* operator->() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
@@ -219,22 +219,22 @@ private:
   }
 
   // Thread collision warner to ensure that API is not called concurrently.
-  // |pObj_| allowed to call from multiple threads, but not
+  // API allowed to call from multiple threads, but not
   // concurrently.
   DFAKE_MUTEX(debug_collision_warner_);
 
-  T* pObj_ = nullptr
+  Type* pObj_ = nullptr
     LIVES_ON(debug_collision_warner_);
 };
 
-template <typename T, typename U>
-inline bool operator==(const U& lhs, const UnownedRef<T>& rhs)
+template <typename Type, typename U>
+inline bool operator==(const U& lhs, const UnownedRef<Type>& rhs)
 {
   return rhs == lhs;
 }
 
-template <typename T, typename U>
-inline bool operator!=(const U& lhs, const UnownedRef<T>& rhs)
+template <typename Type, typename U>
+inline bool operator!=(const U& lhs, const UnownedRef<Type>& rhs)
 {
   return rhs != lhs;
 }

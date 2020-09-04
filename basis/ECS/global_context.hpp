@@ -20,6 +20,7 @@
 #include <base/memory/weak_ptr.h>
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
+#include <base/threading/thread_collision_warner.h>
 
 #include <vector>
 #include <string>
@@ -78,6 +79,8 @@ public:
 
   bool isLockedModification() const
   {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+
     return locked_.load();
   }
 
@@ -96,6 +99,8 @@ public:
   Component& ctx_locked(
     const base::Location& from_here)
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     /// \note no thread-safety checks
     DCHECK(locked_.load())
       << "Unable to use LOCKED global context from "
@@ -118,6 +123,8 @@ public:
   bool try_ctx_locked(
     const base::Location& from_here)
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     /// \note no thread-safety checks
     DCHECK(locked_.load())
       << "Unable to use LOCKED global context from "
@@ -146,6 +153,8 @@ public:
   Component& ctx_unlocked(
     const base::Location& from_here)
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_)
       << "Unable to use global context from wrong thread "
       << from_here.ToString();
@@ -171,6 +180,8 @@ public:
   bool try_ctx_unlocked(
     const base::Location& from_here)
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_)
       << "Unable to use global context from wrong thread "
       << from_here.ToString();
@@ -201,6 +212,8 @@ public:
     , const std::string& debug_name
     , Args&&... args)
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_)
       << "Unable to use global context from wrong thread "
       << from_here.ToString();
@@ -228,6 +241,8 @@ public:
   inline /* `inline` to eleminate function call overhead */
   void unset(const base::Location& from_here)
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_)
       << "Unable to use global context from wrong thread "
       << from_here.ToString();
@@ -250,6 +265,8 @@ public:
   inline /* `inline` to eleminate function call overhead */
   void try_unset(const base::Location& from_here)
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_)
       << "Unable to use global context from wrong thread "
       << from_here.ToString();
@@ -270,6 +287,8 @@ private:
 
   size_t size() const
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     if(!isLockedModification()) {
       DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
     }
@@ -278,6 +297,8 @@ private:
 
   bool empty() const
   {
+    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
     if(!isLockedModification()) {
       DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
     }
@@ -293,6 +314,15 @@ private:
 
   UnsafeTypeContext context_{};
 
+  /// \note Unlike `main_thread_checker_` collision warner used
+  /// BOTH buring modification and reading
+  // Thread collision warner to ensure that API is not called concurrently.
+  // API allowed to call from multiple threads, but not
+  // concurrently.
+  DFAKE_MUTEX(debug_collision_warner_);
+
+  /// \note `main_thread_checker_` used buring modification,
+  /// but not during reading
   THREAD_CHECKER(main_thread_checker_);
 
   DISALLOW_COPY_AND_ASSIGN(GlobalContext);

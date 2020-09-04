@@ -145,7 +145,7 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
  * \example
   DCHECK(ws_sess);
   const boost::asio::executor& executor
-    = ws_sess->ref_stream().get_executor();
+    = ws_sess->stream().get_executor();
 
   return
     somePromise()

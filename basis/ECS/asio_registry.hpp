@@ -6,8 +6,11 @@
 #include <base/logging.h>
 #include <base/macros.h>
 #include <base/optional.h>
+#include <base/rvalue_cast.h>
 #include <base/files/file_path.h>
 #include <base/trace_event/trace_event.h>
+#include <base/strings/string_piece.h>
+#include <base/bind_helpers.h>
 #include <base/synchronization/waitable_event.h>
 #include <base/observer_list_threadsafe.h>
 
@@ -37,256 +40,128 @@ public:
   using IoContext
     = ::boost::asio::io_context;
 
-  AsioRegistry(util::UnownedPtr<IoContext>&& ioc);
+  AsioRegistry(IoContext& ioc);
 
   ~AsioRegistry();
 
-  // can be used to acess registry on same thread that created |AsioRegistry|,
-  // may be useful to init registry
-  ECS::Registry& ref_registry_unsafe(const base::Location& from_here) noexcept;
+  // Similar to |registry|, but without thread-safety checks
+  // Example: can be used to acess registry on same thread
+  // that created |AsioRegistry| i.e. may be useful to init registry
+  MUST_USE_RETURN_VALUE
+  ALWAYS_INLINE
+  const ECS::Registry& registry_unsafe(
+    const base::Location& from_here
+    , base::StringPiece reason_why_unsafe
+    , base::OnceClosure&& check_unsafe_allowed = base::DoNothing::Once()) const noexcept
+  {
+    ignore_result(from_here);
+    ignore_result(reason_why_unsafe);
+    base::rvalue_cast(check_unsafe_allowed).Run();
+    return registry_;
+  }
+
+  MUST_USE_RETURN_VALUE
+  ALWAYS_INLINE
+  ECS::Registry& registry_unsafe(
+    const base::Location& from_here
+    , base::StringPiece reason_why_unsafe
+    , base::OnceClosure&& check_unsafe_allowed = base::DoNothing::Once()) noexcept
+  {
+    ignore_result(from_here);
+    ignore_result(reason_why_unsafe);
+    base::rvalue_cast(check_unsafe_allowed).Run();
+    return registry_;
+  }
 
   // can be used to acess registry on task runner
-  ECS::Registry& ref_registry(const base::Location& from_here) noexcept;
-
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  ECS::Entity create(
-    const base::Location& from_here)
+  MUST_USE_RETURN_VALUE
+  ALWAYS_INLINE
+  const ECS::Registry& registry() const noexcept
   {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    return ref_registry(from_here).create();
+    DCHECK(asioRegistryStrand_.running_in_this_thread())
+      << FROM_HERE.ToString();
+    return registry_;
   }
 
-  template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  decltype(auto) get(
-    const base::Location& from_here
-    , const ECS::Entity entity)
+  // can be used to acess registry on task runner
+  MUST_USE_RETURN_VALUE
+  ALWAYS_INLINE
+  ECS::Registry& registry() noexcept
   {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-
-    if constexpr(sizeof...(Component) == 1) {
-        return (ref_registry(from_here).get<Component>(entity), ...);
-    } else {
-        return std::forward_as_tuple(ref_registry(from_here).get<Component>(entity)...);
-    }
-  }
-
-  template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  decltype(auto) try_get(
-    const base::Location& from_here
-    , const ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-
-    if constexpr(sizeof...(Component) == 1) {
-        return (ref_registry(from_here).try_get<Component>(entity), ...);
-    } else {
-        return std::forward_as_tuple(ref_registry(from_here).try_get<Component>(entity)...);
-    }
-  }
-
-  template<typename Component, typename... Args>
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  decltype(auto) get_or_emplace(
-    const base::Location& from_here
-    , const ECS::Entity entity
-    , Args &&... args)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-
-    return ref_registry(from_here).get_or_assign<Component>(entity, std::forward<Args>(args)...);
-  }
-
-  template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  decltype(auto) clear(
-    const base::Location& from_here
-    , const ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-
-    if constexpr(sizeof...(Component) == 1) {
-        return (ref_registry(from_here).clear<Component>(entity), ...);
-    } else {
-        return std::forward_as_tuple(ref_registry(from_here).clear<Component>(entity)...);
-    }
-  }
-
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  bool has_components(
-    const base::Location& from_here
-    , const ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    return !ref_registry(from_here).orphan(entity);
-  }
-
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  bool valid(
-    const base::Location& from_here
-    , const ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    return ref_registry(from_here).valid(entity);
-  }
-
-  template<typename Component>
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  bool has(
-    const base::Location& from_here
-    , const ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-    return ref_registry(from_here).has<Component>(entity);
-  }
-
-  template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  bool any(
-    const base::Location& from_here
-    , const ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-    return (ref_registry(from_here).any<Component>(entity) || ...);
-  }
-
-  template<typename Component>
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  void destroy(
-    const base::Location& from_here
-    , ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-    ref_registry(from_here).destroy<Component>(entity);
-  }
-
-  template<typename It>
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  void destroy(
-    const base::Location& from_here
-    , It first
-    , It last)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    while(first != last) { ref_registry(from_here).destroy(*(first++)); }
-  }
-
-  template<typename Component, typename... Args>
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  void emplace(
-    const base::Location& from_here
-    , ECS::Entity entity
-    , Args &&... args)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-    ref_registry(from_here).emplace<Component>(entity, std::forward<Args>(args)...);
-  }
-
-  /// \note Prefer this function anyway because it has slightly better performance.
-  /// Equivalent to the following snippet (pseudocode):
-  /// auto &component = registry.has<Component>(entity) ? registry.replace<Component>(entity, args...) : registry.emplace<Component>(entity, args...);
-  template<typename Component, typename... Args>
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  void emplace_or_replace(
-    const base::Location& from_here
-    , ECS::Entity entity
-    , Args &&... args)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-    ref_registry(from_here).assign_or_replace<Component>(entity, std::forward<Args>(args)...);
-  }
-
-  template<typename... Component>
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  void remove(
-    const base::Location& from_here
-    , ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-    (ref_registry(from_here).remove<Component>()(entity), ...);
-  }
-
-  template<typename... Component>
-  /// \note large `inline` functions cause Cache misses
-  /// and affect efficiency negatively, so keep it small
-  inline /* `inline` to eleminate function call overhead */
-  void remove_if_exists(
-    const base::Location& from_here
-    , ECS::Entity entity)
-  {
-    DCHECK(asioRegistryStrand_.running_in_this_thread());
-    DCHECK(ref_registry(from_here).valid(entity));
-    (ref_registry(from_here).remove_if_exists<Component>()(entity), ...);
+    DCHECK(asioRegistryStrand_.running_in_this_thread())
+      << FROM_HERE.ToString();
+    return registry_;
   }
 
   NOT_THREAD_SAFE_FUNCTION()
-  inline /* `inline` to eleminate function call overhead */
-  bool running_in_this_thread()
+  ALWAYS_INLINE
+  bool running_in_this_thread() const NO_EXCEPTION
   {
     return asioRegistryStrand_.running_in_this_thread();
   }
 
+  ALWAYS_INLINE
   NOT_THREAD_SAFE_FUNCTION()
-  StrandType& ref_strand(const base::Location& from_here)
+  StrandType& strand()
   {
-    ignore_result(from_here);
+    return asioRegistryStrand_;
+  }
+
+  ALWAYS_INLINE
+  NOT_THREAD_SAFE_FUNCTION()
+  const StrandType& strand() const
+  {
     return asioRegistryStrand_;
   }
 
   // strand copy equals same strand
+  ALWAYS_INLINE
   NOT_THREAD_SAFE_FUNCTION()
-  StrandType copy_strand(const base::Location& from_here)
+  const StrandType copy_strand() const
   {
-    ignore_result(from_here);
     return asioRegistryStrand_;
+  }
+
+  // strand copy equals same strand
+  ALWAYS_INLINE
+  NOT_THREAD_SAFE_FUNCTION()
+  StrandType copy_strand()
+  {
+    return asioRegistryStrand_;
+  }
+
+  // Shortcut for `.registry`
+  //
+  // BEFORE
+  // DCHECK(obj.registry().empty());
+  //
+  // AFTER
+  // DCHECK((*obj).empty());
+  constexpr const ECS::Registry& operator*() const
+  {
+    return registry();
+  }
+
+  constexpr ECS::Registry& operator*()
+  {
+    return registry();
+  }
+
+  // Shortcut for `.registry`
+  //
+  // BEFORE
+  // DCHECK(obj.registry().empty());
+  //
+  // AFTER
+  // DCHECK(obj->empty());
+  constexpr const ECS::Registry* operator->() const
+  {
+    return &registry();
+  }
+
+  constexpr ECS::Registry* operator->()
+  {
+    return &registry();
   }
 
 private:

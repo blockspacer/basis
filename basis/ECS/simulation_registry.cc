@@ -40,18 +40,18 @@ SimulationRegistry::~SimulationRegistry()
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
-Registry &SimulationRegistry::ref_registry_unsafe(const base::Location& from_here) noexcept
+Registry &SimulationRegistry::registry_unsafe(const base::Location& from_here) noexcept
 {
   ignore_result(from_here);
   return registry_;
 }
 
-Registry &SimulationRegistry::ref_registry(const base::Location& from_here) noexcept
+Registry &SimulationRegistry::registry() noexcept
 {
   DCHECK(task_runner_)
-    << from_here.ToString();
+    << FROM_HERE.ToString();
   DCHECK(task_runner_->RunsTasksInCurrentSequence())
-    << from_here.ToString();
+    << FROM_HERE.ToString();
   return registry_;
 }
 

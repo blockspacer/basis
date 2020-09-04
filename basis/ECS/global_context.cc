@@ -22,7 +22,7 @@ GlobalContext::~GlobalContext()
   DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
 
 #if DCHECK_IS_ON()
-  for(const UnsafeTypeContext::variable_data& data: context_.ref_vars()) {
+  for(const UnsafeTypeContext::variable_data& data: context_.vars()) {
     LOG(ERROR)
       << "You must manually call `unset` for: "
       << data.debug_name;
@@ -51,6 +51,8 @@ GlobalContext*
 
 void ECS::GlobalContext::lockModification()
 {
+  DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
   DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
 
   DCHECK(!locked_.load())
@@ -63,6 +65,8 @@ void ECS::GlobalContext::lockModification()
 
 void GlobalContext::unlockModification()
 {
+  DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
   DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
 
   DCHECK(locked_.load())

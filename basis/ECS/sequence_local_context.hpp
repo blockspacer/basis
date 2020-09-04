@@ -49,7 +49,12 @@ class SequenceLocalContext
       // will be used in `DCHECK(task_runner.RunsTasksInCurrentSequence());`
       , scoped_refptr<base::SequencedTaskRunner> task_runner);
 
-  UnsafeTypeContext& ref_context()
+  UnsafeTypeContext& context()
+  {
+    return context_;
+  }
+
+  const UnsafeTypeContext& context() const
   {
     return context_;
   }

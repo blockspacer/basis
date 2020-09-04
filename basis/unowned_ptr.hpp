@@ -33,7 +33,7 @@
 
 namespace util {
 
-template <class T>
+template <class Type>
 class UnownedPtr
 {
 public:
@@ -105,7 +105,7 @@ public:
 
   NOT_THREAD_SAFE_FUNCTION()
   UnownedPtr& operator=(
-    UNOWNED_LIFETIME(T*) that)
+    UNOWNED_LIFETIME(Type*) that)
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
 
@@ -158,7 +158,7 @@ public:
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
-    return std::less<T*>()(Get(), that.Get());
+    return std::less<Type*>()(Get(), that.Get());
   }
 
   NOT_THREAD_SAFE_FUNCTION()
@@ -181,10 +181,12 @@ public:
     return !(*this == that);
   }
 
+  /// \note Does not call `checkForLifetimeIssues`,
+  /// so call it manually.
   /// \note Do not do stupid things like
   /// `delete unownedPtr.Get();` // WRONG
   NOT_THREAD_SAFE_FUNCTION()
-  T* Get() const
+  Type* Get() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
@@ -195,12 +197,12 @@ public:
   /// it just sets |pObj_| to nullptr without memory deallocation
   /// Use `Release()` when you want to delete |pObj_|
   NOT_THREAD_SAFE_FUNCTION()
-  T* Release()
+  Type* Release()
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     checkForLifetimeIssues();
-    T* pTemp = nullptr;
+    Type* pTemp = nullptr;
     std::swap(pTemp, pObj_);
     DCHECK(!pObj_); // must become prev. |pTemp| i.e. nullptr
     return pTemp;
@@ -215,7 +217,7 @@ public:
   }
 
   NOT_THREAD_SAFE_FUNCTION()
-  T& operator*() const
+  Type& operator*() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
@@ -224,7 +226,7 @@ public:
   }
 
   NOT_THREAD_SAFE_FUNCTION()
-  T* operator->() const
+  Type* operator->() const
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
@@ -232,7 +234,6 @@ public:
     return pObj_;
   }
 
-private:
   // check that object is alive, use memory tool like ASAN
   inline void checkForLifetimeIssues()
   {
@@ -244,24 +245,24 @@ private:
 #endif
   }
 
+private:
   // Thread collision warner to ensure that API is not called concurrently.
-  // |pObj_| allowed to call from multiple threads, but not
+  // API allowed to call from multiple threads, but not
   // concurrently.
   DFAKE_MUTEX(debug_collision_warner_);
 
-  NOT_THREAD_SAFE_LIFETIME()
-  T* pObj_ = nullptr
+  Type* pObj_ = nullptr
     LIVES_ON(debug_collision_warner_);
 };
 
-template <typename T, typename U>
-inline bool operator==(const U* lhs, const UnownedPtr<T>& rhs)
+template <typename Type, typename U>
+inline bool operator==(const U* lhs, const UnownedPtr<Type>& rhs)
 {
   return rhs == lhs;
 }
 
-template <typename T, typename U>
-inline bool operator!=(const U* lhs, const UnownedPtr<T>& rhs)
+template <typename Type, typename U>
+inline bool operator!=(const U* lhs, const UnownedPtr<Type>& rhs)
 {
   return rhs != lhs;
 }

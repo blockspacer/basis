@@ -34,10 +34,10 @@ public:
 
   // can be used to acess registry on same thread that created |SimulationRegistry|,
   // may be useful to init registry
-  ECS::Registry& ref_registry_unsafe(const base::Location& from_here) noexcept;
+  ECS::Registry& registry_unsafe(const base::Location& from_here) noexcept;
 
   // can be used to acess registry on task runner
-  ECS::Registry& ref_registry(const base::Location& from_here) noexcept;
+  ECS::Registry& registry() noexcept;
 
   [[nodiscard]] /* don't ignore return value */
   /// \note large `inline` functions cause Cache misses
@@ -47,7 +47,7 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    return ref_registry(from_here).create();
+    return registry().create();
   }
 
   template<typename... Component>
@@ -60,12 +60,12 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
+    DCHECK(registry().valid(entity));
 
     if constexpr(sizeof...(Component) == 1) {
-        return (ref_registry(from_here).get<Component>(entity), ...);
+        return (registry().get<Component>(entity), ...);
     } else {
-        return std::forward_as_tuple(ref_registry(from_here).get<Component>(entity)...);
+        return std::forward_as_tuple(registry().get<Component>(entity)...);
     }
   }
 
@@ -80,12 +80,12 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
+    DCHECK(registry().valid(entity));
 
     if constexpr(sizeof...(Component) == 1) {
-        return (ref_registry(from_here).try_get<Component>(entity), ...);
+        return (registry().try_get<Component>(entity), ...);
     } else {
-        return std::forward_as_tuple(ref_registry(from_here).try_get<Component>(entity)...);
+        return std::forward_as_tuple(registry().try_get<Component>(entity)...);
     }
   }
 
@@ -101,9 +101,9 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
+    DCHECK(registry().valid(entity));
 
-    return ref_registry(from_here).get_or_assign<Component>(entity, std::forward<Args>(args)...);
+    return registry().get_or_assign<Component>(entity, std::forward<Args>(args)...);
   }
 
   template<typename... Component>
@@ -117,12 +117,12 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
+    DCHECK(registry().valid(entity));
 
     if constexpr(sizeof...(Component) == 1) {
-        return (ref_registry(from_here).clear<Component>(entity), ...);
+        return (registry().clear<Component>(entity), ...);
     } else {
-        return std::forward_as_tuple(ref_registry(from_here).clear<Component>(entity)...);
+        return std::forward_as_tuple(registry().clear<Component>(entity)...);
     }
   }
 
@@ -136,7 +136,7 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    return !ref_registry(from_here).orphan(entity);
+    return !registry().orphan(entity);
   }
 
   [[nodiscard]] /* don't ignore return value */
@@ -149,7 +149,7 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    return ref_registry(from_here).valid(entity);
+    return registry().valid(entity);
   }
 
   template<typename Component>
@@ -163,8 +163,8 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
-    return ref_registry(from_here).has<Component>(entity);
+    DCHECK(registry().valid(entity));
+    return registry().has<Component>(entity);
   }
 
   template<typename... Component>
@@ -178,8 +178,8 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
-    return (ref_registry(from_here).any<Component>(entity) || ...);
+    DCHECK(registry().valid(entity));
+    return (registry().any<Component>(entity) || ...);
   }
 
   template<typename Component>
@@ -192,8 +192,8 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
-    ref_registry(from_here).destroy<Component>(entity);
+    DCHECK(registry().valid(entity));
+    registry().destroy<Component>(entity);
   }
 
   template<typename It>
@@ -207,7 +207,7 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-      while(first != last) { ref_registry(from_here).destroy(*(first++)); }
+      while(first != last) { registry().destroy(*(first++)); }
   }
 
   template<typename Component, typename... Args>
@@ -221,8 +221,8 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
-    ref_registry(from_here).assign<Component>(entity, std::forward<Args>(args)...);
+    DCHECK(registry().valid(entity));
+    registry().assign<Component>(entity, std::forward<Args>(args)...);
   }
 
   /// \note Prefer this function anyway because it has slightly better performance.
@@ -239,8 +239,8 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
-    ref_registry(from_here).assign_or_replace<Component>(entity, std::forward<Args>(args)...);
+    DCHECK(registry().valid(entity));
+    registry().assign_or_replace<Component>(entity, std::forward<Args>(args)...);
   }
 
   template<typename... Component>
@@ -253,8 +253,8 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
-    (ref_registry(from_here).remove<Component>()(entity), ...);
+    DCHECK(registry().valid(entity));
+    (registry().remove<Component>()(entity), ...);
   }
 
   template<typename... Component>
@@ -267,8 +267,8 @@ public:
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
-    DCHECK(ref_registry(from_here).valid(entity));
-    (ref_registry(from_here).remove_if_exists<Component>()(entity), ...);
+    DCHECK(registry().valid(entity));
+    (registry().remove_if_exists<Component>()(entity), ...);
   }
 
   scoped_refptr<

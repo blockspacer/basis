@@ -49,52 +49,9 @@ inline std::ostream& operator<<(
     << to_integral(entity_id);
 }
 
-#define LABEL(__name__) using __name__ = entt::tag<#__name__ ## _hs>
+#define ECS_LABEL(__name__) using __name__ = entt::tag<#__name__ ## _hs>
 
 #define CREATE_ECS_TAG(TAG_NAME) \
-  LABEL(TAG_NAME);
-
-} // namespace ECS
-
-/// \todo move out
-namespace ECS {
-
-CREATE_ECS_TAG(TcpConnectionTag)
-
-} // namespace ECS
-
-namespace ECS {
-
-CREATE_ECS_TAG(WebsocketConnectionTag)
-
-} // namespace ECS
-
-namespace ECS {
-
-CREATE_ECS_TAG(DetectChannelTag)
-
-} // namespace ECS
-
-namespace ECS {
-
-CREATE_ECS_TAG(UnusedTag)
-
-} // namespace ECS
-
-namespace ECS {
-
-CREATE_ECS_TAG(NeedToDestroyTag)
-
-} // namespace ECS
-
-namespace ECS {
-
-CREATE_ECS_TAG(UnusedSSLDetectResultTag)
-
-} // namespace ECS
-
-namespace ECS {
-
-CREATE_ECS_TAG(UnusedAcceptResultTag)
+  ECS_LABEL(TAG_NAME);
 
 } // namespace ECS

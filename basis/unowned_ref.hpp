@@ -138,45 +138,33 @@ public:
 
   bool operator==(const UnownedRef& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return Get() == that.Get();
   }
 
   bool operator!=(const UnownedRef& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return !(*this == that);
   }
 
   bool operator<(const UnownedRef& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return std::less<Type*>()(Get(), that.Get());
   }
 
   template <typename U>
   bool operator==(const U& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return Get() == &that;
   }
 
   template <typename U>
   bool operator!=(const U& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return !(*this == &that);
   }
 
   Type& Ref() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     DCHECK(pObj_);
     return *pObj_;
   }
@@ -185,23 +173,17 @@ public:
   /// `delete unownedRef.Get();` // WRONG
   Type* Get() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return pObj_;
   }
 
   Type& operator*() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     DCHECK(pObj_);
     return *pObj_;
   }
 
   Type* operator->() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     DCHECK(pObj_);
     return pObj_;
   }
@@ -210,21 +192,21 @@ private:
   // check that object is alive, use memory tool like ASAN
   inline void checkForLifetimeIssues()
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
 #if defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
     if (pObj_)
       reinterpret_cast<const volatile uint8_t*>(pObj_)[0];
 #endif
   }
 
+  /// \note Thread collision warner used only for modification operations
+  /// because you may want to use unchangable storage
+  /// that can be read from multiple threads safely.
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
   DFAKE_MUTEX(debug_collision_warner_);
 
-  Type* pObj_ = nullptr
-    LIVES_ON(debug_collision_warner_);
+  Type* pObj_ = nullptr;
 };
 
 template <typename Type, typename U>

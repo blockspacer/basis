@@ -122,7 +122,7 @@ void
 void setPeriodicTaskExecutorOnSequence(
   const base::Location& from_here
   , scoped_refptr<base::SequencedTaskRunner> task_runner
-  , base::RepeatingClosure updateCallback)
+  , COPIED() base::RepeatingClosure updateCallback)
 {
   LOG_CALL(DVLOG(99));
 
@@ -141,47 +141,6 @@ void setPeriodicTaskExecutorOnSequence(
         , std::move(updateCallback)
       );
   ignore_result(result);
-}
-
-void setPeriodicTaskExecutorOnAsioExecutor(
-  const base::Location& from_here
-  , scoped_refptr<base::SequencedTaskRunner> task_runner
-  , const ::boost::asio::executor& executor
-  , base::RepeatingClosure updateCallback)
-{
-  LOG_CALL(DVLOG(99));
-
-  DCHECK(task_runner);
-
-  setPeriodicTaskExecutorOnSequence(
-    from_here
-    , task_runner
-    , base::BindRepeating(
-        []
-        (base::RepeatingClosure updateCallback
-         , const ::boost::asio::executor& executor)
-        {
-          LOG_CALL(DVLOG(99));
-          DCHECK(executor);
-          ::boost::asio::post(
-            executor
-            , std::bind(
-              []
-              (base::RepeatingClosure updateCallback)
-              {
-                LOG_CALL(DVLOG(99));
-                DCHECK(updateCallback);
-                updateCallback.Run();
-              }
-              , COPIED(updateCallback)
-            )
-          );
-          LOG_CALL(DVLOG(99));
-        }
-        , COPIED(updateCallback)
-        , COPIED(executor)
-      )
-  );
 }
 
 void startPeriodicTaskExecutorOnSequence(

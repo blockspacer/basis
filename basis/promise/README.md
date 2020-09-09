@@ -14,6 +14,16 @@ Promises forum topics: https://groups.google.com/a/chromium.org/forum/#!topic/cx
 
 C++ Promises for Chromium - Google Docs https://docs.google.com/document/d/1l12PAJgEtlrqTXKiw6mk2cR2jP7FAfCCDr-DGIdiC9w/
 
+## Performance
+
+Designed for NOT performance-critical code.
+
+Uses dynamic allocations, so avoid it in hot-code-paths.
+
+Also `Promise` has shared ownership (`shared_ptr` is anti-pattern).
+
+Performance overhead expected to be NOT large (TODO: measure).
+
 ## Alternatives
 
 https://github.com/grantila/q uses similar approach, so you can find it's docs useful, see http://libq.io

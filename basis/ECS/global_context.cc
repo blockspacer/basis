@@ -12,6 +12,7 @@
 
 namespace ECS {
 
+#if 0
 GlobalContext::GlobalContext()
 {
   DETACH_FROM_THREAD(main_thread_checker_);
@@ -76,5 +77,6 @@ void GlobalContext::unlockModification()
   DVLOG(9)
       << "unlocked GlobalContext";
 }
+#endif // 0
 
 } // namespace ECS

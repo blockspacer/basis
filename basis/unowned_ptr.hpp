@@ -138,8 +138,6 @@ public:
   bool operator==(
     const UnownedPtr& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return Get() == that.Get();
   }
 
@@ -147,8 +145,6 @@ public:
   bool operator!=(
     const UnownedPtr& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return !(*this == that);
   }
 
@@ -156,8 +152,6 @@ public:
   bool operator<(
     const UnownedPtr& that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return std::less<Type*>()(Get(), that.Get());
   }
 
@@ -166,8 +160,6 @@ public:
   bool operator==(
     const U* that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return Get() == that;
   }
 
@@ -176,8 +168,6 @@ public:
   bool operator!=(
     const U* that) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return !(*this == that);
   }
 
@@ -188,8 +178,6 @@ public:
   NOT_THREAD_SAFE_FUNCTION()
   Type* Get() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return pObj_;
   }
 
@@ -211,16 +199,12 @@ public:
   NOT_THREAD_SAFE_FUNCTION()
   explicit operator bool() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     return !!pObj_;
   }
 
   NOT_THREAD_SAFE_FUNCTION()
   Type& operator*() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     DCHECK(pObj_);
     return *pObj_;
   }
@@ -228,8 +212,6 @@ public:
   NOT_THREAD_SAFE_FUNCTION()
   Type* operator->() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
     DCHECK(pObj_);
     return pObj_;
   }
@@ -237,8 +219,6 @@ public:
   // check that object is alive, use memory tool like ASAN
   inline void checkForLifetimeIssues()
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
-
 #if defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
     if (pObj_)
       reinterpret_cast<const volatile uint8_t*>(pObj_)[0];
@@ -246,13 +226,15 @@ public:
   }
 
 private:
+  /// \note Thread collision warner used only for modification operations
+  /// because you may want to use unchangable storage
+  /// that can be read from multiple threads safely.
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
   DFAKE_MUTEX(debug_collision_warner_);
 
-  Type* pObj_ = nullptr
-    LIVES_ON(debug_collision_warner_);
+  Type* pObj_ = nullptr;
 };
 
 template <typename Type, typename U>

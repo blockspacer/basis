@@ -37,6 +37,10 @@ struct DefaultSingletonTraits;
 
 namespace ECS {
 
+/// \todo Rename `GlobalContext` to `TheadSafeGlobalContext` and use `mutex`
+#if 0
+/// \note Prefer `TheadSafeGlobalContext` to `GlobalContext`
+///
 // Context that can be used as global singleton.
 // Inspired by entt context, see for details:
 // https://github.com/skypjack/entt/wiki/Crash-Course:-entity-component-system
@@ -67,11 +71,15 @@ class GlobalContext
 public:
   GlobalContext();
 
+  /// \todo remove in favor of `SequenceLocalContext`
+  /// Rename `GlobalContext` to `TheadSafeGlobalContext` and use `mutex`
   // prohibit entity creation/destruction for thread-safety purposes
   // i.e. fill |GlobalContext| before app started, then call `lock()`.
   // Call `unlock()` only during app termination.
   void lockModification();
 
+  /// \todo remove in favor of `SequenceLocalContext`
+  /// Rename `GlobalContext` to `TheadSafeGlobalContext` and use `mutex`
   // allow entity creation/destruction for thread-safety purposes
   // i.e. fill |GlobalContext| before app started, then call `lock()`.
   // Call `unlock()` only during app termination.
@@ -327,5 +335,6 @@ private:
 
   DISALLOW_COPY_AND_ASSIGN(GlobalContext);
 };
+#endif // 0
 
 } // namespace ECS

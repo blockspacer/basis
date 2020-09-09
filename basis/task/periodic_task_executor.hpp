@@ -113,14 +113,6 @@ void setPeriodicTaskExecutorOnSequence(
   , scoped_refptr<base::SequencedTaskRunner> task_runner
   , base::RepeatingClosure updateCallback);
 
-// executes task periodically on |task_runner|,
-// but also calls |::boost::asio::post| on |executor|
-void setPeriodicTaskExecutorOnAsioExecutor(
-  const base::Location& from_here
-  , scoped_refptr<base::SequencedTaskRunner> task_runner
-  , const ::boost::asio::executor& executor
-  , base::RepeatingClosure updateCallback);
-
 void startPeriodicTaskExecutorOnSequence(
   const base::TimeDelta& endTimeDelta);
 

@@ -87,8 +87,16 @@ template <typename TagType, typename UnderlyingType>
 class StrongAlias {
  public:
   constexpr StrongAlias() = default;
-  constexpr explicit StrongAlias(const UnderlyingType& v) : value_(v) {}
-  constexpr explicit StrongAlias(UnderlyingType&& v) : value_(std::move(v)) {}
+
+  constexpr explicit StrongAlias(const UnderlyingType& v)
+    : value_(v) {}
+
+  constexpr explicit StrongAlias(UnderlyingType&& v)
+    : value_(std::move(v)) {}
+
+  template <class... Args>
+  constexpr explicit StrongAlias(Args&&... args)
+    : value_(std::forward<Args>(args)...) {}
 
   constexpr UnderlyingType& value() & { return value_; }
   constexpr const UnderlyingType& value() const& { return value_; }
@@ -96,6 +104,40 @@ class StrongAlias {
   constexpr const UnderlyingType&& value() const&& { return std::move(value_); }
 
   constexpr explicit operator UnderlyingType() const { return value_; }
+
+  // Shortcut for `.value`
+  //
+  // BEFORE
+  // DCHECK(obj.value().empty());
+  //
+  // AFTER
+  // DCHECK((*obj).empty());
+  constexpr const UnderlyingType& operator*() const
+  {
+    return value_;
+  }
+
+  constexpr UnderlyingType& operator*()
+  {
+    return value_;
+  }
+
+  // Shortcut for `.value`
+  //
+  // BEFORE
+  // DCHECK(obj.value().empty());
+  //
+  // AFTER
+  // DCHECK(obj->empty());
+  constexpr const UnderlyingType* operator->() const
+  {
+    return &value_;
+  }
+
+  constexpr UnderlyingType* operator->()
+  {
+    return &value_;
+  }
 
   constexpr bool operator==(const StrongAlias& other) const {
     return value_ == other.value_;

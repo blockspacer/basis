@@ -441,7 +441,7 @@ public:
     }
 
     // Returns the implementation object for member access.
-    T* operator->() noexcept
+    constexpr T* operator->() noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
@@ -449,7 +449,7 @@ public:
     }
 
     // Returns the implementation object for member access (const overload).
-    const T* operator->() const noexcept
+    constexpr const T* operator->() const noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
@@ -457,7 +457,7 @@ public:
     }
 
     // Returns the implementation object.
-    T& operator*() noexcept
+    constexpr T& operator*() noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
@@ -465,7 +465,7 @@ public:
     }
 
     // Returns the implementation object (const overload).
-    const T& operator*() const noexcept
+    constexpr const T& operator*() const noexcept
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 

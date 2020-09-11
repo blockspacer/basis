@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <sstream>
 
 // using a hashed string under VS could generate a warning.
 // it's expected and harmless. However, it can be annoying.

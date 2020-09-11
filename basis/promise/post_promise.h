@@ -9,6 +9,7 @@
 
 #include "base/synchronization/waitable_event.h"
 #include "base/base_export.h"
+#include "base/task/thread_pool/thread_pool.h"
 #include "base/callback.h"
 #include "base/callback_helpers.h"
 #include "base/memory/ref_counted.h"
@@ -326,25 +327,65 @@ scoped_refptr<base::internal::AbstractPromise>
   return promise;
 }
 
-/// \note waits on posted task runner,
-/// so pass different `signalling` task runner to prevent deadlocks
+/// \note Waits on posted task runner,
+/// so pass different `signalling` task runner to prevent deadlocks.
+/// \note Will block current thread for unspecified time.
+//
+// USAGE
+//
+//  VoidPromise promise
+//    = base::PostPromise(FROM_HERE
+//        , periodicAsioTaskRunner_.get()
+//        , base::BindOnce(
+//          &ExampleServer::deletePeriodicAsioExecutor
+//          , base::Unretained(this)
+//        )
+//      );
+//  base::waitForPromiseResolve(
+//    promise
+//    , base::ThreadPool::GetInstance()->
+//        CreateSequencedTaskRunnerWithTraits(
+//          base::TaskTraits{
+//            base::TaskPriority::BEST_EFFORT
+//            , base::MayBlock()
+//            , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+//          }
+//      )
+//  );
 template <typename ResolveType>
 void waitForPromiseResolve(
-  base::Promise<ResolveType, base::NoReject>& promise
+  const base::Location& from_here
+  , SHARED_LIFETIME() base::Promise<ResolveType, base::NoReject> promise
+  // `signal task runner` used to execute callback after promise resolving
   , scoped_refptr<base::SequencedTaskRunner> signal_task_runner
+      = base::ThreadPool::GetInstance()->
+              CreateSequencedTaskRunnerWithTraits(
+                base::TaskTraits{
+                  base::TaskPriority::BEST_EFFORT
+                  , base::MayBlock()
+                  , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+                }
+            )
   , const base::TimeDelta& wait_delta = base::TimeDelta::Max())
 {
   base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
     , base::WaitableEvent::InitialState::NOT_SIGNALED);
 
-  // `wait` and `signal` must be different sequence
+  // `wait task runner` and `signal task runner`
+  // must be different sequences to prevent deadlocks
   DCHECK(signal_task_runner
     != base::MessageLoop::current()->task_runner());
+  DCHECK(signal_task_runner
+    != base::SequencedTaskRunnerHandle::Get());
 
   promise
   .ThenOn(signal_task_runner
-     , FROM_HERE
+     , from_here
      , base::BindOnce(&base::WaitableEvent::Signal, base::Unretained(&event)));
+
+  DVLOG(9)
+    << "issued wait from "
+    << from_here.ToString();
 
   // The SequencedTaskRunner guarantees that
   // |event| will only be signaled after |task| is executed.

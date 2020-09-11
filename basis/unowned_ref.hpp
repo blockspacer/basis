@@ -11,6 +11,7 @@
 
 namespace util {
 
+/// \note Prefer `UnownedRef` to `gsl::not_null`, `std::reference_wrapper` etc.
 // UnownedRef is similar to std::reference_wrapper
 //
 // 1. It documents the nature of the reference with no need to add a comment
@@ -54,6 +55,7 @@ public:
       {
         pObj_ = other.Get();
       }
+      // it is reference, so can not be nullptr
       DCHECK(pObj_);
     }
   }
@@ -110,6 +112,13 @@ public:
   ~UnownedRef()
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
+
+    // It is reference, so can not be `nullptr`.
+    // So `pObj_` can be `nullptr` only if `UnownedRef`
+    // is not constructed.
+    // We are in destructor,
+    // so `UnownedRef` MUST be constructed.
+    DCHECK(pObj_);
 
     checkForLifetimeIssues();
   }
@@ -206,7 +215,11 @@ private:
   // concurrently.
   DFAKE_MUTEX(debug_collision_warner_);
 
-  Type* pObj_ = nullptr;
+  // It is reference, so can not be `nullptr`.
+  // So `pObj_` can be `nullptr` only if `UnownedRef`
+  // is not constructed.
+  Type* pObj_
+    = nullptr;
 };
 
 template <typename Type, typename U>

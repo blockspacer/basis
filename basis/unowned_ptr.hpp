@@ -7,6 +7,9 @@
 #include <cstddef>
 #include <functional>
 
+/// \note Prefer `UnownedRef` if stored pointer
+/// always set (can not be nullptr)
+/// i.e. `UnownedPtr` should be almost never used.
 // UnownedPtr is a smart pointer class that behaves very much like a
 // standard C-style pointer. The advantages of using it over raw
 // pointers are:

@@ -19,12 +19,11 @@
 namespace basis {
 
 /**
- * Usage:
+ * Usage (single threaded):
   {
     /// \note will stop periodic timer on scope exit
     basis::PeriodicTaskExecutor periodicAsioExecutor_1(
-      asio_task_runner
-      , base::BindRepeating(
+      base::BindRepeating(
           [
           ](
             boost::asio::io_context& ioc
@@ -45,14 +44,67 @@ namespace basis {
 
     run_loop.Run();
   }
+ *
+ * Usage (sequence-local-context):
+ *
+  // Create unique type to store in sequence-local-context
+  /// \note initialized, used and destroyed
+  /// on `periodicAsioTaskRunner_` sequence-local-context
+  using PeriodicAsioExecutorType
+    = util::StrongAlias<
+        class PeriodicAsioExecutorTag
+        /// \note will stop periodic timer on scope exit
+        , basis::PeriodicTaskExecutor
+      >;
+  void Example::setupPeriodicAsioExecutor() NO_EXCEPTION
+  {
+    DCHECK_CUSTOM_THREAD_GUARD(periodicAsioTaskRunner_);
+
+    DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
+
+    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+      = ECS::SequenceLocalContext::getSequenceLocalInstance(
+          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+
+    DCHECK(sequenceLocalContext);
+    // Can not register same data type twice.
+    // Forces users to call `sequenceLocalContext->unset`.
+    DCHECK(!sequenceLocalContext->try_ctx<PeriodicAsioExecutorType>(FROM_HERE));
+    PeriodicAsioExecutorType& result
+      = sequenceLocalContext->set_once<PeriodicAsioExecutorType>(
+          FROM_HERE
+          , "PeriodicAsioExecutorType" + FROM_HERE.ToString()
+          , base::BindRepeating(
+              &Example::updateAsioRegistry
+              , base::Unretained(this))
+        );
+    result->startPeriodicTimer(
+      base::TimeDelta::FromMilliseconds(100));
+  }
+
+  void Example::deletePeriodicAsioExecutor() NO_EXCEPTION
+  {
+    DCHECK_CUSTOM_THREAD_GUARD(periodicAsioTaskRunner_);
+
+    DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
+
+    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+      = ECS::SequenceLocalContext::getSequenceLocalInstance(
+          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+
+    DCHECK(sequenceLocalContext);
+    DCHECK(sequenceLocalContext->try_ctx<PeriodicAsioExecutorType>(FROM_HERE));
+    sequenceLocalContext->unset<PeriodicAsioExecutorType>(FROM_HERE);
+  }
  **/
 /// \note will stop periodic timer on scope exit
+/// \note Create, destruct and use on same sequence.
+/// See usage example with `sequence-local-context` above.
 class PeriodicTaskExecutor
 {
  public:
   PeriodicTaskExecutor(
-    scoped_refptr<base::SequencedTaskRunner> task_runner
-    , base::RepeatingClosure&& periodic_task);
+    base::RepeatingClosure&& periodic_task);
 
   ~PeriodicTaskExecutor();
 
@@ -78,8 +130,6 @@ private:
 
   base::RepeatingClosure periodic_task_;
 
-  /// \note created and destroyed on |sequence_checker_|,
-  /// but used on |task_runner_|
   base::RepeatingTimer timer_;
 
   scoped_refptr<
@@ -101,6 +151,10 @@ private:
   // thread according to weak_ptr.h (versus calling
   // |weak_ptr_factory_.GetWeakPtr() which is not).
   base::WeakPtr<PeriodicTaskExecutor> weak_this_;
+
+#if DCHECK_IS_ON()
+  std::string debug_guid_;
+#endif // DCHECK_IS_ON()
 
  private:
   DISALLOW_COPY_AND_ASSIGN(PeriodicTaskExecutor);

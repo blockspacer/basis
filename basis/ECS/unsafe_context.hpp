@@ -172,6 +172,45 @@ class UnsafeTypeContext
       : set_var<Type>(std::forward<Args>(args)...);
   }
 
+  /// \note works only if `Type` is `base::Optional<...>`
+  /// because optional allows to re-create variable using same storage
+  /// (i.e. using `placement new`)
+  // Binds an object to the context of the registry.
+  // If `Type` already exists it re-creates it using same storage
+  // i.e. does NOT call `remove_if` and `vars_.push_back`.
+  // Can be used to create `memory pool` where
+  // unused data not freed instantly, but can be re-used again.
+  template<typename Type, typename... Args>
+  [[nodiscard]] /* don't ignore return value */
+  Type & reset_or_create_var(
+    const std::string debug_name
+    , Args &&... args)
+  {
+    const bool useCache
+      = try_ctx_var<Type>();
+
+    DVLOG(99)
+      << (useCache
+          ? ("using preallocated " + debug_name)
+          : ("allocating new " + debug_name));
+
+    Type* channelCtx
+      = &ctx_or_set_var<Type>(
+          debug_name
+          , base::in_place
+          , std::forward<Args>(args)...);
+
+    // If the value already exists it is overwritten
+    if(useCache) {
+      /// \note we do not call `set_var` for optimization purposes
+      /// ( because `set_var` uses `remove_if` and `vars_.push_back`)
+      /// i.e. use `base::Optional<...>` that uses placement new
+      channelCtx->emplace(std::forward<Args>(args)...);
+    }
+
+    return *channelCtx;
+  }
+
   /**
    * @brief Returns a pointer to an object in the context of the registry.
    * @tparam Type Type of object to get.

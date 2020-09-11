@@ -44,6 +44,49 @@ public:
 
   ~AsioRegistry();
 
+  /// \note works only if `Type` is `base::Optional<...>`
+  /// because optional allows to re-create variable using same storage
+  /// (i.e. using `placement new`)
+  // If `Type` already exists it re-creates it using same storage
+  // i.e. does NOT call `remove_if` and `vars_.push_back`.
+  // Can be used to create `memory pool` where
+  // unused data not freed instantly, but can be re-used again.
+  template<typename Type, typename... Args>
+  [[nodiscard]] /* don't ignore return value */
+  Type & reset_or_create_var(
+    const std::string debug_name
+    , ECS::Entity tcp_entity_id
+    , Args &&... args)
+  {
+    const bool useCache
+      = registry_.has<Type>(tcp_entity_id);
+
+    DVLOG(99)
+      << (useCache
+          ? ("using preallocated " + debug_name)
+          : ("allocating new " + debug_name));
+
+    Type& result
+      = useCache
+        /// \todo use get_or_emplace
+        ? registry_.get<Type>(tcp_entity_id)
+        : registry_.emplace<Type>(tcp_entity_id
+            , base::in_place
+            , std::forward<Args>(args)...);
+
+    // If the value already exists it is overwritten
+    if(useCache)
+    {
+      DCHECK(result);
+      /// \note we do not call `emplace` for optimization purposes
+      /// ( because `emplace` uses `erase` and `instances.push_back`)
+      /// i.e. use `base::Optional<...>` that uses placement new
+      result.emplace(std::forward<Args>(args)...);
+    }
+
+    return result;
+  }
+
   // Similar to |registry|, but without thread-safety checks
   // Example: can be used to acess registry on same thread
   // that created |AsioRegistry| i.e. may be useful to init registry

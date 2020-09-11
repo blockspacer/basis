@@ -16,6 +16,7 @@
 #include <base/task/task_traits.h>
 #include <base/trace_event/trace_event.h>
 #include <base/compiler_specific.h>
+#include <base/guid.h>
 
 #include <basis/ECS/sequence_local_context.hpp>
 #include <basis/promise/promise.h>
@@ -33,20 +34,30 @@
 namespace basis {
 
 PeriodicTaskExecutor::PeriodicTaskExecutor(
-  scoped_refptr<base::SequencedTaskRunner> task_runner
-  , base::RepeatingClosure&& periodic_task)
-  : task_runner_(task_runner)
-  , periodic_task_(std::move(periodic_task))
+  base::RepeatingClosure&& periodic_task)
+  : periodic_task_(std::move(periodic_task))
   , ALLOW_THIS_IN_INITIALIZER_LIST(weak_ptr_factory_(this))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_this_(weak_ptr_factory_.GetWeakPtr()))
+#if DCHECK_IS_ON()
+  , debug_guid_(base::GenerateGUID())
+#endif // DCHECK_IS_ON()
 {
+#if DCHECK_IS_ON()
+  LOG_CALL(DVLOG(99))
+    << debug_guid_;
+#endif // DCHECK_IS_ON()
+
   DETACH_FROM_SEQUENCE(sequence_checker_);
-  DCHECK(task_runner_);
 }
 
 PeriodicTaskExecutor::~PeriodicTaskExecutor()
 {
+#if DCHECK_IS_ON()
+  LOG_CALL(DVLOG(99))
+    << debug_guid_;
+#endif // DCHECK_IS_ON()
+
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   shutdown();
@@ -62,13 +73,7 @@ void
 
   DCHECK(!timer_.IsRunning());
 
-  const bool postTaskOk
-    = task_runner_->PostTask(FROM_HERE
-      , base::Bind(&PeriodicTaskExecutor::restart_timer
-                   , weak_this_
-                   , /*copied*/checkPeriod)
-    );
-  DCHECK(postTaskOk);
+  restart_timer(checkPeriod);
 }
 
 void
@@ -77,7 +82,7 @@ void
 {
   LOG_CALL(DVLOG(99));
 
-  DCHECK(task_runner_->RunsTasksInCurrentSequence());
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   // It's safe to destroy or restart Timer on another sequence after Stop().
   timer_.Stop();
@@ -99,7 +104,7 @@ void
   DVLOG(9999)
     << "(PeriodicTaskExecutor) runOnce...";
 
-  DCHECK(task_runner_->RunsTasksInCurrentSequence());
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   DCHECK(periodic_task_);
   periodic_task_.Run();
@@ -116,7 +121,10 @@ void
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   LOG(INFO) << "(PeriodicTaskExecutor) shutdown";
-  timer_.Stop();
+  if(timer_.IsRunning())
+  {
+    timer_.Stop();
+  }
 }
 
 void setPeriodicTaskExecutorOnSequence(
@@ -126,18 +134,21 @@ void setPeriodicTaskExecutorOnSequence(
 {
   LOG_CALL(DVLOG(99));
 
-  DCHECK(task_runner);
+  DCHECK(task_runner
+    && task_runner->RunsTasksInCurrentSequence());
 
-  auto sequenceLocalContext
+  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         from_here, task_runner);
 
   DCHECK(sequenceLocalContext);
+  // Can not register same data type twice.
+  // Forces users to call `sequenceLocalContext->unset`.
+  DCHECK(!sequenceLocalContext->try_ctx<PeriodicTaskExecutor>(FROM_HERE));
   PeriodicTaskExecutor& result
     = sequenceLocalContext->set_once<PeriodicTaskExecutor>(
         from_here
         , "Timeout.PeriodicTaskExecutor." + from_here.ToString()
-        , task_runner
         , std::move(updateCallback)
       );
   ignore_result(result);
@@ -148,11 +159,12 @@ void startPeriodicTaskExecutorOnSequence(
 {
   LOG_CALL(DVLOG(99));
 
-  auto sequenceLocalContext
+  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         FROM_HERE, base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
+  DCHECK(sequenceLocalContext->try_ctx<PeriodicTaskExecutor>(FROM_HERE));
   PeriodicTaskExecutor& periodicTaskExecutor
     = sequenceLocalContext->ctx<PeriodicTaskExecutor>(FROM_HERE);
 
@@ -164,11 +176,12 @@ void unsetPeriodicTaskExecutorOnSequence()
 {
   LOG_CALL(DVLOG(99));
 
-  auto sequenceLocalContext
+  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         FROM_HERE, base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
+  DCHECK(sequenceLocalContext->try_ctx<PeriodicTaskExecutor>(FROM_HERE));
   sequenceLocalContext->unset<PeriodicTaskExecutor>(FROM_HERE);
 }
 

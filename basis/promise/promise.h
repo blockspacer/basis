@@ -335,6 +335,76 @@ class Promise : public internal::BasePromise {
                 OnceClosure())));
   }
 
+  // Wraps passed promise into callback that returns it as nested promise.
+  template <typename ResolveT, typename RejectT>
+  auto ThenOn(const scoped_refptr<TaskRunner>& task_runner,
+              const Location& from_here,
+              Promise<ResolveT, RejectT> on_resolve,
+              // If callback returns promise,
+              // then resolving will be done based on `nested` promise
+              // (may be not when callback finished).
+              // Must be true if callback returns promise, otherwise false.
+              // Checks if callback returns promise only in debug mode.
+              bool nestedPromise) noexcept
+  {
+    // `nestedPromise` always true, but keep it for documentation purposes
+    // (API user must use `nested promises` carefully).
+    DCHECK(nestedPromise);
+
+    return ThenOn(task_runner, from_here,
+                  base::BindOnce([
+                    ](
+                      // `Promise<>` has shared lifetime
+                      Promise<ResolveT, RejectT> onResolve
+                    ){
+                      return onResolve;
+                    },
+                    on_resolve // `Promise<>` has shared lifetime
+                  ),
+                  nestedPromise);
+  }
+
+  // Wraps passed promise into callback that returns it as nested promise.
+  template <typename ResolveT, typename RejectT>
+  auto ThenOn(const scoped_refptr<TaskRunner>& task_runner,
+              const Location& from_here,
+              Promise<ResolveT, RejectT> on_resolve,
+              Promise<ResolveT, RejectT> on_reject,
+              // If callback returns promise,
+              // then resolving will be done based on `nested` promise
+              // (may be not when callback finished).
+              // Must be true if callback returns promise, otherwise false.
+              // Checks if callback returns promise only in debug mode.
+              bool nestedPromise) noexcept
+  {
+    // `nestedPromise` always true, but keep it for documentation purposes
+    // (API user must use `nested promises` carefully).
+    DCHECK(nestedPromise);
+
+    return ThenOn(
+      task_runner
+      , from_here
+      , base::BindOnce([
+          ](
+            // `Promise<>` has shared lifetime
+            Promise<ResolveT, RejectT> onResolve
+          ){
+            return onResolve;
+          },
+          on_resolve // `Promise<>` has shared lifetime
+        ),
+        base::BindOnce([
+          ](
+            // `Promise<>` has shared lifetime
+            Promise<ResolveT, RejectT> onReject
+          ){
+            return onReject;
+          },
+          on_reject // `Promise<>` has shared lifetime
+        ),
+        nestedPromise);
+  }
+
   template <typename ThenCb>
   auto ThenOn(const TaskTraits& traits,
               const Location& from_here,

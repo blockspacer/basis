@@ -126,8 +126,9 @@ void
 
   const bool old_has_focus = HasFocus(application_state_);
 
-  DLOG(INFO) << __FUNCTION__ << ": " << STATE_STRING(application_state_)
-             << " -> " << STATE_STRING(state);
+  DVLOG(9)
+    << __FUNCTION__ << ": " << STATE_STRING(application_state_)
+    << " -> " << STATE_STRING(state);
   application_state_ = state;
   DCHECK_NE(application_state_
     , application::kApplicationStateTotal);

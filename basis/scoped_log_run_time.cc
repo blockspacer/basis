@@ -12,7 +12,7 @@ basis::ScopedLogRunTime::~ScopedLogRunTime()
 {
   base::TimeDelta elapsed_delta = timer_->Elapsed();
 
-  DLOG(INFO)
+  LOG(INFO)
     << "Done in : "
     << elapsed_delta.InMilliseconds() << " milliseconds"
     <<" (" << elapsed_delta.InNanoseconds() << " nanoseconds)";

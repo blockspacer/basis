@@ -1,10 +1,11 @@
 ﻿#pragma once
 
-#include <basis/strong_alias.hpp>
 
-#include <basis/promise/promise.h>
-#include <basis/promise/helpers.h>
-#include <basis/promise/post_task_executor.h>
+#include "basis/lock_with_check.hpp"
+#include "basis/strong_alias.hpp"
+#include "basis/promise/promise.h"
+#include "basis/promise/helpers.h"
+#include "basis/promise/post_task_executor.h"
 
 #include <base/timer/timer.h>
 #include <base/time/time.h>
@@ -17,6 +18,7 @@
 #include <base/trace_event/trace_event.h>
 #include <base/synchronization/waitable_event.h>
 #include <base/observer_list_threadsafe.h>
+#include <base/thread_annotations.h>
 
 #include <vector>
 #include <optional>
@@ -122,27 +124,12 @@ private:
       base::SequencedTaskRunner
     > task_runner_;
 
-  // base::WeakPtr can be used to ensure that any callback bound
-  // to an object is canceled when that object is destroyed
-  // (guarantees that |this| will not be used-after-free).
-  base::WeakPtrFactory<
-      PeriodicCheckUntil
-    > weak_ptr_factory_;
-
-  // After constructing |weak_ptr_factory_|
-  // we immediately construct a WeakPtr
-  // in order to bind the WeakPtr object to its thread.
-  // When we need a WeakPtr, we copy construct this,
-  // which is safe to do from any
-  // thread according to weak_ptr.h (versus calling
-  // |weak_ptr_factory_.GetWeakPtr() which is not).
-  base::WeakPtr<PeriodicCheckUntil> weak_this_;
-
   CheckNotifyTask checkNotifyTask_;
 
   CheckShutdownTask checkShutdownTask_;
 
- private:
+  SET_WEAK_POINTERS(PeriodicCheckUntil);
+
   DISALLOW_COPY_AND_ASSIGN(PeriodicCheckUntil);
 };
 

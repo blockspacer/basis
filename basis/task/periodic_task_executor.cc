@@ -120,7 +120,8 @@ void
 
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  LOG(INFO) << "(PeriodicTaskExecutor) shutdown";
+  DVLOG(9) << "(PeriodicTaskExecutor) shutdown";
+
   if(timer_.IsRunning())
   {
     timer_.Stop();

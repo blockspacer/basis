@@ -21,8 +21,13 @@ namespace ECS {
 
 AsioRegistry::AsioRegistry(
   IoContext& ioc)
-  : weak_this_factory_(this)
-  , asioRegistryStrand_(ioc.get_executor())
+  : strand(ioc.get_executor())
+  , ALLOW_THIS_IN_INITIALIZER_LIST(
+      weak_ptr_factory_(COPIED(this)))
+  , ALLOW_THIS_IN_INITIALIZER_LIST(
+      weak_this_(
+        weak_ptr_factory_.GetWeakPtr()))
+  , registry_()
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
 }

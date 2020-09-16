@@ -80,13 +80,13 @@ ScopedBaseEnvironment::~ScopedBaseEnvironment()
       basis::writeTraceReport(
         *traceReportPath_);
     } else {
-      LOG(INFO)
+      DVLOG(9)
         << "tracing disabled";
     }
   }
 
   {
-    LOG(INFO)
+    DVLOG(9)
       << "ThreadPool Shutdown...";
     TRACE_EVENT0("shutdown", "MainLoop:ThreadPool");
     DCHECK(base::ThreadPool::GetInstance());

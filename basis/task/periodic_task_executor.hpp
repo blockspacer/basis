@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "basis/lock_with_check.hpp"
+
 #include <base/timer/timer.h>
 #include <base/time/time.h>
 #include <base/bind.h>
@@ -58,7 +60,7 @@ namespace basis {
       >;
   void Example::setupPeriodicAsioExecutor() NO_EXCEPTION
   {
-    DCHECK_CUSTOM_THREAD_GUARD(periodicAsioTaskRunner_);
+    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(periodicAsioTaskRunner_);
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
 
@@ -84,7 +86,7 @@ namespace basis {
 
   void Example::deletePeriodicAsioExecutor() NO_EXCEPTION
   {
-    DCHECK_CUSTOM_THREAD_GUARD(periodicAsioTaskRunner_);
+    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(periodicAsioTaskRunner_);
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
 
@@ -136,27 +138,12 @@ private:
       base::SequencedTaskRunner
     > task_runner_;
 
-  // base::WeakPtr can be used to ensure that any callback bound
-  // to an object is canceled when that object is destroyed
-  // (guarantees that |this| will not be used-after-free).
-  base::WeakPtrFactory<
-      PeriodicTaskExecutor
-    > weak_ptr_factory_;
-
-  // After constructing |weak_ptr_factory_|
-  // we immediately construct a WeakPtr
-  // in order to bind the WeakPtr object to its thread.
-  // When we need a WeakPtr, we copy construct this,
-  // which is safe to do from any
-  // thread according to weak_ptr.h (versus calling
-  // |weak_ptr_factory_.GetWeakPtr() which is not).
-  base::WeakPtr<PeriodicTaskExecutor> weak_this_;
-
 #if DCHECK_IS_ON()
   std::string debug_guid_;
 #endif // DCHECK_IS_ON()
 
- private:
+  SET_WEAK_POINTERS(PeriodicTaskExecutor);
+
   DISALLOW_COPY_AND_ASSIGN(PeriodicTaskExecutor);
 };
 

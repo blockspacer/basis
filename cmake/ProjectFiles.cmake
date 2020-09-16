@@ -114,22 +114,21 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/promise/then_and_catch_executor.cc
   ${BASIS_DIR}/promise/then_and_catch_executor.h
   #
-  #
   ${BASIS_DIR}/core/numeric_static_cast.hpp
   ${BASIS_DIR}/core/pimpl.hpp
   #
   ${BASIS_DIR}/time_step/FixedTimeStep.hpp
-  ${BASIS_DIR}/time_step/FixedTimeStep.cpp
+  ${BASIS_DIR}/time_step/FixedTimeStep.cc
   ${BASIS_DIR}/time_step/FixedTimeStepLoop.hpp
-  ${BASIS_DIR}/time_step/FixedTimeStepLoop.cpp
+  ${BASIS_DIR}/time_step/FixedTimeStepLoop.cc
   #
   ${BASIS_DIR}/timer/IntervalTimer.hpp
-  ${BASIS_DIR}/timer/IntervalTimer.cpp
+  ${BASIS_DIR}/timer/IntervalTimer.cc
   #
   ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.hpp
-  ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.cpp
+  ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.cc
   #
-  ${BASIS_DIR}/log/Logger.cpp
+  ${BASIS_DIR}/log/Logger.cc
   ${BASIS_DIR}/log/Logger.hpp
   #
   ${BASIS_DIR}/task/task_util.cc
@@ -138,7 +137,22 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/task/periodic_check.cc
   ${BASIS_DIR}/task/periodic_check.hpp
   #
-  ${BASIS_DIR}/move_only.hpp
+  ${BASIS_DIR}/task/periodic_validate_until.cc
+  ${BASIS_DIR}/task/periodic_validate_until.hpp
+  #
+  ${BASIS_DIR}/state_machine/unsafe_state_machine.hpp
+  #
+  ${BASIS_DIR}/scoped_sequence_context_var.hpp
+  ${BASIS_DIR}/scoped_sequence_context_var.cc
+  #
+  ${BASIS_DIR}/lock_with_check.hpp
+  ${BASIS_DIR}/lock_with_check.cc
+  #
+  ${BASIS_DIR}/verify_nothing.hpp
+  #
+  ${BASIS_DIR}/checked_optional.hpp
+  #
+  ${BASIS_DIR}/unowned_ptr.hpp
   #
   ${BASIS_DIR}/unowned_ptr.hpp
   #

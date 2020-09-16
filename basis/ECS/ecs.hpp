@@ -1,9 +1,10 @@
 #pragma once
 
-#include <entt/entt.hpp>
-#include <entt/entity/registry.hpp>
-#include <entt/entity/helper.hpp>
-#include <entt/entity/group.hpp>
+#include <entt/entt.hpp> // IWYU pragma: keep
+#include <entt/entity/registry.hpp> // IWYU pragma: keep
+#include <entt/entity/helper.hpp> // IWYU pragma: keep
+#include <entt/entity/group.hpp> // IWYU pragma: keep
+#include <entt/core/type_info.hpp> // IWYU pragma: keep
 
 #include <cstddef>
 #include <cstdint>

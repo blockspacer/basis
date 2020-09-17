@@ -241,7 +241,7 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 //   // expected to be not modified (if properly initialized)
 //   SET_CUSTOM_THREAD_GUARD(periodicVerifyRunner_);
 // // ...
-// DCHECK_CUSTOM_THREAD_GUARD_SCOPE(periodicVerifyRunner_);
+// DCHECK_THREAD_GUARD_SCOPE(periodicVerifyRunner_);
 // DCHECK(periodicVerifyRunner_);
 // DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicVerifyRunner_.get());
 #define DCHECK_RUN_ON_SEQUENCED_RUNNER(x)                                              \
@@ -561,7 +561,7 @@ class SCOPED_LOCKABLE
 //      , base::BindRepeating(
 //          [] \
 //          (HttpChannel* self) -> bool {
-//            DCHECK_CUSTOM_THREAD_GUARD_SCOPE(self->guard_is_stream_valid_);
+//            DCHECK_THREAD_GUARD_SCOPE(self->guard_is_stream_valid_);
 //            /// \note |perConnectionStrand_|
 //            /// is valid as long as |stream_| valid
 //            /// i.e. valid util |stream_| moved out
@@ -578,7 +578,7 @@ class SCOPED_LOCKABLE
 /// \notes requires to include:
 /// #include <base/threading/thread_collision_warner.h>
 /// #include <base/macros.h>
-#define CREATE_THREAD_COLLISION_GUARD(Name, MutexName) \
+#define CREATE_RECURSIVE_THREAD_COLLISION_GUARD(Name, MutexName) \
   DFAKE_MUTEX(MutexName); \
   CREATE_CUSTOM_THREAD_GUARD_WITH_CHECK(Name \
     , base::BindRepeating( \
@@ -597,9 +597,13 @@ class SCOPED_LOCKABLE
 // API allowed to call from multiple threads, but not concurrently.
 // Usually it means that var. can be used only by one thread at some
 // moment of time (but different threads can use it overall).
+// Imagine (as example) chain of `base::Promise` that uses same object
+// on multiple threads, but all accesses are sequential
+// (without thread collision).
 #define SET_THREAD_COLLISION_GUARD(Name) \
   GUARDED_BY(Name); \
-  CREATE_THREAD_COLLISION_GUARD(Name, CGEN_UNIQUE_NAME(fake_mutex_))
+  CREATE_RECURSIVE_THREAD_COLLISION_GUARD( \
+    Name, CGEN_UNIQUE_NAME(fake_mutex_))
 
 /// \note Prefer instead RUN_ON(Name, m1, m2)
 // Per-variable alternative to `RUN_ON`
@@ -608,6 +612,14 @@ class SCOPED_LOCKABLE
 // that can be used from multiple threads.
 #define USE_CUSTOM_THREAD_GUARD(Name) \
   THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(Name))
+
+// Guard name for member variable
+#define MEMBER_GUARD(Name) \
+  member_guard_##Name
+
+// Guard name for function
+#define FUNC_GUARD(Name) \
+  func_guard_##Name
 
 // Per-variable alternative to `DCHECK_RUN_ON`
 // Documents that you must take care of thread safety somehow.
@@ -623,19 +635,19 @@ class SCOPED_LOCKABLE
       (Name, FROM_HERE)
 
 // FakeLockCheckType::isWholeScope performs check on both scope enter and exit
-#define DCHECK_CUSTOM_THREAD_GUARD_SCOPE(Name) \
+#define DCHECK_THREAD_GUARD_SCOPE(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
     basis::FakeLockPolicyDebugOnly, \
     basis::FakeLockCheckWholeScope)
 
 // FakeLockCheckType::isEnterScope performs check only on scope enter
-#define DCHECK_CUSTOM_THREAD_GUARD_SCOPE_ENTER(Name) \
+#define DCHECK_THREAD_GUARD_SCOPE_ENTER(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
     basis::FakeLockPolicyDebugOnly, \
     basis::FakeLockCheckEnterScope)
 
 // FakeLockCheckType::isEnterScope performs check only on scope exit
-#define DCHECK_CUSTOM_THREAD_GUARD_SCOPE_EXIT(Name) \
+#define DCHECK_THREAD_GUARD_SCOPE_EXIT(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
     basis::FakeLockPolicyDebugOnly, \
     basis::FakeLockCheckExitScope)
@@ -696,7 +708,7 @@ class SCOPED_LOCKABLE
 //     /// in preference to `operator*()` or `operator->()`
 //     RUN_ON_ANY_THREAD(fn_registry) // documents about thread-safety
 //   {
-//     DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_registry_);
+//     DCHECK_THREAD_GUARD_SCOPE(guard_registry_);
 //
 //     return registry_;
 //   }
@@ -748,6 +760,6 @@ class SCOPED_LOCKABLE
 //   }
 // };
 #define DCHECK_RUN_ON_ANY_THREAD_SCOPE(Name) \
-  DCHECK_CUSTOM_THREAD_GUARD_SCOPE(Name)
+  DCHECK_THREAD_GUARD_SCOPE(Name)
 
 } // namespace basis

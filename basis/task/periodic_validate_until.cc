@@ -20,8 +20,8 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
   LOG_CALL(DVLOG(99));
 
   DCHECK_RUN_ON(&sequence_checker_);
-  DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_periodicVerifyRunner_);
-  DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_timeoutTaskRunner_);
+  DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(periodicVerifyRunner_));
+  DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(timeoutTaskRunner_));
 
   DCHECK(base::ThreadPool::GetInstance());
   // wait and signal on different task runners
@@ -93,7 +93,7 @@ PeriodicValidateUntil::VoidPromise
 {
   LOG_CALL(DVLOG(99));
 
-  DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_periodicVerifyRunner_);
+  DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(periodicVerifyRunner_));
   DCHECK(periodicVerifyRunner_);
   DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicVerifyRunner_.get());
 

@@ -773,6 +773,21 @@ struct TupleCanResolveHelper<std::tuple<Ts...>> {
       any_of({!std::is_same<Ts, NoResolve>::value...});
 };
 
+
+template <typename ResolveT, typename RejectT>
+auto wrapPromiseIntoOnceCallback(Promise<ResolveT, RejectT> targetPromise)
+{
+  return base::BindOnce([
+    ](
+      // `Promise<>` has shared lifetime
+      Promise<ResolveT, RejectT> target
+    ){
+      return target;
+    },
+    targetPromise // `Promise<>` has shared lifetime
+  );
+}
+
 }  // namespace internal
 }  // namespace base
 

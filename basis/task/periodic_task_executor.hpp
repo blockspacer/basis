@@ -60,7 +60,7 @@ namespace basis {
       >;
   void Example::setupPeriodicAsioExecutor() NO_EXCEPTION
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(periodicAsioTaskRunner_);
+    DCHECK_THREAD_GUARD_SCOPE(periodicAsioTaskRunner_);
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
 
@@ -86,7 +86,7 @@ namespace basis {
 
   void Example::deletePeriodicAsioExecutor() NO_EXCEPTION
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(periodicAsioTaskRunner_);
+    DCHECK_THREAD_GUARD_SCOPE(periodicAsioTaskRunner_);
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
 

@@ -104,14 +104,14 @@ class PeriodicValidateUntil {
 
   bool RunsVerifierInCurrentSequence() const NO_EXCEPTION
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_periodicVerifyRunner_);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(periodicVerifyRunner_));
 
     return periodicVerifyRunner_->RunsTasksInCurrentSequence();
   }
 
   scoped_refptr<base::SequencedTaskRunner> taskRunner()
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_periodicVerifyRunner_);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(periodicVerifyRunner_));
 
     return periodicVerifyRunner_;
   }
@@ -123,10 +123,10 @@ class PeriodicValidateUntil {
 
  private:
   scoped_refptr<base::SequencedTaskRunner> periodicVerifyRunner_
-    SET_STORAGE_THREAD_GUARD(guard_periodicVerifyRunner_);
+    SET_STORAGE_THREAD_GUARD(MEMBER_GUARD(periodicVerifyRunner_));
 
   scoped_refptr<base::SequencedTaskRunner> timeoutTaskRunner_
-    SET_STORAGE_THREAD_GUARD(guard_timeoutTaskRunner_);
+    SET_STORAGE_THREAD_GUARD(MEMBER_GUARD(timeoutTaskRunner_));
 
   SEQUENCE_CHECKER(sequence_checker_);
 

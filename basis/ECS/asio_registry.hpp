@@ -67,8 +67,8 @@ public:
     , Args &&... args)
     RUN_ON(&strand)
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_strand);
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_registry_);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(strand));
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(registry_));
 
     DCHECK(strand->running_in_this_thread());
 
@@ -106,9 +106,9 @@ public:
   ALWAYS_INLINE
   const ECS::Registry& registry() const NO_EXCEPTION
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_registry_);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(registry_));
 
-    DCHECK_RUN_ON_ANY_THREAD_SCOPE(fn_registry);
+    DCHECK_RUN_ON_ANY_THREAD_SCOPE(FUNC_GUARD(registry));
 
     return registry_;
   }
@@ -121,9 +121,9 @@ public:
     /// on each call to `registry()` because
     /// function is NOT thread-safe and must be avoided
     /// in preference to `operator*()` or `operator->()`
-    RUN_ON_ANY_THREAD(fn_registry)
+    RUN_ON_ANY_THREAD(FUNC_GUARD(registry))
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_registry_);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(registry_));
 
     return registry_;
   }
@@ -131,9 +131,9 @@ public:
   ALWAYS_INLINE
   bool running_in_this_thread() const NO_EXCEPTION
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_strand);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(strand));
 
-    DCHECK_RUN_ON_ANY_THREAD_SCOPE(fn_running_in_this_thread);
+    DCHECK_RUN_ON_ANY_THREAD_SCOPE(FUNC_GUARD(running_in_this_thread));
 
     return strand->running_in_this_thread();
   }
@@ -141,9 +141,9 @@ public:
   ALWAYS_INLINE
   StrandType& asioStrand()
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_strand);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(strand));
 
-    DCHECK_RUN_ON_ANY_THREAD_SCOPE(fn_asioStrand);
+    DCHECK_RUN_ON_ANY_THREAD_SCOPE(FUNC_GUARD(asioStrand));
 
     return strand.data;
   }
@@ -151,9 +151,9 @@ public:
   ALWAYS_INLINE
   const StrandType& asioStrand() const
   {
-    DCHECK_CUSTOM_THREAD_GUARD_SCOPE(guard_strand);
+    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(strand));
 
-    DCHECK_RUN_ON_ANY_THREAD_SCOPE(fn_asioStrand);
+    DCHECK_RUN_ON_ANY_THREAD_SCOPE(FUNC_GUARD(asioStrand));
 
     return strand.data;
   }
@@ -217,10 +217,10 @@ public:
   /// \note do not destruct |Listener| while |strand|
   /// has scheduled or execting tasks
   basis::AnnotatedStrand<ExecutorType> strand
-    SET_STORAGE_THREAD_GUARD(guard_strand);
+    SET_STORAGE_THREAD_GUARD(MEMBER_GUARD(strand));
 
   /// \note `registry(...)` is not thread-safe
-  CREATE_CUSTOM_THREAD_GUARD(fn_registry);
+  CREATE_CUSTOM_THREAD_GUARD(FUNC_GUARD(registry));
 
 private:
   SEQUENCE_CHECKER(sequence_checker_);
@@ -228,13 +228,13 @@ private:
   // Registry stores entities and arranges pools of components
   /// \note entt API is not thread-safe
   ECS::Registry registry_
-    SET_STORAGE_THREAD_GUARD(guard_registry_);
+    SET_STORAGE_THREAD_GUARD(MEMBER_GUARD(registry_));
 
   /// \note `running_in_this_thread(...)` is not thread-safe
-  CREATE_CUSTOM_THREAD_GUARD(fn_running_in_this_thread);
+  CREATE_CUSTOM_THREAD_GUARD(FUNC_GUARD(running_in_this_thread));
 
   /// \note `asioStrand(...)` is not thread-safe
-  CREATE_CUSTOM_THREAD_GUARD(fn_asioStrand);
+  CREATE_CUSTOM_THREAD_GUARD(FUNC_GUARD(asioStrand));
 
   SET_WEAK_POINTERS(AsioRegistry);
 

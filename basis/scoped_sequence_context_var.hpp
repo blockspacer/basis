@@ -179,7 +179,7 @@ class ScopedSequenceCtxVar
     return base::PostPromise(FROM_HERE
       , taskRunner_.get()
       , base::BindOnce(
-          &ScopedSequenceCtxVar::emplace<Args ...>
+          &ScopedSequenceCtxVar::emplace<Args&& ...>
           , base::Unretained(this)
           , from_here
           , debug_name + "_" + FROM_HERE.ToString()

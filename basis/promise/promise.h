@@ -337,72 +337,28 @@ class Promise : public internal::BasePromise {
 
   // Wraps passed promise into callback that returns it as nested promise.
   template <typename ResolveT, typename RejectT>
-  auto ThenOn(const scoped_refptr<TaskRunner>& task_runner,
+  auto ThenNestedPromiseOn(const scoped_refptr<TaskRunner>& task_runner,
               const Location& from_here,
-              Promise<ResolveT, RejectT> on_resolve,
-              // If callback returns promise,
-              // then resolving will be done based on `nested` promise
-              // (may be not when callback finished).
-              // Must be true if callback returns promise, otherwise false.
-              // Checks if callback returns promise only in debug mode.
-              bool nestedPromise) noexcept
+              Promise<ResolveT, RejectT> on_resolve) noexcept
   {
-    // `nestedPromise` always true, but keep it for documentation purposes
-    // (API user must use `nested promises` carefully).
-    DCHECK(nestedPromise);
-
     return ThenOn(task_runner, from_here,
-                  base::BindOnce([
-                    ](
-                      // `Promise<>` has shared lifetime
-                      Promise<ResolveT, RejectT> onResolve
-                    ){
-                      return onResolve;
-                    },
-                    on_resolve // `Promise<>` has shared lifetime
-                  ),
-                  nestedPromise);
+                  internal::wrapPromiseIntoOnceCallback(on_resolve)
+                  , true);
   }
 
   // Wraps passed promise into callback that returns it as nested promise.
   template <typename ResolveT, typename RejectT>
-  auto ThenOn(const scoped_refptr<TaskRunner>& task_runner,
+  auto ThenNestedPromiseOn(const scoped_refptr<TaskRunner>& task_runner,
               const Location& from_here,
               Promise<ResolveT, RejectT> on_resolve,
-              Promise<ResolveT, RejectT> on_reject,
-              // If callback returns promise,
-              // then resolving will be done based on `nested` promise
-              // (may be not when callback finished).
-              // Must be true if callback returns promise, otherwise false.
-              // Checks if callback returns promise only in debug mode.
-              bool nestedPromise) noexcept
+              Promise<ResolveT, RejectT> on_reject) noexcept
   {
-    // `nestedPromise` always true, but keep it for documentation purposes
-    // (API user must use `nested promises` carefully).
-    DCHECK(nestedPromise);
-
     return ThenOn(
       task_runner
       , from_here
-      , base::BindOnce([
-          ](
-            // `Promise<>` has shared lifetime
-            Promise<ResolveT, RejectT> onResolve
-          ){
-            return onResolve;
-          },
-          on_resolve // `Promise<>` has shared lifetime
-        ),
-        base::BindOnce([
-          ](
-            // `Promise<>` has shared lifetime
-            Promise<ResolveT, RejectT> onReject
-          ){
-            return onReject;
-          },
-          on_reject // `Promise<>` has shared lifetime
-        ),
-        nestedPromise);
+      , internal::wrapPromiseIntoOnceCallback(on_resolve)
+      , internal::wrapPromiseIntoOnceCallback(on_reject)
+      , true);
   }
 
   template <typename ThenCb>
@@ -581,6 +537,18 @@ class Promise : public internal::BasePromise {
                   nestedPromise);
   }
 
+  // Wraps passed promise into callback that returns it as nested promise.
+  template <typename ResolveT, typename RejectT>
+  auto ThenNestedPromiseHere(const Location& from_here,
+              Promise<ResolveT, RejectT> on_resolve,
+              Promise<ResolveT, RejectT> on_reject) noexcept
+  {
+    return ThenHere(from_here
+      , internal::wrapPromiseIntoOnceCallback(on_resolve)
+      , internal::wrapPromiseIntoOnceCallback(on_reject)
+      , true);
+  }
+
   template <typename ThenCb, typename CatchCb>
   auto ThenHere(const Location& from_here,
                 ThenCb on_resolve,
@@ -659,6 +627,16 @@ class Promise : public internal::BasePromise {
                     Rejected<ReturnedPromiseRejectT>>>(),
                 internal::ToCallbackBase(std::move(on_resolve)),
                 internal::ToCallbackBase(std::move(on_reject)))));
+  }
+
+  // Wraps passed promise into callback that returns it as nested promise.
+  template <typename ResolveT, typename RejectT>
+  auto ThenNestedPromiseHere(const Location& from_here,
+              Promise<ResolveT, RejectT> on_resolve) noexcept
+  {
+    return ThenHere(from_here
+      , internal::wrapPromiseIntoOnceCallback(on_resolve)
+      , true);
   }
 
   // A task to execute |finally_callback| on |task_runner| is posted after the

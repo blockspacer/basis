@@ -127,21 +127,25 @@ namespace basis {
 //     sm_->AddExitAction(UNINITIALIZED,
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
+//         State prev_state = sm_->currentState();
 //         return ::util::OkStatus();
 //       });
 //     sm_->AddEntryAction(STARTED,
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
+//         State prev_state = sm_->currentState();
 //         return ::util::OkStatus();
 //       });
 //     sm_->AddEntryAction(PAUSED,
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
+//         State prev_state = sm_->currentState();
 //         return ::util::OkStatus();
 //       });
 //     sm_->AddEntryAction(FAILED,
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
+//         State prev_state = sm_->currentState();
 //         return ::util::Status(::util::error::INTERNAL, "Failures are fun!")
 //       });
 //   }
@@ -208,7 +212,7 @@ class UnsafeStateMachine {
   // Entry actions are executed in the order they are added.
   void AddEntryAction(
     const State& state
-    , const CallbackType& callback)
+    , const CallbackType& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
     entry_actions_[state].push_back(callback);
@@ -217,7 +221,7 @@ class UnsafeStateMachine {
   // Exit actions are executed in the order they are added.
   void AddExitAction(
     const State& state
-    , const CallbackType& callback)
+    , const CallbackType& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
     exit_actions_[state].push_back(callback);
@@ -227,6 +231,7 @@ class UnsafeStateMachine {
   // If so, it performs any entry and exit actions.
   // The reason parameter describes why the
   // event was added to the StateMachine.
+  MUST_USE_RETURN_VALUE
   ::util::Status ProcessEvent(
     const Event& event
     // optional reason describing why the event is added
@@ -234,23 +239,25 @@ class UnsafeStateMachine {
     // In the case where an entry/exit action
     // fails during a transition, the recovery_event is set based on the
     // recommended course of action.
-    , Event* recovery_event)
+    , Event* recovery_event) NO_EXCEPTION
   {
     DFAKE_SCOPED_LOCK(debug_collision_warner_);
     return ProcessEventUnlocked(event, reason, recovery_event);
   }
 
-  State CurrentState() const
+  MUST_USE_RETURN_VALUE
+  State currentState() const NO_EXCEPTION
   {
     return current_state_.load();
   }
 
  private:
   // Performs the actions of ProcessEvent.
+  MUST_USE_RETURN_VALUE
   ::util::Status ProcessEventUnlocked(
     const Event& event
     , base::StringPiece reason
-    , Event* recovery_event)
+    , Event* recovery_event) NO_EXCEPTION
   {
     LOG_CALL(DVLOG(99));
 
@@ -289,9 +296,10 @@ class UnsafeStateMachine {
   }
 
   // Returns whether a given state-event pair results in a valid transition.
+  MUST_USE_RETURN_VALUE
   ::util::StatusOr<State> NextState(
     const State& from_state
-    , const Event& event) const
+    , const Event& event) const NO_EXCEPTION
   {
     // No transitions exist for this state.
     const auto transitions = table_.find(from_state);

@@ -19,7 +19,10 @@ UnsafeTypeContext::UnsafeTypeContext()
 
 UnsafeTypeContext::~UnsafeTypeContext()
 {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  /// \note That check may fail and we do not need it.
+  /// Usually sequence-bound and ref-counted |UnsafeTypeContext|
+  /// will be destroyed when parent sequence is destroying.
+  /// --> DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
 } // namespace ECS

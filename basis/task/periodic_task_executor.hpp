@@ -111,6 +111,10 @@ class PeriodicTaskExecutor
   ~PeriodicTaskExecutor();
 
   void
+    setTaskRunner(
+      scoped_refptr<base::SequencedTaskRunner> task_runner);
+
+  void
     startPeriodicTimer(
       // timer update frequency
       const base::TimeDelta& checkPeriod);

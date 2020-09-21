@@ -70,7 +70,7 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
           // refresh period for periodic validation
         , COPIED() checkPeriod
       )
-      , /*nestedPromise*/ true
+      , base::IsNestedPromise{true}
   )
   .ThenOn(periodicVerifyRunner_
     , from_here

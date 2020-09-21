@@ -1,5 +1,6 @@
 #pragma once
 
+#if 0
 #include "basis/ECS/ecs.hpp"
 
 #include <base/timer/timer.h>
@@ -301,3 +302,4 @@ private:
 };
 
 } // namespace ECS
+#endif // 0

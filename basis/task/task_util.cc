@@ -45,4 +45,42 @@ void PostTaskAndWait(const base::Location& from_here
   event.Wait();
 }
 
+base::OnceClosure bindToTaskRunner(
+  const base::Location& from_here,
+  base::OnceClosure&& task,
+  scoped_refptr<base::SequencedTaskRunner> task_runner,
+  base::TimeDelta delay) NO_EXCEPTION
+{
+  DCHECK(task)
+    << from_here.ToString();
+
+  DCHECK(task_runner)
+    << from_here.ToString();
+
+  return base::BindOnce(
+    [
+    ](
+      const base::Location& from_here,
+      base::OnceClosure&& task,
+      scoped_refptr<base::SequencedTaskRunner> task_runner,
+      base::TimeDelta delay
+    ){
+      if(task_runner->RunsTasksInCurrentSequence())
+      {
+        std::move(task).Run();
+        return;
+      }
+
+      task_runner->PostDelayedTask(from_here,
+        std::move(task),
+        delay
+      );
+    }
+    , from_here
+    , base::Passed(std::move(task))
+    , task_runner
+    , delay
+  );
+}
+
 } // namespace basis

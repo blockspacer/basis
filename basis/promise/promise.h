@@ -20,6 +20,13 @@
 
 namespace base {
 
+struct IsNestedPromise
+{
+  operator bool() const { return isNested; }
+
+  bool isNested = false;
+};
+
 template <typename Type>
 struct DisallowNestedPromise
 {
@@ -280,7 +287,7 @@ class Promise : public internal::BasePromise {
               // (may be not when callback finished).
               // Must be true if callback returns promise, otherwise false.
               // Checks if callback returns promise only in debug mode.
-              bool nestedPromise = false) noexcept {
+              IsNestedPromise isNestedPromise = IsNestedPromise()) noexcept {
     DCHECK(!on_resolve.is_null());
 
     // Extract properties from the |on_resolve| callback.
@@ -310,7 +317,7 @@ class Promise : public internal::BasePromise {
             std::is_const<std::remove_reference_t<ThenCallbackArgT>>::value,
         "Google C++ Style: References in function parameters must be const.");
 
-    if(nestedPromise) {
+    if(isNestedPromise) {
       DCHECK(
         AllowOnlyNestedPromise<typename ThenCallbackTraits::ReturnType>::check_passed)
           << "Nested promise not allowed. Promise posted from "
@@ -343,7 +350,7 @@ class Promise : public internal::BasePromise {
   {
     return ThenOn(task_runner, from_here,
                   internal::wrapPromiseIntoOnceCallback(on_resolve)
-                  , true);
+                  , base::IsNestedPromise{true});
   }
 
   // Wraps passed promise into callback that returns it as nested promise.
@@ -358,7 +365,7 @@ class Promise : public internal::BasePromise {
       , from_here
       , internal::wrapPromiseIntoOnceCallback(on_resolve)
       , internal::wrapPromiseIntoOnceCallback(on_reject)
-      , true);
+      , base::IsNestedPromise{true});
   }
 
   template <typename ThenCb>
@@ -370,13 +377,13 @@ class Promise : public internal::BasePromise {
               // (may be not when callback finished).
               // Must be true if callback returns promise, otherwise false.
               // Checks if callback returns promise only in debug mode.
-              bool nestedPromise = false) noexcept {
+              IsNestedPromise isNestedPromise = IsNestedPromise()) noexcept {
     return ThenOn(CreateSequencedTaskRunnerWithTraits(traits), from_here,
-                  std::forward<ThenCb>(on_resolve), nestedPromise);
+                  std::forward<ThenCb>(on_resolve), isNestedPromise);
   }
 
   template <typename ThenCb>
-  auto ThenHere(const Location& from_here, ThenCb&& on_resolve, bool nestedPromise = false) noexcept {
+  auto ThenHere(const Location& from_here, ThenCb&& on_resolve, IsNestedPromise isNestedPromise = IsNestedPromise()) noexcept {
     DCHECK(!on_resolve.is_null());
 
     // Extract properties from the |on_resolve| callback.
@@ -391,6 +398,18 @@ class Promise : public internal::BasePromise {
                                   typename ThenCallbackTraits::RejectType>;
     using ReturnedPromiseResolveT = typename ReturnedPromiseTraits::ResolveType;
     using ReturnedPromiseRejectT = typename ReturnedPromiseTraits::RejectType;
+
+    if(isNestedPromise) {
+      DCHECK(
+        AllowOnlyNestedPromise<typename ThenCallbackTraits::ReturnType>::check_passed)
+          << "Nested promise not allowed. Promise posted from "
+          << from_here.ToString();
+    } else {
+      DCHECK(
+        DisallowNestedPromise<typename ThenCallbackTraits::ReturnType>::check_passed)
+          << "Nested promise not found. Promise posted from "
+          << from_here.ToString();
+    }
 
     // Check we wouldn't need to return Promise<..., Variant<...>>
     static_assert(ReturnedPromiseTraits::valid,
@@ -449,7 +468,7 @@ class Promise : public internal::BasePromise {
               // (may be not when callback finished).
               // Must be true if callback returns promise, otherwise false.
               // Checks if callback returns promise only in debug mode.
-              bool nestedPromise = false) noexcept {
+              IsNestedPromise isNestedPromise = IsNestedPromise()) noexcept {
     DCHECK(!on_resolve.is_null());
     DCHECK(!on_reject.is_null());
 
@@ -495,7 +514,7 @@ class Promise : public internal::BasePromise {
             std::is_const<std::remove_reference_t<CatchCallbackArgT>>::value,
         "Google C++ Style: References in function parameters must be const.");
 
-    if(nestedPromise) {
+    if(isNestedPromise) {
       DCHECK(
         AllowOnlyNestedPromise<typename ThenCallbackTraits::ReturnType>::check_passed)
           << "Nested promise not allowed. Promise posted from "
@@ -530,11 +549,11 @@ class Promise : public internal::BasePromise {
               // (may be not when callback finished).
               // Must be true if callback returns promise, otherwise false.
               // Checks if callback returns promise only in debug mode.
-              bool nestedPromise = false) noexcept {
+              IsNestedPromise isNestedPromise = IsNestedPromise()) noexcept {
     return ThenOn(CreateSequencedTaskRunnerWithTraits(traits), from_here,
                   std::forward<ThenCb>(on_resolve),
                   std::forward<CatchCb>(on_reject),
-                  nestedPromise);
+                  isNestedPromise);
   }
 
   // Wraps passed promise into callback that returns it as nested promise.
@@ -546,7 +565,7 @@ class Promise : public internal::BasePromise {
     return ThenHere(from_here
       , internal::wrapPromiseIntoOnceCallback(on_resolve)
       , internal::wrapPromiseIntoOnceCallback(on_reject)
-      , true);
+      , base::IsNestedPromise{true});
   }
 
   template <typename ThenCb, typename CatchCb>
@@ -558,7 +577,7 @@ class Promise : public internal::BasePromise {
                 // (may be not when callback finished).
                 // Must be true if callback returns promise, otherwise false.
                 // Checks if callback returns promise only in debug mode.
-                bool nestedPromise = false) noexcept {
+                IsNestedPromise isNestedPromise = IsNestedPromise()) noexcept {
     DCHECK(!on_resolve.is_null());
     DCHECK(!on_reject.is_null());
 
@@ -604,7 +623,7 @@ class Promise : public internal::BasePromise {
             std::is_const<std::remove_reference_t<CatchCallbackArgT>>::value,
         "Google C++ Style: References in function parameters must be const.");
 
-    if(nestedPromise) {
+    if(isNestedPromise) {
       DCHECK(
         AllowOnlyNestedPromise<typename ThenCallbackTraits::ReturnType>::check_passed)
           << "Nested promise not allowed. Promise posted from "
@@ -636,7 +655,7 @@ class Promise : public internal::BasePromise {
   {
     return ThenHere(from_here
       , internal::wrapPromiseIntoOnceCallback(on_resolve)
-      , true);
+      , base::IsNestedPromise{true});
   }
 
   // A task to execute |finally_callback| on |task_runner| is posted after the

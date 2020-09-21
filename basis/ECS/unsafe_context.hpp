@@ -36,14 +36,27 @@ struct DefaultSingletonTraits;
 
 namespace ECS {
 
+using idType = std::uint32_t;
+
 // Stores vector of arbitrary typed objects,
-// each object can be found by its type (using entt::type_info).
+// each object can be found by its type (using typeIndex).
 /// \note API is not thread-safe
 // Inspired by entt context, see for details:
 // https://github.com/skypjack/entt/wiki/Crash-Course:-entity-component-system
 class UnsafeTypeContext
 {
  public:
+  // Returns the sequential identifier of a given type.
+  template<typename Type, typename = void>
+  idType typeIndex() NO_EXCEPTION
+  {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+    // `static` because unique per each `Type`
+    static const idType value = typeCounter_++;
+    return value;
+  }
+
   UnsafeTypeContext();
 
   ~UnsafeTypeContext();
@@ -53,6 +66,8 @@ class UnsafeTypeContext
     : UnsafeTypeContext()
     {
       vars_ = base::rvalue_cast(other.vars_);
+
+      typeCounter_ = base::rvalue_cast(other.typeCounter_);
 
       /// \note do not move |sequence_checker_|
       DETACH_FROM_SEQUENCE(sequence_checker_);
@@ -66,9 +81,13 @@ class UnsafeTypeContext
   // it must be `move-constructible` and `move-assignable`
   UnsafeTypeContext& operator=(UnsafeTypeContext&& rhs)
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
     if (this != &rhs)
     {
       vars_ = base::rvalue_cast(rhs.vars_);
+
+      typeCounter_ = base::rvalue_cast(rhs.typeCounter_);
 
       /// \note do not move |sequence_checker_|
       DETACH_FROM_SEQUENCE(sequence_checker_);
@@ -77,11 +96,8 @@ class UnsafeTypeContext
     return *this;
   }
 
-  /*! @brief Alias declaration for type identifiers. */
-  using id_type = ENTT_ID_TYPE;
-
   struct variable_data {
-    id_type type_id;
+    idType type_id;
     std::unique_ptr<void, void(*)(void *)> value;
 #if DCHECK_IS_ON()
     std::string debug_name;
@@ -102,15 +118,19 @@ class UnsafeTypeContext
   template<typename Type, typename... Args>
   Type & set_var(const std::string& debug_name, Args &&... args)
   {
-    unset_var<Type>();
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+    DCHECK(!try_ctx_var<Type>());
+
     vars_.push_back(
       variable_data
       {
-        entt::type_info<Type>::id()
+        typeIndex<Type>()
         , { new Type{std::forward<Args>(args)...}
+            // custom deleter for `unique_ptr`
             , [](void *instance)
               {
-                delete static_cast<Type *>(instance);
+                delete static_cast<Type*>(instance);
               }
           }
 #if DCHECK_IS_ON()
@@ -121,7 +141,23 @@ class UnsafeTypeContext
 #if !DCHECK_IS_ON()
     ignore_result(debug_name);
 #endif // DCHECK_IS_ON()
-    return *static_cast<Type *>(vars_.back().value.get());
+    VLOG(9)
+      << "added to global context: "
+      << debug_name
+      << " with type_id: "
+      << typeIndex<Type>();
+
+#if DCHECK_IS_ON()
+    for(const auto& var: vars_) {
+      VLOG(9)
+        << "(0) found global context var: "
+        << var.debug_name
+        << " with type_id: "
+        << var.type_id;
+    }
+#endif // DCHECK_IS_ON()
+
+    return *static_cast<Type*>(vars_.back().value.get());
   }
 
   /**
@@ -129,26 +165,57 @@ class UnsafeTypeContext
    * @tparam Type Type of object to set.
    */
   template<typename Type>
-  void unset_var()
+  void unset_var(const base::Location& from_here)
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+    DVLOG(9)
+      << from_here.ToString()
+      << " removing from global context type index: "
+      << typeIndex<Type>();
+
+#if DCHECK_IS_ON()
+    for(const auto& var: vars_) {
+      VLOG(9)
+        << "(1) found global context var: "
+        << var.debug_name
+        << " with type_id: "
+        << var.type_id;
+    }
+#endif // DCHECK_IS_ON()
+
     vars_.erase(
       std::remove_if(
         vars_.begin()
         , vars_.end()
-        , [](auto &&var) {
+        , [this](auto &&var) {
 #if DCHECK_IS_ON()
-            if(var.type_id == entt::type_info<Type>::id())
+            if(var.type_id == typeIndex<Type>())
             {
               VLOG(9)
-                << "removed from global context:"
-                << var.debug_name;
+                << "removed from global context: "
+                << var.debug_name
+                << " with type_id: "
+                << var.type_id
+                << " and type index: "
+                << typeIndex<Type>();
             }
 #endif // DCHECK_IS_ON()
-            return var.type_id == entt::type_info<Type>::id();
+            return var.type_id == typeIndex<Type>();
           }
       )
       , vars_.end()
     );
+
+#if DCHECK_IS_ON()
+    for(const auto& var: vars_) {
+      VLOG(9)
+        << "(2) found global context var: "
+        << var.debug_name
+        << " with type_id: "
+        << var.type_id;
+    }
+#endif // DCHECK_IS_ON()
   }
 
   /**
@@ -166,6 +233,8 @@ class UnsafeTypeContext
   [[nodiscard]] /* don't ignore return value */
   Type & ctx_or_set_var(Args &&... args)
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
     auto *value = try_ctx_var<Type>();
     return value
       ? *value
@@ -186,6 +255,8 @@ class UnsafeTypeContext
     const std::string debug_name
     , Args &&... args)
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
     const bool useCache
       = try_ctx_var<Type>();
 
@@ -219,27 +290,20 @@ class UnsafeTypeContext
    */
   template<typename Type>
   [[nodiscard]] /* don't ignore return value */
-  const Type * try_ctx_var() const
+  Type* try_ctx_var()
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
     auto it = std::find_if(
       vars_.cbegin()
       , vars_.cend()
-      , [](auto &&var)
+      , [this](auto &&var)
         {
-          return var.type_id == entt::type_info<Type>::id();
+          return var.type_id == typeIndex<Type>();
         });
     return it == vars_.cend()
       ? nullptr
-      : static_cast<const Type *>(it->value.get());
-  }
-
-  /*! @copydoc try_ctx */
-  template<typename Type>
-  [[nodiscard]] /* don't ignore return value */
-  Type * try_ctx_var()
-  {
-    return const_cast<Type *>(
-      std::as_const(*this).template try_ctx_var<Type>());
+      : static_cast<Type*>(it->value.get());
   }
 
   /**
@@ -256,20 +320,13 @@ class UnsafeTypeContext
    */
   template<typename Type>
   [[nodiscard]] /* don't ignore return value */
-  const Type & ctx_var() const
+  Type& ctx_var()
   {
-    const auto *instance = try_ctx_var<Type>();
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+    auto *instance = try_ctx_var<Type>();
     DCHECK(instance);
     return *instance;
-  }
-
-  /*! @copydoc ctx */
-  template<typename Type>
-  [[nodiscard]] /* don't ignore return value */
-  Type & ctx_var()
-  {
-    return const_cast<Type &>(
-      std::as_const(*this).template ctx_var<Type>());
   }
 
   /**
@@ -295,6 +352,8 @@ class UnsafeTypeContext
   template<typename Func>
   void ctx_var(Func func) const
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
     for(auto pos = vars_.size(); pos; --pos) {
       func(vars_[pos-1].type_id);
     }
@@ -302,25 +361,32 @@ class UnsafeTypeContext
 
   std::vector<variable_data>& vars()
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     return vars_;
   }
 
   const std::vector<variable_data>& vars() const
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     return vars_;
   }
 
   size_t size() const
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     return vars_.size();
   }
 
   bool empty() const
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     return vars_.empty();
   }
 
  private:
+  // per-sequence counter for thread-safety reasons
+  idType typeCounter_{};
+
   // Stores objects in the context of the registry.
   std::vector<variable_data> vars_{};
 

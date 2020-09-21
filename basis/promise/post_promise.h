@@ -85,7 +85,7 @@ auto PostDelayedPromise(const Location& from_here,
                      // (may be not when callback finished).
                      // Must be true if callback returns promise, otherwise false.
                      // Checks if callback returns promise only in debug mode.
-                     bool nestedPromise = false) {
+                     IsNestedPromise isNestedPromise = IsNestedPromise()) {
   // Extract properties from |task| callback.
   using CallbackTraits = internal::CallbackTraits<std::decay_t<CallbackT>>;
   using ReturnedPromiseResolveT = typename CallbackTraits::ResolveType;
@@ -93,7 +93,7 @@ auto PostDelayedPromise(const Location& from_here,
   using ReturnedPromise =
       Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
 
-  if(nestedPromise) {
+  if(isNestedPromise) {
     DCHECK(
       AllowOnlyNestedPromise<typename CallbackTraits::ReturnType>::check_passed)
         << "Nested promise not allowed. Promise posted from "
@@ -132,12 +132,12 @@ auto PostPromise(const Location& from_here
   // (may be not when callback finished).
   // Must be true if callback returns promise, otherwise false.
   // Checks if callback returns promise only in debug mode.
-  , bool nestedPromise = false
+  , IsNestedPromise isNestedPromise = IsNestedPromise()
   , TimeDelta delay = TimeDelta())
 {
   DCHECK(task_runner);
   return PostDelayedPromise(
-    from_here, task_runner, std::forward<CallbackT>(task), delay, nestedPromise);
+    from_here, task_runner, std::forward<CallbackT>(task), delay, isNestedPromise);
 }
 
 template <typename CallbackT>
@@ -149,7 +149,7 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
                      // (may be not when callback finished).
                      // Must be true if callback returns promise, otherwise false.
                      // Checks if callback returns promise only in debug mode.
-                     bool nestedPromise = false) {
+                     IsNestedPromise isNestedPromise = IsNestedPromise()) {
   // Extract properties from |task| callback.
   using CallbackTraits = internal::CallbackTraits<std::decay_t<CallbackT>>;
   using ReturnedPromiseResolveT = typename CallbackTraits::ResolveType;
@@ -157,7 +157,7 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
   using ReturnedPromise =
       Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
 
-  if(nestedPromise) {
+  if(isNestedPromise) {
     DCHECK(
       AllowOnlyNestedPromise<typename CallbackTraits::ReturnType>::check_passed)
         << "Nested promise not allowed. Promise posted from "
@@ -218,17 +218,17 @@ auto PostPromiseOnAsioExecutor(const Location& from_here
   // (may be not when callback finished).
   // Must be true if callback returns promise, otherwise false.
   // Checks if callback returns promise only in debug mode.
-  , bool nestedPromise = false)
+  , IsNestedPromise isNestedPromise = IsNestedPromise())
 {
   return PostDelayedPromiseOnExecutor(
-    from_here, executor, std::forward<CallbackT>(task), nestedPromise);
+    from_here, executor, std::forward<CallbackT>(task), isNestedPromise);
 }
 
 template <typename CallbackT>
 auto PostDelayedPromiseOnContext(const Location& from_here,
                      boost::asio::io_context& context,
                      CallbackT task,
-                     bool nestedPromise = false) {
+                     IsNestedPromise isNestedPromise = IsNestedPromise()) {
   // Extract properties from |task| callback.
   using CallbackTraits = internal::CallbackTraits<std::decay_t<CallbackT>>;
   using ReturnedPromiseResolveT = typename CallbackTraits::ResolveType;
@@ -236,7 +236,7 @@ auto PostDelayedPromiseOnContext(const Location& from_here,
   using ReturnedPromise =
       Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
 
-  if(nestedPromise) {
+  if(isNestedPromise) {
     DCHECK(
       AllowOnlyNestedPromise<typename CallbackTraits::ReturnType>::check_passed)
         << "Nested promise not allowed. Promise posted from "
@@ -268,10 +268,10 @@ auto PostPromiseOnAsioContext(const Location& from_here
     // (may be not when callback finished).
     // Must be true if callback returns promise, otherwise false.
     // Checks if callback returns promise only in debug mode.
-  , bool nestedPromise = false)
+  , IsNestedPromise isNestedPromise = IsNestedPromise())
 {
   return PostDelayedPromiseOnContext(
-    from_here, context, std::forward<CallbackT>(task), nestedPromise);
+    from_here, context, std::forward<CallbackT>(task), isNestedPromise);
 }
 
 // Wraps synchronous task into promise
@@ -292,7 +292,7 @@ scoped_refptr<base::internal::AbstractPromise>
     // (may be not when callback finished).
     // Must be true if callback returns promise, otherwise false.
     // Checks if callback returns promise only in debug mode.
-    bool nestedPromise = false)
+    IsNestedPromise isNestedPromise = IsNestedPromise())
 {
   // Initial PostTask is inlined which results in smaller code.
   using CallbackTraits =
@@ -302,7 +302,7 @@ scoped_refptr<base::internal::AbstractPromise>
   using ReturnedPromise =
       Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
 
-  if(nestedPromise) {
+  if(isNestedPromise) {
     DCHECK(
       AllowOnlyNestedPromise<typename CallbackTraits::ReturnType>::check_passed)
         << "Nested promise not allowed. Promise posted from "
@@ -405,7 +405,7 @@ bool PostTaskAndReplyWithPromise(TaskRunner* task_runner,
                                  // (may be not when callback finished).
                                  // Must be true if callback returns promise, otherwise false.
                                  // Checks if callback returns promise only in debug mode.
-                                 bool nestedPromise = false) {
+                                 IsNestedPromise isNestedPromise = IsNestedPromise()) {
   // Initial PostTask is inlined which results in smaller code.
   using CallbackTraits =
       internal::CallbackTraits<CallbackType<TaskReturnType()>>;
@@ -414,7 +414,7 @@ bool PostTaskAndReplyWithPromise(TaskRunner* task_runner,
   using ReturnedPromise =
       Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
 
-  if(nestedPromise) {
+  if(isNestedPromise) {
     DCHECK(
       AllowOnlyNestedPromise<typename CallbackTraits::ReturnType>::check_passed)
         << "Nested promise not allowed. Promise posted from "

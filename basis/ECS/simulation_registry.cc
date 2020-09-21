@@ -1,5 +1,6 @@
 #include "basis/ECS/simulation_registry.hpp" // IWYU pragma: associated
 
+#if 0
 #include <base/logging.h>
 #include <base/files/file.h>
 #include <base/files/file_util.h>
@@ -56,3 +57,4 @@ Registry &SimulationRegistry::registry() noexcept
 }
 
 } // namespace ECS
+#endif // 0

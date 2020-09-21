@@ -51,11 +51,19 @@ class SequenceLocalContext
 
   UnsafeTypeContext& context()
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_)
+      << "Unable to use global context from wrong thread "
+      << FROM_HERE.ToString();
+
     return context_;
   }
 
   const UnsafeTypeContext& context() const
   {
+    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_)
+      << "Unable to use global context from wrong thread "
+      << FROM_HERE.ToString();
+
     return context_;
   }
 
@@ -104,7 +112,7 @@ class SequenceLocalContext
     }
 #endif // DCHECK_IS_ON()
 
-    return context_.try_ctx_var<Component>();
+    return context_.try_ctx_var<Component>() != nullptr;
   }
 
   template<typename Type, typename... Args>
@@ -148,7 +156,7 @@ class SequenceLocalContext
       << from_here.ToString();
 
     DCHECK(context_.try_ctx_var<Type>());
-    return context_.unset_var<Type>();
+    return context_.unset_var<Type>(from_here);
   }
 
   template<typename Type>
@@ -165,7 +173,7 @@ class SequenceLocalContext
       << "called SequenceLocalContext::unset from "
       << from_here.ToString();
 
-    return context_.unset_var<Type>();
+    return context_.unset_var<Type>(from_here);
   }
 
  private:

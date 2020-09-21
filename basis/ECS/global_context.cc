@@ -1,5 +1,6 @@
 #include "basis/ECS/global_context.hpp" // IWYU pragma: associated
 
+#if 0
 #include <base/memory/singleton.h>
 #include <base/no_destructor.h>
 #include <base/task/post_task.h>
@@ -12,15 +13,14 @@
 
 namespace ECS {
 
-#if 0
-GlobalContext::GlobalContext()
+UnsafeGlobalContext::UnsafeGlobalContext()
 {
-  DETACH_FROM_THREAD(main_thread_checker_);
+  DETACH_FROM_SEQUENCE(sequence_checker_);
 }
 
-GlobalContext::~GlobalContext()
+UnsafeGlobalContext::~UnsafeGlobalContext()
 {
-  DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
 #if DCHECK_IS_ON()
   for(const UnsafeTypeContext::variable_data& data: context_.vars()) {
@@ -36,47 +36,16 @@ GlobalContext::~GlobalContext()
     << "You must manually call `unset` before destruction."
     << "Remaining elements count:"
     << context_.size();
-
-  DCHECK(!locked_.load())
-    << "global context must be unlocked during destruction";
 }
 
-GlobalContext*
-  GlobalContext::GetInstance()
+UnsafeGlobalContext*
+  UnsafeGlobalContext::GetInstance()
 {
   /// Singleton itself thread-safe.
   /// The underlying Type must of course be
   /// thread-safe if you want to use it concurrently.
-  return base::Singleton<GlobalContext>::get();
+  return base::Singleton<UnsafeGlobalContext>::get();
 }
-
-void ECS::GlobalContext::lockModification()
-{
-  DFAKE_SCOPED_LOCK(debug_collision_warner_);
-
-  DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
-
-  DCHECK(!locked_.load())
-    << "modification of global context already locked";
-  locked_ = true;
-
-  DVLOG(9)
-    << "locked GlobalContext";
-}
-
-void GlobalContext::unlockModification()
-{
-  DFAKE_SCOPED_LOCK(debug_collision_warner_);
-
-  DCHECK_CALLED_ON_VALID_THREAD(main_thread_checker_);
-
-  DCHECK(locked_.load())
-    << "modification of global context already unlocked";
-  locked_ = false;
-
-  DVLOG(9)
-      << "unlocked GlobalContext";
-}
-#endif // 0
 
 } // namespace ECS
+#endif // 0

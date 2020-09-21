@@ -64,6 +64,13 @@ PeriodicTaskExecutor::~PeriodicTaskExecutor()
 }
 
 void
+  PeriodicTaskExecutor::setTaskRunner(
+    scoped_refptr<base::SequencedTaskRunner> task_runner)
+{
+  timer_.SetTaskRunner(task_runner);
+}
+
+void
   PeriodicTaskExecutor::startPeriodicTimer(
     const base::TimeDelta& checkPeriod)
 {
@@ -170,7 +177,7 @@ void startPeriodicTaskExecutorOnSequence(
     = sequenceLocalContext->ctx<PeriodicTaskExecutor>(FROM_HERE);
 
   periodicTaskExecutor.startPeriodicTimer(
-    base::TimeDelta::FromMilliseconds(500));
+    endTimeDelta);
 }
 
 void unsetPeriodicTaskExecutorOnSequence()

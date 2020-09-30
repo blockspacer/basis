@@ -20,6 +20,7 @@
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
 #include <base/rvalue_cast.h>
+#include <base/threading/thread_collision_warner.h>
 
 #include <vector>
 #include <string>
@@ -50,7 +51,7 @@ class UnsafeTypeContext
   template<typename Type, typename = void>
   idType typeIndex() NO_EXCEPTION
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     // `static` because unique per each `Type`
     static const idType value = typeCounter_++;
@@ -68,9 +69,6 @@ class UnsafeTypeContext
       vars_ = base::rvalue_cast(other.vars_);
 
       typeCounter_ = base::rvalue_cast(other.typeCounter_);
-
-      /// \note do not move |sequence_checker_|
-      DETACH_FROM_SEQUENCE(sequence_checker_);
     }
 
   // Move assignment operator
@@ -81,16 +79,11 @@ class UnsafeTypeContext
   // it must be `move-constructible` and `move-assignable`
   UnsafeTypeContext& operator=(UnsafeTypeContext&& rhs)
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-
     if (this != &rhs)
     {
       vars_ = base::rvalue_cast(rhs.vars_);
 
       typeCounter_ = base::rvalue_cast(rhs.typeCounter_);
-
-      /// \note do not move |sequence_checker_|
-      DETACH_FROM_SEQUENCE(sequence_checker_);
     }
 
     return *this;
@@ -118,7 +111,7 @@ class UnsafeTypeContext
   template<typename Type, typename... Args>
   Type & set_var(const std::string& debug_name, Args &&... args)
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     DCHECK(!try_ctx_var<Type>());
 
@@ -141,7 +134,8 @@ class UnsafeTypeContext
 #if !DCHECK_IS_ON()
     ignore_result(debug_name);
 #endif // DCHECK_IS_ON()
-    VLOG(9)
+
+    DVLOG(9)
       << "added to global context: "
       << debug_name
       << " with type_id: "
@@ -167,7 +161,7 @@ class UnsafeTypeContext
   template<typename Type>
   void unset_var(const base::Location& from_here)
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     DVLOG(9)
       << from_here.ToString()
@@ -233,7 +227,7 @@ class UnsafeTypeContext
   [[nodiscard]] /* don't ignore return value */
   Type & ctx_or_set_var(Args &&... args)
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     auto *value = try_ctx_var<Type>();
     return value
@@ -255,7 +249,7 @@ class UnsafeTypeContext
     const std::string debug_name
     , Args &&... args)
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     const bool useCache
       = try_ctx_var<Type>();
@@ -292,7 +286,7 @@ class UnsafeTypeContext
   [[nodiscard]] /* don't ignore return value */
   Type* try_ctx_var()
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     auto it = std::find_if(
       vars_.cbegin()
@@ -322,7 +316,7 @@ class UnsafeTypeContext
   [[nodiscard]] /* don't ignore return value */
   Type& ctx_var()
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     auto *instance = try_ctx_var<Type>();
     DCHECK(instance);
@@ -352,7 +346,7 @@ class UnsafeTypeContext
   template<typename Func>
   void ctx_var(Func func) const
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
 
     for(auto pos = vars_.size(); pos; --pos) {
       func(vars_[pos-1].type_id);
@@ -361,25 +355,25 @@ class UnsafeTypeContext
 
   std::vector<variable_data>& vars()
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
     return vars_;
   }
 
   const std::vector<variable_data>& vars() const
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
     return vars_;
   }
 
   size_t size() const
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
     return vars_.size();
   }
 
   bool empty() const
   {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
     return vars_.empty();
   }
 
@@ -390,7 +384,10 @@ class UnsafeTypeContext
   // Stores objects in the context of the registry.
   std::vector<variable_data> vars_{};
 
-  SEQUENCE_CHECKER(sequence_checker_);
+  // Thread collision warner to ensure that API is not called concurrently.
+  // API allowed to call from multiple threads, but not
+  // concurrently.
+  DFAKE_MUTEX(debug_collision_warner_);
 
   DISALLOW_COPY_AND_ASSIGN(UnsafeTypeContext);
 };

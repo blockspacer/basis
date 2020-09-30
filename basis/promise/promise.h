@@ -71,16 +71,6 @@ class Promise : public internal::BasePromise {
  public:
   Promise() = default;
 
-  static_assert(
-      !std::is_reference<ResolveType>::value ||
-          std::is_const<std::remove_reference_t<ResolveType>>::value,
-      "Google C++ Style: References in function parameters must be const.");
-
-  static_assert(
-      !std::is_reference<RejectType>::value ||
-          std::is_const<std::remove_reference_t<RejectType>>::value,
-      "Google C++ Style: References in function parameters must be const.");
-
   explicit Promise(
       scoped_refptr<internal::AbstractPromise> abstract_promise) noexcept
       : BasePromise(std::move(abstract_promise)) {}
@@ -191,11 +181,6 @@ class Promise : public internal::BasePromise {
             std::is_void<CatchCallbackArgT>::value,
         "|on_reject| callback must accept Promise::RejectType or void.");
 
-    static_assert(
-        !std::is_reference<CatchCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<CatchCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
-
     return Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>(
         ConstructAbstractPromiseWithSinglePrerequisite(
             task_runner, from_here, abstract_promise_.get(),
@@ -245,11 +230,6 @@ class Promise : public internal::BasePromise {
         internal::IsValidPromiseArg<RejectType, CatchCallbackArgT>::value ||
             std::is_void<CatchCallbackArgT>::value,
         "|on_reject| callback must accept Promise::RejectType or void.");
-
-    static_assert(
-        !std::is_reference<CatchCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<CatchCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
 
     return Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>(
         ConstructHereAbstractPromiseWithSinglePrerequisite(
@@ -311,11 +291,6 @@ class Promise : public internal::BasePromise {
         internal::IsValidPromiseArg<ResolveType, ThenCallbackArgT>::value ||
             std::is_void<ThenCallbackArgT>::value,
         "|on_resolve| callback must accept Promise::ResolveType or void.");
-
-    static_assert(
-        !std::is_reference<ThenCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<ThenCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
 
     if(isNestedPromise) {
       DCHECK(
@@ -420,11 +395,6 @@ class Promise : public internal::BasePromise {
             std::is_void<ThenCallbackArgT>::value,
         "|on_resolve| callback must accept Promise::ResolveType or void.");
 
-    static_assert(
-        !std::is_reference<ThenCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<ThenCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
-
     return Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>(
         ConstructHereAbstractPromiseWithSinglePrerequisite(
             from_here, abstract_promise_.get(),
@@ -503,16 +473,6 @@ class Promise : public internal::BasePromise {
         internal::IsValidPromiseArg<RejectType, CatchCallbackArgT>::value ||
             std::is_void<CatchCallbackArgT>::value,
         "|on_reject| callback must accept Promise::RejectType or void.");
-
-    static_assert(
-        !std::is_reference<ThenCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<ThenCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
-
-    static_assert(
-        !std::is_reference<CatchCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<CatchCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
 
     if(isNestedPromise) {
       DCHECK(
@@ -612,16 +572,6 @@ class Promise : public internal::BasePromise {
         internal::IsValidPromiseArg<RejectType, CatchCallbackArgT>::value ||
             std::is_void<CatchCallbackArgT>::value,
         "|on_reject| callback must accept Promise::RejectType or void.");
-
-    static_assert(
-        !std::is_reference<ThenCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<ThenCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
-
-    static_assert(
-        !std::is_reference<CatchCallbackArgT>::value ||
-            std::is_const<std::remove_reference_t<CatchCallbackArgT>>::value,
-        "Google C++ Style: References in function parameters must be const.");
 
     if(isNestedPromise) {
       DCHECK(

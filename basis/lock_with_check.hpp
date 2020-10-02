@@ -208,8 +208,14 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 //  void internalRunLoop() NO_EXCEPTION
 //    RUN_ON(&sequence_checker_);
 // };
-#define RUN_ON(...) \
+#define THREAD_ANNOTATION_ATTRIBUTE__RUN_ON(...) \
   THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(__VA_ARGS__))
+
+#define PRIVATE_METHOD_RUN_ON(...) \
+  THREAD_ANNOTATION_ATTRIBUTE__RUN_ON(__VA_ARGS__)
+
+#define PROTECTED_METHOD_RUN_ON(...) \
+  THREAD_ANNOTATION_ATTRIBUTE__RUN_ON(__VA_ARGS__)
 
 /// \note use it with functions in `public` API (that can call `DCHECK_RUN_ON*`)
 //
@@ -218,12 +224,15 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 // class MyClass {
 // public:
 //  void runLoop() NO_EXCEPTION
-//    RUN_ON_LOCKS_EXCLUDED(&sequence_checker_);
+//    THREAD_ANNOTATION_ATTRIBUTE__RUN_ON_LOCKS_EXCLUDED(&sequence_checker_);
 // };
-#define RUN_ON_LOCKS_EXCLUDED(...) \
+#define THREAD_ANNOTATION_ATTRIBUTE__RUN_ON_LOCKS_EXCLUDED(...) \
   LOCKS_EXCLUDED(__VA_ARGS__)
 
-#define NOT_RUN_ON(...) \
+#define PUBLIC_METHOD_RUN_ON(...) \
+  THREAD_ANNOTATION_ATTRIBUTE__RUN_ON_LOCKS_EXCLUDED(__VA_ARGS__)
+
+#define ANNOTATE_NOT_RUN_ON(...) \
   LOCKS_EXCLUDED(__VA_ARGS__)
 
 // Type of `x` is `base::SequenceChecker*`
@@ -239,13 +248,13 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 // scoped_refptr<base::SequencedTaskRunner> periodicVerifyRunner_
 //   // It safe to read value from any thread because its storage
 //   // expected to be not modified (if properly initialized)
-//   SET_CUSTOM_THREAD_GUARD(periodicVerifyRunner_);
+//   GUARD_WITH_FAKE_LOCK(periodicVerifyRunner_);
 // // ...
 // DCHECK_THREAD_GUARD_SCOPE(periodicVerifyRunner_);
 // DCHECK(periodicVerifyRunner_);
 // DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicVerifyRunner_.get());
 #define DCHECK_RUN_ON_SEQUENCED_RUNNER(x)                                              \
-  basis::SequencedTaskRunnerScope seq_rask_runner_scope(x); \
+  basis::SequencedTaskRunnerScope seq_task_runner_scope(x); \
   DCHECK((x)); \
   DCHECK((x)->RunsTasksInCurrentSequence())
 
@@ -362,7 +371,7 @@ template <
 >
 class ScopedFakeLockWithCheck;
 
-/// \note prefer `DCHECK_RUN_ON` to `FakeLockWithCheck` where possible.
+/// \note Prefer instead `DCHECK_RUN_ON` to `FakeLockWithCheck` where possible.
 /// \note It is not real lock, only annotated as lock.
 /// It just calls callback on scope entry AND exit.
 /// \note Need to build with `-Wthread-safety-analysis`
@@ -524,7 +533,7 @@ class SCOPED_LOCKABLE
   DISALLOW_COPY_AND_ASSIGN(ScopedFakeLockWithCheck);
 };
 
-#define CREATE_CUSTOM_THREAD_GUARD(Name) \
+#define CREATE_FAKE_THREAD_GUARD(Name) \
   basis::FakeLockWithCheck<bool()> \
     Name { \
     basis::VerifyNothing::Repeatedly() \
@@ -534,53 +543,27 @@ class SCOPED_LOCKABLE
 // Documents that you must take care of thread safety somehow.
 // That allows to notice (find & debug & fix) code
 // that can be used from multiple threads.
-#define SET_CUSTOM_THREAD_GUARD(Name) \
+#define GUARD_WITH_FAKE_LOCK(Name) \
   GUARDED_BY(Name); \
-  CREATE_CUSTOM_THREAD_GUARD(Name)
+  CREATE_FAKE_THREAD_GUARD(Name)
 
-// Documents that it safe to read value from any thread because its storage
-// expected to be not modified (if properly initialized)
-#define SET_STORAGE_THREAD_GUARD(Name) \
-  SET_CUSTOM_THREAD_GUARD(Name)
-
-#define CREATE_CUSTOM_THREAD_GUARD_WITH_CHECK(Name, Callback) \
+#define CREATE_FAKE_THREAD_GUARD_WITH_CHECK(Name, Callback) \
   basis::FakeLockWithCheck<bool()> \
     Name { \
     Callback \
   }
 
-// USAGE
-//
-//  basis::AnnotatedStrand<ExecutorType> perConnectionStrand_
-//    SET_CUSTOM_THREAD_GUARD_WITH_CHECK(
-//      guard_perConnectionStrand_
-//      // 1. It safe to read value from any thread
-//      // because its storage expected to be not modified.
-//      // 2. On each access to strand check that stream valid
-//      // otherwise `::boost::asio::post` may fail.
-//      , base::BindRepeating(
-//          [] \
-//          (HttpChannel* self) -> bool {
-//            DCHECK_THREAD_GUARD_SCOPE(self->guard_is_stream_valid_);
-//            /// \note |perConnectionStrand_|
-//            /// is valid as long as |stream_| valid
-//            /// i.e. valid util |stream_| moved out
-//            /// (it uses executor from stream).
-//            return self->is_stream_valid_.load();
-//          }
-//          , base::Unretained(this)
-//        )
-//    );
-#define SET_CUSTOM_THREAD_GUARD_WITH_CHECK(Name, Callback) \
+// Prefer instead `GUARD_MEMBER_WITH_CHECK` to `SET_THREAD_GUARD_WITH_CHECK`
+#define SET_THREAD_GUARD_WITH_CHECK(Name, Callback) \
   GUARDED_BY(Name); \
-  CREATE_CUSTOM_THREAD_GUARD_WITH_CHECK(Name, Callback)
+  CREATE_FAKE_THREAD_GUARD_WITH_CHECK(Name, Callback)
 
 /// \notes requires to include:
 /// #include <base/threading/thread_collision_warner.h>
 /// #include <base/macros.h>
 #define CREATE_RECURSIVE_THREAD_COLLISION_GUARD(Name, MutexName) \
   DFAKE_MUTEX(MutexName); \
-  CREATE_CUSTOM_THREAD_GUARD_WITH_CHECK(Name \
+  CREATE_FAKE_THREAD_GUARD_WITH_CHECK(Name \
     , base::BindRepeating( \
       [ \
       ]( \
@@ -610,7 +593,7 @@ class SCOPED_LOCKABLE
 // Documents that you must take care of thread safety somehow.
 // That allows to notice (find & debug & fix) code
 // that can be used from multiple threads.
-#define USE_CUSTOM_THREAD_GUARD(Name) \
+#define THREAD_ANNOTATION_ATTRIBUTE__USE_CUSTOM_THREAD_GUARD(Name) \
   THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(Name))
 
 // Guard name for member variable
@@ -641,10 +624,44 @@ class SCOPED_LOCKABLE
     basis::FakeLockCheckWholeScope)
 
 // FakeLockCheckType::isEnterScope performs check only on scope enter
+//
+// EXAMPLE
+//  /// \note `is_stream_valid_` may become invalid on scope exit,
+//  /// so check it only on beginning of function scope,
+//  /// but not at the end of function.
+//  DCHECK_THREAD_GUARD_SCOPE_ENTER(MEMBER_GUARD(perConnectionStrand_));
 #define DCHECK_THREAD_GUARD_SCOPE_ENTER(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
     basis::FakeLockPolicyDebugOnly, \
     basis::FakeLockCheckEnterScope)
+
+#define GUARD_MEMBER_DISALLOW_THREAD_COLLISION(Name) \
+  SET_THREAD_COLLISION_GUARD(MEMBER_GUARD(Name))
+
+// USAGE
+//
+//  basis::AnnotatedStrand<ExecutorType> perConnectionStrand_
+//    GUARD_MEMBER_WITH_CHECK(
+//      perConnectionStrand_
+//      // 1. It safe to read value from any thread
+//      // because its storage expected to be not modified.
+//      // 2. On each access to strand check that stream valid
+//      // otherwise `::boost::asio::post` may fail.
+//      , base::BindRepeating(
+//          [] \
+//          (HttpChannel* self) -> bool {
+//            DCHECK_THREAD_GUARD_SCOPE(self->guard_is_stream_valid_);
+//            /// \note |perConnectionStrand_|
+//            /// is valid as long as |stream_| valid
+//            /// i.e. valid util |stream_| moved out
+//            /// (it uses executor from stream).
+//            return self->is_stream_valid_.load();
+//          }
+//          , base::Unretained(this)
+//        )
+//    );
+#define GUARD_MEMBER_WITH_CHECK(Name, Callback) \
+  SET_THREAD_GUARD_WITH_CHECK(MEMBER_GUARD(Name), Callback)
 
 // FakeLockCheckType::isEnterScope performs check only on scope exit
 #define DCHECK_THREAD_GUARD_SCOPE_EXIT(Name) \
@@ -669,12 +686,12 @@ class SCOPED_LOCKABLE
 // because its storage expected to be not modified,
 // we just need to check storage validity.
 // 2. Thread-safe type (like atomic).
-#define GUARDED_BY_ANY_THREAD(Name) \
+#define THREAD_ANNOTATION_ATTRIBUTE__GUARDED_BY_ANY_THREAD(Name) \
   GUARDED_BY(Name)
 
-/// \note Prefer `RUN_ON_ANY_THREAD_LOCKS_EXCLUDED`
+/// \note Prefer instead `RUN_ON_ANY_THREAD_LOCKS_EXCLUDED`
 // `RUN_ON_ANY_THREAD` can be used to force API users
-// to use `DCHECK_RUN_ON_ANY_THREAD_SCOPE` on each call to some function because
+// to use `DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD` on each call to some function because
 // function is NOT thread-safe and must be avoided
 // i.e. it makes API ugly intentionally
 /// \note Alternatively you can combine it with multiple `mutexes`
@@ -688,11 +705,11 @@ class SCOPED_LOCKABLE
 //     RUN_ON_ANY_THREAD(logFailure); // documents about thread-safety
 //
 //   // ...
-//   CREATE_CUSTOM_THREAD_GUARD(logFailure);
+//   CREATE_FAKE_THREAD_GUARD(logFailure);
 //   // ...
 //
 //   {
-//     DCHECK_RUN_ON_ANY_THREAD_SCOPE(logFailure); // documents about thread-safety
+//     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(logFailure); // documents about thread-safety
 //     logFailure(ec, "open");
 //   }
 //
@@ -702,7 +719,7 @@ class SCOPED_LOCKABLE
 //   MUST_USE_RETURN_VALUE
 //   ALWAYS_INLINE
 //   ECS::Registry& registry() NO_EXCEPTION
-//     /// \note force API users to use `DCHECK_RUN_ON_ANY_THREAD_SCOPE`
+//     /// \note force API users to use `DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD`
 //     /// on each call to `registry()` because
 //     /// function is NOT thread-safe and must be avoided
 //     /// in preference to `operator*()` or `operator->()`
@@ -712,7 +729,7 @@ class SCOPED_LOCKABLE
 //
 //     return registry_;
 //   }
-#define RUN_ON_ANY_THREAD(Name) \
+#define THREAD_ANNOTATION_ATTRIBUTE__RUN_ON_ANY_THREAD(Name) \
   THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(Name))
 
 // Use `RUN_ON_ANY_THREAD_LOCKS_EXCLUDED` if you want to
@@ -727,19 +744,19 @@ class SCOPED_LOCKABLE
 //   void logFailure(const ErrorCode& ec, char const* what)
 //    RUN_ON_ANY_THREAD_LOCKS_EXCLUDED(logFailure) // documents about thread-safety
 //  {
-//    DCHECK_RUN_ON_ANY_THREAD_SCOPE(logFailure); // documents about thread-safety
+//    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(logFailure); // documents about thread-safety
 //
 //    // ...
 //  }
 //
 //   // ...
-//   CREATE_CUSTOM_THREAD_GUARD(logFailure);
+//   CREATE_FAKE_THREAD_GUARD(logFailure);
 //   // ...
 //
 //   {
 //     logFailure(ec, "open");
 //   }
-#define RUN_ON_ANY_THREAD_LOCKS_EXCLUDED(Name) \
+#define THREAD_ANNOTATION_ATTRIBUTE__RUN_ON_ANY_THREAD_LOCKS_EXCLUDED(Name) \
   LOCKS_EXCLUDED(Name)
 
 // Allow to use code that can be used from any thread
@@ -751,15 +768,46 @@ class SCOPED_LOCKABLE
 // EXAMPLE
 // class MySharedClass {
 //   // ...
-//   CREATE_CUSTOM_THREAD_GUARD(MySharedClassDestructor);
+//   CREATE_FAKE_THREAD_GUARD(MySharedClassDestructor);
 //   // ...
 //   ~MySharedClass()
 //   {
 //     // documents that destructor called from any thread
-//     DCHECK_RUN_ON_ANY_THREAD_SCOPE(MySharedClassDestructor);
+//     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(MySharedClassDestructor);
 //   }
 // };
-#define DCHECK_RUN_ON_ANY_THREAD_SCOPE(Name) \
-  DCHECK_THREAD_GUARD_SCOPE(Name)
+#define DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(Name) \
+  DCHECK_THREAD_GUARD_SCOPE_ENTER(FUNC_GUARD(Name))
+
+#define DCHECK_MEMBER_GUARD(Name) \
+  DCHECK_THREAD_GUARD_SCOPE_ENTER(MEMBER_GUARD(Name))
+
+// Documents that class (or struct, etc.)
+// member is not thread-bound
+// i.e. can be used by multiple threads.
+#define DCHECK_MEMBER_OF_UNKNOWN_THREAD(Name) \
+  DCHECK_MEMBER_GUARD(Name)
+
+// Documents that class (or struct, etc.)
+// member is not thread-bound
+// i.e. can be used by multiple threads.
+//
+// For example, it MAY be safe to read value from any thread
+// if its storage expected to be not modified
+// (if properly initialized)
+#define GUARD_MEMBER_OF_UNKNOWN_THREAD(Name) \
+  GUARD_WITH_FAKE_LOCK(MEMBER_GUARD(Name))
+
+// Documents that class (or struct, etc.)
+// `public:` member fuction is not thread-bound
+// i.e. can be used by multiple threads.
+#define GUARD_METHOD_ON_UNKNOWN_THREAD(Name) \
+  THREAD_ANNOTATION_ATTRIBUTE__RUN_ON_ANY_THREAD_LOCKS_EXCLUDED(FUNC_GUARD(Name))
+
+#define CREATE_METHOD_GUARD(Name) \
+  CREATE_FAKE_THREAD_GUARD(FUNC_GUARD(Name))
+
+#define CREATE_MEMBER_GUARD(Name) \
+  CREATE_FAKE_THREAD_GUARD(MEMBER_GUARD(Name))
 
 } // namespace basis

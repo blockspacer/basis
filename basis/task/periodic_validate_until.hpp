@@ -52,7 +52,7 @@ namespace basis {
 //       [
 //       ](
 //         boost::asio::io_context& ioc
-//         , ECS::AsioRegistry& asio_registry
+//         , ECS::NetworkRegistry& asio_registry
 //         , COPIED() base::RepeatingClosure resolveCallback
 //       ){
 //         LOG(INFO)
@@ -104,14 +104,14 @@ class PeriodicValidateUntil {
 
   bool RunsVerifierInCurrentSequence() const NO_EXCEPTION
   {
-    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(periodicVerifyRunner_));
+    DCHECK_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
 
     return periodicVerifyRunner_->RunsTasksInCurrentSequence();
   }
 
   scoped_refptr<base::SequencedTaskRunner> taskRunner()
   {
-    DCHECK_THREAD_GUARD_SCOPE(MEMBER_GUARD(periodicVerifyRunner_));
+    DCHECK_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
 
     return periodicVerifyRunner_;
   }
@@ -123,10 +123,10 @@ class PeriodicValidateUntil {
 
  private:
   scoped_refptr<base::SequencedTaskRunner> periodicVerifyRunner_
-    SET_STORAGE_THREAD_GUARD(MEMBER_GUARD(periodicVerifyRunner_));
+    GUARD_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
 
   scoped_refptr<base::SequencedTaskRunner> timeoutTaskRunner_
-    SET_STORAGE_THREAD_GUARD(MEMBER_GUARD(timeoutTaskRunner_));
+    GUARD_MEMBER_OF_UNKNOWN_THREAD(timeoutTaskRunner_);
 
   SEQUENCE_CHECKER(sequence_checker_);
 

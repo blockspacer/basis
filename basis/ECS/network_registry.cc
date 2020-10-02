@@ -1,4 +1,4 @@
-#include "basis/ECS/asio_registry.hpp" // IWYU pragma: associated
+#include "basis/ECS/network_registry.hpp" // IWYU pragma: associated
 
 #include <base/logging.h>
 #include <base/files/file.h>
@@ -19,20 +19,27 @@
 
 namespace ECS {
 
-AsioRegistry::AsioRegistry(
-  IoContext& ioc)
-  : strand(ioc.get_executor())
-  , ALLOW_THIS_IN_INITIALIZER_LIST(
+NetworkRegistry::NetworkRegistry()
+  : ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_ptr_factory_(COPIED(this)))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_this_(
         weak_ptr_factory_.GetWeakPtr()))
+  , taskRunner_{
+      base::ThreadPool::GetInstance()->
+        CreateSequencedTaskRunnerWithTraits(
+          base::TaskTraits{
+            base::TaskPriority::BEST_EFFORT
+            , base::MayBlock()
+            , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+          }
+        )}
   , registry_()
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
 }
 
-AsioRegistry::~AsioRegistry()
+NetworkRegistry::~NetworkRegistry()
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }

@@ -160,6 +160,25 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/promise_collection.hpp
   #
+  ${BASIS_DIR}/progress_logger.cc
+  ${BASIS_DIR}/progress_logger.hpp
+  #
+  ${BASIS_DIR}/ECS/components/parent_entity.hpp
+  #
+  ${BASIS_DIR}/ECS/components/parent_entity.hpp
+  #
+  ${BASIS_DIR}/ECS/components/first_child_in_linked_list.hpp
+  #
+  ${BASIS_DIR}/ECS/components/child_linked_list_size.hpp
+  #
+  ${BASIS_DIR}/ECS/components/child_linked_list.hpp
+  #
+  ${BASIS_DIR}/ECS/helpers/remove_child_entity.hpp
+  #
+  ${BASIS_DIR}/ECS/helpers/foreach_child_entity.hpp
+  #
+  ${BASIS_DIR}/ECS/helpers/add_child_entity.hpp
+  #
   ${BASIS_DIR}/ECS/simulation_registry.cc
   ${BASIS_DIR}/ECS/simulation_registry.hpp
   #
@@ -176,4 +195,6 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/ECS/network_registry.hpp
   #
   ${BASIS_DIR}/ECS/ecs.hpp
+  #
+  ${BASIS_DIR}/ECS/tags.hpp
 )

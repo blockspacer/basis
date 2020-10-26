@@ -35,6 +35,9 @@ void foreachChildEntity(
   using ChildrenComponent = ChildLinkedList<TagType>;
 
   // sanity check
+  DCHECK(parentId != ECS::NULL_ENTITY);
+
+  // sanity check
   DCHECK(registry.valid(parentId));
 
   // sanity check
@@ -77,7 +80,9 @@ void foreachChildEntity(
     callback.Run(REFERENCED(registry), parentId, curr);
 
     // sanity check
-    DCHECK(registry.valid(nextCurr));
+    DCHECK((nextCurr != ECS::NULL_ENTITY)
+      ? registry.valid(nextCurr)
+      : true);
 
     curr = nextCurr;
   }

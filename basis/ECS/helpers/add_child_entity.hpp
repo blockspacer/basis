@@ -33,7 +33,13 @@ void prependChildEntity(
   using ParentComponent = ParentEntity<TagType>;
 
   // sanity check
+  DCHECK(parentId != ECS::NULL_ENTITY);
+
+  // sanity check
   DCHECK(registry.valid(parentId));
+
+  // sanity check
+  DCHECK(childId != ECS::NULL_ENTITY);
 
   // sanity check
   DCHECK(registry.valid(childId));

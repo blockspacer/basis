@@ -7,6 +7,35 @@
 
 namespace basis {
 
+::boost::beast::detail::bind_front_wrapper<
+    typename std::decay<
+      std::function<void(base::OnceClosure&&)>
+    >::type,
+    typename std::decay<
+      base::OnceClosure
+    >::type> bindFrontOnceClosure(
+  base::OnceClosure&& task)
+{
+  // Because `std::bind` arg(s) are passed by value as Lvalues
+  // we need to use `bind_front_handler`.
+  // There is no problem with `bind_front_handler`
+  // because in this implementation all data members
+  // of generated functor are forwarded to a target.
+  // https://stackoverflow.com/a/61422348
+  return ::boost::beast::bind_front_handler<
+    std::function<void(base::OnceClosure&&)>
+    , base::OnceClosure
+  >([
+    ](
+      base::OnceClosure&& boundTask
+    ) mutable {
+      DCHECK(boundTask);
+      base::rvalue_cast(boundTask).Run();
+    }
+    , base::rvalue_cast(task)
+  );
+}
+
 bool RunsTasksInAnySequenceOf(
   const std::vector<scoped_refptr<base::SequencedTaskRunner> > &task_runners
   , bool dcheck_not_empty)

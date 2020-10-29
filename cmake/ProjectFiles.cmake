@@ -163,6 +163,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/progress_logger.cc
   ${BASIS_DIR}/progress_logger.hpp
   #
+  ${BASIS_DIR}/sequence_bound_flag.cc
+  ${BASIS_DIR}/sequence_bound_flag.hpp
+  #
   ${BASIS_DIR}/ECS/components/parent_entity.hpp
   #
   ${BASIS_DIR}/ECS/components/parent_entity.hpp

@@ -13,7 +13,6 @@
 #include <base/location.h>
 #include <base/strings/string_util.h>
 #include <base/strings/strcat.h>
-#include <base/strings/string_util.h>
 #include <base/synchronization/lock.h>
 
 // TODO(unknown): Move to Abseil-status when it is available.

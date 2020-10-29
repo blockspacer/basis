@@ -1,5 +1,9 @@
 # About
 
+`basis` extends `base` library.
+
+Unlike `base`, `basis` can use third-party libs (`boost`, `beast`, `entt`, etc.)
+
 Basis is pulled into many projects.
 
 So the bar for adding stuff is that it must have demonstrated wide applicability.

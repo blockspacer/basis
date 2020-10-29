@@ -52,11 +52,7 @@ class PeriodicCheckUntil
    using CheckShutdownTask
     =  base::RepeatingCallback<bool()>;
 
-  using CheckPeriod
-    = util::StrongAlias<
-        class CheckPeriodTag
-        , base::TimeDelta
-      >;
+  STRONGLY_TYPED(base::TimeDelta, CheckPeriod);
 
  public:
   PeriodicCheckUntil(

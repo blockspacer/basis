@@ -16,6 +16,7 @@
 #include <base/strings/string_util.h>
 #include <base/strings/stringprintf.h>
 #include <base/synchronization/lock.h>
+#include <base/lazy_instance.h>
 
 namespace util {
 
@@ -24,9 +25,11 @@ typedef std::unordered_map<std::string, ErrorSpace*, std::hash<std::string> >
     ErrorSpaceTable;
 static ErrorSpaceTable* error_space_table;
 
-base::Lock ErrorSpace::registry_lock_;
+base::LazyInstance<base::Lock>::Leaky registry_lock_ =
+  LAZY_INSTANCE_INITIALIZER;
 
-base::Lock ErrorSpace::init_lock_;
+base::LazyInstance<base::Lock>::Leaky init_lock_ =
+  LAZY_INSTANCE_INITIALIZER;
 
 // Convert canonical code to a value known to this binary.
 static inline error::Code MapToLocalCode(int c) {
@@ -119,8 +122,8 @@ static bool initialized = false;
 static const ErrorSpace* generic_space = nullptr;
 static const std::string* empty_string;
 
-/// \note requires Lock
 static void InitModule() {
+  base::AutoLock initLock(init_lock_.Get());
   if (initialized) return;
   initialized = true;
   generic_space = new GenericErrorSpace;
@@ -129,7 +132,6 @@ static void InitModule() {
 
 const ErrorSpace* Status::canonical_space() {
   {
-    base::AutoLock initLock(ErrorSpace::init_lock_);
     InitModule();
   }
   return generic_space;
@@ -137,7 +139,6 @@ const ErrorSpace* Status::canonical_space() {
 
 const std::string* Status::EmptyString() {
   {
-    base::AutoLock initLock(ErrorSpace::init_lock_);
     InitModule();
   }
   return empty_string;
@@ -358,7 +359,7 @@ Status Status::StripMessage() const {
 }
 
 ErrorSpace::ErrorSpace(const char* name) : name_(name) {
-  base::AutoLock l(ErrorSpace::registry_lock_);
+  base::AutoLock l(registry_lock_.Get());
   if (error_space_table == nullptr) {
     error_space_table = new ErrorSpaceTable;
   }
@@ -366,7 +367,7 @@ ErrorSpace::ErrorSpace(const char* name) : name_(name) {
 }
 
 ErrorSpace::~ErrorSpace() {
-  base::AutoLock l(ErrorSpace::registry_lock_);
+  base::AutoLock l(registry_lock_.Get());
   ErrorSpaceTable::iterator iter = error_space_table->find(name_);
   if (iter != error_space_table->end() && iter->second == this) {
     error_space_table->erase(iter);
@@ -375,10 +376,9 @@ ErrorSpace::~ErrorSpace() {
 
 ErrorSpace* ErrorSpace::Find(const std::string& name) {
   {
-    base::AutoLock initLock(ErrorSpace::init_lock_);
     InitModule();
   }
-  base::AutoLock l(ErrorSpace::registry_lock_);
+  base::AutoLock l(registry_lock_.Get());
   if (error_space_table == nullptr) {
     return nullptr;
   } else {

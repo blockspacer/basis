@@ -296,12 +296,6 @@ class ErrorSpace {
   // Prevent deletions of ErrorSpace objects by random clients
   virtual ~ErrorSpace();
 
- /// \todo refactor locks to ConstInitType
- public:
-  static base::Lock registry_lock_;
-
-  static base::Lock init_lock_;
-
  private:
   const std::string name_;
 };

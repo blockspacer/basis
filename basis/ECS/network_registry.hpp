@@ -2,7 +2,6 @@
 
 #include "basis/ECS/ecs.hpp"
 
-#include "basis/lock_with_check.hpp"
 #include "basis/unowned_ptr.hpp" // IWYU pragma: keep
 #include "basis/lock_with_check.hpp" // IWYU pragma: keep
 

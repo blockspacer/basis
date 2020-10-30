@@ -220,8 +220,9 @@ public:
   }
 
   // check that object is alive, use memory tool like ASAN
-  inline void checkForLifetimeIssues()
+  inline void checkForLifetimeIssues() const
   {
+    // Works with `-fsanitize=address,undefined
 #if defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
     if (pObj_)
       reinterpret_cast<const volatile uint8_t*>(pObj_)[0];

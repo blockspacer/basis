@@ -1,7 +1,7 @@
 #pragma once
 
 #if 0
-#include "basis/lock_with_check.hpp"
+#include "basis/scoped_checks.hpp"
 #include "basis/ECS/sequence_local_context.hpp"
 
 #include <base/macros.h>

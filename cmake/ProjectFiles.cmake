@@ -145,8 +145,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/scoped_sequence_context_var.hpp
   ${BASIS_DIR}/scoped_sequence_context_var.cc
   #
-  ${BASIS_DIR}/lock_with_check.hpp
-  ${BASIS_DIR}/lock_with_check.cc
+  ${BASIS_DIR}/scoped_checks.hpp
+  ${BASIS_DIR}/scoped_checks.cc
   #
   ${BASIS_DIR}/verify_nothing.hpp
   #
@@ -181,6 +181,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/ECS/helpers/foreach_child_entity.hpp
   #
   ${BASIS_DIR}/ECS/helpers/add_child_entity.hpp
+  #
+  ${BASIS_DIR}/bind/exec_time_checker.hpp
+  ${BASIS_DIR}/bind/exec_time_checker.cc
   #
   ${BASIS_DIR}/ECS/simulation_registry.cc
   ${BASIS_DIR}/ECS/simulation_registry.hpp

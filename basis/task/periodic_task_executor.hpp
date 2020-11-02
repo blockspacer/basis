@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "basis/lock_with_check.hpp"
+#include "basis/scoped_checks.hpp"
 
 #include <base/timer/timer.h>
 #include <base/time/time.h>

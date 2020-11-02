@@ -295,7 +295,7 @@ void setPeriodicTimeoutCheckerOnSequence(
       , errorText /// \note copied
       );
 
-  auto sequenceLocalContext
+  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         from_here, task_runner);
 
@@ -317,7 +317,7 @@ void unsetPeriodicTimeoutCheckerOnSequence()
 {
   LOG_CALL(DVLOG(99));
 
-  auto sequenceLocalContext
+  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         FROM_HERE, base::SequencedTaskRunnerHandle::Get());
 

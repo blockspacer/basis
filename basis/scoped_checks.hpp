@@ -1,7 +1,7 @@
 #pragma once
 
 #include "basis/verify_nothing.hpp"
-#include "basis/lock_with_check.hpp"
+#include "basis/scoped_checks.hpp"
 
 #include <base/macros.h>
 #include <base/sequence_checker.h>
@@ -23,6 +23,32 @@
 #include <functional>
 #include <map>
 #include <string>
+
+// -----------------------------------------------------------------------------
+// Usage documentation
+// -----------------------------------------------------------------------------
+//
+// Overview:
+// We can use approach similar to `base::AutoLock`
+// to perform checks on scope entry (and/or exit) and require 'custom locks'
+// in code (guard code) using Clang Thread-Safety annotations
+// i.e. we create custom types like `base::AutoLockRunOnThreadId myThreadIdLock_`
+// and can use annotations like `GUARDED_BY(myThreadIdLock_)`.
+//
+// MOTIVATION
+//
+// We use Clang Thread-Safety annotations to:
+//
+// * Guard usage of some data or method with custom checks (like memory validity)
+//   See `GUARD_MEMBER_WITH_CHECK`
+// * Guard some data or method with thread id (single-thread-bound)
+//   sequence id (sequence-bound), strand id check (asio strand-bound), etc.
+//   See `PRIVATE_METHOD_RUN_ON(&sequence_checker_)`,
+//  `PUBLIC_METHOD_RUN_ON(&perConnectionStrand_)` etc.
+// * Document that you must take care of thread-safety while using some data or method
+//   See `CREATE_METHOD_GUARD`, `GUARD_MEMBER_OF_UNKNOWN_THREAD`,
+//   `GUARD_METHOD_ON_UNKNOWN_THREAD`, `DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD`,
+//   `DCHECK_MEMBER_OF_UNKNOWN_THREAD` etc.
 
 namespace basis {
 

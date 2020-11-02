@@ -4,7 +4,7 @@
 #include <base/sequence_checker.h>
 #include <base/compiler_specific.h>
 
-#include <basis/lock_with_check.hpp>
+#include <basis/scoped_checks.hpp>
 
 namespace basis {
 

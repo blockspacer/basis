@@ -26,6 +26,12 @@ void prependChildEntity(
   , ECS::Entity parentId
   , ECS::Entity childId)
 {
+  DVLOG(99)
+    << " prepended child entity "
+    << childId
+    << " to parent entity "
+    << parentId;
+
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
   using ChildrenComponent = ChildLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
@@ -64,7 +70,8 @@ void prependChildEntity(
 
     CHECK(!registry.has<ParentComponent>(childId));
     registry.emplace<ParentComponent>(
-      childId, ParentComponent{parentId}
+      childId
+      , ParentComponent{parentId}
     );
   }
 

@@ -11,6 +11,19 @@
 
 namespace ECS {
 
+/// \note We return `std::vector<ECS::Entity>` because
+/// can not use `registry.remove` here:
+/// Only deleting the current entity or removing its components
+/// is allowed during iterations.
+/// For all the other entities,
+/// destroying them or removing their components
+/// is not allowed and can result in undefined behavior.
+struct ChildEntitiesThatCanBeRemoved
+{
+  std::vector<ECS::Entity> children;
+  ECS::Entity parent;
+};
+
 // Removes id of existing entity from linked list.
 //
 // Returns `false` if entity not found linked list
@@ -21,7 +34,7 @@ template <
   typename TagType  // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-bool removeChildEntity(
+ChildEntitiesThatCanBeRemoved childEntitiesThatCanBeRemoved(
   ECS::Registry& registry
   , ECS::Entity parentId
   , ECS::Entity childIdToRemove)
@@ -31,6 +44,9 @@ bool removeChildEntity(
   /// \note we assume that size of all children can be stored in `size_t`
   using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
   using ParentComponent = ParentEntity<TagType>;
+
+  ChildEntitiesThatCanBeRemoved result;
+  result.parent = parentId;
 
   // sanity check
   DCHECK(parentId != ECS::NULL_ENTITY);
@@ -47,7 +63,7 @@ bool removeChildEntity(
   if(!registry.has<FirstChildComponent>(parentId))
   {
     // no children i.e. nothing to do
-    return false;
+    return result;
   }
 
   FirstChildComponent& firstChild
@@ -67,8 +83,7 @@ bool removeChildEntity(
     if(childrenCompToRemove.nextId == ECS::NULL_ENTITY)
     {
       // no more children related to `parentId`
-      registry.remove<FirstChildComponent>(parentId);
-      registry.remove<ChildrenSizeComponent>(parentId);
+      result.children.push_back(parentId);
     } else {
       // mark as first element in list
       firstChild.firstId = childrenCompToRemove.nextId;
@@ -96,12 +111,11 @@ bool removeChildEntity(
 
     // child no more in list
     {
-      registry.remove<ChildrenComponent>(childIdToRemove);
-      registry.remove<ParentComponent>(childIdToRemove);
+      result.children.push_back(parentId);
     }
 
     // `childIdToRemove` removed without errors
-    return true;
+    return result;
   }
 
   ChildrenComponent& childrenFirstChild
@@ -152,8 +166,7 @@ bool removeChildEntity(
 
       // child no more in list
       {
-        registry.remove<ChildrenComponent>(childIdToRemove);
-        registry.remove<ParentComponent>(childIdToRemove);
+        result.children.push_back(parentId);
 
         // decrement size of linked list
         {
@@ -168,14 +181,14 @@ bool removeChildEntity(
       }
 
       // `childIdToRemove` removed without errors
-      return true;
+      return result;
     }
 
     curr = currChildrenComp.nextId;
   }
 
   // `childIdToRemove` not found i.e. nothing to do
-  return false;
+  return result;
 }
 
 } // namespace ECS

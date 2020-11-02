@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basis/lock_with_check.hpp"
+#include "basis/scoped_checks.hpp"
 
 #include <base/macros.h>
 #include <base/sequence_checker.h>

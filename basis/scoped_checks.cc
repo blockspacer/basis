@@ -1,4 +1,4 @@
-#include "basis/lock_with_check.hpp" // IWYU pragma: associated
+#include "basis/scoped_checks.hpp" // IWYU pragma: associated
 
 namespace basis {
 

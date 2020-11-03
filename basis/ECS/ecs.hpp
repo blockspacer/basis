@@ -31,10 +31,8 @@
 
 namespace ECS {
 
-ENTT_OPAQUE_TYPE(EntityId, std::uint32_t);
+static const Entity NULL_ENTITY = entt::null;
 
-/// \todo entt > 3.5
-#if 0
 /// \note `struct EntityId` default initialized with `entt::null`
 /// to avoid bugs similar to github.com/skypjack/entt/issues/561
 // Custom entity identifiers are definitely a good idea in two cases at least:
@@ -50,14 +48,11 @@ struct EntityId
   using entity_type
     = typename traits_type::entity_type;
 
-  using entity_type
-    = std::uint32_t;
-
-  EntityId(entity_type value = entt::null)
+  EntityId(entity_type value = ECS::NULL_ENTITY)
     : entt{value}
   {}
 
-  EntityId(const EntityId &other)
+  EntityId(const EntityId& other)
     : entt{other.entt}
   {}
 
@@ -71,7 +66,6 @@ private:
 
 template<>
 struct entt::entt_traits<EntityId>: entt::entt_traits<entt::entity> {};
-#endif // 0
 
 // Registry stores entities and arranges pools of components
 using Registry
@@ -90,8 +84,6 @@ using View
 // Underlying entity identifier
 using Entity
   = ECS::EntityId;
-
-static const Entity NULL_ENTITY = entt::null;
 
 template<typename... Type>
 struct exclude_t: entt::type_list<Type...> {};

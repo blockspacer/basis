@@ -19,36 +19,37 @@ namespace ECS {
 /// Prefer to use it if order of children does not matter
 /// (for performance reasons).
 template <
-  typename TagType  // unique type tag for all children
+  typename TagType // unique type tag for all children
 >
 void prependChildEntity(
   ECS::Registry& registry
   , ECS::Entity parentId
   , ECS::Entity childId)
 {
-  DVLOG(99)
-    << " prepended child entity "
-    << childId
-    << " to parent entity "
-    << parentId;
-
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
   using ChildrenComponent = ChildLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
   using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
   using ParentComponent = ParentEntity<TagType>;
 
-  // sanity check
-  DCHECK(parentId != ECS::NULL_ENTITY);
+  if(parentId == ECS::NULL_ENTITY
+     || childId == ECS::NULL_ENTITY)
+  {
+    return;
+  }
+
+  DVLOG(99)
+    << " prepended child entity "
+    << childId
+    << " to parent entity "
+    << parentId;
 
   // sanity check
-  DCHECK(registry.valid(parentId));
+  DCHECK(parentId != childId);
 
-  // sanity check
-  DCHECK(childId != ECS::NULL_ENTITY);
+  DCHECK_ECS_ENTITY(parentId, &registry);
 
-  // sanity check
-  DCHECK(registry.valid(childId));
+  DCHECK_ECS_ENTITY(childId, &registry);
 
   FirstChildComponent* firstChild
     = registry.try_get<FirstChildComponent>(parentId);
@@ -77,11 +78,7 @@ void prependChildEntity(
 
   if(firstChild)
   {
-    // sanity check
-    DCHECK(firstChild->firstId != ECS::NULL_ENTITY);
-
-    // sanity check
-    DCHECK(registry.valid(firstChild->firstId));
+    DCHECK_ECS_ENTITY(firstChild->firstId, &registry);
 
     // increment size of linked list
     {

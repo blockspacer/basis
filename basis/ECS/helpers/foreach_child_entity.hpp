@@ -3,8 +3,10 @@
 #include <basis/ECS/ecs.hpp>
 
 #include <basis/ECS/components/child_linked_list.hpp>
+#include <basis/ECS/components/child_linked_list_size.hpp>
 #include <basis/ECS/components/first_child_in_linked_list.hpp>
 #include <basis/ECS/components/parent_entity.hpp>
+#include <basis/ECS/helpers/is_parent_entity.hpp>
 
 #include <base/logging.h>
 #include <base/callback.h>
@@ -22,8 +24,30 @@ using ForeachChildEntityCb
 // i.e. can not be removed.
 //
 // Used to represent hierarchies in ECS model.
+//
+// USAGE
+//
+//  ECS::foreachChildEntity<TagType>(
+//    REFERENCED(registry)
+//    , parentEntityId
+//    , base::BindRepeating(
+//        [
+//        ](
+//          ECS::Entity parentEntityId
+//          , ECS::Registry& registry
+//          , ECS::Entity parentId
+//          , ECS::Entity childId
+//        ){
+//          DCHECK(parentId != childId);
+//
+//          DCHECK_PARENT_ECS_ENTITY(parentId, &registry, TagType);
+//        }
+//        , parentEntityId
+//      )
+//    );
+//  };
 template <
-  typename TagType  // unique type tag for all children
+  typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
 void foreachChildEntity(
@@ -31,20 +55,28 @@ void foreachChildEntity(
   , ECS::Entity parentId
   , ForeachChildEntityCb callback)
 {
-  using FirstChildComponent = FirstChildInLinkedList<TagType>;
-  using ChildrenComponent = ChildLinkedList<TagType>;
+  using FirstChildComponent = ECS::FirstChildInLinkedList<TagType>;
+  using ChildrenComponent = ECS::ChildLinkedList<TagType>;
+  /// \note we assume that size of all children can be stored in `size_t`
+  using ChildrenSizeComponent = ECS::ChildLinkedListSize<TagType, size_t>;
+  using ParentComponent = ECS::ParentEntity<TagType>;
 
-  // sanity check
-  DCHECK(parentId != ECS::NULL_ENTITY);
+  if(parentId == ECS::NULL_ENTITY)
+  {
+    return;
+  }
 
-  // sanity check
-  DCHECK(registry.valid(parentId));
+  DCHECK_ECS_ENTITY(parentId, &registry);
 
   // sanity check
   DCHECK(callback);
 
-  if(!registry.has<FirstChildComponent>(parentId))
+  // check required components for parent that have any children
+  if(!isParentEntity<TagType>(registry, parentId))
   {
+    DCHECK(!registry.has<FirstChildComponent>(parentId));
+    DCHECK(!registry.has<ChildrenSizeComponent>(parentId));
+
     // no children i.e. nothing to do
     return;
   }
@@ -52,39 +84,40 @@ void foreachChildEntity(
   FirstChildComponent& firstChild
     = registry.get<FirstChildComponent>(parentId);
 
-  // sanity check
-  DCHECK(firstChild.firstId != ECS::NULL_ENTITY);
+  DCHECK_CHILD_ECS_ENTITY(firstChild.firstId, &registry, TagType);
 
-  ECS::Entity curr = firstChild.firstId;
+  ECS::Entity currChild = firstChild.firstId;
 
   // if removed element not first in list, then find it
-  while(curr != ECS::NULL_ENTITY)
+  while(currChild != ECS::NULL_ENTITY)
   {
-    // sanity check
-    DCHECK(registry.valid(curr));
+    DCHECK_ECS_ENTITY(currChild, &registry);
 
-    ECS::Entity nextCurr = ECS::NULL_ENTITY;
+    // sanity check
+    DCHECK(currChild != parentId);
+
+    DCHECK_CHILD_ECS_ENTITY(currChild, &registry, TagType);
+
+    ECS::Entity nextCurrChild = ECS::NULL_ENTITY;
 
     // cache some data because callback may free compoments
     {
-      // Assume that all entities have the relationship component.
-      DCHECK(registry.has<ChildrenComponent>(curr));
-
       ChildrenComponent& currChildrenComp
-        = registry.get<ChildrenComponent>(curr);
+        = registry.get<ChildrenComponent>(currChild);
 
-      nextCurr = currChildrenComp.nextId;
+      nextCurrChild = currChildrenComp.nextId;
     }
 
-    /// \note callback may destroy `curr` or any components
-    callback.Run(REFERENCED(registry), parentId, curr);
+    /// \note callback may destroy `currChild` or any components
+    callback.Run(REFERENCED(registry), parentId, currChild);
 
     // sanity check
-    DCHECK((nextCurr != ECS::NULL_ENTITY)
-      ? registry.valid(nextCurr)
+    DCHECK((nextCurrChild != ECS::NULL_ENTITY)
+      ? registry.valid(nextCurrChild)
+      // no check for ECS::NULL_ENTITY
       : true);
 
-    curr = nextCurr;
+    currChild = nextCurrChild;
   }
 }
 

@@ -180,7 +180,9 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/ECS/helpers/foreach_child_entity.hpp
   #
-  ${BASIS_DIR}/ECS/helpers/add_child_entity.hpp
+  ${BASIS_DIR}/ECS/helpers/view_child_entities.hpp
+  #
+  ${BASIS_DIR}/ECS/helpers/prepend_child_entity.hpp
   #
   ${BASIS_DIR}/bind/exec_time_checker.hpp
   ${BASIS_DIR}/bind/exec_time_checker.cc

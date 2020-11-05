@@ -11,11 +11,12 @@
 
 namespace ECS {
 
+// checks components required by any `Child`
 template <
   typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-bool isChildEntity(
+bool hasChildComponents(
   ECS::Registry& registry
   , ECS::Entity entityId)
 {
@@ -24,6 +25,7 @@ bool isChildEntity(
 
   return
     entityId != ECS::NULL_ENTITY
+    && registry.valid(entityId)
     && registry.has<ChildrenComponent>(entityId)
     && registry.has<ParentComponent>(entityId);
 }

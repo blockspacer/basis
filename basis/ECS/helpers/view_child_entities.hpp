@@ -6,7 +6,8 @@
 #include <basis/ECS/components/child_linked_list_size.hpp>
 #include <basis/ECS/components/first_child_in_linked_list.hpp>
 #include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/helpers/is_parent_entity.hpp>
+#include <basis/ECS/helpers/has_parent_components.hpp>
+#include <basis/ECS/helpers/is_child_of.hpp>
 
 #include <base/logging.h>
 #include <base/callback.h>
@@ -14,6 +15,7 @@
 
 namespace ECS {
 
+/// \note `Scoped*View` removes component on scope exit
 template <
   typename TagType // unique type tag for all children
 >
@@ -60,6 +62,8 @@ private:
   DISALLOW_COPY_AND_ASSIGN(ScopedChildView);
 };
 
+// Iterates each entity in linked list to create view associated with them.
+//
 // USAGE
 //
 //  auto scopedView
@@ -70,11 +74,11 @@ private:
 //
 //  for(const ECS::Entity& childId: scopedView.view())
 //  {
-//    DCHECK_CHILD_ECS_ENTITY(childId, &registry, TagType);
+//    DCHECK_CHILD_ENTITY_COMPONENTS(childId, &registry, TagType);
 //
 //    DCHECK(parentEntityId != childId);
 //
-//    DCHECK_PARENT_ECS_ENTITY(parentEntityId, &registry, TagType);
+//    DCHECK_PARENT_ENTITY_COMPONENTS(parentEntityId, &registry, TagType);
 //
 //    // update `prev` and `next` links in `ChildLinkedList` hierarchy
 //    bool isRemovedFromListLinks
@@ -122,7 +126,10 @@ auto viewChildEntities(
       ){
         DCHECK(parentId != childId);
 
-        DCHECK_PARENT_ECS_ENTITY(parentId, &registry, TagType);
+        DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
+        DCHECK_CHILD_ENTITY_COMPONENTS(childId, &registry, TagType);
+
+        DCHECK(isChildOf<TagType>(REFERENCED(registry), parentId, childId));
 
         DCHECK(!registry.has<Internal_ChildrenToView>(childId));
         registry.emplace<Internal_ChildrenToView>(childId);
@@ -130,6 +137,7 @@ auto viewChildEntities(
     )
   );
 
+  /// \note `Scoped*View` must remove component on scope exit
   return ScopedChildView<Internal_ChildrenToView>(REFERENCED(registry));
 }
 

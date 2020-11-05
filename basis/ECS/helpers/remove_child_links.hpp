@@ -6,6 +6,7 @@
 #include <basis/ECS/components/first_child_in_linked_list.hpp>
 #include <basis/ECS/components/parent_entity.hpp>
 #include <basis/ECS/components/child_linked_list_size.hpp>
+#include <basis/ECS/helpers/is_child_of.hpp>
 
 #include <base/logging.h>
 
@@ -13,6 +14,7 @@ namespace ECS {
 
 // Does not remove any components,
 // only updates `prev` and `next` links in `ChildLinkedList` hierarchy
+// i.e. you must remove some components from parent and child entity manually
 /// \note removes element only once (expects no duplicates)
 /// \note does not remove `ChildLinkedList` component from child
 /// \note does not remove `ParentEntity` component from child
@@ -31,6 +33,7 @@ bool removeChildLinks(
   , ECS::Entity listEndId = ECS::NULL_ENTITY)
 {
   using ChildrenComponent = ChildLinkedList<TagType>;
+  using ParentComponent = ParentEntity<TagType>;
 
   if(childIdToRemove == ECS::NULL_ENTITY
      || listBeginId == ECS::NULL_ENTITY)
@@ -44,7 +47,7 @@ bool removeChildLinks(
 
   while(curr != ECS::NULL_ENTITY)
   {
-    DCHECK_CHILD_ECS_ENTITY(curr, &registry, TagType);
+    DCHECK_CHILD_ENTITY_COMPONENTS(curr, &registry, TagType);
 
     ChildrenComponent& currChildrenComp
       = registry.get<ChildrenComponent>(curr);
@@ -52,6 +55,8 @@ bool removeChildLinks(
     ECS::Entity& currPrevId = currChildrenComp.prevId;
 
     ECS::Entity& currNextId = currChildrenComp.nextId;
+
+    DCHECK(registry.get<ParentComponent>(curr).parentId == parentId);
 
     // found element to remove
     if(childIdToRemove == curr)
@@ -61,7 +66,9 @@ bool removeChildLinks(
       {
         DCHECK_ECS_ENTITY(currPrevId, &registry);
 
-        DCHECK_CHILD_ECS_ENTITY(currPrevId, &registry, TagType);
+        DCHECK_CHILD_ENTITY_COMPONENTS(currPrevId, &registry, TagType);
+
+        DCHECK(registry.get<ParentComponent>(currPrevId).parentId == parentId);
 
         ChildrenComponent& prevChildrenComp
           = registry.get<ChildrenComponent>(currPrevId);
@@ -74,7 +81,9 @@ bool removeChildLinks(
       {
         DCHECK_ECS_ENTITY(currNextId, &registry);
 
-        DCHECK_CHILD_ECS_ENTITY(currNextId, &registry, TagType);
+        DCHECK_CHILD_ENTITY_COMPONENTS(currNextId, &registry, TagType);
+
+        DCHECK(registry.get<ParentComponent>(currNextId).parentId == parentId);
 
         ChildrenComponent& nextChildrenComp
           = registry.get<ChildrenComponent>(currNextId);

@@ -6,6 +6,10 @@
 
 namespace ECS {
 
+// Stores id of parent element in hierarchy
+// (parent element must be associated with linked list of children).
+// `ParentEntity` component must be emplaced into child entity.
+//
 // Allows to represent hierarchies in ECS model
 // without ruining the performance.
 /// \see https://skypjack.github.io/2019-06-25-ecs-baf-part-4/

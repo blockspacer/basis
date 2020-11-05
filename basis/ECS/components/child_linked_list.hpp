@@ -6,6 +6,10 @@
 
 namespace ECS {
 
+// Represents element of hierarchy
+//
+// `ChildLinkedList` component must be emplaced into child entity.
+//
 // Allows to represent hierarchies in ECS model
 // without ruining the performance.
 //

@@ -6,6 +6,8 @@
 #include <basis/ECS/components/first_child_in_linked_list.hpp>
 #include <basis/ECS/components/parent_entity.hpp>
 #include <basis/ECS/components/child_linked_list_size.hpp>
+#include <basis/ECS/helpers/is_child_of.hpp>
+#include <basis/ECS/helpers/has_child_in_linked_list.hpp>
 
 #include <base/logging.h>
 
@@ -15,8 +17,11 @@ namespace ECS {
 // as first element (NOT as last element as you may want!).
 // Used to represent hierarchies in ECS model.
 //
-/// \note Order of children may be corrupted, use with caution (!!!).
-/// Prefer to use it if order of children does not matter
+/// \note Assumes that `childId` does not have `ParentEntity`
+/// with provided `TagType`
+/// i.e. it can add only new child, not modify existing one
+/// \note expects no child element duplication in linked list
+/// \note Prefer to use it if order of children does not matter
 /// (for performance reasons).
 template <
   typename TagType // unique type tag for all children
@@ -38,11 +43,7 @@ void prependChildEntity(
     return;
   }
 
-  DVLOG(99)
-    << " prepended child entity "
-    << childId
-    << " to parent entity "
-    << parentId;
+  DCHECK(!isChildOf<TagType>(REFERENCED(registry), parentId, childId));
 
   // sanity check
   DCHECK(parentId != childId);
@@ -129,6 +130,15 @@ void prependChildEntity(
         }
     );
   }
+
+  DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
+
+  DCHECK_CHILD_ENTITY_COMPONENTS(childId, &registry, TagType);
+
+  DCHECK(isChildOf<TagType>(REFERENCED(registry), parentId, childId));
+
+  DCHECK(hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childId));
+
 }
 
 } // namespace ECS

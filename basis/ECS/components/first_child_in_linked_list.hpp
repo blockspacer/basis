@@ -6,6 +6,10 @@
 
 namespace ECS {
 
+// Represents first element of hierarchy
+// (first element of linked list that stores children related to parent entity).
+// `FirstChildInLinkedList` component must be emplaced into parent entity.
+//
 // Allows to represent hierarchies in ECS model
 // without ruining the performance.
 /// \see https://skypjack.github.io/2019-06-25-ecs-baf-part-4/

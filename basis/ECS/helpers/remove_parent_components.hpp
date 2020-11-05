@@ -27,7 +27,7 @@ void removeParentComponents(
     return;
   }
 
-  DCHECK_PARENT_ECS_ENTITY(parentId, &registry, TagType);
+  DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
 
   DCHECK(registry.has<FirstChildComponent>(parentId));
   registry.remove<FirstChildComponent>(parentId);

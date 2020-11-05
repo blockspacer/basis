@@ -6,8 +6,9 @@
 
 namespace ECS {
 
-// Allows to represent hierarchies in ECS model
-// without ruining the performance.
+// Represents size of hierarchy
+// (size of linked list that stores children related to parent entity).
+// `ChildLinkedListSize` component must be emplaced into parent entity.
 //
 /// \see https://skypjack.github.io/2019-06-25-ecs-baf-part-4/
 //

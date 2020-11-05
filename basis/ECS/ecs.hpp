@@ -155,9 +155,9 @@ inline std::ostream& operator<<(
 //
 // USAGE
 //
-// DCHECK_CHILD_ECS_ENTITY(entityId, &registry, TagType);
-// DCHECK_CHILD_ECS_ENTITY(entityId, registryStrongAlias, TagType);
-#define DCHECK_CHILD_ECS_ENTITY(__name__, __registry_ptr__, __tag_type__) \
+// DCHECK_CHILD_ENTITY_COMPONENTS(entityId, &registry, TagType);
+// DCHECK_CHILD_ENTITY_COMPONENTS(entityId, registryStrongAlias, TagType);
+#define DCHECK_CHILD_ENTITY_COMPONENTS(__name__, __registry_ptr__, __tag_type__) \
   { \
     DCHECK_ECS_ENTITY(__name__, __registry_ptr__); \
     DCHECK((__registry_ptr__)->has<ParentEntity<__tag_type__>>(__name__)); \
@@ -168,9 +168,9 @@ inline std::ostream& operator<<(
 //
 // USAGE
 //
-// DCHECK_PARENT_ECS_ENTITY(entityId, &registry, TagType);
-// DCHECK_PARENT_ECS_ENTITY(entityId, registryStrongAlias, TagType);
-#define DCHECK_PARENT_ECS_ENTITY(__name__, __registry_ptr__, __tag_type__) \
+// DCHECK_PARENT_ENTITY_COMPONENTS(entityId, &registry, TagType);
+// DCHECK_PARENT_ENTITY_COMPONENTS(entityId, registryStrongAlias, TagType);
+#define DCHECK_PARENT_ENTITY_COMPONENTS(__name__, __registry_ptr__, __tag_type__) \
   { \
     DCHECK_ECS_ENTITY(__name__, __registry_ptr__); \
     bool hasFirstChild \

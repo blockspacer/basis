@@ -6,12 +6,13 @@
 #include <basis/ECS/components/first_child_in_linked_list.hpp>
 #include <basis/ECS/components/parent_entity.hpp>
 #include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/is_parent_entity.hpp>
-#include <basis/ECS/helpers/is_child_entity.hpp>
+#include <basis/ECS/helpers/has_parent_components.hpp>
+#include <basis/ECS/helpers/has_child_components.hpp>
 #include <basis/ECS/helpers/remove_child_components.hpp>
 #include <basis/ECS/helpers/remove_child_links.hpp>
 #include <basis/ECS/helpers/remove_parent_components.hpp>
-#include <basis/ECS/helpers/has_child.hpp>
+#include <basis/ECS/helpers/has_child_in_linked_list.hpp>
+#include <basis/ECS/helpers/is_child_of.hpp>
 
 #include <base/logging.h>
 
@@ -50,49 +51,48 @@ bool removeChildEntity(
 
   DCHECK(parentId != childIdToRemove);
 
-  // check required components for parent that have any children
-  if(!isParentEntity<TagType>(registry, parentId))
+  // check required components
+  if(!hasParentComponents<TagType>(REFERENCED(registry), parentId))
   {
     DCHECK(!registry.has<FirstChildComponent>(parentId));
     DCHECK(!registry.has<ChildrenSizeComponent>(parentId));
 
-    // no children i.e. nothing to do
     return false;
   }
 
   // check required components
-  DCHECK_PARENT_ECS_ENTITY(parentId, &registry, TagType);
+  DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
 
   FirstChildComponent& firstChild
     = registry.get<FirstChildComponent>(parentId);
 
   // sanity check
-  DCHECK_CHILD_ECS_ENTITY(firstChild.firstId, &registry, TagType);
+  DCHECK_CHILD_ENTITY_COMPONENTS(firstChild.firstId, &registry, TagType);
 
-  // check required components for parent that have any children
-  if(!isChildEntity<TagType>(registry, childIdToRemove))
+  // check required components
+  if(!hasChildComponents<TagType>(REFERENCED(registry), childIdToRemove))
   {
     DCHECK(!registry.has<ChildrenComponent>(childIdToRemove));
     DCHECK(!registry.has<ParentComponent>(childIdToRemove));
 
     DCHECK_NE(childIdToRemove, firstChild.firstId);
 
-    DCHECK(!hasChild<TagType>(registry, parentId, childIdToRemove));
+    DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
-    // no children i.e. nothing to do
     return false;
   }
 
   // sanity check
-  DCHECK_CHILD_ECS_ENTITY(childIdToRemove, &registry, TagType);
+  DCHECK_CHILD_ENTITY_COMPONENTS(childIdToRemove, &registry, TagType);
 
   ChildrenComponent& childrenCompToRemove
     = registry.get<ChildrenComponent>(childIdToRemove);
 
-  /// \note change `firstChild` before modifications in `ChildLinkedList` hierarchy
+  /// \note change `firstChild` 
+  /// before modifications in `ChildLinkedList` hierarchy
   if(childIdToRemove == firstChild.firstId)
   {
-    DCHECK(hasChild<TagType>(registry, parentId, childIdToRemove));
+    DCHECK(hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
     // mark as first element in list
     firstChild.firstId = childrenCompToRemove.nextId;
@@ -105,6 +105,16 @@ bool removeChildEntity(
         = registry.get<ChildrenSizeComponent>(parentId);
       DCHECK_EQ(childrenSize.size, 1UL);
     }
+  }
+
+  if(!isChildOf<TagType>(REFERENCED(registry), parentId, childIdToRemove))
+  {
+    DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+
+    DCHECK_NE(childIdToRemove, firstChild.firstId);
+
+    // `childIdToRemove` not found i.e. nothing to do
+    return false;
   }
 
   // update `prev` and `next` links in `ChildLinkedList` hierarchy
@@ -130,7 +140,7 @@ bool removeChildEntity(
   }
 
   // if `childIdToRemove` found, then it must have child components
-  DCHECK_CHILD_ECS_ENTITY(childIdToRemove, &registry, TagType);
+  DCHECK_CHILD_ENTITY_COMPONENTS(childIdToRemove, &registry, TagType);
 
   // decrement size of linked list,
   // but only if child entity found
@@ -160,7 +170,10 @@ bool removeChildEntity(
   );
 
   // child was removed from list
-  DCHECK(!hasChild<TagType>(registry, parentId, childIdToRemove));
+  DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+
+  // child was removed from parent components
+  DCHECK(!isChildOf<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
   return true;
 }

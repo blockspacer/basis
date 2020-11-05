@@ -11,13 +11,16 @@
 #include <basis/ECS/helpers/remove_child_links.hpp>
 #include <basis/ECS/helpers/remove_parent_components.hpp>
 #include <basis/ECS/helpers/remove_child_components.hpp>
+#include <basis/ECS/helpers/is_child_of.hpp>
 
 #include <base/logging.h>
 
 namespace ECS {
 
-// remove all children associated with `parent`
-/// \note does not destroy children entities, only removes them from hierarchy
+// Removes all children associated with `parent`.
+// Does modification of components both in parent and children.
+/// \note does not destroy children entities,
+/// only removes them from hierarchy
 template <
   typename TagType // unique type tag for all children
   , typename... Include
@@ -50,7 +53,7 @@ void removeAllChildrenFromView(
 
   for(const ECS::Entity& parentEntityId: targetView)
   {
-    DCHECK_PARENT_ECS_ENTITY(parentEntityId, &registry, TagType);
+    DCHECK_PARENT_ENTITY_COMPONENTS(parentEntityId, &registry, TagType);
 
     auto scopedView
       = ECS::viewChildEntities<TagType>(
@@ -60,11 +63,13 @@ void removeAllChildrenFromView(
 
     for(const ECS::Entity& childId: scopedView.view())
     {
-      DCHECK_CHILD_ECS_ENTITY(childId, &registry, TagType);
+      DCHECK_CHILD_ENTITY_COMPONENTS(childId, &registry, TagType);
 
       DCHECK(parentEntityId != childId);
 
-      DCHECK_PARENT_ECS_ENTITY(parentEntityId, &registry, TagType);
+      DCHECK_PARENT_ENTITY_COMPONENTS(parentEntityId, &registry, TagType);
+
+      DCHECK(isChildOf<TagType>(REFERENCED(registry), parentEntityId, childId));
 
       // update `prev` and `next` links in `ChildLinkedList` hierarchy
       bool isRemovedFromListLinks
@@ -90,7 +95,7 @@ void removeAllChildrenFromView(
   for(const ECS::Entity& childId:
     registry.view<Internal_ChildrenToRemove>())
   {
-    DCHECK_CHILD_ECS_ENTITY(childId, &registry, TagType);
+    DCHECK_CHILD_ENTITY_COMPONENTS(childId, &registry, TagType);
 
     // entity must be fully created
     DCHECK(!registry.has<ECS::DelayedConstruction>(childId));
@@ -108,7 +113,7 @@ void removeAllChildrenFromView(
     /// \note new group due to iterator invalidation
      : targetView)
   {
-    DCHECK_PARENT_ECS_ENTITY(parentId, &registry, TagType);
+    DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
 
     // remove all components associated with `parent`
     removeParentComponents<TagType>(

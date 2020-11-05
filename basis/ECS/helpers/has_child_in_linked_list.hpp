@@ -6,19 +6,24 @@
 #include <basis/ECS/components/first_child_in_linked_list.hpp>
 #include <basis/ECS/components/parent_entity.hpp>
 #include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/is_parent_entity.hpp>
+#include <basis/ECS/helpers/has_parent_components.hpp>
 
 #include <base/logging.h>
 
 namespace ECS {
 
-/// \note returns `ECS::NULL_ENTITY` if child not found
-/// \note returns first found element (expects no duplicates)
+// Unlike `isParentOf` or `isChildOf` it will iterate all
+// nodes in linked list until `childIdToFind` found,
+// even if `ParentComponent` alrady points to `parentId`.
+/// \note prefer `isParentOf` or `isChildOf` because of
+/// performance reasons.
+/// \note returns `false` if child not found
+/// \note expects no child element duplication in linked list
 template <
   typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-bool hasChild(
+bool hasChildInLinkedList(
   ECS::Registry& registry
   , ECS::Entity parentId
   , ECS::Entity childIdToFind)
@@ -39,13 +44,12 @@ bool hasChild(
 
   DCHECK_ECS_ENTITY(childIdToFind, &registry);
 
-  // check required components for parent that have any children
-  if(!isParentEntity<TagType>(registry, parentId))
+  // check required components
+  if(!hasParentComponents<TagType>(REFERENCED(registry), parentId))
   {
     DCHECK(!registry.has<FirstChildComponent>(parentId));
     DCHECK(!registry.has<ChildrenSizeComponent>(parentId));
 
-    // no children i.e. nothing to do
     return false;
   }
 
@@ -57,7 +61,8 @@ bool hasChild(
 
   if(childIdToFind == firstChild.firstId)
   {
-    DCHECK_CHILD_ECS_ENTITY(firstChild.firstId, &registry, TagType);
+    DCHECK_CHILD_ENTITY_COMPONENTS(firstChild.firstId, &registry, TagType);
+    DCHECK_EQ(registry.get<ParentComponent>(childId).parentId, parentId);
     return true;
   }
 
@@ -72,12 +77,13 @@ bool hasChild(
   {
     DCHECK_ECS_ENTITY(curr, &registry);
 
-    DCHECK_CHILD_ECS_ENTITY(curr, &registry, TagType);
+    DCHECK_CHILD_ENTITY_COMPONENTS(curr, &registry, TagType);
 
     // found element
     if(childIdToFind == curr)
     {
-      DCHECK_CHILD_ECS_ENTITY(curr, &registry, TagType);
+      DCHECK_CHILD_ENTITY_COMPONENTS(curr, &registry, TagType);
+      DCHECK_EQ(registry.get<ParentComponent>(childId).parentId, parentId);
       return true;
     }
 

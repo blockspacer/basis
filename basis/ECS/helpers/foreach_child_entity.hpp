@@ -6,7 +6,7 @@
 #include <basis/ECS/components/child_linked_list_size.hpp>
 #include <basis/ECS/components/first_child_in_linked_list.hpp>
 #include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/helpers/is_parent_entity.hpp>
+#include <basis/ECS/helpers/has_parent_components.hpp>
 
 #include <base/logging.h>
 #include <base/callback.h>
@@ -18,12 +18,8 @@ using ForeachChildEntityCb
       void(ECS::Registry&, ECS::Entity parentId, ECS::Entity childId)
     >;
 
-// Removes id of existing entity from linked list.
-//
-// Returns `false` if entity not found linked list
-// i.e. can not be removed.
-//
-// Used to represent hierarchies in ECS model.
+// Iterates each entity in linked list
+// and calls callback on each iterated entity.
 //
 // USAGE
 //
@@ -40,7 +36,7 @@ using ForeachChildEntityCb
 //        ){
 //          DCHECK(parentId != childId);
 //
-//          DCHECK_PARENT_ECS_ENTITY(parentId, &registry, TagType);
+//          DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
 //        }
 //        , parentEntityId
 //      )
@@ -71,20 +67,21 @@ void foreachChildEntity(
   // sanity check
   DCHECK(callback);
 
-  // check required components for parent that have any children
-  if(!isParentEntity<TagType>(registry, parentId))
+  // check required components
+  if(!hasParentComponents<TagType>(REFERENCED(registry), parentId))
   {
     DCHECK(!registry.has<FirstChildComponent>(parentId));
     DCHECK(!registry.has<ChildrenSizeComponent>(parentId));
 
-    // no children i.e. nothing to do
     return;
   }
+
+  DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
 
   FirstChildComponent& firstChild
     = registry.get<FirstChildComponent>(parentId);
 
-  DCHECK_CHILD_ECS_ENTITY(firstChild.firstId, &registry, TagType);
+  DCHECK_CHILD_ENTITY_COMPONENTS(firstChild.firstId, &registry, TagType);
 
   ECS::Entity currChild = firstChild.firstId;
 
@@ -96,7 +93,7 @@ void foreachChildEntity(
     // sanity check
     DCHECK(currChild != parentId);
 
-    DCHECK_CHILD_ECS_ENTITY(currChild, &registry, TagType);
+    DCHECK_CHILD_ENTITY_COMPONENTS(currChild, &registry, TagType);
 
     ECS::Entity nextCurrChild = ECS::NULL_ENTITY;
 

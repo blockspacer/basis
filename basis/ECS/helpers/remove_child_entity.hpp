@@ -88,6 +88,16 @@ bool removeChildEntity(
   ChildrenComponent& childrenCompToRemove
     = registry.get<ChildrenComponent>(childIdToRemove);
 
+  if(!isChildOf<TagType>(REFERENCED(registry), parentId, childIdToRemove))
+  {
+    DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+
+    DCHECK_NE(childIdToRemove, firstChild.firstId);
+
+    // `childIdToRemove` not found i.e. nothing to do
+    return false;
+  }
+
   /// \note change `firstChild` 
   /// before modifications in `ChildLinkedList` hierarchy
   if(childIdToRemove == firstChild.firstId)
@@ -105,16 +115,6 @@ bool removeChildEntity(
         = registry.get<ChildrenSizeComponent>(parentId);
       DCHECK_EQ(childrenSize.size, 1UL);
     }
-  }
-
-  if(!isChildOf<TagType>(REFERENCED(registry), parentId, childIdToRemove))
-  {
-    DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
-
-    DCHECK_NE(childIdToRemove, firstChild.firstId);
-
-    // `childIdToRemove` not found i.e. nothing to do
-    return false;
   }
 
   // update `prev` and `next` links in `ChildLinkedList` hierarchy

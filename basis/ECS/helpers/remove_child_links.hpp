@@ -56,8 +56,6 @@ bool removeChildLinks(
 
     ECS::Entity& currNextId = currChildrenComp.nextId;
 
-    DCHECK(registry.get<ParentComponent>(curr).parentId == parentId);
-
     // found element to remove
     if(childIdToRemove == curr)
     {
@@ -68,7 +66,8 @@ bool removeChildLinks(
 
         DCHECK_CHILD_ENTITY_COMPONENTS(currPrevId, &registry, TagType);
 
-        DCHECK(registry.get<ParentComponent>(currPrevId).parentId == parentId);
+        DCHECK_EQ(registry.get<ParentComponent>(currPrevId).parentId
+          , registry.get<ParentComponent>(curr).parentId);
 
         ChildrenComponent& prevChildrenComp
           = registry.get<ChildrenComponent>(currPrevId);
@@ -83,7 +82,8 @@ bool removeChildLinks(
 
         DCHECK_CHILD_ENTITY_COMPONENTS(currNextId, &registry, TagType);
 
-        DCHECK(registry.get<ParentComponent>(currNextId).parentId == parentId);
+        DCHECK_EQ(registry.get<ParentComponent>(currNextId).parentId
+          , registry.get<ParentComponent>(curr).parentId);
 
         ChildrenComponent& nextChildrenComp
           = registry.get<ChildrenComponent>(currNextId);

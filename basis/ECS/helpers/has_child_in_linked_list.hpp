@@ -62,7 +62,7 @@ bool hasChildInLinkedList(
   if(childIdToFind == firstChild.firstId)
   {
     DCHECK_CHILD_ENTITY_COMPONENTS(firstChild.firstId, &registry, TagType);
-    DCHECK_EQ(registry.get<ParentComponent>(childId).parentId, parentId);
+    DCHECK_EQ(registry.get<ParentComponent>(childIdToFind).parentId, parentId);
     return true;
   }
 
@@ -83,7 +83,7 @@ bool hasChildInLinkedList(
     if(childIdToFind == curr)
     {
       DCHECK_CHILD_ENTITY_COMPONENTS(curr, &registry, TagType);
-      DCHECK_EQ(registry.get<ParentComponent>(childId).parentId, parentId);
+      DCHECK_EQ(registry.get<ParentComponent>(childIdToFind).parentId, parentId);
       return true;
     }
 

@@ -21,6 +21,23 @@ namespace ECS {
 // Does modification of components both in parent and children.
 /// \note does not destroy children entities,
 /// only removes them from hierarchy
+//
+// USAGE
+//
+// removeAllChildrenFromView<
+//   TagType
+// >(
+//   REFERENCED(registry)
+//   , ECS::include<
+//       ECS::UnusedTag
+//     >
+//   , ECS::exclude<
+//       // entity in destruction
+//       ECS::NeedToDestroyTag
+//       // entity not fully created
+//       , ECS::DelayedConstruction
+//     >
+// );
 template <
   typename TagType // unique type tag for all children
   , typename... Include
@@ -31,7 +48,6 @@ void removeAllChildrenFromView(
   , ECS::include_t<Include...> = {}
   , ECS::exclude_t<Exclude...> = {})
 {
-  using ChildrenComponent = ChildLinkedList<TagType>;
   using ParentComponent = ParentEntity<TagType>;
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
@@ -39,7 +55,8 @@ void removeAllChildrenFromView(
 
   auto targetView
     = registry.view<
-        Include...
+        FirstChildComponent
+        , Include...
       >(
         entt::exclude<
           Exclude...

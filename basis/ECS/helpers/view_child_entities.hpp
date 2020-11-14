@@ -25,14 +25,6 @@ public:
     : registry_(registry)
   {
     DETACH_FROM_SEQUENCE(sequence_checker_);
-
-#if DCHECK_IS_ON()
-    for(const ECS::Entity& childId:
-      registry_.template view<TagType>())
-    {
-      DCHECK(registry_.has<TagType>(childId));
-    }
-#endif // DCHECK_IS_ON()
   }
 
   ~ScopedChildView()
@@ -90,8 +82,8 @@ private:
 //        );
 //    DCHECK(isRemovedFromListLinks);
 //
-//    DCHECK(!registry.has<Internal_ChildrenToRemove>(childId));
-//    registry.emplace<Internal_ChildrenToRemove>(childId);
+//    DCHECK(!registry.has<Internal_ChildrenToView>(childId));
+//    registry.emplace<Internal_ChildrenToView>(childId);
 //
 //    DCHECK(registry.has<FirstChildComponent>(parentEntityId));
 //    DCHECK(registry.has<ChildrenSizeComponent>(parentEntityId));

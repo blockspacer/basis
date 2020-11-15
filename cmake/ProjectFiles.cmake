@@ -43,7 +43,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/scoped_log_run_time.hpp
   ${BASIS_DIR}/scoped_log_run_time.cc
   #
-  ${BASIS_DIR}/strong_alias.hpp
+  ${BASIS_DIR}/strong_types/strong_alias.hpp
+  #
   ${BASIS_DIR}/immutable.hpp
   ${BASIS_DIR}/weak_handle.hpp
   ${BASIS_DIR}/enum_set.hpp

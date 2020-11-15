@@ -100,10 +100,6 @@
 #define STRONGLY_TYPED(TYPE, NAME) \
   using NAME = util::StrongAlias<class STRONG_TYPE_TAG(NAME), TYPE>
 
-// must provide `operator bool()`
-#define STRONGLY_TYPED_BOOL(TYPE) \
-  STRONGLY_TYPED(NAME, bool)
-
 // format function name (concats strings)
 #define NAME_HAS_MEMBER_FUNCTION(content, suffix) \
   content ## _ ## suffix
@@ -730,10 +726,18 @@ class StrongAlias
   }
 
   // Hasher to use in std::unordered_map, std::unordered_set, etc.
-  struct Hasher {
+  //
+  // USAGE
+  //
+  // using FooAlias = StrongAlias<class FooTag, TypeParam>;
+  // std::unordered_map<FooAlias, std::string, typename FooAlias::Hasher> map;
+  //
+  struct Hasher
+  {
     using argument_type = StrongAlias;
     using result_type = std::size_t;
-    result_type operator()(const argument_type& id) const {
+    result_type operator()(const argument_type& id) const
+    {
       return std::hash<UnderlyingType>()(id.value());
     }
   };

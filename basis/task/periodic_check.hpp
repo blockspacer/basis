@@ -2,7 +2,7 @@
 
 
 #include "basis/scoped_checks.hpp"
-#include "basis/strong_alias.hpp"
+#include "basis/strong_types/strong_alias.hpp"
 #include "basis/promise/promise.h"
 #include "basis/promise/helpers.h"
 #include "basis/promise/post_task_executor.h"

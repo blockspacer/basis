@@ -496,7 +496,7 @@ public:
     const base::Location& from_here
     , Args&&... args)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     if constexpr (VerifyPolicyType == CheckedOptionalPolicy::Always)
     {
@@ -531,7 +531,7 @@ public:
     , base::OnceClosure&& check_unsafe_allowed
     , Args&&... args)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
@@ -542,7 +542,7 @@ public:
 
   void reset(const base::Location& from_here)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     if constexpr (VerifyPolicyType == CheckedOptionalPolicy::Always)
     {
@@ -570,7 +570,7 @@ public:
     // usually you want to pass `= base::DoNothing::Once()` here
     , base::OnceClosure&& check_unsafe_allowed)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
@@ -583,7 +583,7 @@ public:
     const base::Location& from_here
     , base::StringPiece reason_why_make_invalid)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     DCHECK(hasReadPermission());
 
@@ -598,7 +598,7 @@ public:
     const base::Location& from_here
     , base::StringPiece reason_why_make_invalid)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     DCHECK(hasModifyPermission());
 
@@ -613,7 +613,7 @@ public:
     const base::Location& from_here
     , base::StringPiece reason_why_make_valid)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     DCHECK(!hasReadPermission());
 
@@ -628,7 +628,7 @@ public:
     const base::Location& from_here
     , base::StringPiece reason_why_make_valid)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     DCHECK(!hasModifyPermission());
 
@@ -687,7 +687,7 @@ private:
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
-  DFAKE_MUTEX(debug_collision_warner_);
+  DFAKE_MUTEX(debug_thread_collision_warner_);
 
   // check sequence on which class was constructed/destructed/configured
   SEQUENCE_CHECKER(sequence_checker_);

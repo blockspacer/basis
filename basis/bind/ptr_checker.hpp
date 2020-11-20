@@ -101,7 +101,7 @@ class PtrChecker
   // check that object is alive, use memory tool like ASAN
   inline void checkForLifetimeIssues() const
   {
-    // Works with `-fsanitize=address,undefined
+    // Works with `-fsanitize=address,undefined`
 #if defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
     if (ptr_)
       reinterpret_cast<const volatile uint8_t*>(ptr_)[0];

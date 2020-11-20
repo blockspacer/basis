@@ -9,6 +9,10 @@ namespace basis {
 
 // Downcasting means casting from a base class to a derived class.
 //
+// Down-casting should be avoided.
+// In general is a sign of bad design, as one rarely needs to convert
+// a Base object to a derived one.
+//
 // EXAMPLE:
 //   ...
 //   class Fruit { public: virtual ~Fruit(){}; ... };

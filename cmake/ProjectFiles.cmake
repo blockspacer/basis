@@ -187,6 +187,8 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/bind/exec_time_checker.hpp
   ${BASIS_DIR}/bind/exec_time_checker.cc
+  ${BASIS_DIR}/bind/callable_hook.hpp
+  ${BASIS_DIR}/bind/callable_hook.cc
   #
   ${BASIS_DIR}/ECS/simulation_registry.cc
   ${BASIS_DIR}/ECS/simulation_registry.hpp

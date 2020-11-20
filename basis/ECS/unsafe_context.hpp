@@ -51,7 +51,7 @@ class UnsafeTypeContext
   template<typename Type, typename = void>
   idType typeIndex() NO_EXCEPTION
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     // `static` because unique per each `Type`
     static const idType value = typeCounter_++;
@@ -111,7 +111,7 @@ class UnsafeTypeContext
   template<typename Type, typename... Args>
   Type & set_var(const std::string& debug_name, Args &&... args)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     DCHECK(!try_ctx_var<Type>());
 
@@ -161,7 +161,7 @@ class UnsafeTypeContext
   template<typename Type>
   void unset_var(const base::Location& from_here)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     DVLOG(9)
       << from_here.ToString()
@@ -227,7 +227,7 @@ class UnsafeTypeContext
   [[nodiscard]] /* don't ignore return value */
   Type & ctx_or_set_var(Args &&... args)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     auto *value = try_ctx_var<Type>();
     return value
@@ -249,7 +249,7 @@ class UnsafeTypeContext
     const std::string debug_name
     , Args &&... args)
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     const bool useCache
       = try_ctx_var<Type>();
@@ -286,7 +286,7 @@ class UnsafeTypeContext
   [[nodiscard]] /* don't ignore return value */
   Type* try_ctx_var()
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     auto it = std::find_if(
       vars_.cbegin()
@@ -316,7 +316,7 @@ class UnsafeTypeContext
   [[nodiscard]] /* don't ignore return value */
   Type& ctx_var()
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     auto *instance = try_ctx_var<Type>();
     DCHECK(instance);
@@ -346,7 +346,7 @@ class UnsafeTypeContext
   template<typename Func>
   void ctx_var(Func func) const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     for(auto pos = vars_.size(); pos; --pos) {
       func(vars_[pos-1].type_id);
@@ -355,25 +355,25 @@ class UnsafeTypeContext
 
   std::vector<variable_data>& vars()
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
     return vars_;
   }
 
   const std::vector<variable_data>& vars() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
     return vars_;
   }
 
   size_t size() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
     return vars_.size();
   }
 
   bool empty() const
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
     return vars_.empty();
   }
 
@@ -387,7 +387,7 @@ class UnsafeTypeContext
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
-  DFAKE_MUTEX(debug_collision_warner_);
+  DFAKE_MUTEX(debug_thread_collision_warner_);
 
   DISALLOW_COPY_AND_ASSIGN(UnsafeTypeContext);
 };

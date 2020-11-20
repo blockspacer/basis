@@ -42,7 +42,7 @@ public:
   UnownedRef(
     UnownedRef&& other)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     DCHECK(!pObj_)
       << "UnownedRef construction can change internal pointer,"
@@ -64,7 +64,7 @@ public:
   UnownedRef& operator=(
     const UnownedRef& that)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     DCHECK(!pObj_)
       << "UnownedRef assignment can change internal pointer,"
@@ -92,7 +92,7 @@ public:
     UNOWNED_LIFETIME(const U& pObj))
     : COPIED(pObj_(&pObj))
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     DCHECK(pObj_);
   }
@@ -104,14 +104,14 @@ public:
     UNOWNED_LIFETIME(const std::reference_wrapper<U>& pObj))
     : COPIED(pObj_(&pObj.get()))
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     DCHECK(pObj_);
   }
 
   ~UnownedRef()
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     // It is reference, so can not be `nullptr`.
     // So `pObj_` can be `nullptr` only if `UnownedRef`
@@ -134,7 +134,7 @@ public:
   void reset(
     UNOWNED_LIFETIME(Type*) that)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     // it is reference, so can not be nullptr
     DCHECK(that);
@@ -201,7 +201,7 @@ private:
   // check that object is alive, use memory tool like ASAN
   inline void checkForLifetimeIssues() const
   {
-    // Works with `-fsanitize=address,undefined
+    // Works with `-fsanitize=address,undefined`
 #if defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
     if (pObj_)
       reinterpret_cast<const volatile uint8_t*>(pObj_)[0];
@@ -214,7 +214,7 @@ private:
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
-  DFAKE_MUTEX(debug_collision_warner_);
+  DFAKE_MUTEX(debug_thread_collision_warner_);
 
   // It is reference, so can not be `nullptr`.
   // So `pObj_` can be `nullptr` only if `UnownedRef`

@@ -44,7 +44,7 @@ public:
   UnownedPtr(const UnownedPtr& that)
     : UnownedPtr(that.Get())
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
   }
 
   template <typename U>
@@ -52,7 +52,7 @@ public:
     UNOWNED_LIFETIME(U* pObj))
     : COPIED(pObj_(pObj))
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     DCHECK(pObj_);
   }
@@ -61,14 +61,14 @@ public:
   // NOLINTNEXTLINE(runtime/explicit)
   UnownedPtr(std::nullptr_t ptr)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     ignore_result(ptr);
   }
 
   ~UnownedPtr()
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     checkForLifetimeIssues();
   }
@@ -77,7 +77,7 @@ public:
   UnownedPtr(
     UnownedPtr&& other)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     checkForLifetimeIssues();
     if (*this != other) {
@@ -93,7 +93,7 @@ public:
   UnownedPtr& operator=(
     UnownedPtr&& other)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     checkForLifetimeIssues();
     if (*this != other) {
@@ -110,7 +110,7 @@ public:
   UnownedPtr& operator=(
     UNOWNED_LIFETIME(Type*) that)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     checkForLifetimeIssues();
     if(pObj_ != that)
@@ -124,7 +124,7 @@ public:
   UnownedPtr& operator=(
     const UnownedPtr& that)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
     checkForLifetimeIssues();
     if (*this != that) {
@@ -190,7 +190,7 @@ public:
   NOT_THREAD_SAFE_FUNCTION()
   Type* Release()
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     checkForLifetimeIssues();
     Type* pTemp = nullptr;
@@ -222,7 +222,7 @@ public:
   // check that object is alive, use memory tool like ASAN
   inline void checkForLifetimeIssues() const
   {
-    // Works with `-fsanitize=address,undefined
+    // Works with `-fsanitize=address,undefined`
 #if defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
     if (pObj_)
       reinterpret_cast<const volatile uint8_t*>(pObj_)[0];
@@ -236,7 +236,7 @@ private:
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
-  DFAKE_MUTEX(debug_collision_warner_);
+  DFAKE_MUTEX(debug_thread_collision_warner_);
 
   Type* pObj_ = nullptr;
 };

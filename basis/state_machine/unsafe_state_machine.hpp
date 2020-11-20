@@ -195,7 +195,7 @@ class UnsafeStateMachine {
     : current_state_(initial_state)
     , table_(table)
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
   }
 
   explicit UnsafeStateMachine(
@@ -206,7 +206,7 @@ class UnsafeStateMachine {
     : current_state_(initial_state)
     , table_(base::rvalue_cast(table))
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
   }
 
   // Entry actions are executed in the order they are added.
@@ -214,7 +214,7 @@ class UnsafeStateMachine {
     const State& state
     , const CallbackType& callback) NO_EXCEPTION
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
     entry_actions_[state].push_back(callback);
   }
 
@@ -223,7 +223,7 @@ class UnsafeStateMachine {
     const State& state
     , const CallbackType& callback) NO_EXCEPTION
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
     exit_actions_[state].push_back(callback);
   }
 
@@ -241,7 +241,7 @@ class UnsafeStateMachine {
     // recommended course of action.
     , Event* recovery_event) NO_EXCEPTION
   {
-    DFAKE_SCOPED_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
     return ProcessEventUnlocked(event, reason, recovery_event);
   }
 
@@ -261,7 +261,7 @@ class UnsafeStateMachine {
   {
     LOG_CALL(DVLOG(99));
 
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner_);
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     // Do not change states if the transition is invalid.
     ASSIGN_OR_RETURN(
@@ -326,7 +326,7 @@ class UnsafeStateMachine {
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
-  DFAKE_MUTEX(debug_collision_warner_);
+  DFAKE_MUTEX(debug_thread_collision_warner_);
 
   // The current state of the StateMachine,
   // initialized in the constructor.

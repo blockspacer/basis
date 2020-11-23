@@ -19,43 +19,44 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/boost_command_line.hpp
   ${BASIS_DIR}/boost_command_line.cc
   #
-  ${BASIS_DIR}/i18n.hpp
-  ${BASIS_DIR}/i18n.cc
-  #
   ${BASIS_DIR}/doctest_util.hpp
   ${BASIS_DIR}/doctest_util.cc
   #
-  ${BASIS_DIR}/icu_util.hpp
-  ${BASIS_DIR}/icu_util.cc
+  ${BASIS_DIR}/i18n/i18n.hpp
+  ${BASIS_DIR}/i18n/i18n.cc
+  #
+  ${BASIS_DIR}/i18n/icu_util.hpp
+  ${BASIS_DIR}/i18n/icu_util.cc
   #
   ${BASIS_DIR}/cmd_util.hpp
   ${BASIS_DIR}/cmd_util.cc
   #
-  ${BASIS_DIR}/thread_pool_util.hpp
-  ${BASIS_DIR}/thread_pool_util.cc
+  ${BASIS_DIR}/threading/thread_pool_util.hpp
+  ${BASIS_DIR}/threading/thread_pool_util.cc
   #
-  ${BASIS_DIR}/tracing_util.hpp
-  ${BASIS_DIR}/tracing_util.cc
+  ${BASIS_DIR}/tracing/tracing_util.hpp
+  ${BASIS_DIR}/tracing/tracing_util.cc
   #
-  ${BASIS_DIR}/log_util.hpp
-  ${BASIS_DIR}/log_util.cc
+  ${BASIS_DIR}/tracing/local_trace.hpp
+  #
+  ${BASIS_DIR}/tracing/stats_table.hpp
+  ${BASIS_DIR}/tracing/stats_table.cc
   #
   ${BASIS_DIR}/scoped_log_run_time.hpp
   ${BASIS_DIR}/scoped_log_run_time.cc
   #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
   #
-  ${BASIS_DIR}/immutable.hpp
-  ${BASIS_DIR}/weak_handle.hpp
+  ${BASIS_DIR}/core/immutable.hpp
+  ${BASIS_DIR}/core/numeric_static_cast.hpp
+  ${BASIS_DIR}/core/pimpl.hpp
+  ${BASIS_DIR}/core/weak_handle.hpp
+  #
   ${BASIS_DIR}/enum_set.hpp
   ${BASIS_DIR}/polymorphic_downcast.hpp
-  ${BASIS_DIR}/ltrace.hpp
   #
-  ${BASIS_DIR}/stats_table.hpp
-  ${BASIS_DIR}/stats_table.cc
-  #
-  ${BASIS_DIR}/periodic_prioritized_task_heap.hpp
-  ${BASIS_DIR}/periodic_prioritized_task_heap.cc
+  ${BASIS_DIR}/task/periodic_prioritized_task_heap.hpp
+  ${BASIS_DIR}/task/periodic_prioritized_task_heap.cc
   #
   ${BASIS_DIR}/task/periodic_task_executor.hpp
   ${BASIS_DIR}/task/periodic_task_executor.cc
@@ -115,9 +116,6 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/promise/then_and_catch_executor.cc
   ${BASIS_DIR}/promise/then_and_catch_executor.h
   #
-  ${BASIS_DIR}/core/numeric_static_cast.hpp
-  ${BASIS_DIR}/core/pimpl.hpp
-  #
   ${BASIS_DIR}/time_step/FixedTimeStep.hpp
   ${BASIS_DIR}/time_step/FixedTimeStep.cc
   ${BASIS_DIR}/time_step/FixedTimeStepLoop.hpp
@@ -129,8 +127,10 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.hpp
   ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.cc
   #
-  ${BASIS_DIR}/log/Logger.cc
-  ${BASIS_DIR}/log/Logger.hpp
+  ${BASIS_DIR}/log/logger.cc
+  ${BASIS_DIR}/log/logger.hpp
+  ${BASIS_DIR}/log/log_util.hpp
+  ${BASIS_DIR}/log/log_util.cc
   #
   ${BASIS_DIR}/task/task_util.cc
   ${BASIS_DIR}/task/task_util.hpp
@@ -159,7 +159,7 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/unowned_ref.hpp
   #
-  ${BASIS_DIR}/promise_collection.hpp
+  ${BASIS_DIR}/promise/promise_collection.hpp
   #
   ${BASIS_DIR}/progress_logger.cc
   ${BASIS_DIR}/progress_logger.hpp

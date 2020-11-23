@@ -22,7 +22,7 @@
 #include <basis/promise/promise.h>
 #include <basis/promise/helpers.h>
 #include <basis/promise/post_task_executor.h>
-#include <basis/trace_event_util.hpp>
+#include <basis/tracing/trace_event_util.hpp>
 #include <basis/application/application_configuration.hpp>
 
 #include <boost/asio/bind_executor.hpp>

@@ -22,6 +22,8 @@
 
 namespace util {
 
+/// \note see also basis/value_saver.h
+//
 // A scoped cleanup action that is performed on destruction.  The action can be
 // cancelled by calling Cancel().
 //

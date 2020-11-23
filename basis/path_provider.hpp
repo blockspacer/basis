@@ -1,5 +1,7 @@
 #pragma once
 
+#include <base/macros.h>
+
 namespace base {
 class FilePath;
 } // namespace base
@@ -24,7 +26,7 @@ enum ApplicationPathKeys {
 };
 
 // returns path based on |ApplicationPathKeys|
-[[nodiscard]] /* do not ignore return value */
+MUST_USE_RETURN_VALUE
 bool PathProvider(
   int key, base::FilePath* result);
 

@@ -40,7 +40,7 @@ public:
   // can be used to acess registry on task runner
   ECS::Registry& registry() noexcept;
 
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -52,7 +52,7 @@ public:
   }
 
   template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -71,7 +71,7 @@ public:
   }
 
   template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -91,7 +91,7 @@ public:
   }
 
   template<typename Component, typename... Args>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -108,7 +108,7 @@ public:
   }
 
   template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -127,7 +127,7 @@ public:
     }
   }
 
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -140,7 +140,7 @@ public:
     return !registry().orphan(entity);
   }
 
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -154,7 +154,7 @@ public:
   }
 
   template<typename Component>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -169,7 +169,7 @@ public:
   }
 
   template<typename... Component>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */

@@ -60,7 +60,8 @@ using logging::LogSeverity;
 // new error space per API
 class ErrorSpace;
 
-class Status final {
+// Status represents an error state or the absence thereof.
+class MUST_USE_RESULT Status final {
  public:
   // Creates a "successful" status.
   Status();
@@ -122,16 +123,16 @@ class Status final {
   void Clear();
 
   // Accessor
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool ok() const;
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   int error_code() const;
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   const std::string& error_message() const;
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   const ErrorSpace* error_space() const;
 
   // Returns the canonical code for this Status value.  Automatically
@@ -146,23 +147,23 @@ class Status final {
   bool operator!=(const Status& x) const;
 
   // Returns true iff this->CanonicalCode() == expected.
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool Matches(::util::error::Code expected) const;
 
   // Returns true iff this has the same error_space, error_code,
   // and canonical_code as "x".  I.e., the two Status objects are
   // identical except possibly for the error message.
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool Matches(const Status& x) const;
 
   // Return a combination of the error code name and message.
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   std::string ToString() const;
 
   // Returns a copy of the status object in the canonical error space.  This
   // will use the canonical code from the status protocol buffer (if present) or
   // the result of passing this status to the ErrorSpace CanonicalCode method.
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   Status ToCanonical() const;
 
   // If this->Matches(x), return without doing anything.
@@ -185,7 +186,7 @@ class Status final {
   // Useful for comparing against expected status when error message
   // might vary, e.g.
   //     EXPECT_EQ(expected_status, real_status.StripMessage());
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   Status StripMessage() const;
 
  private:
@@ -225,7 +226,7 @@ class Status final {
   // Ensures rep_ is not shared with any other Status.
   void PrepareToModify();
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   static Rep* NewRep(const ErrorSpace*, int code, const std::string&,
                      int canonical_code);
   static void ResetRep(Rep* rep, const ErrorSpace*, int code,
@@ -411,7 +412,7 @@ class StatusBuilder {
     return *this;
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   operator Status() const& {
     Status status(code_, stream_);
     if (log_type_ == LogType::kDisabled) return status;
@@ -420,10 +421,10 @@ class StatusBuilder {
     return status;
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   int line() const { return line_; }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   const std::string& file() const { return file_; }
 
  private:

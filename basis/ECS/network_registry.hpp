@@ -53,7 +53,7 @@ public:
   /// \note `base::Optional<typename Type::value_type>` and `Type` must be same,
   /// we just want to force user to use `base::Optional`
   template<typename Type, typename... Args>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   base::Optional<typename Type::value_type> & reset_or_create_component(
     const std::string debug_name
     , ECS::Entity tcp_entity_id

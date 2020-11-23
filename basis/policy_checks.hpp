@@ -11,11 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// -----------------------------------------------------------------------------
-// File: policy_checks.h
-// -----------------------------------------------------------------------------
-//
+
 // This header enforces a minimum set of policies at build time, such as the
 // supported compiler and library versions. Unsupported configurations are
 // reported with `#error`. This enforcement is best effort, so successfully

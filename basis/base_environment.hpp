@@ -32,7 +32,7 @@ public:
   ~ScopedBaseEnvironment();
 
   // init with provided settings
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool init(
     int argc
     , char* argv[]

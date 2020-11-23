@@ -104,7 +104,7 @@ public:
     }
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool hasValue(TickNumType tickNum) const
   {
     const size_t tickIndex = tickNumToBufferIndex(tickNum);
@@ -122,7 +122,7 @@ public:
     return has_value;
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool tryGetValue(TickNumType tickNum, Type* result)
   {
     const size_t tickIndex = tickNumToBufferIndex(tickNum);
@@ -143,7 +143,7 @@ public:
     return true;
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   size_t tickNumToBufferIndex(const TickNumType tickNum) const
   {
     /// \note tickNum must start from 1

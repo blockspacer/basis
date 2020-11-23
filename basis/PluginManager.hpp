@@ -54,7 +54,7 @@ const char kAllPluginsConfigCategory[];
 extern
 const char kIndividualPluginConfigCategory[];
 
-[[nodiscard]] /* do not ignore return value */
+MUST_USE_RETURN_VALUE
 bool parsePluginsConfig(
   ::Corrade::Utility::Configuration& conf
   , std::vector<
@@ -432,7 +432,7 @@ public:
     }
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   size_t countLoadedPlugins()
   const noexcept
   {

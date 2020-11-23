@@ -20,7 +20,7 @@
 #include <base/compiler_specific.h>
 
 #include <basis/promise/post_promise.h>
-#include <basis/trace_event_util.hpp>
+#include <basis/tracing/trace_event_util.hpp>
 #include <basis/application/application_configuration.hpp>
 
 namespace basis {

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "chromecast/base/thread_health_checker.h"
+#include "basis/threading/thread_health_checker.h"
 
 #include <memory>
 #include <string>
@@ -13,9 +13,9 @@
 #include "base/task_runner.h"
 #include "base/threading/thread_checker.h"
 #include "base/timer/timer.h"
-#include "chromecast/base/bind_to_task_runner.h"
+#include "basis/bind/bind_to_task_runner.h"
 
-namespace chromecast {
+namespace basis {
 
 ThreadHealthChecker::Internal::Internal(
     scoped_refptr<base::TaskRunner> patient_task_runner,
@@ -109,4 +109,4 @@ ThreadHealthChecker::~ThreadHealthChecker() {
                                 internal_));
 }
 
-}  // namespace chromecast
+}  // namespace basis

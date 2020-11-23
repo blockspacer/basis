@@ -70,7 +70,7 @@ class SequenceLocalContext
   // usually context is NOT locked
   // during app creation or termination
   template<typename Component>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -91,7 +91,7 @@ class SequenceLocalContext
   // usually context is NOT locked
   // during app creation or termination
   template<typename Component>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
@@ -116,7 +116,7 @@ class SequenceLocalContext
   }
 
   template<typename Type, typename... Args>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */

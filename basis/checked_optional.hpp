@@ -20,7 +20,7 @@
 #include <map>
 #include <string>
 
-namespace util {
+namespace basis {
 
 enum class CheckedOptionalPermissions
 {
@@ -49,10 +49,6 @@ enum class CheckedOptionalPermissions
         | CheckedOptionalPermissions::Modifiable
 };
 ALLOW_BITMASK_OPERATORS(CheckedOptionalPermissions)
-
-} // namespace util
-
-namespace basis {
 
 enum class CheckedOptionalPolicy {
   // Will call `verifier_callback_.Run()` in any builds (including release),
@@ -92,7 +88,7 @@ enum class CheckedOptionalPolicy {
 //      // it safe to read value from any thread
 //      // because its storage expected to be not modified
 //      basis::VerifyNothing::Repeatedly()
-//      , util::CheckedOptionalPermissions::Readable
+//      , basis::CheckedOptionalPermissions::Readable
 //      , base::in_place};
 //
 //  basis::CheckedOptional<
@@ -100,7 +96,7 @@ enum class CheckedOptionalPolicy {
 //  > sm_(
 //    BIND_UNRETAINED_RUN_ON_STRAND_CHECK(&acceptorStrand_) // see CheckedOptional constructor
 //    // "disallow `emplace` for thread-safety reasons"
-//    , util::CheckedOptionalPermissions::Readable // see CheckedOptional constructor
+//    , basis::CheckedOptionalPermissions::Readable // see CheckedOptional constructor
 //    , base::in_place // see base::Optional constructor
 //    , UNINITIALIZED // see StateMachineType constructor
 //    , FillStateTransitionTable()) // see StateMachineType constructor
@@ -130,8 +126,8 @@ public:
   /// than you can pass `base::in_place` as second argument
   explicit CheckedOptional(
     VerifierCb&& verifierCb
-    , const util::CheckedOptionalPermissions& permissions
-        = util::CheckedOptionalPermissions::All)
+    , const basis::CheckedOptionalPermissions& permissions
+        = basis::CheckedOptionalPermissions::All)
     : verifier_callback_(verifierCb)
     , CheckedOptionalPermissions(permissions)
   {
@@ -144,7 +140,7 @@ public:
   template <class... Args>
   CheckedOptional(
     VerifierCb&& verifierCb
-    , const util::CheckedOptionalPermissions& permissions
+    , const basis::CheckedOptionalPermissions& permissions
     , Args&&... args)
     : verifier_callback_(verifierCb)
     , CheckedOptionalPermissions(permissions)
@@ -194,8 +190,8 @@ public:
       NOTREACHED();
     }
 
-    return util::hasBit(CheckedOptionalPermissions
-          , util::CheckedOptionalPermissions::Readable);
+    return basis::hasBit(CheckedOptionalPermissions
+          , basis::CheckedOptionalPermissions::Readable);
   }
 
   MUST_USE_RETURN_VALUE
@@ -214,8 +210,8 @@ public:
     }
 
     return
-      util::hasBit(CheckedOptionalPermissions
-          , util::CheckedOptionalPermissions::Modifiable);
+      basis::hasBit(CheckedOptionalPermissions
+          , basis::CheckedOptionalPermissions::Modifiable);
   }
 
   /// \note performs automatic checks only in debug mode,
@@ -590,8 +586,8 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_invalid);
 
-    util::removeBit(CheckedOptionalPermissions
-      , util::CheckedOptionalPermissions::Readable);
+    basis::removeBit(CheckedOptionalPermissions
+      , basis::CheckedOptionalPermissions::Readable);
   }
 
   void forceNotValidToModify(
@@ -605,8 +601,8 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_invalid);
 
-    util::removeBit(CheckedOptionalPermissions
-      , util::CheckedOptionalPermissions::Modifiable);
+    basis::removeBit(CheckedOptionalPermissions
+      , basis::CheckedOptionalPermissions::Modifiable);
   }
 
   void forceValidToRead(
@@ -620,8 +616,8 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_valid);
 
-    util::addBit(CheckedOptionalPermissions
-      , util::CheckedOptionalPermissions::Readable);
+    basis::addBit(CheckedOptionalPermissions
+      , basis::CheckedOptionalPermissions::Readable);
   }
 
   void forceValidToModify(
@@ -635,8 +631,8 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_valid);
 
-    util::addBit(CheckedOptionalPermissions
-      , util::CheckedOptionalPermissions::Modifiable);
+    basis::addBit(CheckedOptionalPermissions
+      , basis::CheckedOptionalPermissions::Modifiable);
   }
 
   bool operator==(const CheckedOptional& that) const
@@ -676,8 +672,8 @@ private:
   // `std::move` (just mark invalid after move)
   // or to force object to initialize only once
   // (just mark invalid after initialization to prohibit `emplace()`)
-  util::CheckedOptionalPermissions CheckedOptionalPermissions{
-    util::CheckedOptionalPermissions::All};
+  basis::CheckedOptionalPermissions CheckedOptionalPermissions{
+    basis::CheckedOptionalPermissions::All};
 
   base::Optional<Type> value_;
 

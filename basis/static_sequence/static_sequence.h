@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROMECAST_BASE_STATIC_SEQUENCE_STATIC_SEQUENCE_H_
-#define CHROMECAST_BASE_STATIC_SEQUENCE_STATIC_SEQUENCE_H_
+#pragma once
 
 #include <memory>
 #include <utility>
@@ -343,5 +342,3 @@ class Sequenced {
 };
 
 }  // namespace util
-
-#endif  // CHROMECAST_BASE_STATIC_SEQUENCE_STATIC_SEQUENCE_H_

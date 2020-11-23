@@ -204,7 +204,7 @@ public:
 
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   inline /* `inline` to eleminate function call overhead */
   basis::FixedTimeStep& time_step_ref() noexcept
   {
@@ -336,7 +336,7 @@ public:
     }
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool run() noexcept
   {
     using steady_clock
@@ -367,7 +367,7 @@ public:
     return /* done without error */ true;
   }
 
-  [[nodiscard]] /* do not ignore return value */
+  MUST_USE_RETURN_VALUE
   bool stop() noexcept
   {
     is_running_ = false;

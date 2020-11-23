@@ -15,7 +15,7 @@ namespace {
 
 /// \note returns empty |base::FilePath()|
 /// if path is NOT valid
-[[nodiscard]] /* do not ignore return value */
+MUST_USE_RETURN_VALUE
 static base::FilePath GetOrCreatePath(
   const base::FilePath& path)
 {

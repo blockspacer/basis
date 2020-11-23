@@ -1,12 +1,14 @@
 #pragma once
 
-namespace util {
+namespace basis {
 
+/// \note See also basis/enum_set.hpp
+//
 // see http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
 //
 // USAGE
 //
-// namespace util {
+// namespace basis {
 // enum class MyCollectionPermissions
 // {
 //   Nothing = 0
@@ -19,7 +21,7 @@ namespace util {
 //         | MyCollectionPermissions::Removable
 // };
 // ALLOW_BITMASK_OPERATORS(MyCollectionPermissions)
-// } // namespace util
+// } // namespace basis
 //
 // namespace my_ns {
 // class MyCollection
@@ -157,4 +159,4 @@ operator |=(Enum& lhs, Enum rhs)
   return lhs;
 }
 
-} // namespace util
+} // namespace basis

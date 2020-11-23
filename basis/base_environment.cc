@@ -5,11 +5,11 @@
 #include <entt/signal/dispatcher.hpp>
 
 #include <basis/cmd_util.hpp>
-#include <basis/i18n.hpp>
-#include <basis/icu_util.hpp>
-#include <basis/log_util.hpp>
-#include <basis/thread_pool_util.hpp>
-#include <basis/tracing_util.hpp>
+#include <basis/i18n/i18n.hpp>
+#include <basis/i18n/icu_util.hpp>
+#include <basis/log/log_util.hpp>
+#include <basis/threading/thread_pool_util.hpp>
+#include <basis/tracing/tracing_util.hpp>
 
 #include <base/base_switches.h>
 #include <base/command_line.h>

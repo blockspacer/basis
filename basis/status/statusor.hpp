@@ -69,7 +69,7 @@
 namespace util {
 
 template <typename T>
-class StatusOr {
+class MUST_USE_RESULT StatusOr {
   template <typename U>
   friend class StatusOr;
 
@@ -164,6 +164,116 @@ class StatusOr {
   // more efficient than ValueOrDie, but may leave the stored value
   // in an arbitrary valid state.
   T ConsumeValueOrDie();
+
+  // For any type U returned by a function f,
+  // transform creates a StatusOr<U> by either applying
+  // the function to the value_ member or forwarding the status_.
+  //
+  // This is the lvalue overload.
+  //
+  // USAGE
+  //
+  // auto from = StatusOr<int>{3};
+  // auto to = from.transform([](auto&& i) {
+  //   return StatusOr<double>{static_cast<double>(i)};
+  // });
+  // ASSERT_EQ(3.0, to.ValueOrDie());
+  template <typename F>
+  StatusOr<std::invoke_result_t<F&&, T&>> transform(F&& f) &
+  {
+    if (ok())
+      return {std::forward<F>(f)(*value_)};
+    else
+      return {status_};
+  }
+
+  // This is the const lvalue overload.
+  template <typename F>
+  StatusOr<std::invoke_result_t<F&&, const T&>> transform(F&& f) const&
+  {
+    if (ok())
+      return {std::forward<F>(f)(*value_)};
+    else
+      return {status_};
+  }
+
+  // This is the rvalue overload.
+  template <typename F>
+  StatusOr<std::invoke_result_t<F&&, T&&>> transform(F&& f) &&
+  {
+    if (ok())
+      return {std::forward<F>(f)(*std::move(value_))};
+    else
+      return {std::move(status_)};
+  }
+
+  // This is the const rvalue overload.
+  template <typename F>
+  StatusOr<std::invoke_result_t<F&&, const T&&>> transform(F&& f) const&&
+  {
+    if (ok())
+      return {std::forward<F>(f)(*std::move(value_))};
+    else
+      return {std::move(status_)};
+  }
+
+  // `andThen`ing over success values invokes
+  // the function to produce a new result
+  //
+  // For any type U returned inside a StatusOr<U> by a function f,
+  // andThen directly produces a StatusOr<U> by applying the function
+  // to the value_ member or creates one by forwarding the status_.
+  //
+  // `andThen` performs the same function as `transform`
+  // but for a function f with a return type of StatusOr.
+  //
+  // This is the lvalue overload.
+  //
+  // USAGE
+  //
+  // auto from = StatusOr<int>{3};
+  // auto to = from.andThen([](auto&& i) {
+  //   return StatusOr<double>{static_cast<double>(i)};
+  // });
+  // ASSERT_EQ(3.0, to.ValueOrDie());
+  template <typename F>
+  StatusOr<typename std::invoke_result_t<F&&, T&>::value_type> andThen(F&& f) &
+  {
+    if (ok())
+      return {std::forward<F>(f)(*value_)};
+    else
+      return {status_};
+  }
+
+  // This is the const lvalue overload.
+  template <typename F>
+  StatusOr<typename std::invoke_result_t<F&&, const T&>::value_type> andThen(F&& f) const&
+  {
+    if (ok())
+      return {std::forward<F>(f)(*value_)};
+    else
+      return {status_};
+  }
+
+  // This is the rvalue overload.
+  template <typename F>
+  StatusOr<typename std::invoke_result_t<F&&, T&&>::value_type> andThen(F&& f) &&
+  {
+    if (ok())
+      return {std::forward<F>(f)(*std::move(value_))};
+    else
+      return {std::move(status_)};
+  }
+
+  // This is the const rvalue overload.
+  template <typename F>
+  StatusOr<typename std::invoke_result_t<F&&, const T&&>::value_type> andThen(F&& f) const&&
+  {
+    if (ok())
+      return {std::forward<F>(f)(*std::move(value_))};
+    else
+      return {std::move(status_)};
+  }
 
   void EnsureOk() const;
 

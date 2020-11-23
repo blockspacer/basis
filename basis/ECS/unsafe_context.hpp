@@ -224,7 +224,7 @@ class UnsafeTypeContext
    * @return A reference to the object in the context of the registry.
    */
   template<typename Type, typename... Args>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   Type & ctx_or_set_var(Args &&... args)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
@@ -244,7 +244,7 @@ class UnsafeTypeContext
   // Can be used to create `memory pool` where
   // unused data not freed instantly, but can be re-used again.
   template<typename Type, typename... Args>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   Type & reset_or_create_var(
     const std::string debug_name
     , Args &&... args)
@@ -283,7 +283,7 @@ class UnsafeTypeContext
    * registry, a null pointer otherwise.
    */
   template<typename Type>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   Type* try_ctx_var()
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
@@ -313,7 +313,7 @@ class UnsafeTypeContext
    * @return A valid reference to the object in the context of the registry.
    */
   template<typename Type>
-  [[nodiscard]] /* don't ignore return value */
+  MUST_USE_RETURN_VALUE
   Type& ctx_var()
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);

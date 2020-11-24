@@ -80,8 +80,8 @@
 //   VolumeFeedbackManager(MediaManager* media_manager)
 //       : volume_observer_(media_manager->ObserveVolume()) {
 //     volume_observer_.SetOnUpdateCallback(
-//         base::BindRepeating(&VolumeFeedbackManager::OnVolumeChanged,
-//                             base::Unretained(this)));
+//         ::base::BindRepeating(&VolumeFeedbackManager::OnVolumeChanged,
+//                             ::base::Unretained(this)));
 //   }
 //
 //  private:
@@ -154,7 +154,7 @@ class Observer {
   // Note: value_ is a const ref to the value copy for this sequence, stored in
   // SequenceOwnedInfo.
   const T& value_;
-  base::RepeatingClosure on_update_callback_;
+  ::base::RepeatingClosure on_update_callback_;
   SEQUENCE_CHECKER(sequence_checker_);
 
   DISALLOW_ASSIGN(Observer);
@@ -187,13 +187,13 @@ namespace subtle {
 
 template <typename T>
 class ObservableInternals
-    : public base::RefCountedThreadSafe<ObservableInternals<T>> {
+    : public ::base::RefCountedThreadSafe<ObservableInternals<T>> {
  public:
   explicit ObservableInternals(const T& initial_value)
       : value_(initial_value) {}
 
   void SetValue(const T& new_value) {
-    base::AutoLock lock(lock_);
+    ::base::AutoLock lock(lock_);
     value_ = new_value;
 
     for (auto& item : per_sequence_) {
@@ -204,16 +204,16 @@ class ObservableInternals
   const T& GetValue() const { return value_; }
 
   T GetValueThreadSafe() const {
-    base::AutoLock lock(lock_);
+    ::base::AutoLock lock(lock_);
     return value_;
   }
 
   const T& AddObserver(Observer<T>* observer) {
     DCHECK(observer);
     DCHECK(base::SequencedTaskRunnerHandle::IsSet());
-    auto task_runner = base::SequencedTaskRunnerHandle::Get();
+    auto task_runner = ::base::SequencedTaskRunnerHandle::Get();
 
-    base::AutoLock lock(lock_);
+    ::base::AutoLock lock(lock_);
     auto it = per_sequence_.begin();
     while (it != per_sequence_.end() && it->task_runner() != task_runner) {
       ++it;
@@ -229,9 +229,9 @@ class ObservableInternals
   void RemoveObserver(Observer<T>* observer) {
     DCHECK(observer);
     DCHECK(base::SequencedTaskRunnerHandle::IsSet());
-    auto task_runner = base::SequencedTaskRunnerHandle::Get();
+    auto task_runner = ::base::SequencedTaskRunnerHandle::Get();
 
-    base::AutoLock lock(lock_);
+    ::base::AutoLock lock(lock_);
     for (size_t i = 0; i < per_sequence_.size(); ++i) {
       if (per_sequence_[i].task_runner() == task_runner) {
         per_sequence_[i].RemoveObserver(observer);
@@ -305,7 +305,7 @@ class ObservableInternals
 
   class PerSequenceInfo {
    public:
-    PerSequenceInfo(scoped_refptr<base::SequencedTaskRunner> task_runner,
+    PerSequenceInfo(scoped_refptr<::base::SequencedTaskRunner> task_runner,
                     const T& value)
         : task_runner_(std::move(task_runner)),
           owned_info_(std::make_unique<SequenceOwnedInfo>(value)) {}
@@ -325,12 +325,12 @@ class ObservableInternals
       // guarantee deletion.
       task_runner_->PostNonNestableTask(
           FROM_HERE,
-          base::BindOnce(&SequenceOwnedInfo::Destroy, std::move(owned_info_)));
+          ::base::BindOnce(&SequenceOwnedInfo::Destroy, std::move(owned_info_)));
     }
 
     const T& value() const { return owned_info_->value(); }
 
-    const base::SequencedTaskRunner* task_runner() const {
+    const ::base::SequencedTaskRunner* task_runner() const {
       return task_runner_.get();
     }
 
@@ -352,21 +352,21 @@ class ObservableInternals
     void SetValue(const T& value) {
       task_runner_->PostTask(
           FROM_HERE,
-          base::BindOnce(&SequenceOwnedInfo::SetValue,
-                         base::Unretained(owned_info_.get()), value));
+          ::base::BindOnce(&SequenceOwnedInfo::SetValue,
+                         ::base::Unretained(owned_info_.get()), value));
     }
 
    private:
     // Operations on |owned_info| do not need to be synchronized with a lock,
     // since all operations must occur on |task_runner|.
-    scoped_refptr<base::SequencedTaskRunner> task_runner_;
+    scoped_refptr<::base::SequencedTaskRunner> task_runner_;
     std::unique_ptr<SequenceOwnedInfo> owned_info_;
   };
 
-  friend class base::RefCountedThreadSafe<ObservableInternals>;
+  friend class ::base::RefCountedThreadSafe<ObservableInternals>;
   ~ObservableInternals() {}
 
-  mutable base::Lock lock_;
+  mutable ::base::Lock lock_;
   T value_;
   std::vector<PerSequenceInfo> per_sequence_;
 

@@ -33,13 +33,13 @@ struct AppRunnerGlobals {
 
   // |task_runners[id]| is safe to access on |main_thread_checker_| as
   // well as on any thread once it's read-only after initialization
-  scoped_refptr<base::SequencedTaskRunner>
+  scoped_refptr<::base::SequencedTaskRunner>
       task_runners[AppRunners::ID_COUNT];
 };
 
 AppRunnerGlobals& getAppRunnerGlobals()
 {
-  static base::NoDestructor<AppRunnerGlobals> globals;
+  static ::base::NoDestructor<AppRunnerGlobals> globals;
   return *globals;
 }
 
@@ -71,7 +71,7 @@ const char* getAppRunnerName(AppRunners::ID identifier)
 }  // namespace
 
 // static
-scoped_refptr<base::SequencedTaskRunner>
+scoped_refptr<::base::SequencedTaskRunner>
 AppRunners::getTaskRunner(AppRunners::ID identifier)
 {
   DCHECK_GE(identifier, 0);
@@ -88,7 +88,7 @@ AppRunners::getTaskRunner(AppRunners::ID identifier)
 // static
 void
 AppRunners::registerGlobalTaskRunner(const AppRunners::ID& identifier
-      , scoped_refptr<base::SequencedTaskRunner> task_runner)
+      , scoped_refptr<::base::SequencedTaskRunner> task_runner)
       {
   DCHECK_GE(identifier, 0);
   DCHECK_LT(identifier, AppRunners::ID_COUNT);
@@ -121,7 +121,7 @@ AppRunners::CurrentlyOn(ID identifier)
 // static
 std::string AppRunners::GetDCheckCurrentlyOnErrorMessage(ID identifier)
 {
-  std::string actual_name = base::PlatformThread::GetName();
+  std::string actual_name = ::base::PlatformThread::GetName();
   if (actual_name.empty()) {
     actual_name = "Unknown Thread Runer";
   }
@@ -134,9 +134,9 @@ std::string AppRunners::GetDCheckCurrentlyOnErrorMessage(ID identifier)
   return result;
 }
 
-bool runOrPostTaskOn(const base::Location& location
+bool runOrPostTaskOn(const ::base::Location& location
   , AppRunners::ID id
-  , base::OnceClosure task)
+  , ::base::OnceClosure task)
 {
   if (AppRunners::CurrentlyOn(id))
   {

@@ -388,7 +388,7 @@ class BASE_EXPORT PromiseValue {
 
   // Constructs a PromiseValue containing |value| as long as |VT| isn't INVALID
   // according to TypeToStateHelper.
-  // E.g. base::PromiseValue a(Resolved<int>(123));
+  // E.g. ::base::PromiseValue a(Resolved<int>(123));
   template <typename T,
             typename VT = std::decay_t<T>,
             State state = PromiseValueInternal::TypeToStateHelper<VT>::state,
@@ -400,7 +400,7 @@ class BASE_EXPORT PromiseValue {
 
   // Constructs a PromiseValue containing an object of type T which is
   // initialized by std::forward<Args>(args). E.g.
-  // base::unique_any a(base::in_place_type_t<Resolved<int>>(), 123);
+  // ::base::unique_any a(base::in_place_type_t<Resolved<int>>(), 123);
   template <typename T,
             typename... Args,
             State state = PromiseValueInternal::TypeToStateHelper<T>::state,

@@ -16,17 +16,17 @@ namespace {
 /// \note returns empty |base::FilePath()|
 /// if path is NOT valid
 MUST_USE_RETURN_VALUE
-static base::FilePath GetOrCreatePath(
-  const base::FilePath& path)
+static ::base::FilePath GetOrCreatePath(
+  const ::base::FilePath& path)
 {
   if (base::PathExists(path)
-      || base::CreateDirectory(path))
+      || ::base::CreateDirectory(path))
   {
     return
       path;
   }
   return
-    base::FilePath();
+    ::base::FilePath();
 }
 
 }  // namespace
@@ -37,18 +37,18 @@ const char kAppPathTestOutputDirectory[] = "test_out_dir";
 
 const char kAppPathContentDirectory[] = "content_dir";
 
-bool PathProvider(int key, base::FilePath* result)
+bool PathProvider(int key, ::base::FilePath* result)
 {
   DCHECK(result);
 
-  base::FilePath dir_exe;
+  ::base::FilePath dir_exe;
   if (!base::PathService::Get(base::DIR_EXE, &dir_exe)) {
     NOTREACHED();
   }
 
   switch (key) {
   case DIR_APP_DEBUG_OUT: {
-    base::FilePath directory =
+    ::base::FilePath directory =
       GetOrCreatePath(dir_exe.Append(kAppPathDebugOutputDirectory));
     if (!directory.empty()) {
       *result = directory;
@@ -65,7 +65,7 @@ bool PathProvider(int key, base::FilePath* result)
 
   case DIR_APP_TEST_OUT:
   {
-    base::FilePath directory =
+    ::base::FilePath directory =
       GetOrCreatePath(dir_exe.Append(kAppPathTestOutputDirectory));
     if (!directory.empty()) {
       *result = directory;
@@ -81,12 +81,12 @@ bool PathProvider(int key, base::FilePath* result)
   }
 
   case DIR_APP_WEB_ROOT: {
-    base::FilePath directory =
+    ::base::FilePath directory =
       GetOrCreatePath(dir_exe.Append(kAppPathContentDirectory));
     if (!directory.empty()) {
       *result = directory.Append("web");
       const bool dir_created
-        = base::CreateDirectory(*result);
+        = ::base::CreateDirectory(*result);
       if(!dir_created) {
         DLOG(ERROR)
             << "Unable to create directory "
@@ -117,28 +117,28 @@ bool PathProvider(int key, base::FilePath* result)
 
 void AddPathProvider()
 {
-  base::PathService::RegisterProvider(
+  ::base::PathService::RegisterProvider(
     &basis::PathProvider
-    , basis::PATH_APP_START
-    , basis::PATH_APP_END);
+    , ::basis::PATH_APP_START
+    , ::basis::PATH_APP_END);
 
-  base::FilePath log_directory;
-  base::PathService::Get(
-    basis::DIR_APP_DEBUG_OUT, &log_directory);
+  ::base::FilePath log_directory;
+  ::base::PathService::Get(
+    ::basis::DIR_APP_DEBUG_OUT, &log_directory);
   VLOG(9)
     << "log_directory: "
     << log_directory.value();
 
-  base::FilePath test_root_directory;
-  base::PathService::Get(
-    basis::DIR_APP_TEST_OUT, &test_root_directory);
+  ::base::FilePath test_root_directory;
+  ::base::PathService::Get(
+    ::basis::DIR_APP_TEST_OUT, &test_root_directory);
   VLOG(9)
     << "test_root_directory: "
     << test_root_directory.value();
 
-  base::FilePath web_root_directory;
-  base::PathService::Get(
-    basis::DIR_APP_WEB_ROOT, &web_root_directory);
+  ::base::FilePath web_root_directory;
+  ::base::PathService::Get(
+    ::basis::DIR_APP_WEB_ROOT, &web_root_directory);
   VLOG(9)
     << "web_root_directory: "
     << web_root_directory.value();

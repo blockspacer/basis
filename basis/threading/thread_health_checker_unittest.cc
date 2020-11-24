@@ -13,29 +13,29 @@
 namespace basis {
 
 namespace {
-const base::TimeDelta kInterval = base::TimeDelta::FromSeconds(3);
-const base::TimeDelta kTimeout = base::TimeDelta::FromSeconds(2);
+const ::base::TimeDelta kInterval = ::base::TimeDelta::FromSeconds(3);
+const ::base::TimeDelta kTimeout = ::base::TimeDelta::FromSeconds(2);
 }  // namespace
 
 class ThreadHealthCheckerTest : public ::testing::Test {
  protected:
   ThreadHealthCheckerTest()
-      : patient_(base::MakeRefCounted<base::TestMockTimeTaskRunner>()),
-        doctor_(base::MakeRefCounted<base::TestMockTimeTaskRunner>()),
+      : patient_(base::MakeRefCounted<::base::TestMockTimeTaskRunner>()),
+        doctor_(base::MakeRefCounted<::base::TestMockTimeTaskRunner>()),
         event_(base::WaitableEvent::ResetPolicy::MANUAL,
-               base::WaitableEvent::InitialState::NOT_SIGNALED) {}
+               ::base::WaitableEvent::InitialState::NOT_SIGNALED) {}
 
   ~ThreadHealthCheckerTest() override {}
 
-  scoped_refptr<base::TestMockTimeTaskRunner> patient_;
-  scoped_refptr<base::TestMockTimeTaskRunner> doctor_;
-  base::WaitableEvent event_;
+  scoped_refptr<::base::TestMockTimeTaskRunner> patient_;
+  scoped_refptr<::base::TestMockTimeTaskRunner> doctor_;
+  ::base::WaitableEvent event_;
 };
 
 #define CREATE_THREAD_HEALTH_CHECKER(name)                                   \
   ThreadHealthChecker name(patient_, doctor_, kInterval, kTimeout,           \
-                           base::BindRepeating(&base::WaitableEvent::Signal, \
-                                               base::Unretained(&event_)))
+                           ::base::BindRepeating(&base::WaitableEvent::Signal, \
+                                               ::base::Unretained(&event_)))
 
 TEST_F(ThreadHealthCheckerTest, FiresTimeoutWhenTaskRunnerDoesNotFlush) {
   CREATE_THREAD_HEALTH_CHECKER(thc);

@@ -81,23 +81,23 @@ enum class CheckedOptionalPolicy {
 // USAGE
 //
 //  // The io_context is required for all I/O
-//  basis::CheckedOptional<
+//  ::basis::CheckedOptional<
 //    boost::asio::io_context
-//    , basis::CheckedOptionalPolicy::DebugOnly
+//    , ::basis::CheckedOptionalPolicy::DebugOnly
 //  > ioc_{
 //      // it safe to read value from any thread
 //      // because its storage expected to be not modified
-//      basis::VerifyNothing::Repeatedly()
-//      , basis::CheckedOptionalPermissions::Readable
-//      , base::in_place};
+//      ::basis::VerifyNothing::Repeatedly()
+//      , ::basis::CheckedOptionalPermissions::Readable
+//      , ::base::in_place};
 //
-//  basis::CheckedOptional<
+//  ::basis::CheckedOptional<
 //    StateMachineType
 //  > sm_(
 //    BIND_UNRETAINED_RUN_ON_STRAND_CHECK(&acceptorStrand_) // see CheckedOptional constructor
 //    // "disallow `emplace` for thread-safety reasons"
-//    , basis::CheckedOptionalPermissions::Readable // see CheckedOptional constructor
-//    , base::in_place // see base::Optional constructor
+//    , ::basis::CheckedOptionalPermissions::Readable // see CheckedOptional constructor
+//    , ::base::in_place // see ::base::Optional constructor
 //    , UNINITIALIZED // see StateMachineType constructor
 //    , FillStateTransitionTable()) // see StateMachineType constructor
 //
@@ -119,15 +119,15 @@ public:
   // depending on `CheckedOptionalPolicy`.
   // Usually it is used for thread-safety checks.
   using VerifierCb
-    = base::RepeatingCallback<bool()>;
+    = ::base::RepeatingCallback<bool()>;
 
 public:
   /// \note if you want to initialize `value_`,
   /// than you can pass `base::in_place` as second argument
   explicit CheckedOptional(
     VerifierCb&& verifierCb
-    , const basis::CheckedOptionalPermissions& permissions
-        = basis::CheckedOptionalPermissions::All)
+    , const ::basis::CheckedOptionalPermissions& permissions
+        = ::basis::CheckedOptionalPermissions::All)
     : verifier_callback_(verifierCb)
     , CheckedOptionalPermissions(permissions)
   {
@@ -140,7 +140,7 @@ public:
   template <class... Args>
   CheckedOptional(
     VerifierCb&& verifierCb
-    , const basis::CheckedOptionalPermissions& permissions
+    , const ::basis::CheckedOptionalPermissions& permissions
     , Args&&... args)
     : verifier_callback_(verifierCb)
     , CheckedOptionalPermissions(permissions)
@@ -190,8 +190,8 @@ public:
       NOTREACHED();
     }
 
-    return basis::hasBit(CheckedOptionalPermissions
-          , basis::CheckedOptionalPermissions::Readable);
+    return ::basis::hasBit(CheckedOptionalPermissions
+          , ::basis::CheckedOptionalPermissions::Readable);
   }
 
   MUST_USE_RETURN_VALUE
@@ -210,15 +210,15 @@ public:
     }
 
     return
-      basis::hasBit(CheckedOptionalPermissions
-          , basis::CheckedOptionalPermissions::Modifiable);
+      ::basis::hasBit(CheckedOptionalPermissions
+          , ::basis::CheckedOptionalPermissions::Modifiable);
   }
 
   /// \note performs automatic checks only in debug mode,
   /// in other modes you must call `runVerifierCallback()` manually
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
-  base::Optional<Type>& optional()
+  ::base::Optional<Type>& optional()
   {
     if constexpr (VerifyPolicyType == CheckedOptionalPolicy::Always)
     {
@@ -240,7 +240,7 @@ public:
 
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
-  const base::Optional<Type>& optional() const
+  const ::base::Optional<Type>& optional() const
   {
     if constexpr (VerifyPolicyType == CheckedOptionalPolicy::Always)
     {
@@ -265,27 +265,27 @@ public:
   // (when data no longer used between threads)
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
-  base::Optional<Type>& optional_unsafe(
-    const base::Location& from_here
-    , base::StringPiece reason_why_using_unsafe
-    , base::OnceClosure&& check_unsafe_allowed = base::DoNothing::Once())
+  ::base::Optional<Type>& optional_unsafe(
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_using_unsafe
+    , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once())
   {
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
-    base::rvalue_cast(check_unsafe_allowed).Run();
+    ::base::rvalue_cast(check_unsafe_allowed).Run();
     return value_;
   }
 
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
-  const base::Optional<Type>& optional_unsafe(
-    const base::Location& from_here
-    , base::StringPiece reason_why_using_unsafe
-    , base::OnceClosure&& check_unsafe_allowed = base::DoNothing::Once()) const
+  const ::base::Optional<Type>& optional_unsafe(
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_using_unsafe
+    , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once()) const
   {
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
-    base::rvalue_cast(check_unsafe_allowed).Run();
+    ::base::rvalue_cast(check_unsafe_allowed).Run();
     return value_;
   }
 
@@ -346,13 +346,13 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   Type& value_unsafe(
-    const base::Location& from_here
-    , base::StringPiece reason_why_using_unsafe
-    , base::OnceClosure&& check_unsafe_allowed = base::DoNothing::Once())
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_using_unsafe
+    , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once())
   {
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
-    base::rvalue_cast(check_unsafe_allowed).Run();
+    ::base::rvalue_cast(check_unsafe_allowed).Run();
 
     return value_.value();
   }
@@ -361,13 +361,13 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   const Type& value_unsafe(
-    const base::Location& from_here
-    , base::StringPiece reason_why_using_unsafe
-    , base::OnceClosure&& check_unsafe_allowed = base::DoNothing::Once()) const
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_using_unsafe
+    , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once()) const
   {
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
-    base::rvalue_cast(check_unsafe_allowed).Run();
+    ::base::rvalue_cast(check_unsafe_allowed).Run();
     return value_.value();
   }
 
@@ -489,7 +489,7 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   Type& emplace(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , Args&&... args)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
@@ -521,22 +521,22 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   Type& emplace_unsafe(
-    const base::Location& from_here
-    , base::StringPiece reason_why_using_unsafe
-    // usually you want to pass `= base::DoNothing::Once()` here
-    , base::OnceClosure&& check_unsafe_allowed
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_using_unsafe
+    // usually you want to pass `= ::base::DoNothing::Once()` here
+    , ::base::OnceClosure&& check_unsafe_allowed
     , Args&&... args)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
-    base::rvalue_cast(check_unsafe_allowed).Run();
+    ::base::rvalue_cast(check_unsafe_allowed).Run();
 
     return value_.emplace(std::forward<Args>(args)...);
   }
 
-  void reset(const base::Location& from_here)
+  void reset(const ::base::Location& from_here)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
@@ -561,23 +561,23 @@ public:
   }
 
   void reset_unsafe(
-    const base::Location& from_here
-    , base::StringPiece reason_why_using_unsafe
-    // usually you want to pass `= base::DoNothing::Once()` here
-    , base::OnceClosure&& check_unsafe_allowed)
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_using_unsafe
+    // usually you want to pass `= ::base::DoNothing::Once()` here
+    , ::base::OnceClosure&& check_unsafe_allowed)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     ignore_result(from_here);
     ignore_result(reason_why_using_unsafe);
-    base::rvalue_cast(check_unsafe_allowed).Run();
+    ::base::rvalue_cast(check_unsafe_allowed).Run();
 
     value_.reset();
   }
 
   void forceNotValidToRead(
-    const base::Location& from_here
-    , base::StringPiece reason_why_make_invalid)
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_make_invalid)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
@@ -586,13 +586,13 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_invalid);
 
-    basis::removeBit(CheckedOptionalPermissions
-      , basis::CheckedOptionalPermissions::Readable);
+    ::basis::removeBit(CheckedOptionalPermissions
+      , ::basis::CheckedOptionalPermissions::Readable);
   }
 
   void forceNotValidToModify(
-    const base::Location& from_here
-    , base::StringPiece reason_why_make_invalid)
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_make_invalid)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
@@ -601,13 +601,13 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_invalid);
 
-    basis::removeBit(CheckedOptionalPermissions
-      , basis::CheckedOptionalPermissions::Modifiable);
+    ::basis::removeBit(CheckedOptionalPermissions
+      , ::basis::CheckedOptionalPermissions::Modifiable);
   }
 
   void forceValidToRead(
-    const base::Location& from_here
-    , base::StringPiece reason_why_make_valid)
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_make_valid)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
@@ -616,13 +616,13 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_valid);
 
-    basis::addBit(CheckedOptionalPermissions
-      , basis::CheckedOptionalPermissions::Readable);
+    ::basis::addBit(CheckedOptionalPermissions
+      , ::basis::CheckedOptionalPermissions::Readable);
   }
 
   void forceValidToModify(
-    const base::Location& from_here
-    , base::StringPiece reason_why_make_valid)
+    const ::base::Location& from_here
+    , ::base::StringPiece reason_why_make_valid)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
@@ -631,8 +631,8 @@ public:
     ignore_result(from_here);
     ignore_result(reason_why_make_valid);
 
-    basis::addBit(CheckedOptionalPermissions
-      , basis::CheckedOptionalPermissions::Modifiable);
+    ::basis::addBit(CheckedOptionalPermissions
+      , ::basis::CheckedOptionalPermissions::Modifiable);
   }
 
   bool operator==(const CheckedOptional& that) const
@@ -672,10 +672,10 @@ private:
   // `std::move` (just mark invalid after move)
   // or to force object to initialize only once
   // (just mark invalid after initialization to prohibit `emplace()`)
-  basis::CheckedOptionalPermissions CheckedOptionalPermissions{
-    basis::CheckedOptionalPermissions::All};
+  ::basis::CheckedOptionalPermissions CheckedOptionalPermissions{
+    ::basis::CheckedOptionalPermissions::All};
 
-  base::Optional<Type> value_;
+  ::base::Optional<Type> value_;
 
   /// \note Thread collision warner used only for modification operations
   /// because you may want to use unchangable storage

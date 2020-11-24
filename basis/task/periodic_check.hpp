@@ -47,22 +47,22 @@ class PeriodicCheckUntil
 {
  public:
    using CheckNotifyTask
-    =  base::RepeatingCallback<bool()>;
+    =  ::base::RepeatingCallback<bool()>;
 
    using CheckShutdownTask
-    =  base::RepeatingCallback<bool()>;
+    =  ::base::RepeatingCallback<bool()>;
 
   STRONGLY_TYPED(base::TimeDelta, CheckPeriod);
 
  public:
   PeriodicCheckUntil(
-    scoped_refptr<base::SequencedTaskRunner> task_runner
+    scoped_refptr<::base::SequencedTaskRunner> task_runner
     , CheckNotifyTask&& checkNotifyTask
     , CheckShutdownTask&& checkShutdownTask);
 
   // calls startPeriodicTimer
   PeriodicCheckUntil(
-    scoped_refptr<base::SequencedTaskRunner> task_runner
+    scoped_refptr<::base::SequencedTaskRunner> task_runner
     , CheckNotifyTask&& checkNotifyTask
     , CheckShutdownTask&& checkShutdownTask
     // timer update frequency
@@ -109,15 +109,15 @@ private:
 
   /// \note created and destroyed on |sequence_checker_|,
   /// but used on |task_runner_|
-  base::RepeatingTimer timer_;
+  ::base::RepeatingTimer timer_;
 
   /// \note ObserverListThreadSafe may be ued from multiple threads
   const scoped_refptr<
-      base::ObserverListThreadSafe<CheckUntilObserver>
+      ::base::ObserverListThreadSafe<CheckUntilObserver>
     > observers_;
 
   scoped_refptr<
-      base::SequencedTaskRunner
+      ::base::SequencedTaskRunner
     > task_runner_;
 
   CheckNotifyTask checkNotifyTask_;
@@ -135,11 +135,11 @@ private:
 class EndingTimeout {
  public:
   explicit EndingTimeout(
-    const base::Time& endTime);
+    const ::base::Time& endTime);
 
   // will calculate |endTime| as (base::Time::Now() + endTimeDelta)
   explicit EndingTimeout(
-    const base::TimeDelta& endTimeDelta);
+    const ::base::TimeDelta& endTimeDelta);
 
   EndingTimeout(
     EndingTimeout&& other)
@@ -160,7 +160,7 @@ class EndingTimeout {
 
   ~EndingTimeout();
 
-  base::Time endTime() const
+  ::base::Time endTime() const
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     return endTime_;
@@ -169,7 +169,7 @@ class EndingTimeout {
 private:
   SEQUENCE_CHECKER(sequence_checker_);
 
-  base::Time endTime_;
+  ::base::Time endTime_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(EndingTimeout);
@@ -184,19 +184,19 @@ private:
  * \example
    DCHECK(base::ThreadPool::GetInstance());
    // wait and signal on different task runners
-   scoped_refptr<base::SequencedTaskRunner> timeout_task_runner =
-     base::ThreadPool::GetInstance()->
+   scoped_refptr<::base::SequencedTaskRunner> timeout_task_runner =
+     ::base::ThreadPool::GetInstance()->
      CreateSequencedTaskRunnerWithTraits(
-       base::TaskTraits{
-         base::TaskPriority::BEST_EFFORT
-         , base::MayBlock()
-         , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+       ::base::TaskTraits{
+         ::base::TaskPriority::BEST_EFFORT
+         , ::base::MayBlock()
+         , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
        }
      );
    appLoopRunner.promiseFirstRun()
    .ThenOn(timeout_task_runner
      , FROM_HERE
-     , base::BindOnce(
+     , ::base::BindOnce(
        [
        ](
          std::unique_ptr<PeriodicCheckUntilTime>& timeoutForInit
@@ -206,13 +206,13 @@ private:
 
          EndingTimeout endingTimeout(
            // end time = now() + delta
-           base::TimeDelta::FromSeconds(5));
+           ::base::TimeDelta::FromSeconds(5));
 
          DCHECK(!timeoutForInit);
          timeoutForInit = std::make_unique<PeriodicCheckUntilTime>(
            // same as timeout_task_runner
-           base::SequencedTaskRunnerHandle::Get()
-           , base::BindRepeating([
+           ::base::SequencedTaskRunnerHandle::Get()
+           , ::base::BindRepeating([
              ](
              ){
                LOG(WARNING)
@@ -224,23 +224,23 @@ private:
            , endingTimeout
            // timer update frequency
            , PeriodicCheckUntil::CheckPeriod{
-               base::TimeDelta::FromMilliseconds(500)}
+               ::base::TimeDelta::FromMilliseconds(500)}
          );
        }
        , std::ref(timeoutForInit_) /// \note must manage lifetime
    ))
    .ThenOn(base::MessageLoop::current()->task_runner()
      , FROM_HERE
-     , base::BindOnce(
+     , ::base::BindOnce(
          &ServerEnvironment::DoTasks
-         , base::Unretained(this)
+         , ::base::Unretained(this)
    ))
    // reset |timeoutForInit_|
    .ThenOn(timeout_task_runner
      , FROM_HERE
-     , base::BindOnce(
+     , ::base::BindOnce(
          &std::unique_ptr<PeriodicCheckUntilTime>::reset
-         , base::Unretained(&timeoutForInit_)
+         , ::base::Unretained(&timeoutForInit_)
          , nullptr // reset unique_ptr to nullptr
        )
    );
@@ -249,11 +249,11 @@ class PeriodicCheckUntilTime
 {
  public:
   using OptionalCheckPeriod
-    = base::Optional<PeriodicCheckUntil::CheckPeriod>;
+    = ::base::Optional<PeriodicCheckUntil::CheckPeriod>;
 
   PeriodicCheckUntilTime(
-    scoped_refptr<base::SequencedTaskRunner> task_runner
-    , base::RepeatingClosure&& expiredCallback
+    scoped_refptr<::base::SequencedTaskRunner> task_runner
+    , ::base::RepeatingClosure&& expiredCallback
     , const EndingTimeout& endTime
     // timer update frequency
     // calls startPeriodicTimer if set
@@ -285,44 +285,44 @@ private:
  * \usage
   DCHECK(base::ThreadPool::GetInstance());
   // wait and signal on different task runners
-  scoped_refptr<base::SequencedTaskRunner> timeout_task_runner =
-    base::ThreadPool::GetInstance()->
+  scoped_refptr<::base::SequencedTaskRunner> timeout_task_runner =
+    ::base::ThreadPool::GetInstance()->
     CreateSequencedTaskRunnerWithTraits(
-      base::TaskTraits{
-        base::TaskPriority::BEST_EFFORT
-        , base::MayBlock()
-        , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+      ::base::TaskTraits{
+        ::base::TaskPriority::BEST_EFFORT
+        , ::base::MayBlock()
+        , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
       }
     );
   somePromise()
   .ThenOn(timeout_task_runner
     , FROM_HERE
-    , base::BindOnce(
+    , ::base::BindOnce(
         // limit execution time
         &setPeriodicTimeoutCheckerOnSequence
         , FROM_HERE
         , timeout_task_runner
         , EndingTimeout{
-            base::TimeDelta::FromSeconds(5)}
+            ::base::TimeDelta::FromSeconds(5)}
         , PeriodicCheckUntil::CheckPeriod{
-            base::TimeDelta::FromMilliseconds(500)}
+            ::base::TimeDelta::FromMilliseconds(500)}
         , "application initialization hanged"
   ))
   .ThenOn(base::MessageLoop::current()->task_runner()
     , FROM_HERE
-    , base::BindOnce(
+    , ::base::BindOnce(
         &doSomething
   ))
   // reset check of execution time
   .ThenOn(timeout_task_runner
     , FROM_HERE
-    , base::BindOnce(&unsetPeriodicTimeoutCheckerOnSequence)
+    , ::base::BindOnce(&unsetPeriodicTimeoutCheckerOnSequence)
   )
   ;
  */
 void setPeriodicTimeoutCheckerOnSequence(
-  const base::Location& from_here
-  , scoped_refptr<base::SequencedTaskRunner> task_runner
+  const ::base::Location& from_here
+  , scoped_refptr<::base::SequencedTaskRunner> task_runner
   , const EndingTimeout& endingTimeout
   , const PeriodicCheckUntil::CheckPeriod& checkPeriod
   , const std::string& errorText);

@@ -9,7 +9,7 @@
 
 #include <basis/is_reference_wrapper.hpp>
 
-namespace util {
+namespace basis {
 
 /// \note Prefer `UnownedRef` to `gsl::not_null`, `std::reference_wrapper` etc.
 // UnownedRef is similar to std::reference_wrapper
@@ -235,4 +235,4 @@ inline bool operator!=(const U& lhs, const UnownedRef<Type>& rhs)
   return rhs != lhs;
 }
 
-}  // namespace util
+}  // namespace basis

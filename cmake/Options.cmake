@@ -14,7 +14,7 @@ option(ENABLE_TESTS "Enable tests" OFF)
 option(ENABLE_VALGRIND
   "Enable valgrind" OFF)
 
-# TODO: __do_global_dtors_aux, base::debug::CollectStackTrace
+# TODO: __do_global_dtors_aux, ::base::debug::CollectStackTrace
 option(ENABLE_VALGRIND_TESTS
   "Enable valgrind for unit tests" OFF)
 

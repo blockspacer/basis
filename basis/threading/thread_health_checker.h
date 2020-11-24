@@ -34,43 +34,43 @@ namespace basis {
 class ThreadHealthChecker {
  public:
   ThreadHealthChecker(
-      scoped_refptr<base::TaskRunner> patient_task_runner,
-      scoped_refptr<base::SequencedTaskRunner> doctor_task_runner,
-      base::TimeDelta interval,
-      base::TimeDelta timeout,
-      base::RepeatingClosure on_failure);
+      scoped_refptr<::base::TaskRunner> patient_task_runner,
+      scoped_refptr<::base::SequencedTaskRunner> doctor_task_runner,
+      ::base::TimeDelta interval,
+      ::base::TimeDelta timeout,
+      ::base::RepeatingClosure on_failure);
   ~ThreadHealthChecker();
 
  private:
-  class Internal : public base::RefCountedThreadSafe<Internal> {
+  class Internal : public ::base::RefCountedThreadSafe<Internal> {
    public:
-    Internal(scoped_refptr<base::TaskRunner> patient_task_runner,
-             scoped_refptr<base::SequencedTaskRunner> doctor_task_runner,
-             base::TimeDelta interval,
-             base::TimeDelta timeout,
-             base::RepeatingClosure on_failure);
+    Internal(scoped_refptr<::base::TaskRunner> patient_task_runner,
+             scoped_refptr<::base::SequencedTaskRunner> doctor_task_runner,
+             ::base::TimeDelta interval,
+             ::base::TimeDelta timeout,
+             ::base::RepeatingClosure on_failure);
     void StartHealthCheck();
     void StopHealthCheck();
 
    private:
-    friend class base::RefCountedThreadSafe<Internal>;
+    friend class ::base::RefCountedThreadSafe<Internal>;
     ~Internal();
     void ScheduleHealthCheck();
     void CheckThreadHealth();
     void ThreadOk();
     void ThreadTimeout();
 
-    scoped_refptr<base::TaskRunner> patient_task_runner_;
-    scoped_refptr<base::SequencedTaskRunner> doctor_task_runner_;
-    base::TimeDelta interval_;
-    base::TimeDelta timeout_;
-    std::unique_ptr<base::OneShotTimer> ok_timer_;
-    std::unique_ptr<base::OneShotTimer> failure_timer_;
-    base::RepeatingClosure on_failure_;
+    scoped_refptr<::base::TaskRunner> patient_task_runner_;
+    scoped_refptr<::base::SequencedTaskRunner> doctor_task_runner_;
+    ::base::TimeDelta interval_;
+    ::base::TimeDelta timeout_;
+    std::unique_ptr<::base::OneShotTimer> ok_timer_;
+    std::unique_ptr<::base::OneShotTimer> failure_timer_;
+    ::base::RepeatingClosure on_failure_;
     THREAD_CHECKER(thread_checker_);
   };
 
-  scoped_refptr<base::SequencedTaskRunner> doctor_task_runner_;
+  scoped_refptr<::base::SequencedTaskRunner> doctor_task_runner_;
   scoped_refptr<Internal> internal_;
 
   DISALLOW_COPY_AND_ASSIGN(ThreadHealthChecker);

@@ -49,21 +49,21 @@ int runCatchTests(int argc, char* const argv[]) {
 static inline void initI18n()
 {
   /// \todo InitializeICUWithFileDescriptor
-  bool icu_initialized = base::i18n::InitializeICU();
+  bool icu_initialized = ::base::i18n::InitializeICU();
   //DCHECK(icu_initialized);
 }
 
 static inline void initCommandLine(int argc, char* argv[])
 {
-  base::PlatformThread::SetName("Main");
+  ::base::PlatformThread::SetName("Main");
 
   // see https://stackoverflow.com/a/18981514/10904212
   std::locale::global(std::locale::classic());
 
   // see https://peter.sh/experiments/chromium-command-line-switches/
-  base::CommandLine::Init(argc, argv);
+  ::base::CommandLine::Init(argc, argv);
 
-  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  ::base::CommandLine* command_line = ::base::CommandLine::ForCurrentProcess();
 
   // initialize |g_vlog_info| in debug mode
 #if !defined(NDEBUG)
@@ -120,18 +120,18 @@ static inline void initCommandLine(int argc, char* argv[])
 
   /// \todo
   // init allocator https://github.com/aranajhonny/chromium/blob/caf5bcb822f79b8997720e589334266551a50a13/content/app/content_main_runner.cc#L512
-  // base::EnableTerminationOnHeapCorruption();
-  // base::EnableTerminationOnOutOfMemory();
+  // ::base::EnableTerminationOnHeapCorruption();
+  // ::base::EnableTerminationOnOutOfMemory();
   // mojo::embedder::Init();
   // mojo::ServiceManager::GetInstance();
 //#if !defined(OFFICIAL_BUILD)
-//  base::debug::EnableInProcessStackDumping();
+//  ::base::debug::EnableInProcessStackDumping();
 //#if defined(OS_WIN)
-//  base::RouteStdioToConsole(false);
+//  ::base::RouteStdioToConsole(false);
 //#endif
 //#endif
 
-  base::FeatureList::InitializeInstance(std::string(), std::string());
+  ::base::FeatureList::InitializeInstance(std::string(), std::string());
 
   /// \todo
   //base::FeatureList::InitializeInstance(
@@ -141,7 +141,7 @@ static inline void initCommandLine(int argc, char* argv[])
   // DCHECK(!base::TaskScheduler::GetInstance());
   // // A one-per-process task scheduler is needed for usage of APIs in
   // // base/post_task.h
-  // base::TaskScheduler::CreateAndStartWithDefaultParams("MainThreadPool");
+  // ::base::TaskScheduler::CreateAndStartWithDefaultParams("MainThreadPool");
   // DCHECK(base::TaskScheduler::GetInstance());
 }
 #endif // USE_CATCH_TEST || defined(GTEST_NO_SUITE)
@@ -152,14 +152,14 @@ int main(int argc, char* argv[]) {
 
   // This object instance is required (for example,
   // LazyInstance, MessageLoop).
-  base::AtExitManager at_exit;
+  ::base::AtExitManager at_exit;
 
-  /// \note creates base::MessageLoop::current()
-  base::MessageLoopForIO main_thread_message_loop;
+  /// \note creates ::base::MessageLoop::current()
+  ::base::MessageLoopForIO main_thread_message_loop;
 
   initI18n();
 
-  basis::initLogging(
+  ::basis::initLogging(
     "" // logFile
   );
 
@@ -194,10 +194,10 @@ int main(int argc, char* argv[]) {
   const int gtest_res = RUN_ALL_TESTS();
   return gtest_res;
 #else
-  base::TestSuite test_suite(argc, argv);
-  return base::LaunchUnitTests(
+  ::base::TestSuite test_suite(argc, argv);
+  return ::base::LaunchUnitTests(
       argc, argv,
-      base::BindOnce(&base::TestSuite::Run, base::Unretained(&test_suite)));
+      ::base::BindOnce(&base::TestSuite::Run, ::base::Unretained(&test_suite)));
 #endif // GTEST_NO_SUITE
 #endif // USE_GTEST_TEST
 

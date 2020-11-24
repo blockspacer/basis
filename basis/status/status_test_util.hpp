@@ -23,12 +23,12 @@ namespace stratum {
 namespace test_utils {
 namespace matchers_internal {
 
-inline const ::util::Status& GetStatus(const ::util::Status& status) {
+inline const ::basis::Status& GetStatus(const ::basis::Status& status) {
   return status;
 }
 
 template <typename T>
-inline const ::util::Status& GetStatus(const ::util::StatusOr<T>& status) {
+inline const ::basis::Status& GetStatus(const ::basis::StatusOr<T>& status) {
   return status.status();
 }
 
@@ -130,8 +130,8 @@ class IsOkAndHoldsMatcher {
 ////////////////////////////////////////////////////////////
 // Implementation of StatusIs().
 
-// An internal matcher for matching a const util::ErrorSpace* against
-// an expected const util::ErrorSpace*.  It describes the expected
+// An internal matcher for matching a const ::basis::ErrorSpace* against
+// an expected const ::basis::ErrorSpace*.  It describes the expected
 // error space by the symbolic name.
 MATCHER_P(ErrorSpaceEq, expected_error_space,
           (negation ? "isn't <" : "is <") + expected_error_space->SpaceName() +
@@ -153,30 +153,30 @@ struct EnumHasErrorSpace<
 
 template <typename E>
 typename std::enable_if<EnumHasErrorSpace<E>::value,
-                        const ::util::ErrorSpace*>::type
+                        const ::basis::ErrorSpace*>::type
 GetErrorSpaceForStatusIs(E e) {
-  if (static_cast<int>(e) == 0) return ::util::Status::canonical_space();
+  if (static_cast<int>(e) == 0) return ::basis::Status::canonical_space();
   return GetErrorSpaceForEnum(e);
 }
 
 template <typename E>
 typename std::enable_if<!EnumHasErrorSpace<E>::value,
-                        const ::util::ErrorSpace*>::type
+                        const ::basis::ErrorSpace*>::type
 GetErrorSpaceForStatusIs(E) {
-  return ::util::Status::canonical_space();
+  return ::basis::Status::canonical_space();
 }
 
-// ToErrorSpaceMatcher(m) converts m to a Matcher<const util::ErrorSpace*>.
+// ToErrorSpaceMatcher(m) converts m to a Matcher<const ::basis::ErrorSpace*>.
 //
-// If m is a pointer to util::ErrorSpace or a subclass, the first
+// If m is a pointer to ::basis::ErrorSpace or a subclass, the first
 // overload is picked; otherwise the second overload is picked.
-inline ::testing::Matcher<const ::util::ErrorSpace*> ToErrorSpaceMatcher(
-    const ::util::ErrorSpace* space) {
+inline ::testing::Matcher<const ::basis::ErrorSpace*> ToErrorSpaceMatcher(
+    const ::basis::ErrorSpace* space) {
   // Ensure that the expected error space is described by its symbolic name.
   return ErrorSpaceEq(space);
 }
-inline ::testing::Matcher<const ::util::ErrorSpace*> ToErrorSpaceMatcher(
-    const ::testing::Matcher<const ::util::ErrorSpace*>& space_matcher) {
+inline ::testing::Matcher<const ::basis::ErrorSpace*> ToErrorSpaceMatcher(
+    const ::testing::Matcher<const ::basis::ErrorSpace*>& space_matcher) {
   return space_matcher;
 }
 
@@ -215,7 +215,7 @@ inline ::testing::Matcher<int> ToCodeMatcher(const ::testing::Matcher<int>& m) {
 class StatusIsMatcherCommonImpl {
  public:
   StatusIsMatcherCommonImpl(
-      ::testing::Matcher<const ::util::ErrorSpace*> space_matcher,
+      ::testing::Matcher<const ::basis::ErrorSpace*> space_matcher,
       ::testing::Matcher<int> code_matcher,
       ::testing::Matcher<const std::string&> message_matcher)
       : space_matcher_(std::move(space_matcher)),
@@ -226,11 +226,11 @@ class StatusIsMatcherCommonImpl {
 
   void DescribeNegationTo(std::ostream* os) const;
 
-  bool MatchAndExplain(const ::util::Status& status,
+  bool MatchAndExplain(const ::basis::Status& status,
                        ::testing::MatchResultListener* result_listener) const;
 
  private:
-  const ::testing::Matcher<const ::util::ErrorSpace*> space_matcher_;
+  const ::testing::Matcher<const ::basis::ErrorSpace*> space_matcher_;
   const ::testing::Matcher<int> code_matcher_;
   const ::testing::Matcher<const std::string&> message_matcher_;
 };
@@ -349,14 +349,14 @@ inline matchers_internal::StatusIsMatcher StatusIs(
   return StatusIs(std::forward<StatusCodeMatcher>(code_matcher), ::testing::_);
 }
 
-// Macros for testing the results of functions that return ::util::Status.
+// Macros for testing the results of functions that return ::basis::Status.
 
 #define EXPECT_OK(statement) \
   EXPECT_THAT(statement, ::stratum::test_utils::IsOk())
 #define ASSERT_OK(statement) \
   ASSERT_THAT(statement, ::stratum::test_utils::IsOk())
 
-// Macros for testing the results of functions that return ::util::StatusOr.
+// Macros for testing the results of functions that return ::basis::StatusOr.
 #define ASSERT_CONCAT1(prefix, postfix) prefix ## postfix
 #define ASSERT_CONCAT(prefix, postfix) ASSERT_CONCAT1(prefix, postfix)
 #define ASSERT_UNIQUE(prefix) ASSERT_CONCAT(prefix, __LINE__)
@@ -370,7 +370,7 @@ inline matchers_internal::StatusIsMatcher StatusIs(
 // provide much value (when they fail, they would just print the OK status
 // which conveys no more information than EXPECT_FALSE(status.ok());
 // If you want to check for particular errors, better alternatives are:
-// EXPECT_EQ(::util::Status(...expected error...), status.StripMessage());
+// EXPECT_EQ(::basis::Status(...expected error...), status.StripMessage());
 // EXPECT_THAT(status.ToString(), HasSubstr("expected error"));
 // Also, see testing/base/public/gmock.h.
 

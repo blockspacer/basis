@@ -30,7 +30,7 @@ ALLOW_BITMASK_OPERATORS(PromiseCollectionPermissions)
 
 template <
   typename ResolveType
-  , typename RejectType = base::NoReject
+  , typename RejectType = ::base::NoReject
   >
 class PromiseCollection
 {
@@ -41,7 +41,7 @@ public:
 #endif // DCHECK_IS_ON
 
   using PromiseType
-    = base::Promise<ResolveType, RejectType>;
+    = ::base::Promise<ResolveType, RejectType>;
 
   // Define a total order based on the |task_runner| affinity, so that MDPs
   // belonging to the same SequencedTaskRunner are adjacent in the set.
@@ -83,12 +83,12 @@ public:
   /// but only for currently collected promises
   /// i.e. after adding new promises to collection
   /// you may want to call `All()` again.
-  PromiseType All(const base::Location& from_here)
+  PromiseType All(const ::base::Location& from_here)
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
     if(!promiseContainer_.empty()) {
-      return base::Promises::All(FROM_HERE, promiseContainer_);
+      return ::base::Promises::All(FROM_HERE, promiseContainer_);
     }
 
     // dummy promise
@@ -114,7 +114,7 @@ public:
 
     bool removedOnce = false;
 
-    base::EraseIf(
+    ::base::EraseIf(
       promiseContainer_,
       [
         SHARED_LIFETIME(boundPromise)

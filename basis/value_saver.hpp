@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VERIBLE_COMMON_UTIL_VALUE_SAVER_H_
-#define VERIBLE_COMMON_UTIL_VALUE_SAVER_H_
+#pragma once
 
-namespace verible {
+namespace basis {
 
 // An object of this type modifies a given variable in the constructor
 // and restores its original value in the destructor.
@@ -39,6 +38,4 @@ class ValueSaver {
   const T oldval_;
 };
 
-}  // namespace verible
-
-#endif  // VERIBLE_COMMON_UTIL_VALUE_SAVER_H_
+}  // namespace basis

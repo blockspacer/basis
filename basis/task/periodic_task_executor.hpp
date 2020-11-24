@@ -24,8 +24,8 @@ namespace basis {
  * Usage (single threaded):
   {
     /// \note will stop periodic timer on scope exit
-    basis::PeriodicTaskExecutor periodicAsioExecutor_1(
-      base::BindRepeating(
+    ::basis::PeriodicTaskExecutor periodicAsioExecutor_1(
+      ::base::BindRepeating(
           [
           ](
             boost::asio::io_context& ioc
@@ -42,7 +42,7 @@ namespace basis {
     );
 
     periodicAsioExecutor_1.startPeriodicTimer(
-      base::TimeDelta::FromMilliseconds(30));
+      ::base::TimeDelta::FromMilliseconds(30));
 
     run_loop.Run();
   }
@@ -56,7 +56,7 @@ namespace basis {
     = util::StrongAlias<
         class PeriodicAsioExecutorTag
         /// \note will stop periodic timer on scope exit
-        , basis::PeriodicTaskExecutor
+        , ::basis::PeriodicTaskExecutor
       >;
   void Example::setupPeriodicAsioExecutor() NO_EXCEPTION
   {
@@ -64,9 +64,9 @@ namespace basis {
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
 
-    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+    ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
       = ECS::SequenceLocalContext::getSequenceLocalInstance(
-          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+          FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
     DCHECK(sequenceLocalContext);
     // Can not register same data type twice.
@@ -76,12 +76,12 @@ namespace basis {
       = sequenceLocalContext->set_once<PeriodicAsioExecutorType>(
           FROM_HERE
           , "PeriodicAsioExecutorType" + FROM_HERE.ToString()
-          , base::BindRepeating(
+          , ::base::BindRepeating(
               &Example::updateAsioRegistry
-              , base::Unretained(this))
+              , ::base::Unretained(this))
         );
     result->startPeriodicTimer(
-      base::TimeDelta::FromMilliseconds(100));
+      ::base::TimeDelta::FromMilliseconds(100));
   }
 
   void Example::deletePeriodicAsioExecutor() NO_EXCEPTION
@@ -90,9 +90,9 @@ namespace basis {
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicAsioTaskRunner_.get());
 
-    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+    ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
       = ECS::SequenceLocalContext::getSequenceLocalInstance(
-          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+          FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
     DCHECK(sequenceLocalContext);
     DCHECK(sequenceLocalContext->try_ctx<PeriodicAsioExecutorType>(FROM_HERE));
@@ -106,18 +106,18 @@ class PeriodicTaskExecutor
 {
  public:
   PeriodicTaskExecutor(
-    base::RepeatingClosure&& periodic_task);
+    ::base::RepeatingClosure&& periodic_task);
 
   ~PeriodicTaskExecutor();
 
   void
     setTaskRunner(
-      scoped_refptr<base::SequencedTaskRunner> task_runner);
+      scoped_refptr<::base::SequencedTaskRunner> task_runner);
 
   void
     startPeriodicTimer(
       // timer update frequency
-      const base::TimeDelta& checkPeriod);
+      const ::base::TimeDelta& checkPeriod);
 
   void
     runOnce();
@@ -126,7 +126,7 @@ private:
   void
     restart_timer(
       // timer update frequency
-      const base::TimeDelta& checkPeriod);
+      const ::base::TimeDelta& checkPeriod);
 
   void
     shutdown();
@@ -134,12 +134,12 @@ private:
 private:
   SEQUENCE_CHECKER(sequence_checker_);
 
-  base::RepeatingClosure periodic_task_;
+  ::base::RepeatingClosure periodic_task_;
 
-  base::RepeatingTimer timer_;
+  ::base::RepeatingTimer timer_;
 
   scoped_refptr<
-      base::SequencedTaskRunner
+      ::base::SequencedTaskRunner
     > task_runner_;
 
 #if DCHECK_IS_ON()
@@ -154,12 +154,12 @@ private:
 // executes task periodically on |task_runner|
 /// \note do not forget to call |startPeriodicTaskExecutorOnSequence|
 void setPeriodicTaskExecutorOnSequence(
-  const base::Location& from_here
-  , scoped_refptr<base::SequencedTaskRunner> task_runner
-  , base::RepeatingClosure updateCallback);
+  const ::base::Location& from_here
+  , scoped_refptr<::base::SequencedTaskRunner> task_runner
+  , ::base::RepeatingClosure updateCallback);
 
 void startPeriodicTaskExecutorOnSequence(
-  const base::TimeDelta& endTimeDelta);
+  const ::base::TimeDelta& endTimeDelta);
 
 void unsetPeriodicTaskExecutorOnSequence();
 

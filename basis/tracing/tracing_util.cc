@@ -28,10 +28,10 @@ static const char kTraceJsonEnd[]
   = "]}";
 
 void onTraceDataCollected(
-  base::File& _output_file
-  , base::Closure quit_closure
-  , base::trace_event::TraceResultBuffer* in_trace_buffer
-  , const scoped_refptr<base::RefCountedString>&
+  ::base::File& _output_file
+  , ::base::Closure quit_closure
+  , ::base::trace_event::TraceResultBuffer* in_trace_buffer
+  , const scoped_refptr<::base::RefCountedString>&
   json_events_str
   , bool has_more_events)
 {
@@ -55,21 +55,21 @@ void initTracing(
   // Used by out-of-process heap-profiling. When malloc is profiled by an
   // external process, that process will be responsible for emitting metrics on
   // behalf of this one. Thus, MallocDumpProvider should not do anything.
-  base::trace_event::MallocDumpProvider::GetInstance()
+  ::base::trace_event::MallocDumpProvider::GetInstance()
     ->DisableMetrics();
 
 #if defined(OS_MACOSX)
   // On macOS, this call is necessary to shim malloc zones that were created
   // after startup. This cannot be done during shim initialization because the
   // task scheduler has not yet been initialized.
-  base::allocator::PeriodicallyShimNewMallocZones();
+  ::base::allocator::PeriodicallyShimNewMallocZones();
 #endif
 
   // see https://github.com/mbbill/libTraceEvent
   // see https://habr.com/ru/post/256907/
   // see http://dev.chromium.org/developers/how-tos/trace-event-profiling-tool
   // see https://www.chromium.org/developers/how-tos/trace-event-profiling-tool/tracing-event-instrumentation
-  base::trace_event::TraceConfig trace_config{
+  ::base::trace_event::TraceConfig trace_config{
     // |category_filter_string| is a comma-delimited list of category wildcards.
     // A category can have an optional '-' prefix to make it an excluded category.
     // All the same rules apply above, so for example, having both included and
@@ -78,40 +78,40 @@ void initTracing(
     // Example: "test_MyTest*,test_OtherStuff"
     // Example: "-excluded_category1,-excluded_category2"
     event_categories
-    //, base::trace_event::RECORD_CONTINUOUSLY
-    , base::trace_event::RECORD_UNTIL_FULL
+    //, ::base::trace_event::RECORD_CONTINUOUSLY
+    , ::base::trace_event::RECORD_UNTIL_FULL
     };
 
   /// \todo https://www.chromium.org/developers/how-tos/trace-event-profiling-tool/memory/howto-adding-memory-infra-tracing-to-a-component
   //base::tracing::ProcessMetricsMemoryDumpProvider::RegisterForProcess(
-  //    base::kNullProcessId);
+  //    ::base::kNullProcessId);
 
   /// \todo
-  /// use base::trace_event::MemoryDumpManager::GetInstance()->RegisterDumpProvider
+  /// use ::base::trace_event::MemoryDumpManager::GetInstance()->RegisterDumpProvider
   // Create trace config with heap profiling filter.
-  /*std::string filter_string = base::JoinString(
+  /*std::string filter_string = ::base::JoinString(
       {"*", TRACE_DISABLED_BY_DEFAULT("net"), TRACE_DISABLED_BY_DEFAULT("cc"),
-       base::trace_event::MemoryDumpManager::kTraceCategory},
+       ::base::trace_event::MemoryDumpManager::kTraceCategory},
       ",");
-  base::trace_event::TraceConfigCategoryFilter category_filter;
+  ::base::trace_event::TraceConfigCategoryFilter category_filter;
   category_filter.InitializeFromString(filter_string);
-  base::trace_event::TraceConfig::EventFilterConfig heap_profiler_filter_config(
-      base::HeapProfilerEventFilter::kName);
+  ::base::trace_event::TraceConfig::EventFilterConfig heap_profiler_filter_config(
+      ::base::HeapProfilerEventFilter::kName);
   heap_profiler_filter_config.SetCategoryFilter(category_filter);
-  base::trace_event::TraceConfig::EventFilters enabled_event_filters_;
+  ::base::trace_event::TraceConfig::EventFilters enabled_event_filters_;
   enabled_event_filters_.push_back(heap_profiler_filter_config);
   trace_config.SetEventFilters(enabled_event_filters_);*/
   //base::trace_event::TraceLog::GetInstance()->SetEnabled(
-  //  base::trace_event::TraceConfig(
-  //    base::trace_event::MemoryDumpManager::kTraceCategory, ""),
-  //  base::trace_event::TraceLog::RECORDING_MODE);
+  //  ::base::trace_event::TraceConfig(
+  //    ::base::trace_event::MemoryDumpManager::kTraceCategory, ""),
+  //  ::base::trace_event::TraceLog::RECORDING_MODE);
 
-  base::trace_event::TraceLog::GetInstance()->SetEnabled(
+  ::base::trace_event::TraceLog::GetInstance()->SetEnabled(
     trace_config
-    , base::trace_event::TraceLog::RECORDING_MODE);
+    , ::base::trace_event::TraceLog::RECORDING_MODE);
 
   if(!auto_start_tracer) {
-    base::trace_event::TraceLog::GetInstance()->SetDisabled();
+    ::base::trace_event::TraceLog::GetInstance()->SetDisabled();
     VLOG(1)
       << "Tracing disabled."
       << " You can control tracing by cmd flags";
@@ -124,13 +124,13 @@ void initTracing(
       << " consider enabling tracing on-demand";
   }
 
-  base::trace_event::TraceLog::GetInstance()
+  ::base::trace_event::TraceLog::GetInstance()
     ->set_process_name("Main Process");
 
   {
-    using base::trace_event::AllocationContextTracker;
+    using ::base::trace_event::AllocationContextTracker;
     using CaptureMode
-      = base::trace_event::AllocationContextTracker::CaptureMode;
+      = ::base::trace_event::AllocationContextTracker::CaptureMode;
 
     DCHECK(AllocationContextTracker
       ::GetInstanceForCurrentThread());
@@ -138,21 +138,21 @@ void initTracing(
       CaptureMode::DISABLED);
   }
 
-  base::SamplingHeapProfiler::Init();
+  ::base::SamplingHeapProfiler::Init();
 
-  auto* h_profiler = base::SamplingHeapProfiler::Get();
+  auto* h_profiler = ::base::SamplingHeapProfiler::Get();
   DCHECK(h_profiler);
   const uint32_t profile_id = h_profiler->Start();
 
-  base::trace_event::MemoryDumpManager* mdump_instance
-    = base::trace_event::MemoryDumpManager::GetInstance();
+  ::base::trace_event::MemoryDumpManager* mdump_instance
+    = ::base::trace_event::MemoryDumpManager::GetInstance();
   DCHECK(mdump_instance);
   mdump_instance->Initialize(
-   base::BindRepeating(
+   ::base::BindRepeating(
      [
      ](
-       base::trace_event::MemoryDumpType dump_type
-       , base::trace_event::MemoryDumpLevelOfDetail level_of_detail
+       ::base::trace_event::MemoryDumpType dump_type
+       , ::base::trace_event::MemoryDumpLevelOfDetail level_of_detail
      ){
        NOTIMPLEMENTED();
      }
@@ -162,12 +162,12 @@ void initTracing(
   );
 
   mdump_instance->SetupForTracing(
-    base::trace_event::TraceConfig::MemoryDumpConfig());
+    ::base::trace_event::TraceConfig::MemoryDumpConfig());
 
   /// \todo
-  //void* volatile p = base::allocator::UncheckedAlloc(400);
+  //void* volatile p = ::base::allocator::UncheckedAlloc(400);
   //free(p);
-  //std::vector<base::SamplingHeapProfiler::Sample> h_samples =
+  //std::vector<::base::SamplingHeapProfiler::Sample> h_samples =
   //    h_profiler->GetSamples(
   //      //profile_id
   //      0 // To retrieve all set to 0.
@@ -188,19 +188,19 @@ void initTracing(
   //}
   //static uint64_t dump_guid = 0;
   //base::trace_event::MemoryDumpType dump_type
-  //  = base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED;
+  //  = ::base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED;
   //base::trace_event::MemoryDumpLevelOfDetail level_of_detail
-  //  = base::trace_event::MemoryDumpLevelOfDetail::DETAILED;
+  //  = ::base::trace_event::MemoryDumpLevelOfDetail::DETAILED;
   //base::trace_event::MemoryDumpRequestArgs request_args{
   //  dump_guid, dump_type, level_of_detail};
   //mdump_instance->CreateProcessDump(request_args
-  //  , base::BindRepeating(
+  //  , ::base::BindRepeating(
   //    [](
   //      bool success
   //      , uint64_t dump_guid
-  //      , std::unique_ptr<base::trace_event::ProcessMemoryDump> pmd
+  //      , std::unique_ptr<::base::trace_event::ProcessMemoryDump> pmd
   //    ){
-  //      using base::trace_event::TracedValue;
+  //      using ::base::trace_event::TracedValue;
   //
   //      VLOG(1)
   //        << "MemoryDumpRequest done"
@@ -225,17 +225,17 @@ void initTracing(
   //      {
   //        bool enabled;
   //        TRACE_EVENT_CATEGORY_GROUP_ENABLED(
-  //            base::trace_event::MemoryDumpManager::kTraceCategory, &enabled);
+  //            ::base::trace_event::MemoryDumpManager::kTraceCategory, &enabled);
   //        //DCHECK(enabled);
   //      }
   //      traced_value->SetString(
   //          "level_of_detail",
-  //          base::trace_event::MemoryDumpLevelOfDetailToString(
+  //          ::base::trace_event::MemoryDumpLevelOfDetailToString(
   //            /// \todo
-  //            base::trace_event::MemoryDumpLevelOfDetail::DETAILED
+  //            ::base::trace_event::MemoryDumpLevelOfDetail::DETAILED
   //            ));
   //
-  //      base::trace_event::TraceArguments trace_args(
+  //      ::base::trace_event::TraceArguments trace_args(
   //        "dumps"
   //        , std::move(traced_value));
   //
@@ -243,11 +243,11 @@ void initTracing(
   //      // and call `TeardownForTracing`
   //      TRACE_EVENT_API_ADD_TRACE_EVENT(
   //          TRACE_EVENT_PHASE_MEMORY_DUMP,
-  //          base::trace_event::TraceLog::GetCategoryGroupEnabled(
-  //              base::trace_event::MemoryDumpManager::kTraceCategory)
-  //          , base::trace_event::MemoryDumpTypeToString(
+  //          ::base::trace_event::TraceLog::GetCategoryGroupEnabled(
+  //              ::base::trace_event::MemoryDumpManager::kTraceCategory)
+  //          , ::base::trace_event::MemoryDumpTypeToString(
   //             /// \todo
-  //             base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED
+  //             ::base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED
   //          )
   //          , ::trace_event_internal::kGlobalScope
   //          , dump_guid
@@ -255,33 +255,33 @@ void initTracing(
   //          , &trace_args
   //          , TRACE_EVENT_FLAG_HAS_ID);
   //      TRACE_EVENT_NESTABLE_ASYNC_BEGIN2(
-  //          base::trace_event::MemoryDumpManager::kTraceCategory
+  //          ::base::trace_event::MemoryDumpManager::kTraceCategory
   //          , "GlobalMemoryDump"
   //          , TRACE_ID_LOCAL(dump_guid)
   //          , "dump_type"
-  //          , base::trace_event::MemoryDumpTypeToString(
+  //          , ::base::trace_event::MemoryDumpTypeToString(
   //              /// \todo
-  //              base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED
+  //              ::base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED
   //            )
   //          , "level_of_detail",
-  //          base::trace_event::MemoryDumpLevelOfDetailToString(
+  //          ::base::trace_event::MemoryDumpLevelOfDetailToString(
   //              /// \todo
-  //              base::trace_event::MemoryDumpLevelOfDetail::DETAILED
+  //              ::base::trace_event::MemoryDumpLevelOfDetail::DETAILED
   //            )
   //          );
   //      TRACE_EVENT_NESTABLE_ASYNC_END2(
-  //          base::trace_event::MemoryDumpManager::kTraceCategory
+  //          ::base::trace_event::MemoryDumpManager::kTraceCategory
   //          , "GlobalMemoryDump"
   //          , TRACE_ID_LOCAL(dump_guid)
   //          , "dump_type"
-  //          , base::trace_event::MemoryDumpTypeToString(
+  //          , ::base::trace_event::MemoryDumpTypeToString(
   //              /// \todo
-  //              base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED
+  //              ::base::trace_event::MemoryDumpType::EXPLICITLY_TRIGGERED
   //            )
   //          , "level_of_detail",
-  //          base::trace_event::MemoryDumpLevelOfDetailToString(
+  //          ::base::trace_event::MemoryDumpLevelOfDetailToString(
   //              /// \todo
-  //              base::trace_event::MemoryDumpLevelOfDetail::DETAILED
+  //              ::base::trace_event::MemoryDumpLevelOfDetail::DETAILED
   //            )
   //          );
   //      LOG(INFO)
@@ -291,14 +291,14 @@ void initTracing(
 }
 
 void writeTraceReport(
-  const base::FilePath &output_filepath)
+  const ::base::FilePath &output_filepath)
 {
   DCHECK(base::trace_event::TraceLog::GetInstance());
 
   /// \note call that function only if tracing enabled
   {
     const bool need_write_tracing_report
-      = base::trace_event::TraceLog::GetInstance()->IsEnabled();
+      = ::base::trace_event::TraceLog::GetInstance()->IsEnabled();
     DCHECK(need_write_tracing_report);
     if(!need_write_tracing_report) {
       LOG(ERROR)
@@ -310,27 +310,27 @@ void writeTraceReport(
 
   // disable writing of new tracing data
   // before flush of trace report
-  base::trace_event::TraceLog::GetInstance()->SetDisabled();
+  ::base::trace_event::TraceLog::GetInstance()->SetDisabled();
 
-  base::trace_event::TraceResultBuffer trace_buffer;
+  ::base::trace_event::TraceResultBuffer trace_buffer;
 
   // Start JSON output.
   // This resets all internal state, so you can reuse
   // the TraceResultBuffer by calling Start.
   trace_buffer.Start();
 
-  base::File output_file(
+  ::base::File output_file(
     output_filepath
     /// \note create file if not exists
-    , base::File::FLAG_CREATE_ALWAYS
-      | base::File::FLAG_WRITE);
+    , ::base::File::FLAG_CREATE_ALWAYS
+      | ::base::File::FLAG_WRITE);
 
   output_file.WriteAtCurrentPos(
     kTraceJsonStart, strlen(kTraceJsonStart));
 
   // output to file
   trace_buffer.SetOutputCallback(
-    base::Bind(
+    ::base::Bind(
       []
         (base::File& _output_file
         , const std::string& data)
@@ -343,17 +343,17 @@ void writeTraceReport(
       )
     );
 
-  base::trace_event::MemoryDumpManager::GetInstance()
+  ::base::trace_event::MemoryDumpManager::GetInstance()
     ->TeardownForTracing();
 
-  base::RunLoop trace_run_loop{};
+  ::base::RunLoop trace_run_loop{};
 
-  base::trace_event::TraceLog::GetInstance()->Flush(
-    base::BindRepeating(
+  ::base::trace_event::TraceLog::GetInstance()->Flush(
+    ::base::BindRepeating(
       &onTraceDataCollected
       , std::ref(output_file)
       , trace_run_loop.QuitClosure(),
-      base::Unretained(&trace_buffer)));
+      ::base::Unretained(&trace_buffer)));
 
   trace_run_loop.Run();
 

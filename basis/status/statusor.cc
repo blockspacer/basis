@@ -12,31 +12,31 @@
 
 #include <base/logging.h>
 
-namespace util {
+namespace basis {
 namespace internal {
 
-::util::Status StatusOrHelper::HandleInvalidStatusCtorArg() {
+::basis::Status StatusOrHelper::HandleInvalidStatusCtorArg() {
   const char* kMessage =
       "Status::OK is not a valid constructor argument to StatusOr<T>";
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
-  // TODO(unknown): Change this to ::util::error::INVALID_ARGUMENT.
-  return ::util::PosixErrorToStatus(EINVAL, kMessage);
+  // TODO(unknown): Change this to ::basis::error::INVALID_ARGUMENT.
+  return ::basis::PosixErrorToStatus(EINVAL, kMessage);
 }
 
-::util::Status StatusOrHelper::HandleNullObjectCtorArg() {
+::basis::Status StatusOrHelper::HandleNullObjectCtorArg() {
   const char* kMessage =
       "NULL is not a valid constructor argument to StatusOr<T*>";
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
-  // TODO(unknown): Change this to ::util::error::INVALID_ARGUMENT.
-  return ::util::PosixErrorToStatus(EINVAL, kMessage);
+  // TODO(unknown): Change this to ::basis::error::INVALID_ARGUMENT.
+  return ::basis::PosixErrorToStatus(EINVAL, kMessage);
 }
 
-void StatusOrHelper::Crash(const ::util::Status& status) {
+void StatusOrHelper::Crash(const ::basis::Status& status) {
   LOG(FATAL) << "Attempting to fetch value instead of handling error "
              << status;
 }
 
 }  // namespace internal
-}  // namespace util
+}  // namespace basis

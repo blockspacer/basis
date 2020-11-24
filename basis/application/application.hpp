@@ -113,7 +113,7 @@ private:
 
   /// \note ObserverListThreadSafe may be ued from multiple threads
   const scoped_refptr<
-      base::ObserverListThreadSafe<ApplicationStateObserver>
+      ::base::ObserverListThreadSafe<ApplicationStateObserver>
     > observers_;
 
   DISALLOW_COPY_AND_ASSIGN(ApplicationStateManager);

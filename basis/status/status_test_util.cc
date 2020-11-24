@@ -29,7 +29,7 @@ void StatusIsMatcherCommonImpl::DescribeNegationTo(std::ostream* os) const {
 }
 
 bool StatusIsMatcherCommonImpl::MatchAndExplain(
-    const ::util::Status& status,
+    const ::basis::Status& status,
     ::testing::MatchResultListener* result_listener) const {
   ::testing::StringMatchResultListener inner_listener;
   if (!space_matcher_.MatchAndExplain(status.error_space(), &inner_listener)) {

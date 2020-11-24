@@ -44,7 +44,7 @@ UnsafeGlobalContext*
   /// Singleton itself thread-safe.
   /// The underlying Type must of course be
   /// thread-safe if you want to use it concurrently.
-  return base::Singleton<UnsafeGlobalContext>::get();
+  return ::base::Singleton<UnsafeGlobalContext>::get();
 }
 
 } // namespace ECS

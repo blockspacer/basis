@@ -206,7 +206,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   MUST_USE_RETURN_VALUE
   inline /* `inline` to eleminate function call overhead */
-  basis::FixedTimeStep& time_step_ref() noexcept
+  ::basis::FixedTimeStep& time_step_ref() noexcept
   {
     return time_step_;
   }
@@ -379,7 +379,7 @@ public:
   void* data_raw_;
 
 private:
-  basis::FixedTimeStep time_step_;
+  ::basis::FixedTimeStep time_step_;
 
   bool is_running_{false};
 };

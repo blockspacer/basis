@@ -122,7 +122,7 @@ TEST(PromiseValueTest, AssignResolvedValue) {
                          in_place_type_t<NoOpPromiseExecutor>(), true, true));
 
   EXPECT_FALSE(value.ContainsResolved());
-  value = base::Resolved<int>(123);
+  value = ::base::Resolved<int>(123);
 
   EXPECT_TRUE(value.ContainsResolved());
   EXPECT_EQ(123, value.Get<Resolved<int>>()->value);
@@ -134,7 +134,7 @@ TEST(PromiseValueTest, AssignRejectedValue) {
                          in_place_type_t<NoOpPromiseExecutor>(), true, true));
 
   EXPECT_FALSE(value.ContainsRejected());
-  value = base::Rejected<int>(123);
+  value = ::base::Rejected<int>(123);
 
   EXPECT_TRUE(value.ContainsRejected());
   EXPECT_EQ(123, value.Get<Rejected<int>>()->value);
@@ -146,7 +146,7 @@ TEST(PromiseValueTest, EmplaceRejectedTuple) {
                          in_place_type_t<NoOpPromiseExecutor>(), true, true));
 
   EXPECT_FALSE(value.ContainsRejected());
-  value.emplace(in_place_type_t<base::Rejected<std::tuple<int, std::string>>>(),
+  value.emplace(in_place_type_t<::base::Rejected<std::tuple<int, std::string>>>(),
                 123, "Hello");
 
   EXPECT_TRUE(value.ContainsRejected());

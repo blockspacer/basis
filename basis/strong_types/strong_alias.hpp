@@ -27,7 +27,7 @@
 //
 // StrongAlias may instead be used as follows:
 //
-// using Orange = util::StrongAlias<class OrangeTag, int>;
+// using Orange = ::basis::StrongAlias<class OrangeTag, int>;
 // STRONGLY_TYPED(int, Apple);
 // Apple apple(2);
 // Orange orange = apple;  // Does not compile.
@@ -58,7 +58,7 @@
 // See also
 // - //styleguide/c++/blink-c++.md which provides recommendation and examples of
 //   using StrongAlias<Tag, bool> instead of a bare bool.
-// - util::IdType<...> which provides helpers for specializing
+// - ::basis::IdType<...> which provides helpers for specializing
 //   StrongAlias to be used as an id.
 
 #include <ostream>
@@ -98,7 +98,7 @@
 /// Ideally, use code generator to 'copy' all methods from aliased type
 /// into custom `UniquePerTypeStrongAlias`
 #define STRONGLY_TYPED(TYPE, NAME) \
-  using NAME = util::StrongAlias<class STRONG_TYPE_TAG(NAME), TYPE>
+  using NAME = ::basis::StrongAlias<class STRONG_TYPE_TAG(NAME), TYPE>
 
 // format function name (concats strings)
 #define NAME_HAS_MEMBER_FUNCTION(content, suffix) \
@@ -144,7 +144,7 @@
           >::value; \
     };
 
-namespace util {
+namespace basis {
 
 // Specification:
 // http://en.cppreference.com/w/cpp/utility/optional/nullopt_t
@@ -301,7 +301,7 @@ HAS_MEMBER_FUNCTION(ToString)
  * \usage
     class FrameLoader {
     public:
-      using ForReload = util::StrongAlias<class ForReloadTag, bool>;
+      using ForReload = ::basis::StrongAlias<class ForReloadTag, bool>;
 
       bool ShouldClose(ForReload) {
         // A StrongAlias<_, bool> can be tested like a bool.
@@ -424,7 +424,7 @@ class StrongAlias
       typename U = UnderlyingType,
       std::enable_if_t<
           std::is_constructible<UnderlyingType, U&&>::value &&
-              !std::is_same<RemoveCvRefT<U>, base::in_place_t>::value &&
+              !std::is_same<RemoveCvRefT<U>, ::base::in_place_t>::value &&
               !std::is_same<RemoveCvRefT<U>, StrongAlias<TagType,UnderlyingType>>::value &&
               std::is_convertible<U&&, UnderlyingType>::value,
           bool> = false>
@@ -435,7 +435,7 @@ class StrongAlias
       typename U = UnderlyingType,
       std::enable_if_t<
           std::is_constructible<UnderlyingType, U&&>::value &&
-              !std::is_same<RemoveCvRefT<U>, base::in_place_t>::value &&
+              !std::is_same<RemoveCvRefT<U>, ::base::in_place_t>::value &&
               !std::is_same<RemoveCvRefT<U>, StrongAlias<TagType,UnderlyingType>>::value &&
               !std::is_convertible<U&&, UnderlyingType>::value,
           bool> = false>

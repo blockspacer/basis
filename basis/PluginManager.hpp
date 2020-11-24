@@ -33,9 +33,9 @@ namespace backend {
 
 struct PluginManagerEvents {
   struct Startup {
-    base::FilePath pathToDirWithPlugins;
-    base::FilePath pathToPluginsConfFile;
-    std::vector<base::FilePath> pathsToExtraPluginFiles;
+    ::base::FilePath pathToDirWithPlugins;
+    ::base::FilePath pathToPluginsConfFile;
+    std::vector<::base::FilePath> pathsToExtraPluginFiles;
   };
   struct Shutdown {
     // event parameters
@@ -151,10 +151,10 @@ public:
     CHECK(!executable_path.empty())
       << "invalid executable path";
 
-    const base::FilePath pathToDirWithPlugins
+    const ::base::FilePath pathToDirWithPlugins
       = event.pathToDirWithPlugins.empty()
         // default value
-          ? base::FilePath{executable_path}
+          ? ::base::FilePath{executable_path}
           : event.pathToDirWithPlugins;
     CHECK(!pathToDirWithPlugins.empty())
       << "invalid path to directory with plugins";
@@ -166,10 +166,10 @@ public:
             , kPluginsConfigFileName}
           );
 
-    const base::FilePath pathToPluginsConfFile
+    const ::base::FilePath pathToPluginsConfFile
       = event.pathToPluginsConfFile.empty()
         // default value
-        ? base::FilePath{pluginsConfFile}
+        ? ::base::FilePath{pluginsConfFile}
         : event.pathToPluginsConfFile;
     CHECK(!pathToPluginsConfFile.empty())
       << "invalid path to plugins configuration file";
@@ -238,7 +238,7 @@ public:
 
     // append path to plugins that
     // must be loaded independently of configuration file
-    for(const base::FilePath& pluginPath
+    for(const ::base::FilePath& pluginPath
         : event.pathsToExtraPluginFiles)
     {
       VLOG(9)

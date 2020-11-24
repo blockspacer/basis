@@ -61,9 +61,9 @@ namespace basis {
 //   // describing why the event is added. In the case where an entry/exit action
 //   // fails during a transition, the recovery_event is set based on the
 //   // recommended course of action.
-//   ::util::Status ProcessEvent(
+//   ::basis::Status ProcessEvent(
 //     Event event
-//     , base::StringPiece reason
+//     , ::base::StringPiece reason
 //     , Event* recovery_event)
 //   {
 //     LOG(INFO) << "Processing Event " << event << " [" << reason << "]"
@@ -128,25 +128,25 @@ namespace basis {
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
 //         State prev_state = sm_->currentState();
-//         return ::util::OkStatus();
+//         return ::basis::OkStatus();
 //       });
 //     sm_->AddEntryAction(STARTED,
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
 //         State prev_state = sm_->currentState();
-//         return ::util::OkStatus();
+//         return ::basis::OkStatus();
 //       });
 //     sm_->AddEntryAction(PAUSED,
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
 //         State prev_state = sm_->currentState();
-//         return ::util::OkStatus();
+//         return ::basis::OkStatus();
 //       });
 //     sm_->AddEntryAction(FAILED,
 //       [this] (Event event, State next_state, Event* recovery_event)
 //       {
 //         State prev_state = sm_->currentState();
-//         return ::util::Status(::util::error::INTERNAL, "Failures are fun!")
+//         return ::basis::Status(::util::error::INTERNAL, "Failures are fun!")
 //       });
 //   }
 //
@@ -173,8 +173,8 @@ class UnsafeStateMachine {
   // it is merely a suggestion that may be used to
   // recover the state machine.
   using CallbackType
-    = base::RepeatingCallback<
-        ::util::Status(
+    = ::base::RepeatingCallback<
+        ::basis::Status(
           Event event, State next_state, Event* recovery_event)
       >;
 
@@ -184,7 +184,7 @@ class UnsafeStateMachine {
   // table_[current_state_][incoming_event] yields
   // the next state, if it exists.
   using TransitionTable =
-    base::flat_map<State, base::flat_map<Event, State>>;
+    ::base::flat_map<State, ::base::flat_map<Event, State>>;
 
   // It is the client's responsibility
   // to ensure that the initial state is safe
@@ -232,10 +232,10 @@ class UnsafeStateMachine {
   // The reason parameter describes why the
   // event was added to the StateMachine.
   MUST_USE_RETURN_VALUE
-  ::util::Status ProcessEvent(
+  ::basis::Status ProcessEvent(
     const Event& event
     // optional reason describing why the event is added
-    , base::StringPiece reason
+    , ::base::StringPiece reason
     // In the case where an entry/exit action
     // fails during a transition, the recovery_event is set based on the
     // recommended course of action.
@@ -254,9 +254,9 @@ class UnsafeStateMachine {
  private:
   // Performs the actions of ProcessEvent.
   MUST_USE_RETURN_VALUE
-  ::util::Status ProcessEventUnlocked(
+  ::basis::Status ProcessEventUnlocked(
     const Event& event
-    , base::StringPiece reason
+    , ::base::StringPiece reason
     , Event* recovery_event) NO_EXCEPTION
   {
     LOG_CALL(DVLOG(99));
@@ -292,27 +292,27 @@ class UnsafeStateMachine {
     DVLOG(99)
       << "Changing current state to " << current_state_.load();
 
-    return ::util::OkStatus();
+    return ::basis::OkStatus();
   }
 
   // Returns whether a given state-event pair results in a valid transition.
   MUST_USE_RETURN_VALUE
-  ::util::StatusOr<State> NextState(
+  ::basis::StatusOr<State> NextState(
     const State& from_state
     , const Event& event) const NO_EXCEPTION
   {
     // No transitions exist for this state.
     const auto transitions = table_.find(from_state);
     if (transitions == table_.end()) {
-      return ::util::Status(
-        util::error::INTERNAL, "Invalid transition.");
+      return ::basis::Status(
+        ::basis::error::INTERNAL, "Invalid transition.");
     }
 
     // No transition from this state with the given event.
     const auto next_state_iter = transitions->second.find(event);
     if (next_state_iter == transitions->second.end()) {
-      return ::util::Status(
-        util::error::INTERNAL, "Invalid transition.");
+      return ::basis::Status(
+        ::basis::error::INTERNAL, "Invalid transition.");
     }
 
     // A valid transition was found; return the next state.
@@ -338,11 +338,11 @@ class UnsafeStateMachine {
 
   // A vector of actions that are executed upon entry
   // to any given state.
-  base::flat_map<State, std::vector<CallbackType>> entry_actions_;
+  ::base::flat_map<State, std::vector<CallbackType>> entry_actions_;
 
   // A vector of actions that are executed upon exit
   // from any given state.
-  base::flat_map<State, std::vector<CallbackType>> exit_actions_;
+  ::base::flat_map<State, std::vector<CallbackType>> exit_actions_;
 };
 
 }  // namespace basis

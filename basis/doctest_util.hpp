@@ -12,13 +12,13 @@
 // https://github.com/onqtam/doctest/blob/master/doc/markdown/configuration.md#doctest_config_disable
 #if !defined(DOCTEST_CONFIG_DISABLE)
 
-namespace doctest_util {
+namespace basis {
 
 // create default doctest context (custom defaults)
 doctest::Context initDoctest(
   int argc, const char* const* argv);
 
-}  // namespace doctest_util
+}  // namespace basis
 
 #endif // DOCTEST_CONFIG_DISABLE
 

@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-namespace util {
+namespace basis {
 
 /* Required wrapper for if constexpr
  *
@@ -25,4 +25,4 @@ struct dependent_false : std::false_type {}; /// \todo move to separate file
 template<typename ... typeclass>
 struct typename_false : std::false_type {}; /// \todo move to separate file
 
-} // namespace util
+} // namespace basis

@@ -44,10 +44,10 @@ namespace basis {
 //     /// \note initialized, used and destroyed
 //     /// on `periodicAsioTaskRunner_` sequence-local-context
 //     using AsioUpdater
-//       = util::StrongAlias<
+//       = ::basis::StrongAlias<
 //           class PeriodicAsioExecutorTag
 //           /// \note will stop periodic timer on scope exit
-//           , basis::PeriodicTaskExecutor
+//           , ::basis::PeriodicTaskExecutor
 //         >;
 //
 //     /// \note Will free stored variable on scope exit.
@@ -57,16 +57,16 @@ namespace basis {
 //     VoidPromise emplaceDonePromise
 //       = scopedSequencedAsioExecutor.emplace_async(FROM_HERE
 //             , "PeriodicAsioExecutor" // debug name
-//             , base::BindRepeating(
+//             , ::base::BindRepeating(
 //                 &ExampleServer::updateAsioRegistry
-//                 , base::Unretained(this))
+//                 , ::base::Unretained(this))
 //       )
 //     .ThenOn(periodicAsioTaskRunner_
 //       , FROM_HERE
-//       , base::BindOnce(
+//       , ::base::BindOnce(
 //         []
 //         (
-//           scoped_refptr<base::SequencedTaskRunner>
+//           scoped_refptr<::base::SequencedTaskRunner>
 //             periodicAsioTaskRunner
 //           , AsioUpdater* periodicAsioExecutor
 //         ){
@@ -74,7 +74,7 @@ namespace basis {
 //
 //           /// \todo make period configurable
 //           (*periodicAsioExecutor)->startPeriodicTimer(
-//             base::TimeDelta::FromMilliseconds(100));
+//             ::base::TimeDelta::FromMilliseconds(100));
 //
 //           DCHECK(periodicAsioTaskRunner->RunsTasksInCurrentSequence());
 //         }
@@ -82,14 +82,14 @@ namespace basis {
 //       )
 //     );
 //     /// \note Will block current thread for unspecified time.
-//     base::waitForPromiseResolve(FROM_HERE, emplaceDonePromise);
+//     ::base::waitForPromiseResolve(FROM_HERE, emplaceDonePromise);
 //
 //     promiseRunDone =
 //       promiseRunDone
 //       .ThenOn(periodicAsioTaskRunner_
 //         , FROM_HERE
 //         , scopedSequencedAsioExecutor.promiseDeletion()
-//         , base::IsNestedPromise{true}
+//         , ::base::IsNestedPromise{true}
 //       );
 //
 //     run_loop_.Run();
@@ -102,19 +102,19 @@ namespace basis {
 //   /// \note We can not just call `periodicAsioTaskRunner_.reset()` because
 //   /// it is shared type and `PeriodicAsioExecutor` prolongs its lifetime.
 //   /// \note Will block current thread for unspecified time.
-//   base::waitForPromiseResolve(FROM_HERE, promiseRunDone);
+//   ::base::waitForPromiseResolve(FROM_HERE, promiseRunDone);
 template<typename Type>
 class ScopedCrossSequenceCtxVar
 {
  public:
   using VoidPromise
-    = base::Promise<void, base::NoReject>;
+    = ::base::Promise<void, ::base::NoReject>;
 
   using CtxTypePromise
-    = base::Promise<Type*, base::NoReject>;
+    = ::base::Promise<Type*, ::base::NoReject>;
 
   ScopedCrossSequenceCtxVar(
-    scoped_refptr<base::SequencedTaskRunner> taskRunner)
+    scoped_refptr<::base::SequencedTaskRunner> taskRunner)
     : taskRunner_(taskRunner)
     , destructionResolver_(FROM_HERE)
     , ALLOW_THIS_IN_INITIALIZER_LIST(
@@ -135,10 +135,10 @@ class ScopedCrossSequenceCtxVar
     DCHECK_RUN_ON(&sequence_checker_);
 
     taskRunner_->PostTask(FROM_HERE
-      , base::BindOnce(
+      , ::base::BindOnce(
           &destructScopedCrossSequenceCtxVar
           , taskRunner_ // prolong lifetime
-          , base::Passed(destructionResolver_.GetRepeatingResolveCallback())
+          , ::base::Passed(destructionResolver_.GetRepeatingResolveCallback())
       )
     );
   }
@@ -146,18 +146,18 @@ class ScopedCrossSequenceCtxVar
   /// \note can be called AFTER destructor finished, so method must be `static`
   /// i.e. unable use member variables etc.
   static void destructScopedCrossSequenceCtxVar(
-    scoped_refptr<base::SequencedTaskRunner> taskRunner
-    , base::OnceClosure resolveCb) NO_EXCEPTION
+    scoped_refptr<::base::SequencedTaskRunner> taskRunner
+    , ::base::OnceClosure resolveCb) NO_EXCEPTION
   {
     DCHECK_RUN_ON_SEQUENCED_RUNNER(taskRunner.get());
 
-    base::rvalue_cast(resolveCb).Run();
+    ::base::rvalue_cast(resolveCb).Run();
 
     LOG_CALL(DVLOG(99));
 
-    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+    ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
       = ECS::SequenceLocalContext::getSequenceLocalInstance(
-          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+          FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
     DCHECK(sequenceLocalContext);
     DCHECK(sequenceLocalContext->try_ctx<Type>(FROM_HERE));
@@ -177,18 +177,18 @@ class ScopedCrossSequenceCtxVar
   template <class... Args>
   MUST_USE_RETURN_VALUE
   CtxTypePromise emplace_async(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const std::string& debug_name
     , Args&&... args) NO_EXCEPTION
   {
     LOG_CALL(DVLOG(99));
 
     DCHECK(!taskRunner_->RunsTasksInCurrentSequence());
-    return base::PostPromise(FROM_HERE
+    return ::base::PostPromise(FROM_HERE
       , taskRunner_.get()
-      , base::BindOnce(
+      , ::base::BindOnce(
           &ScopedCrossSequenceCtxVar::emplace<Args&& ...>
-          , base::Unretained(this)
+          , ::base::Unretained(this)
           , from_here
           , debug_name + "_" + FROM_HERE.ToString()
           , std::forward<Args>(args)...
@@ -202,7 +202,7 @@ class ScopedCrossSequenceCtxVar
   template <class... Args>
   MUST_USE_RETURN_VALUE
   Type* emplace(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const std::string& debug_name
     , Args&&... args) NO_EXCEPTION
   {
@@ -210,9 +210,9 @@ class ScopedCrossSequenceCtxVar
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(taskRunner_.get());
 
-    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+    ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
       = ECS::SequenceLocalContext::getSequenceLocalInstance(
-          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+          FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
     DCHECK(sequenceLocalContext);
     // Can not register same data type twice.
@@ -229,11 +229,11 @@ class ScopedCrossSequenceCtxVar
 
  private:
   // provider of sequence-local-storage
-  scoped_refptr<base::SequencedTaskRunner>
+  scoped_refptr<::base::SequencedTaskRunner>
     taskRunner_;
 
   // resolved in `destructVar()`
-  base::ManualPromiseResolver<void, base::NoReject>
+  ::base::ManualPromiseResolver<void, ::base::NoReject>
     destructionResolver_;
 
   SEQUENCE_CHECKER(sequence_checker_);
@@ -258,7 +258,7 @@ class ScopedCrossSequenceCtxVar
 // USAGE
 //
 //   // in main source file: create prev. not-existing `SequenceCtxVar`
-//   basis::ScopedSequenceCtxVar<
+//   ::basis::ScopedSequenceCtxVar<
 //     backend::ConsoleTerminalEventDispatcher
 //   > consoleTerminalEventDispatcher_;
 //
@@ -272,11 +272,11 @@ class ScopedCrossSequenceCtxVar
 //   consoleTerminalEventDispatcher_->doSmth(...);
 //
 //   // in other source file: get already existing `SequenceCtxVar`
-//   base::WeakPtr<ECS::SequenceLocalContext> mainLoopContext_{
+//   ::base::WeakPtr<ECS::SequenceLocalContext> mainLoopContext_{
 //        ECS::SequenceLocalContext::getSequenceLocalInstance(
-//          FROM_HERE, base::MessageLoop::current()->task_runner())};
+//          FROM_HERE, ::base::MessageLoop::current()->task_runner())};
 //
-//    util::UnownedRef<
+//    ::basis::UnownedRef<
 //      ::backend::ConsoleTerminalEventDispatcher
 //    > consoleTerminalEventDispatcher_{
 //        REFERENCED(mainLoopContext_->ctx<
@@ -313,9 +313,9 @@ class ScopedSequenceCtxVar
 
     DCHECK_RUN_ON(&sequence_checker_);
 
-    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+    ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
       = ECS::SequenceLocalContext::getSequenceLocalInstance(
-          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+          FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
     DCHECK(sequenceLocalContext);
     if(sequenceLocalContext->try_ctx<Type>(FROM_HERE))
@@ -327,7 +327,7 @@ class ScopedSequenceCtxVar
   template <class... Args>
   MUST_USE_RETURN_VALUE
   Type* emplace(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const std::string& debug_name
     , Args&&... args) NO_EXCEPTION
   {
@@ -335,9 +335,9 @@ class ScopedSequenceCtxVar
 
     DCHECK_RUN_ON(&sequence_checker_);
 
-    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+    ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
       = ECS::SequenceLocalContext::getSequenceLocalInstance(
-          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+          FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
     DCHECK(sequenceLocalContext);
     // Can not register same data type twice.
@@ -357,9 +357,9 @@ class ScopedSequenceCtxVar
   {
     DCHECK_RUN_ON(&sequence_checker_);
 
-    base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+    ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
       = ECS::SequenceLocalContext::getSequenceLocalInstance(
-          FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+          FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
     DCHECK(sequenceLocalContext);
 

@@ -30,7 +30,7 @@ CheckUntilObserver::CheckUntilObserver() = default;
 CheckUntilObserver::~CheckUntilObserver() = default;
 
 PeriodicCheckUntil::PeriodicCheckUntil(
-  scoped_refptr<base::SequencedTaskRunner> task_runner
+  scoped_refptr<::base::SequencedTaskRunner> task_runner
   , CheckNotifyTask&& checkNotifyTask
   , CheckShutdownTask&& checkShutdownTask)
   : task_runner_(task_runner)
@@ -39,14 +39,14 @@ PeriodicCheckUntil::PeriodicCheckUntil(
   , ALLOW_THIS_IN_INITIALIZER_LIST(weak_ptr_factory_(this))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_this_(weak_ptr_factory_.GetWeakPtr()))
-  , observers_(new base::ObserverListThreadSafe<CheckUntilObserver>())
+  , observers_(new ::base::ObserverListThreadSafe<CheckUntilObserver>())
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
   DCHECK(task_runner_);
 }
 
 PeriodicCheckUntil::PeriodicCheckUntil(
-  scoped_refptr<base::SequencedTaskRunner> task_runner
+  scoped_refptr<::base::SequencedTaskRunner> task_runner
   , CheckNotifyTask&& checkNotifyTask
   , CheckShutdownTask&& checkShutdownTask
   , const CheckPeriod& checkPeriod)
@@ -118,7 +118,7 @@ void
 
   const bool postTaskOk
     = task_runner_->PostTask(FROM_HERE
-      , base::Bind(&PeriodicCheckUntil::restart_timer
+      , ::base::Bind(&PeriodicCheckUntil::restart_timer
                    , weak_this_
                    , /*copied*/checkPeriod)
     );
@@ -183,22 +183,22 @@ void
 }
 
 PeriodicCheckUntilTime::PeriodicCheckUntilTime(
-  scoped_refptr<base::SequencedTaskRunner> task_runner
-  , base::RepeatingClosure&& expiredCallback
+  scoped_refptr<::base::SequencedTaskRunner> task_runner
+  , ::base::RepeatingClosure&& expiredCallback
   , const EndingTimeout& endTime
-  , const base::Optional<PeriodicCheckUntil::CheckPeriod>& optionalCheckPeriod)
+  , const ::base::Optional<PeriodicCheckUntil::CheckPeriod>& optionalCheckPeriod)
   : periodicCheckUntil_(
       task_runner
       // Will |NotifyObservers| when |CheckNotifyTask| returns true.
-      , base::BindRepeating([
+      , ::base::BindRepeating([
         ](
-          const base::Time endTime
-          , base::RepeatingClosure expiredCallback
+          const ::base::Time endTime
+          , ::base::RepeatingClosure expiredCallback
         )
           -> bool
         {
           const bool isExpired
-            = base::Time::Now() > endTime;
+            = ::base::Time::Now() > endTime;
           if(isExpired)
           {
             DCHECK(expiredCallback);
@@ -213,14 +213,14 @@ PeriodicCheckUntilTime::PeriodicCheckUntilTime(
         , expiredCallback /// \note copied
         )
       // Will call |shutdown| when |CheckShutdownTask| returns true.
-      , base::BindRepeating([
+      , ::base::BindRepeating([
         ](
-          const base::Time endTime
+          const ::base::Time endTime
         )
           -> bool
         {
           const bool isExpired
-            = base::Time::Now() > endTime;
+            = ::base::Time::Now() > endTime;
           if(isExpired)
           {
             // will stop timer
@@ -254,14 +254,14 @@ void PeriodicCheckUntilTime::startPeriodicTimer(
 }
 
 EndingTimeout::EndingTimeout(
-  const base::Time& endTime)
+  const ::base::Time& endTime)
   : endTime_(endTime)
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
 }
 
 basis::EndingTimeout::EndingTimeout(
-  const base::TimeDelta& endTimeDelta)
+  const ::base::TimeDelta& endTimeDelta)
   : EndingTimeout(base::Time::Now() + endTimeDelta)
 {}
 
@@ -271,8 +271,8 @@ basis::EndingTimeout::~EndingTimeout()
 }
 
 void setPeriodicTimeoutCheckerOnSequence(
-  const base::Location& from_here
-  , scoped_refptr<base::SequencedTaskRunner> task_runner
+  const ::base::Location& from_here
+  , scoped_refptr<::base::SequencedTaskRunner> task_runner
   , const EndingTimeout& endingTimeout
   , const PeriodicCheckUntil::CheckPeriod& checkPeriod
   , const std::string& errorText)
@@ -281,8 +281,8 @@ void setPeriodicTimeoutCheckerOnSequence(
 
   DCHECK(task_runner);
 
-  base::RepeatingClosure errorCallback
-    = base::BindRepeating([
+  ::base::RepeatingClosure errorCallback
+    = ::base::BindRepeating([
       ](
         const std::string& errorText
       ){
@@ -295,7 +295,7 @@ void setPeriodicTimeoutCheckerOnSequence(
       , errorText /// \note copied
       );
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         from_here, task_runner);
 
@@ -317,9 +317,9 @@ void unsetPeriodicTimeoutCheckerOnSequence()
 {
   LOG_CALL(DVLOG(99));
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
-        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+        FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
   sequenceLocalContext->unset<PeriodicCheckUntilTime>(FROM_HERE);

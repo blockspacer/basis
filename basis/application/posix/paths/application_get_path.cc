@@ -17,7 +17,7 @@ static const int kMaxPathSize = PLATFORM_FILE_MAX_PATH;
 
 // Gets the path to the cache directory, using the user's home directory.
 bool GetCacheDirectory(char* out_path, int path_size) {
-  const base::FilePath home_dir = base::GetHomeDir();
+  const ::base::FilePath home_dir = ::base::GetHomeDir();
 
   if (home_dir.empty())
   {
@@ -25,8 +25,8 @@ bool GetCacheDirectory(char* out_path, int path_size) {
     return false;
   }
 
-  /// \todo use base::strlcpy
-  const int result = base::strings::SafeSNPrintf(
+  /// \todo use ::base::strlcpy
+  const int result = ::base::strings::SafeSNPrintf(
     out_path, path_size, "%s/.cache", home_dir.value().c_str());
   if (result < 1 || result > kMaxPathSize) {
     out_path[0] = '\0';
@@ -35,7 +35,7 @@ bool GetCacheDirectory(char* out_path, int path_size) {
   }
 
   const bool dir_created
-    = base::CreateDirectory(base::FilePath{out_path});
+    = ::base::CreateDirectory(base::FilePath{out_path});
   if(!dir_created){
     DLOG(ERROR)
       << "Unable to create directory "
@@ -69,8 +69,8 @@ bool GetExecutablePath(char* out_path, int path_size) {
     return false;
   }
 
-  /// \todo use base::strlcpy
-  const int result = base::strings::SafeSNPrintf(
+  /// \todo use ::base::strlcpy
+  const int result = ::base::strings::SafeSNPrintf(
     out_path, path_size, "%s", path);
   if (result < 1 || result > kMaxPathSize) {
     out_path[0] = '\0';
@@ -93,11 +93,11 @@ bool GetExecutableDirectory(char* out_path, int path_size) {
   }
 
   /// \todo memory copy
-  const base::FilePath fp = base::FilePath(out_path);
+  const ::base::FilePath fp = ::base::FilePath(out_path);
 
-  /// \todo use base::strlcpy
+  /// \todo use ::base::strlcpy
   const int result
-    = base::strings::SafeSNPrintf(
+    = ::base::strings::SafeSNPrintf(
         out_path
         , path_size
         , "%s"
@@ -120,10 +120,10 @@ bool GetExecutableName(char* out_path, int path_size) {
   }
 
   /// \todo memory copy
-  const base::FilePath fp = base::FilePath(path);
+  const ::base::FilePath fp = ::base::FilePath(path);
 
-  /// \todo use base::strlcpy
-  const int result = base::strings::SafeSNPrintf(
+  /// \todo use ::base::strlcpy
+  const int result = ::base::strings::SafeSNPrintf(
     out_path, path_size, "%s",
     fp.BaseName().value().data()
     );
@@ -145,7 +145,7 @@ bool GetTemporaryDirectory(char* out_path, int path_size) {
   }
 
   const int result
-    = base::strings::SafeSNPrintf(
+    = ::base::strings::SafeSNPrintf(
         out_path
         , path_size
         , "/tmp/%s-%d"
@@ -183,9 +183,9 @@ bool AppGetPath(
         DCHECK(false);
         return false;
       }
-      /// \todo use base::strlcpy
+      /// \todo use ::base::strlcpy
       const int result
-        = base::strings::SafeSNPrintf(
+        = ::base::strings::SafeSNPrintf(
             path
             , kMaxPathSize
             , "%s%s"
@@ -203,9 +203,9 @@ bool AppGetPath(
         DCHECK(false);
         return false;
       }
-      /// \todo use base::strlcpy
+      /// \todo use ::base::strlcpy
       const int result
-        = base::strings::SafeSNPrintf(
+        = ::base::strings::SafeSNPrintf(
             path
             , kMaxPathSize
             , "%s%s"
@@ -215,7 +215,7 @@ bool AppGetPath(
         return false;
       }
       const bool dir_created
-        = base::CreateDirectory(base::FilePath{path});
+        = ::base::CreateDirectory(base::FilePath{path});
       if (!dir_created) {
         DLOG(ERROR)
           << "Unable to create directory "
@@ -232,9 +232,9 @@ bool AppGetPath(
         return false;
       }
 
-      /// \todo use base::strlcpy
+      /// \todo use ::base::strlcpy
       const int result
-        = base::strings::SafeSNPrintf(
+        = ::base::strings::SafeSNPrintf(
             path
             , kMaxPathSize
             , "%s%s"
@@ -246,7 +246,7 @@ bool AppGetPath(
       }
 
       const bool dir_created
-        = base::CreateDirectory(base::FilePath{path});
+        = ::base::CreateDirectory(base::FilePath{path});
       if(!dir_created){
         DLOG(ERROR)
           << "Unable to create directory "
@@ -263,7 +263,7 @@ bool AppGetPath(
       }
 
       const bool dir_created
-        = base::CreateDirectory(base::FilePath{path});
+        = ::base::CreateDirectory(base::FilePath{path});
       if(!dir_created){
         DLOG(ERROR)
           << "Unable to create directory "
@@ -292,12 +292,12 @@ bool AppGetPath(
       return false;
   }
 
-  /// \todo use base::strlcpy
-  const int result = base::strings::SafeSNPrintf(
+  /// \todo use ::base::strlcpy
+  const int result = ::base::strings::SafeSNPrintf(
     out_path, path_size, "%s", path);
 
   /// \todo memory copy
-  const base::StringPiece str = base::StringPiece{out_path};
+  const ::base::StringPiece str = ::base::StringPiece{out_path};
   int length = str.length();
   if (length < 1 || length > path_size) {
     DCHECK(false);

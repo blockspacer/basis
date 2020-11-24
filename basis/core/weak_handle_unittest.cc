@@ -36,10 +36,10 @@ class Base {
   MOCK_METHOD1(TestWithSelf, void(const WeakHandle<Base>&));
 
  private:
-  base::WeakPtrFactory<Base> weak_ptr_factory_{this};
+  ::base::WeakPtrFactory<Base> weak_ptr_factory_{this};
 };
 
-class Derived : public Base, public base::SupportsWeakPtr<Derived> {};
+class Derived : public Base, public ::base::SupportsWeakPtr<Derived> {};
 
 class WeakHandleTest : public ::testing::Test {
  protected:
@@ -48,14 +48,14 @@ class WeakHandleTest : public ::testing::Test {
     PumpLoop();
   }
 
-  void PumpLoop() { base::RunLoop().RunUntilIdle(); }
+  void PumpLoop() { ::base::RunLoop().RunUntilIdle(); }
 
   static void CallTestFromOtherThread(base::Location from_here,
                                       const WeakHandle<Base>& h) {
-    base::Thread t("Test thread");
+    ::base::Thread t("Test thread");
     ASSERT_TRUE(t.Start());
     t.task_runner()->PostTask(
-        from_here, base::BindOnce(&WeakHandleTest::CallTest, from_here, h));
+        from_here, ::base::BindOnce(&WeakHandleTest::CallTest, from_here, h));
   }
 
  private:
@@ -63,7 +63,7 @@ class WeakHandleTest : public ::testing::Test {
     h.Call(from_here, &Base::Test);
   }
 
-  base::test::SingleThreadTaskEnvironment task_environment_;
+  ::base::test::SingleThreadTaskEnvironment task_environment_;
 };
 
 TEST_F(WeakHandleTest, Uninitialized) {
@@ -191,7 +191,7 @@ TEST_F(WeakHandleTest, DeleteOnOtherThread) {
   WeakHandle<Base>* h = new WeakHandle<Base>(b.AsWeakHandle());
 
   {
-    base::Thread t("Test thread");
+    ::base::Thread t("Test thread");
     ASSERT_TRUE(t.Start());
     t.task_runner()->DeleteSoon(FROM_HERE, h);
   }
@@ -210,10 +210,10 @@ TEST_F(WeakHandleTest, WithDestroyedThread) {
   EXPECT_CALL(b1, TestWithSelf(_)).WillOnce(SaveArg<0>(&b2));
 
   {
-    base::Thread t("Test thread");
+    ::base::Thread t("Test thread");
     ASSERT_TRUE(t.Start());
     t.task_runner()->PostTask(
-        FROM_HERE, base::BindOnce(&CallTestWithSelf, b1.AsWeakHandle()));
+        FROM_HERE, ::base::BindOnce(&CallTestWithSelf, b1.AsWeakHandle()));
   }
 
   // Calls b1.TestWithSelf().
@@ -276,7 +276,7 @@ TEST_F(WeakHandleTest, TypeConversionConstructor) {
 }
 
 TEST_F(WeakHandleTest, TypeConversionConstructorMakeWeakHandle) {
-  const base::WeakPtr<Derived> weak_ptr;
+  const ::base::WeakPtr<Derived> weak_ptr;
 
   // Should trigger type conversion constructor after MakeWeakHandle.
   WeakHandle<Base> base_weak_handle(MakeWeakHandle(weak_ptr));

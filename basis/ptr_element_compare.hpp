@@ -20,7 +20,7 @@
 //    , ptr_element_equal_to<shared_ptr<string>>
 //  > _unordered_map;
 //
-namespace util {
+namespace basis {
 
 template<
   typename Pointer
@@ -89,4 +89,4 @@ struct ptr_element_hash {
   }
 };
 
-} // namespace util
+} // namespace basis

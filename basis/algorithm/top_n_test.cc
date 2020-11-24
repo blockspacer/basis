@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/util/top_n.h"
+#include "basis/algorithm/top_n.hpp"
 
-#include <algorithm>  // for std::next_permutation
+#include <algorithm>
 #include <array>
-#include <functional>  // for std::less
+#include <functional>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-namespace verible {
+namespace basis {
 namespace {
 
 using ::testing::ElementsAre;
@@ -104,4 +104,4 @@ TEST(TopNTest, MaxSizeThreeSmallestWins) {
 }
 
 }  // namespace
-}  // namespace verible
+}  // namespace basis

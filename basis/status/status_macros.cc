@@ -17,7 +17,7 @@
 //            "If set, all errors generated will log a stack trace.");
 //DECLARE_bool(util_status_save_stack_trace);
 
-namespace util {
+namespace basis {
 namespace status_macros {
 
 using ::logging::LogMessage;
@@ -28,14 +28,14 @@ using ::logging::LOG_FATAL;
 using ::logging::LOG_INFO;
 using ::logging::LOG_WARNING;
 
-static ::util::Status MakeStatus(const util::ErrorSpace* error_space, int code,
+static ::basis::Status MakeStatus(const ::basis::ErrorSpace* error_space, int code,
                                  const std::string& message) {
-  return ::util::Status(error_space, code, message);
+  return ::basis::Status(error_space, code, message);
 }
 
 // Log the error at the given severity, optionally with a stack trace.
 // If log_severity is NUM_SEVERITIES, nothing is logged.
-static void LogError(const ::util::Status& status, const char* filename,
+static void LogError(const ::basis::Status& status, const char* filename,
                      int line, LogSeverity log_severity,
                      bool should_log_stack_trace) {
   if (LIKELY(log_severity != ::logging::LOG_NUM_SEVERITIES)) {
@@ -45,22 +45,22 @@ static void LogError(const ::util::Status& status, const char* filename,
   }
 }
 
-// Make a ::util::Status with a code and error message, and also send
+// Make a ::basis::Status with a code and error message, and also send
 // it to LOG(<log_severity>) using the given filename and line (unless
 // should_log is false, or log_severity is NUM_SEVERITIES).  If
 // should_log_stack_trace is true, the stack trace is included in the log
 // message (ignored if should_log is false).
-static ::util::Status MakeError(const char* filename, int line,
-                                const util::ErrorSpace* error_space, int code,
+static ::basis::Status MakeError(const char* filename, int line,
+                                const ::basis::ErrorSpace* error_space, int code,
                                 const std::string& message,
                                 bool should_log, LogSeverity log_severity,
                                 bool should_log_stack_trace) {
-  if (UNLIKELY(code == ::util::error::OK)) {
+  if (UNLIKELY(code == ::basis::error::OK)) {
     LOG(DFATAL) << "Cannot create error with status OK";
-    error_space = ::util::Status::canonical_space();
-    code = ::util::error::UNKNOWN;
+    error_space = ::basis::Status::canonical_space();
+    code = ::basis::error::UNKNOWN;
   }
-  const ::util::Status status = MakeStatus(error_space, code, message);
+  const ::basis::Status status = MakeStatus(error_space, code, message);
   if (LIKELY(should_log)) {
     LogError(status, filename, line, log_severity, should_log_stack_trace);
   }
@@ -80,7 +80,7 @@ static LogSeverity GetSuppressedSeverity(
   }
 }
 
-void LogErrorWithSuppression(const ::util::Status& status, const char* filename,
+void LogErrorWithSuppression(const ::basis::Status& status, const char* filename,
                              int line, int log_level) {
   const LogSeverity severity = GetSuppressedSeverity(::logging::LOG_ERROR, log_level);
   LogError(status, filename, line, severity,
@@ -94,7 +94,7 @@ void MakeErrorStream::CheckNotDone() const {
 }
 
 MakeErrorStream::Impl::Impl(
-    const char* file, int line, const util::ErrorSpace* error_space, int code,
+    const char* file, int line, const ::basis::ErrorSpace* error_space, int code,
     MakeErrorStream* error_stream, bool is_logged_by_default)
     : file_(file), line_(line), error_space_(error_space), code_(code),
       is_done_(false),
@@ -107,14 +107,14 @@ MakeErrorStream::Impl::Impl(
 #endif // DCHECK_IS_ON()
       make_error_stream_with_output_wrapper_(error_stream) {}
 
-MakeErrorStream::Impl::Impl(const ::util::Status& status, const char* file,
+MakeErrorStream::Impl::Impl(const ::basis::Status& status, const char* file,
                             int line, MakeErrorStream* error_stream)
     : file_(file),
       line_(line),
       // Make sure we show some error, even if the call is incorrect.
       error_space_(!status.ok() ? status.error_space()
-                                : ::util::Status::canonical_space()),
-      code_(!status.ok() ? status.error_code() : ::util::error::UNKNOWN),
+                                : ::basis::Status::canonical_space()),
+      code_(!status.ok() ? status.error_code() : ::basis::error::UNKNOWN),
       prior_message_(status.error_message()),
       is_done_(false),
       // Error code type is not visible here, so we can't call
@@ -138,10 +138,10 @@ MakeErrorStream::Impl::~Impl() {
       << file_ << ":" << line_ << " " << stream_.str();
 }
 
-::util::Status MakeErrorStream::Impl::GetStatus() {
+::basis::Status MakeErrorStream::Impl::GetStatus() {
   // Note: error messages refer to the public MakeErrorStream class.
 
-  // Getting a ::util::Status object out more than once is not harmful, but
+  // Getting a ::basis::Status object out more than once is not harmful, but
   // it doesn't match the expected pattern, where the stream is constructed
   // as a temporary, loaded with a message, and then casted to Status.
   LOG_IF(DFATAL, is_done_)
@@ -151,11 +151,11 @@ MakeErrorStream::Impl::~Impl() {
   is_done_ = true;
 
   const std::string& stream_str = stream_.str();
-  std::string str = base::StrCat({prior_message_, stream_str});
+  std::string str = ::base::StrCat({prior_message_, stream_str});
   if (UNLIKELY(str.empty())) {
     return MakeError(
         file_, line_, error_space_, code_,
-        base::StrCat({str, "Error without message at ", file_, ":",
+        ::base::StrCat({str, "Error without message at ", file_, ":",
                      std::to_string(line_)}),
         true /* should_log */, ::logging::LOG_ERROR /* log_severity */,
         should_log_stack_trace_);
@@ -173,4 +173,4 @@ void MakeErrorStream::Impl::CheckNotDone() const {
 }
 
 }  // namespace status_macros
-}  // namespace util
+}  // namespace basis

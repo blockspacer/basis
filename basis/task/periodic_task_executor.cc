@@ -34,7 +34,7 @@
 namespace basis {
 
 PeriodicTaskExecutor::PeriodicTaskExecutor(
-  base::RepeatingClosure&& periodic_task)
+  ::base::RepeatingClosure&& periodic_task)
   : periodic_task_(std::move(periodic_task))
   , ALLOW_THIS_IN_INITIALIZER_LIST(weak_ptr_factory_(this))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
@@ -65,14 +65,14 @@ PeriodicTaskExecutor::~PeriodicTaskExecutor()
 
 void
   PeriodicTaskExecutor::setTaskRunner(
-    scoped_refptr<base::SequencedTaskRunner> task_runner)
+    scoped_refptr<::base::SequencedTaskRunner> task_runner)
 {
   timer_.SetTaskRunner(task_runner);
 }
 
 void
   PeriodicTaskExecutor::startPeriodicTimer(
-    const base::TimeDelta& checkPeriod)
+    const ::base::TimeDelta& checkPeriod)
 {
   LOG_CALL(DVLOG(99));
 
@@ -85,7 +85,7 @@ void
 
 void
   PeriodicTaskExecutor::restart_timer(
-    const base::TimeDelta& checkPeriod)
+    const ::base::TimeDelta& checkPeriod)
 {
   LOG_CALL(DVLOG(99));
 
@@ -136,16 +136,16 @@ void
 }
 
 void setPeriodicTaskExecutorOnSequence(
-  const base::Location& from_here
-  , scoped_refptr<base::SequencedTaskRunner> task_runner
-  , COPIED() base::RepeatingClosure updateCallback)
+  const ::base::Location& from_here
+  , scoped_refptr<::base::SequencedTaskRunner> task_runner
+  , COPIED() ::base::RepeatingClosure updateCallback)
 {
   LOG_CALL(DVLOG(99));
 
   DCHECK(task_runner
     && task_runner->RunsTasksInCurrentSequence());
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
         from_here, task_runner);
 
@@ -163,13 +163,13 @@ void setPeriodicTaskExecutorOnSequence(
 }
 
 void startPeriodicTaskExecutorOnSequence(
-  const base::TimeDelta& endTimeDelta)
+  const ::base::TimeDelta& endTimeDelta)
 {
   LOG_CALL(DVLOG(99));
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
-        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+        FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
   DCHECK(sequenceLocalContext->try_ctx<PeriodicTaskExecutor>(FROM_HERE));
@@ -184,9 +184,9 @@ void unsetPeriodicTaskExecutorOnSequence()
 {
   LOG_CALL(DVLOG(99));
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
-        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+        FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
   DCHECK(sequenceLocalContext->try_ctx<PeriodicTaskExecutor>(FROM_HERE));

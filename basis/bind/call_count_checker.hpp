@@ -14,19 +14,19 @@ namespace base {
 // USAGE
 //
 // {
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::bindCheckedOnce(
+//     , ::base::bindCheckedOnce(
 //         DEBUG_BIND_CHECKS(
 //           CALLED_EXACTLY_ONCE_CHECKER()
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
-//         , base::Passed(FROM_HERE))
+//         , ::base::Unretained(&tmpClass)
+//         , ::base::Passed(FROM_HERE))
 //   );
 // }
 #define CALLED_EXACTLY_ONCE_CHECKER() \
-  base::bindExactCallCountChecker(FROM_HERE, 1)
+  ::base::bindExactCallCountChecker(FROM_HERE, 1)
 
 #if DCHECK_IS_ON()
 #define DEBUG_CALLED_EXACTLY_ONCE_CHECKER(PTR_NAME) \
@@ -41,19 +41,19 @@ namespace base {
 // USAGE
 //
 // {
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::bindCheckedOnce(
+//     , ::base::bindCheckedOnce(
 //         DEBUG_BIND_CHECKS(
 //           CALLED_AT_LEAST_ONCE_CHECKER()
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
-//         , base::Passed(FROM_HERE))
+//         , ::base::Unretained(&tmpClass)
+//         , ::base::Passed(FROM_HERE))
 //   );
 // }
 #define CALLED_AT_LEAST_ONCE_CHECKER() \
-  base::bindAtLeastCallCountChecker(FROM_HERE, 1)
+  ::base::bindAtLeastCallCountChecker(FROM_HERE, 1)
 
 #if DCHECK_IS_ON()
 #define DEBUG_CALLED_AT_LEAST_ONCE_CHECKER(PTR_NAME) \
@@ -68,22 +68,22 @@ namespace base {
 // USAGE
 //
 // {
-//   base::RepeatingCallback<void(const base::Location& location)> repCb
-//     = base::bindCheckedRepeating(
+//   ::base::RepeatingCallback<void(const ::base::Location& location)> repCb
+//     = ::base::bindCheckedRepeating(
 //         DEBUG_BIND_CHECKS(
 //           EXACT_CALL_COUNT_CHECKER(4)
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
+//         , ::base::Unretained(&tmpClass)
 //     );
 //
 //   repCb.Run(FROM_HERE);
 //
 //   repCb.Run(FROM_HERE);
 //
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::BindOnce(
+//     , ::base::BindOnce(
 //         repCb
 //         , FROM_HERE
 //       )
@@ -91,14 +91,14 @@ namespace base {
 //
 //   task_runner->PostTask(
 //     FROM_HERE
-//     , base::BindOnce(
+//     , ::base::BindOnce(
 //         repCb
 //         , FROM_HERE
 //       )
 //   );
 // }
 #define EXACT_CALL_COUNT_CHECKER(PARAM) \
-  base::bindExactCallCountChecker(FROM_HERE, PARAM)
+  ::base::bindExactCallCountChecker(FROM_HERE, PARAM)
 
 #if DCHECK_IS_ON()
 #define DEBUG_EXACT_CALL_COUNT_CHECKER(PTR_NAME) \
@@ -113,22 +113,22 @@ namespace base {
 // USAGE
 //
 // {
-//   base::RepeatingCallback<void(const base::Location& location)> repCb
-//     = base::bindCheckedRepeating(
+//   ::base::RepeatingCallback<void(const ::base::Location& location)> repCb
+//     = ::base::bindCheckedRepeating(
 //         DEBUG_BIND_CHECKS(
 //           AT_LEAST_CALL_COUNT_CHECKER(4)
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
+//         , ::base::Unretained(&tmpClass)
 //     );
 //
 //   repCb.Run(FROM_HERE);
 //
 //   repCb.Run(FROM_HERE);
 //
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::BindOnce(
+//     , ::base::BindOnce(
 //         repCb
 //         , FROM_HERE
 //       )
@@ -136,14 +136,14 @@ namespace base {
 //
 //   task_runner->PostTask(
 //     FROM_HERE
-//     , base::BindOnce(
+//     , ::base::BindOnce(
 //         repCb
 //         , FROM_HERE
 //       )
 //   );
 // }
 #define AT_LEAST_CALL_COUNT_CHECKER(PARAM) \
-  base::bindAtLeastCallCountChecker(FROM_HERE, PARAM)
+  ::base::bindAtLeastCallCountChecker(FROM_HERE, PARAM)
 
 #if DCHECK_IS_ON()
 #define DEBUG_AT_LEAST_CALL_COUNT_CHECKER(PTR_NAME) \
@@ -169,7 +169,7 @@ class CallCountChecker
 
   GUARD_METHOD_ON_UNKNOWN_THREAD(CallCountChecker)
   CallCountChecker(
-    const base::Location& location
+    const ::base::Location& location
     , const CounterType& expectedCallCount)
     : expectedCallCount_(expectedCallCount)
     , location_(location)
@@ -225,8 +225,8 @@ class CallCountChecker
     CallCountChecker<CounterType, CheckPolicy>&& other)
   {
     callCount_.store(other.callCount_.load());
-    expectedCallCount_ = base::rvalue_cast(other.expectedCallCount_);
-    location_ = base::rvalue_cast(other.location_);
+    expectedCallCount_ = ::base::rvalue_cast(other.expectedCallCount_);
+    location_ = ::base::rvalue_cast(other.location_);
     other.is_moved_out_.store(true);
     return *this;
   }
@@ -257,7 +257,7 @@ class CallCountChecker
 
   CounterType expectedCallCount_;
 
-  base::Location location_;
+  ::base::Location location_;
 
   std::atomic<bool> is_moved_out_{false};
 
@@ -275,23 +275,23 @@ class CallCountChecker
 
 template <typename CounterType>
 CallCountChecker<size_t, CallCountCheckPolicy::Exact> bindExactCallCountChecker(
-  const base::Location& location
+  const ::base::Location& location
   , const CounterType& val)
 {
   return CallCountChecker<size_t, CallCountCheckPolicy::Exact>{
     location
-    , base::checked_cast<size_t>(val)
+    , ::base::checked_cast<size_t>(val)
   };
 }
 
 template <typename CounterType>
 CallCountChecker<size_t, CallCountCheckPolicy::AtLeast> bindAtLeastCallCountChecker(
-  const base::Location& location
+  const ::base::Location& location
   , const CounterType& val)
 {
   return CallCountChecker<size_t, CallCountCheckPolicy::AtLeast>{
     location
-    , base::checked_cast<size_t>(val)
+    , ::base::checked_cast<size_t>(val)
   };
 }
 

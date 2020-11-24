@@ -25,7 +25,7 @@ extern const char kProgressBannerStr[];
 
   if (LOG_IS_ON(INFO))
   {
-    basis::ProgressLogger progress(
+    ::basis::ProgressLogger progress(
       5
       , &std::cout
       , "Loading progress");
@@ -36,8 +36,8 @@ extern const char kProgressBannerStr[];
     //  ----5---10---15---20---25---30---35---40---45---50---55---60---65---70---75---80---85---90---95--100
     //  ****************************************
 
-    base::PlatformThread::Sleep(
-      base::TimeDelta::FromMilliseconds(900));
+    ::base::PlatformThread::Sleep(
+      ::base::TimeDelta::FromMilliseconds(900));
 
     ++progress;
     // Output:
@@ -45,8 +45,8 @@ extern const char kProgressBannerStr[];
     //  ----5---10---15---20---25---30---35---40---45---50---55---60---65---70---75---80---85---90---95--100
     //  ************************************************************
 
-    base::PlatformThread::Sleep(
-      base::TimeDelta::FromMilliseconds(900));
+    ::base::PlatformThread::Sleep(
+      ::base::TimeDelta::FromMilliseconds(900));
 
     // Output:
     //  Loading progress

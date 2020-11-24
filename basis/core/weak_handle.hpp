@@ -73,12 +73,12 @@ class WeakHandleCoreBase {
   ~WeakHandleCoreBase();
 
   // May be called on any thread.
-  void PostToOwnerThread(const base::Location& from_here,
-                         const base::Closure& fn) const;
+  void PostToOwnerThread(const ::base::Location& from_here,
+                         const ::base::Closure& fn) const;
 
  private:
   // May be used on any thread.
-  const scoped_refptr<base::SequencedTaskRunner> owner_loop_task_runner_;
+  const scoped_refptr<::base::SequencedTaskRunner> owner_loop_task_runner_;
 
   DISALLOW_COPY_AND_ASSIGN(WeakHandleCoreBase);
 };
@@ -86,14 +86,14 @@ class WeakHandleCoreBase {
 // WeakHandleCore<T> contains all the logic for WeakHandle<T>.
 template <typename T>
 class WeakHandleCore : public WeakHandleCoreBase,
-                       public base::RefCountedThreadSafe<WeakHandleCore<T>> {
+                       public ::base::RefCountedThreadSafe<WeakHandleCore<T>> {
  public:
   // Must be called on |ptr|'s owner thread, which is assumed to be
   // the current thread.
-  explicit WeakHandleCore(const base::WeakPtr<T>& ptr) : ptr_(ptr) {}
+  explicit WeakHandleCore(const ::base::WeakPtr<T>& ptr) : ptr_(ptr) {}
 
   // Must be called on |ptr_|'s owner thread.
-  base::WeakPtr<T> Get() const {
+  ::base::WeakPtr<T> Get() const {
     DCHECK(IsOnOwnerThread());
     return ptr_;
   }
@@ -101,22 +101,22 @@ class WeakHandleCore : public WeakHandleCoreBase,
   // Call(...) may be called on any thread, but all its arguments
   // should be safe to be bound and copied across threads.
   template <typename Method, typename... Args>
-  void Call(const base::Location& from_here,
+  void Call(const ::base::Location& from_here,
             Method method,
             Args&&... args) const {
     PostToOwnerThread(from_here,
-                      base::Bind(method, ptr_, std::forward<Args>(args)...));
+                      ::base::Bind(method, ptr_, std::forward<Args>(args)...));
   }
 
  private:
-  friend class base::RefCountedThreadSafe<WeakHandleCore<T>>;
+  friend class ::base::RefCountedThreadSafe<WeakHandleCore<T>>;
 
   // May be destroyed on any thread.
   ~WeakHandleCore() {}
 
   // Must be dereferenced only on the owner thread.  May be destroyed
   // from any thread.
-  base::WeakPtr<T> ptr_;
+  ::base::WeakPtr<T> ptr_;
 
   DISALLOW_COPY_AND_ASSIGN(WeakHandleCore);
 };
@@ -132,7 +132,7 @@ class WeakHandle {
   WeakHandle() {}
 
   // Creates an initialized WeakHandle from |ptr|.
-  explicit WeakHandle(const base::WeakPtr<T>& ptr)
+  explicit WeakHandle(const ::base::WeakPtr<T>& ptr)
       : core_(new internal::WeakHandleCore<T>(ptr)) {}
 
   // Allow conversion from WeakHandle<U> to WeakHandle<T> if U is
@@ -154,7 +154,7 @@ class WeakHandle {
   void Reset() { core_ = nullptr; }
 
   // Must be called only on the underlying object's owner thread.
-  base::WeakPtr<T> Get() const {
+  ::base::WeakPtr<T> Get() const {
     DCHECK(IsInitialized());
     DCHECK(core_->IsOnOwnerThread());
     return core_->Get();
@@ -163,7 +163,7 @@ class WeakHandle {
   // Call(...) may be called on any thread, but all its arguments
   // should be safe to be bound and copied across threads.
   template <typename Method, typename... Args>
-  void Call(const base::Location& from_here,
+  void Call(const ::base::Location& from_here,
             Method method,
             Args&&... args) const {
     DCHECK(IsInitialized());
@@ -176,7 +176,7 @@ class WeakHandle {
 
 // Makes a WeakHandle from a WeakPtr.
 template <typename T>
-WeakHandle<T> MakeWeakHandle(const base::WeakPtr<T>& ptr) {
+WeakHandle<T> MakeWeakHandle(const ::base::WeakPtr<T>& ptr) {
   return WeakHandle<T>(ptr);
 }
 

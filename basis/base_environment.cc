@@ -67,17 +67,17 @@ ScopedBaseEnvironment::~ScopedBaseEnvironment()
 
   {
     DCHECK(base::trace_event::MemoryDumpManager::GetInstance());
-    base::trace_event::MemoryDumpManager::GetInstance()
+    ::base::trace_event::MemoryDumpManager::GetInstance()
       ->TeardownForTracing();
   }
 
   // save tracing report to file, if needed
   {
     const bool need_write_tracing_report
-      = base::trace_event::TraceLog::GetInstance()->IsEnabled();
+      = ::base::trace_event::TraceLog::GetInstance()->IsEnabled();
     if(need_write_tracing_report) {
       DCHECK(traceReportPath_);
-      basis::writeTraceReport(
+      ::basis::writeTraceReport(
         *traceReportPath_);
     } else {
       DVLOG(9)
@@ -90,7 +90,7 @@ ScopedBaseEnvironment::~ScopedBaseEnvironment()
       << "ThreadPool Shutdown...";
     TRACE_EVENT0("shutdown", "MainLoop:ThreadPool");
     DCHECK(base::ThreadPool::GetInstance());
-    base::ThreadPool::GetInstance()->Shutdown();
+    ::base::ThreadPool::GetInstance()->Shutdown();
     // Tasks posted with TaskShutdownBehavior::BLOCK_SHUTDOWN and
     // tasks posted with TaskShutdownBehavior::SKIP_ON_SHUTDOWN that
     // have started to run before the Shutdown() call
@@ -105,9 +105,9 @@ bool ScopedBaseEnvironment::init(
   , char* argv[]
   , const bool need_auto_start_tracer
   , const std::string event_categories
-  , const base::FilePath& outDir
-  , const base::FilePath::CharType icuFileName[]
-  , const base::FilePath::CharType traceReportFileName[]
+  , const ::base::FilePath& outDir
+  , const ::base::FilePath::CharType icuFileName[]
+  , const ::base::FilePath::CharType traceReportFileName[]
   , const int threadsNum)
 {
   DCHECK(argc > 0);
@@ -120,7 +120,7 @@ bool ScopedBaseEnvironment::init(
   }
 
   traceReportPath_
-    = std::make_unique<const base::FilePath>(
+    = std::make_unique<const ::base::FilePath>(
         dir_exe_.Append(traceReportFileName));
 
   /// \note log all command-line arguments before
@@ -138,19 +138,19 @@ bool ScopedBaseEnvironment::init(
     }
   }
 
-  base::PlatformThread::SetName("Main");
+  ::base::PlatformThread::SetName("Main");
 
   // see https://stackoverflow.com/a/18981514/10904212
   std::locale::global(std::locale::classic());
 
-  basis::initCommandLine(argc, argv);
+  ::basis::initCommandLine(argc, argv);
 
 #if DCHECK_IS_ON()
   // Must be done before hooking any functions that make stack traces.
-  base::debug::EnableInProcessStackDumping();
+  ::base::debug::EnableInProcessStackDumping();
 #endif // DCHECK_IS_ON()
 
-  base::SamplingHeapProfiler::Get()->SetRecordThreadNames(true);
+  ::base::SamplingHeapProfiler::Get()->SetRecordThreadNames(true);
 
   /// \todo
   // init allocator https://github.com/aranajhonny/chromium/blob/caf5bcb822f79b8997720e589334266551a50a13/content/app/content_main_runner.cc#L512
@@ -158,26 +158,26 @@ bool ScopedBaseEnvironment::init(
   // Enables 'terminate on heap corruption' flag. Helps protect against heap
   // overflow. Has no effect if the OS doesn't provide the necessary facility.
   /// \note On Linux, there nothing to do AFAIK.
-  base::EnableTerminationOnHeapCorruption();
+  ::base::EnableTerminationOnHeapCorruption();
 
 #if DCHECK_IS_ON()
   // Turns on process termination if memory runs out.
-  base::EnableTerminationOnOutOfMemory();
+  ::base::EnableTerminationOnOutOfMemory();
 #endif // DCHECK_IS_ON()
 
-  std::unique_ptr<base::FeatureList> feature_list
-    = std::make_unique<base::FeatureList>();
+  std::unique_ptr<::base::FeatureList> feature_list
+    = std::make_unique<::base::FeatureList>();
 
   // configure |base::FeatureList|
   {
     std::string default_enable_features
-      = base::JoinString({}, ",");
+      = ::base::JoinString({}, ",");
 
     std::string default_disable_features =
-      base::JoinString({}, ",");
+      ::base::JoinString({}, ",");
 
-    base::CommandLine* command_line
-      = base::CommandLine::ForCurrentProcess();
+    ::base::CommandLine* command_line
+      = ::base::CommandLine::ForCurrentProcess();
 
     /// \usage --enable-features=console_terminal,remote_console
     std::string cmd_enabled =
@@ -201,20 +201,20 @@ bool ScopedBaseEnvironment::init(
     /// \note you can override features like so:
     /// feature_list
     ///   ->RegisterOverride(kFeatureConsoleTerminalName
-    ///       , base::FeatureList::OVERRIDE_ENABLE_FEATURE
+    ///       , ::base::FeatureList::OVERRIDE_ENABLE_FEATURE
     ///       , nullptr // field trial
     /// );
   }
 
-  base::FeatureList::SetInstance(
+  ::base::FeatureList::SetInstance(
     std::move(feature_list));
 
-  basis::initLogging(
+  ::basis::initLogging(
     "" // logFile
     );
 
 #if DCHECK_IS_ON()
-  base::FieldTrial::EnableBenchmarking();
+  ::base::FieldTrial::EnableBenchmarking();
 #endif // DCHECK_IS_ON()
 
   if(!base::PathExists(dir_exe_.Append(icuFileName))) {
@@ -226,7 +226,7 @@ bool ScopedBaseEnvironment::init(
       false;
   }
 
-  icu_util::initICUi18n(icuFileName);
+  ::basis::initICUi18n(icuFileName);
 
   /// \note you must init ICU before i18n
   i18n = std::make_unique<i18n::I18n>(
@@ -236,7 +236,7 @@ bool ScopedBaseEnvironment::init(
   // see |base::RecommendedMaxNumberOfThreadsInThreadGroup|
   {
     const int num_cores
-      = base::SysInfo::NumberOfProcessors();
+      = ::base::SysInfo::NumberOfProcessors();
     const int kBackgroundMaxThreads
     /// \note based on command-line paramater
       = 1 + threadsNum;
@@ -251,16 +251,16 @@ bool ScopedBaseEnvironment::init(
       << "Unable to register foreground threads."
       " Make sure you have at leat one cpu core";
 
-    basis::initThreadPool(
+    ::basis::initThreadPool(
       kBackgroundMaxThreads
       , kForegroundMaxThreads);
   }
 
-  // register basis::ApplicationPathKeys
-  basis::AddPathProvider();
+  // register ::basis::ApplicationPathKeys
+  ::basis::AddPathProvider();
 
   // see http://dev.chromium.org/developers/how-tos/trace-event-profiling-tool
-  basis::initTracing(
+  ::basis::initTracing(
     need_auto_start_tracer
     , event_categories
     );
@@ -285,18 +285,18 @@ bool ScopedBaseEnvironment::init(
   // Usage examples:
   // UMA_HISTOGRAM_BOOLEAN("App.BoolTest()", false);
   // UMA_HISTOGRAM_COUNTS_100("App.TestCounts", 11);
-  // UMA_HISTOGRAM_LONG_TIMES("App.TimeNow()", base::TimeDelta::FromMinutes(5));
+  // UMA_HISTOGRAM_LONG_TIMES("App.TimeNow()", ::base::TimeDelta::FromMinutes(5));
   // UMA_HISTOGRAM_ENUMERATION("Login", OFFLINE_AND_ONLINE, NUM_SUCCESS_REASONS);
-  // base::UmaHistogramMemoryLargeMB("HeapProfiler.Malloc", malloc_usage_mb);
-  base::StatisticsRecorder::InitLogOnShutdown();
+  // ::base::UmaHistogramMemoryLargeMB("HeapProfiler.Malloc", malloc_usage_mb);
+  ::base::StatisticsRecorder::InitLogOnShutdown();
 
   // set current path
   {
     CHECK(!outDir.empty());
-    base::SetCurrentDirectory(outDir);
-    base::FilePath current_path;
+    ::base::SetCurrentDirectory(outDir);
+    ::base::FilePath current_path;
     const bool curDirOk =
-      base::GetCurrentDirectory(&current_path);
+      ::base::GetCurrentDirectory(&current_path);
     DCHECK(curDirOk);
     VLOG(9)
         << "Current path is "

@@ -1,0 +1,303 @@
+#pragma once
+
+#include <base/macros.h>
+#include <base/logging.h>
+#include <base/values.h>
+#include <base/sequence_checker.h>
+#include <base/threading/thread_collision_warner.h>
+#include <base/location.h>
+#include <base/no_destructor.h>
+#include <base/rvalue_cast.h>
+#include <base/callback_list.h>
+
+#include <basis/strong_types/strong_string.hpp>
+
+#include <functional>
+#include <string>
+
+// A FailPoint is a hook mechanism allowing testing behavior to occur
+// at prearranged execution points.
+//
+// Use FailPoint for fault injection (to conditionally cause system failure).
+//
+// FailsPoint-s can be activated and deactivated, and configured to hold data.
+//
+// EXAMPLE
+//
+// // my_fail_points.hpp
+// using FailPoint_FP1 = ::basis::StrongFailPoint<class FailPointFP1Tag>;
+//
+// // on `plugin A` thread, before app started
+// {
+//   // `plugin A` includes "my_fail_points.hpp"
+//
+//   FailPoint_FP1* fp1
+//     = FailPoint_FP1::GetInstance(FROM_HERE, ::basis::FailPointName{"fp1"});
+//
+//   fp1->setFailure();
+//
+//   fp1->enable();
+//
+//   ::base::Value val1(::base::Value::Type::DICTIONARY);
+//   val1.SetKey("bool_key", ::base::Value{false});
+//   val1.SetKey("int_key", ::base::Value{1234});
+//   val1.SetKey("double_key", ::base::Value{12.34567});
+//   val1.SetKey("string_key", ::base::Value{"str"});
+//   fp1->setData(val1);
+// }
+//
+// // on `plugin B` thread, while app is running
+// {
+//   // `plugin B` includes "my_fail_points.hpp"
+//
+//   FailPoint_FP1* fp1
+//     = FailPoint_FP1::GetInstance(FROM_HERE, ::basis::FailPointName{"fp1"});
+//   if(UNLIKELY(fp1->checkFail()))
+//   {
+//     DCHECK_EQ(fp1->data().FindIntPath("int_key").value(), 1234);
+//   }
+// }
+//
+namespace basis {
+
+// can be used for debug purposes
+STRONGLY_TYPED_STRING(FailPointName);
+
+// Storage with thread-safety checks
+//
+/// \note API must be fast (fail points may exist in any production code),
+/// so do not use thread synchronization primitives (like `atomic`) here.
+//
+/// \note API allowed to call from multiple threads, but not concurrently.
+/// Usually that means that you must setup all fail points
+/// during app construction (or that you must pause app
+/// before modification of fail points).
+//
+class FailPointStorage
+{
+ public:
+  explicit FailPointStorage(const ::base::Location& location, const FailPointName& name)
+    : name_(name)
+    , location_(location)
+    , is_active_(false)
+    , has_failure_(false)
+    , data_(::base::Value::Type::DICTIONARY)
+  {
+  }
+
+  MUST_USE_RETURN_VALUE
+  const FailPointName& getName() const NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    return name_;
+  }
+
+  MUST_USE_RETURN_VALUE
+  bool isActive() const NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    return is_active_;
+  }
+
+  void disable() NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    is_active_ = false;
+  }
+
+  void enable() NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    is_active_ = true;
+  }
+
+  void setFailure() NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    has_failure_ = true;
+  }
+
+  void unsetFailure() NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    has_failure_ = false;
+  }
+
+  // Each fail point can have arbitrary data (::base::Value) associated with it.
+  MUST_USE_RETURN_VALUE
+  const ::base::Value& data() const NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    return data_;
+  }
+
+  void setData(const ::base::Value& data) NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    DCHECK_EQ(data.type(), ::base::Value::Type::DICTIONARY);
+    data_ = data.Clone();
+  }
+
+  void setData(::base::Value&& data) NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    DCHECK_EQ(data.type(), ::base::Value::Type::DICTIONARY);
+    data_ = base::rvalue_cast(data);
+  }
+
+  void clearData() NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    data_ = base::Value(::base::Value::Type::DICTIONARY);
+  }
+
+  MUST_USE_RETURN_VALUE
+  bool checkFail() const NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    return has_failure_ && is_active_;
+  }
+
+ private:
+  MUST_USE_RETURN_VALUE
+  bool hasFailure() const NO_EXCEPTION
+  {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    return has_failure_;
+  }
+
+ private:
+  FailPointName name_;
+
+  base::Location location_;
+
+  bool is_active_;
+
+  bool has_failure_;
+
+  ::base::Value data_;
+
+  // Thread collision warner to ensure that API is not called concurrently.
+  // API allowed to call from multiple threads, but not
+  // concurrently.
+  DFAKE_MUTEX(debug_thread_collision_warner_);
+
+  DISALLOW_COPY_AND_ASSIGN(FailPointStorage);
+};
+
+// Each fail point is unique object (uses `GetInstance`)
+// and unique data type (uses type-tag similar to StrongAlias)
+//
+// MOTIVATION
+//
+// API must be fast (fail points may exist in any production code),
+// so do not use map<string, FailPoint>.
+//
+// Use `GetInstance` for fast access to individual fail point.
+//
+// PERFORMANCE TIPS
+//
+// Re-use (cache) pointer returned by `GetInstance` for max. performance
+// i.e. use `auto* fp = MyFailPoint::GetInstance(); fp->...; fp->...;`
+//
+// Use `UNLIKELY` near `checkFail()` for max. performance
+// (we assume that usually most of fail points are disabled).
+//
+template<
+  typename Tag
+>
+class StrongFailPoint
+{
+ public:
+  MUST_USE_RETURN_VALUE
+  static StrongFailPoint<Tag>* GetInstance(
+    const ::base::Location& location, const FailPointName& name)
+  {
+    /// \note construction assumed to be thread-safe due to `base::NoDestructor`
+    /// and constructed on first access
+    static ::base::NoDestructor<StrongFailPoint<Tag>>
+      instance(location, name);
+    DCHECK_EQ(instance.get()->getName(), name);
+    return instance.get();
+  }
+
+  MUST_USE_RETURN_VALUE
+  const FailPointName& getName() const NO_EXCEPTION
+  {
+    return value_.getName();
+  }
+
+  MUST_USE_RETURN_VALUE
+  bool isActive() const NO_EXCEPTION
+  {
+    return value_.isActive();
+  }
+
+  void disable() NO_EXCEPTION
+  {
+    return value_.disable();
+  }
+
+  void enable() NO_EXCEPTION
+  {
+    return value_.enable();
+  }
+
+  auto setFailure() NO_EXCEPTION
+  {
+    return value_.setFailure();
+  }
+
+  auto unsetFailure() NO_EXCEPTION
+  {
+    return value_.unsetFailure();
+  }
+
+  MUST_USE_RETURN_VALUE
+  const ::base::Value& data() const NO_EXCEPTION
+  {
+    return value_.data();
+  }
+
+  void setData(const ::base::Value& data) NO_EXCEPTION
+  {
+    return value_.setData(data);
+  }
+
+  void setData(::base::Value&& data) NO_EXCEPTION
+  {
+    return value_.setData(base::rvalue_cast(data));
+  }
+
+  void clearData() NO_EXCEPTION
+  {
+    return value_.clearData();
+  }
+
+  MUST_USE_RETURN_VALUE
+  bool checkFail() const NO_EXCEPTION
+  {
+    return value_.checkFail();
+  }
+
+private:
+  friend class ::base::NoDestructor<StrongFailPoint<Tag>>;
+
+  // private constructor due to `base::NoDestructor`
+  StrongFailPoint() = delete;
+
+  // private destructor due to `base::NoDestructor`
+  ~StrongFailPoint() = delete;
+
+  // private constructor due to `base::NoDestructor`
+  explicit StrongFailPoint(
+    const ::base::Location& location
+    , const FailPointName& name)
+    : value_(location, name)
+  {}
+
+ private:
+  FailPointStorage value_;
+};
+
+} // namespace basis

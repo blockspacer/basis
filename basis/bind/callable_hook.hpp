@@ -19,6 +19,8 @@
 
 namespace basis {
 
+/// \note Prefer `basis/plug_point` instead.
+//
 // The `CallableHook` mechanism allows for the creation of
 // "weak-symbol-like" functions  which can have
 // implementations injected into a link target
@@ -68,8 +70,8 @@ namespace basis {
 // ::basis::CallableHookRegistrationData<double(double)> badSqrHook =
 //   ::basis::CallableHookRegistrationData(FROM_HERE
 //     , "badSqr"
-//     , base::BindRepeating(
-//         &MyClassImpl::badSqrImpl, base::Unretained(&myClassImpl))
+//     , ::base::BindRepeating(
+//         &MyClassImpl::badSqrImpl, ::base::Unretained(&myClassImpl))
 //     , ::basis::CallableHookPriority{0});
 //
 // LOG(INFO)
@@ -99,14 +101,14 @@ class GlobalCallableHooksRegistry {
       : optFuncRef(base::nullopt)
     {}
 
-    explicit RepeatingCallbackSlot(const base::RepeatingCallback<Func>& cb)
+    explicit RepeatingCallbackSlot(const ::base::RepeatingCallback<Func>& cb)
       : optFuncRef(REFERENCED(cb))
     {}
 
     CallableHookPriority priority{0};
 
-    base::Optional<
-      util::UnownedRef<const base::RepeatingCallback<Func>>
+    ::base::Optional<
+      ::basis::UnownedRef<const ::base::RepeatingCallback<Func>>
     > optFuncRef;
 
     DISALLOW_COPY_AND_ASSIGN(RepeatingCallbackSlot);
@@ -136,7 +138,7 @@ class GlobalCallableHooksRegistry {
     CallableSlot* basicSlot = iter->second.get();
 
     RepeatingCallbackSlot<Func>* slot
-      = basis::polymorphic_downcast<RepeatingCallbackSlot<Func>*>(basicSlot);
+      = ::basis::polymorphic_downcast<RepeatingCallbackSlot<Func>*>(basicSlot);
 
     CHECK(slot)
       << "key "
@@ -158,7 +160,7 @@ class GlobalCallableHooksRegistry {
    */
   template <typename Func>
   bool setSlot(const std::string& key
-    , const base::RepeatingCallback<Func>& impl
+    , const ::base::RepeatingCallback<Func>& impl
     , CallableHookPriority priority)
   {
     RepeatingCallbackSlot<Func>* RepeatingCallbackSlot = getOrCreateSlot<Func>(key);
@@ -200,7 +202,7 @@ class GlobalCallableHooksRegistry {
   // check sequence on which class was constructed/destructed/configured
   SEQUENCE_CHECKER(sequence_checker_);
 
-  friend class base::NoDestructor<GlobalCallableHooksRegistry>;
+  friend class ::base::NoDestructor<GlobalCallableHooksRegistry>;
 
   DISALLOW_COPY_AND_ASSIGN(GlobalCallableHooksRegistry);
 };
@@ -210,35 +212,35 @@ class CallableHookRegistrationData
 {
  public:
   CallableHookRegistrationData(
-    const base::Location& location
+    const ::base::Location& location
     , std::string&& key
-    , base::RepeatingCallback<Func>&& impl
+    , ::base::RepeatingCallback<Func>&& impl
     , CallableHookPriority priority = CallableHookPriority{0})
     : funcStorage_(base::rvalue_cast(impl))
   {
     Init(location
-        , base::rvalue_cast(key)
+        , ::base::rvalue_cast(key)
         , REFERENCED(funcStorage_)
         , priority);
   }
 
   CallableHookRegistrationData(
-    const base::Location& location
+    const ::base::Location& location
     , std::string&& key
-    , const base::RepeatingCallback<Func>& impl
+    , const ::base::RepeatingCallback<Func>& impl
     , CallableHookPriority priority = CallableHookPriority{0})
     : funcStorage_(COPIED(impl))
   {
     Init(location
-        , base::rvalue_cast(key)
+        , ::base::rvalue_cast(key)
         , REFERENCED(funcStorage_)
         , priority);
   }
 
  private:
-  void Init(const base::Location& location
+  void Init(const ::base::Location& location
     , std::string&& key
-    , const base::RepeatingCallback<Func>& impl
+    , const ::base::RepeatingCallback<Func>& impl
     , CallableHookPriority priority = CallableHookPriority{0})
   {
     GlobalCallableHooksRegistry* instance
@@ -255,7 +257,7 @@ class CallableHookRegistrationData
   }
 
  private:
-  base::RepeatingCallback<Func> funcStorage_;
+  ::base::RepeatingCallback<Func> funcStorage_;
 
   DISALLOW_COPY_AND_ASSIGN(CallableHookRegistrationData);
 };

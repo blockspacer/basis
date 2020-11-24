@@ -88,11 +88,11 @@ std::string StrError(int err) {
 
 } // namespace
 
-namespace util {
+namespace basis {
 
 namespace internal {
 
-class PosixErrorSpace : public util::ErrorSpace {
+class PosixErrorSpace : public ::basis::ErrorSpace {
  public:
   PosixErrorSpace();
   virtual ~PosixErrorSpace();
@@ -101,27 +101,27 @@ class PosixErrorSpace : public util::ErrorSpace {
   // space. This is basically a call to strerror_r.
   std::string String(int code) const final;
 
-  ::util::error::Code CanonicalCode(const ::util::Status& status) const final;
+  ::basis::error::Code CanonicalCode(const ::basis::Status& status) const final;
 
   // PosixErrorSpace is neither copyable nor movable.
   PosixErrorSpace(const PosixErrorSpace&) = delete;
   PosixErrorSpace& operator=(const PosixErrorSpace&) = delete;
 };
 
-PosixErrorSpace::PosixErrorSpace() : ErrorSpace("util::PosixErrorSpace") {}
+PosixErrorSpace::PosixErrorSpace() : ErrorSpace("basis::PosixErrorSpace") {}
 
 PosixErrorSpace::~PosixErrorSpace() {}
 
 // TODO(unknown): Move to glog/StrError().
 std::string PosixErrorSpace::String(int code) const { return StrError(code); }
 
-::util::error::Code PosixErrorSpace::CanonicalCode(
-    const ::util::Status& status) const {
-  ::util::error::Code code;
+::basis::error::Code PosixErrorSpace::CanonicalCode(
+    const ::basis::Status& status) const {
+  ::basis::error::Code code;
 
   switch (status.error_code()) {
     case 0:
-      code = ::util::error::OK;
+      code = ::basis::error::OK;
       break;
     case EINVAL:        // Invalid argument
     case ENAMETOOLONG:  // Filename too long
@@ -136,30 +136,30 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ENOTTY:        // Inappropriate I/O control operation
     case EPROTOTYPE:    // Protocol wrong type for socket
     case ESPIPE:        // Invalid seek
-      code = ::util::error::INVALID_ARGUMENT;
+      code = ::basis::error::INVALID_ARGUMENT;
       break;
     case ETIMEDOUT:  // Connection timed out
     case ETIME:      // Timer expired
-      code = ::util::error::DEADLINE_EXCEEDED;
+      code = ::basis::error::DEADLINE_EXCEEDED;
       break;
     case ENODEV:     // No such device
     case ENOENT:     // No such file or directory
     case ENOMEDIUM:  // No medium found
     case ENXIO:      // No such device or address
     case ESRCH:      // No such process
-      code = ::util::error::NOT_FOUND;
+      code = ::basis::error::NOT_FOUND;
       break;
     case EEXIST:         // File exists
     case EADDRNOTAVAIL:  // Address not available
     case EALREADY:       // Connection already in progress
     case ENOTUNIQ:       // Name not unique on network
-      code = ::util::error::ALREADY_EXISTS;
+      code = ::basis::error::ALREADY_EXISTS;
       break;
     case EPERM:   // Operation not permitted
     case EACCES:  // Permission denied
     case ENOKEY:  // Required key not available
     case EROFS:   // Read only file system
-      code = ::util::error::PERMISSION_DENIED;
+      code = ::basis::error::PERMISSION_DENIED;
       break;
     case ENOTEMPTY:   // Directory not empty
     case EISDIR:      // Is a directory
@@ -177,7 +177,7 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ESHUTDOWN:   // Cannot send after transport endpoint shutdown
     case ETXTBSY:     // Text file busy
     case EUNATCH:     // Protocol driver not attached
-      code = ::util::error::FAILED_PRECONDITION;
+      code = ::basis::error::FAILED_PRECONDITION;
       break;
     case ENOSPC:   // No space left on device
     case EDQUOT:   // Disk quota exceeded
@@ -189,13 +189,13 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ENOMEM:   // Not enough space
     case ENOSR:    // No STREAM resources
     case EUSERS:   // Too many users
-      code = ::util::error::RESOURCE_EXHAUSTED;
+      code = ::basis::error::RESOURCE_EXHAUSTED;
       break;
     case ECHRNG:     // Channel number out of range
     case EFBIG:      // File too large
     case EOVERFLOW:  // Value too large to be stored in data type
     case ERANGE:     // Result too large
-      code = ::util::error::OUT_OF_RANGE;
+      code = ::basis::error::OUT_OF_RANGE;
       break;
     case ENOPKG:           // Package not installed
     case ENOSYS:           // Function not implemented
@@ -205,7 +205,7 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case EPROTONOSUPPORT:  // Protocol not supported
     case ESOCKTNOSUPPORT:  // Socket type not supported
     case EXDEV:            // Improper link
-      code = ::util::error::UNIMPLEMENTED;
+      code = ::basis::error::UNIMPLEMENTED;
       break;
     case EAGAIN:        // Resource temporarily unavailable
     case ECOMM:         // Communication error on send
@@ -221,14 +221,14 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ENOLCK:        // No locks available
     case ENOLINK:       // Link has been severed
     case ENONET:        // Machine is not on the network
-      code = ::util::error::UNAVAILABLE;
+      code = ::basis::error::UNAVAILABLE;
       break;
     case EDEADLK:  // Resource deadlock avoided
     case ESTALE:   // Stale file handle
-      code = ::util::error::ABORTED;
+      code = ::basis::error::ABORTED;
       break;
     case ECANCELED:  // Operation cancelled
-      code = ::util::error::CANCELLED;
+      code = ::basis::error::CANCELLED;
       break;
     // NOTE: If you get any of the following (especially in a
     // reproducable way) and can propose a better mapping,
@@ -264,10 +264,10 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ESTRPIPE:      // Streams pipe error
     case EUCLEAN:       // Structure needs cleaning
     case EXFULL:        // Exchange full
-      code = ::util::error::UNKNOWN;
+      code = ::basis::error::UNKNOWN;
       break;
     default: {
-      code = ::util::error::UNKNOWN;
+      code = ::basis::error::UNKNOWN;
       break;
     }
   }
@@ -283,6 +283,6 @@ const ErrorSpace* PosixErrorSpace() {
 
 // Force accessor to run at load time, which registers the errorspace.
 static const ErrorSpace* dummy __attribute__((unused)) =
-    util::PosixErrorSpace();
+    ::basis::PosixErrorSpace();
 
-}  // namespace util
+}  // namespace basis

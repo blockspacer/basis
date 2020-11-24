@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VERIBLE_COMMON_UTIL_SPACER_H_
-#define VERIBLE_COMMON_UTIL_SPACER_H_
+#pragma once
 
 #include <cstddef>
 #include <iosfwd>
 
-namespace verible {
+namespace basis {
 
 // Streamable print adapter that prints a number of spaces without allocating
 // any temporary string.
@@ -30,6 +29,4 @@ struct Spacer {
 
 std::ostream& operator<<(std::ostream&, const Spacer&);
 
-}  // namespace verible
-
-#endif  // VERIBLE_COMMON_UTIL_SPACER_H_
+}  // namespace basis

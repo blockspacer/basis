@@ -18,11 +18,11 @@
 namespace basis {
 
 ThreadHealthChecker::Internal::Internal(
-    scoped_refptr<base::TaskRunner> patient_task_runner,
-    scoped_refptr<base::SequencedTaskRunner> doctor_task_runner,
-    base::TimeDelta interval,
-    base::TimeDelta timeout,
-    base::RepeatingClosure on_failure)
+    scoped_refptr<::base::TaskRunner> patient_task_runner,
+    scoped_refptr<::base::SequencedTaskRunner> doctor_task_runner,
+    ::base::TimeDelta interval,
+    ::base::TimeDelta timeout,
+    ::base::RepeatingClosure on_failure)
     : patient_task_runner_(std::move(patient_task_runner)),
       doctor_task_runner_(std::move(doctor_task_runner)),
       interval_(interval),
@@ -37,8 +37,8 @@ ThreadHealthChecker::Internal::~Internal() {}
 void ThreadHealthChecker::Internal::StartHealthCheck() {
   DCHECK(doctor_task_runner_->RunsTasksInCurrentSequence());
   DETACH_FROM_THREAD(thread_checker_);
-  ok_timer_ = std::make_unique<base::OneShotTimer>();
-  failure_timer_ = std::make_unique<base::OneShotTimer>();
+  ok_timer_ = std::make_unique<::base::OneShotTimer>();
+  failure_timer_ = std::make_unique<::base::OneShotTimer>();
   ScheduleHealthCheck();
 }
 
@@ -81,11 +81,11 @@ void ThreadHealthChecker::Internal::ThreadTimeout() {
 // The public ThreadHealthChecker owns a ref-counted reference to an Internal
 // object which does the heavy lifting.
 ThreadHealthChecker::ThreadHealthChecker(
-    scoped_refptr<base::TaskRunner> patient_task_runner,
-    scoped_refptr<base::SequencedTaskRunner> doctor_task_runner,
-    base::TimeDelta interval,
-    base::TimeDelta timeout,
-    base::RepeatingClosure on_failure)
+    scoped_refptr<::base::TaskRunner> patient_task_runner,
+    scoped_refptr<::base::SequencedTaskRunner> doctor_task_runner,
+    ::base::TimeDelta interval,
+    ::base::TimeDelta timeout,
+    ::base::RepeatingClosure on_failure)
     : doctor_task_runner_(doctor_task_runner),
       internal_(base::MakeRefCounted<ThreadHealthChecker::Internal>(
           patient_task_runner,
@@ -95,7 +95,7 @@ ThreadHealthChecker::ThreadHealthChecker(
           std::move(on_failure))) {
   doctor_task_runner_->PostTask(
       FROM_HERE,
-      base::BindOnce(&ThreadHealthChecker::Internal::StartHealthCheck,
+      ::base::BindOnce(&ThreadHealthChecker::Internal::StartHealthCheck,
                      internal_));
 }
 
@@ -105,7 +105,7 @@ ThreadHealthChecker::ThreadHealthChecker(
 // before the Internal object is destroyed and the health check stops.
 ThreadHealthChecker::~ThreadHealthChecker() {
   doctor_task_runner_->PostTask(
-      FROM_HERE, base::BindOnce(&ThreadHealthChecker::Internal::StopHealthCheck,
+      FROM_HERE, ::base::BindOnce(&ThreadHealthChecker::Internal::StopHealthCheck,
                                 internal_));
 }
 

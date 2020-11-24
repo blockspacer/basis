@@ -13,15 +13,15 @@ namespace base {
 //
 // {
 //   // ERROR: AddressSanitizer: stack-use-after-scope
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::bindCheckedOnce(
+//     , ::base::bindCheckedOnce(
 //         DEBUG_BIND_CHECKS(
 //           REF_CHECKER(tmpClass)
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
-//         , base::Passed(FROM_HERE))
+//         , ::base::Unretained(&tmpClass)
+//         , ::base::Passed(FROM_HERE))
 //   );
 //
 //   DVLOG(9)
@@ -31,7 +31,7 @@ namespace base {
 //     << " to detect `AddressSanitizer: stack-use-after-scope`";
 // }
 #define CONST_REF_CHECKER(REF_NAME) \
-  base::bindRefChecker(FROM_HERE, CONST_REFERENCED(REF_NAME))
+  ::base::bindRefChecker(FROM_HERE, CONST_REFERENCED(REF_NAME))
 
 #if DCHECK_IS_ON()
 #define DEBUG_CONST_REF_CHECKER(PTR_NAME) \
@@ -49,7 +49,7 @@ class RefChecker
   GUARD_METHOD_ON_UNKNOWN_THREAD(RefChecker)
   explicit
   RefChecker(
-    const base::Location& location
+    const ::base::Location& location
     , U& ref)
     : ptr_(&ref)
     , location_(location)
@@ -75,8 +75,8 @@ class RefChecker
   RefChecker& operator=(
     RefChecker<RefType>&& other)
   {
-    ptr_ = base::rvalue_cast(other.ptr_);
-    location_ = base::rvalue_cast(other.location_);
+    ptr_ = ::base::rvalue_cast(other.ptr_);
+    location_ = ::base::rvalue_cast(other.location_);
     return *this;
   }
 
@@ -111,7 +111,7 @@ class RefChecker
  private:
   RefType* ptr_ = nullptr;
 
-  base::Location location_;
+  ::base::Location location_;
 
   // Object construction can be on any thread
   CREATE_METHOD_GUARD(RefChecker);
@@ -127,7 +127,7 @@ class RefChecker
 
 template <typename RefType>
 RefChecker<RefType> bindRefChecker(
-  const base::Location& location
+  const ::base::Location& location
   , std::reference_wrapper<RefType> ref)
 {
   return RefChecker<RefType>{location, ref.get()};

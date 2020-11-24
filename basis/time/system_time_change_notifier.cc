@@ -19,7 +19,7 @@ const int kLimitForMonitorPer10Sec = 600;  // 10 minutes
 }  // namespace
 
 SystemTimeChangeNotifier::SystemTimeChangeNotifier()
-    : observer_list_(new base::ObserverListThreadSafe<Observer>()) {}
+    : observer_list_(new ::base::ObserverListThreadSafe<Observer>()) {}
 
 SystemTimeChangeNotifier::~SystemTimeChangeNotifier() = default;
 
@@ -37,11 +37,11 @@ void SystemTimeChangeNotifier::NotifySystemTimeChanged() {
 
 SystemTimeChangeNotifierPeriodicMonitor::
 SystemTimeChangeNotifierPeriodicMonitor(
-    const scoped_refptr<base::SequencedTaskRunner>& task_runner)
+    const scoped_refptr<::base::SequencedTaskRunner>& task_runner)
     : task_runner_(task_runner),
       weak_factory_(this) {
   DCHECK(task_runner_);
-  base::Time now = Now();
+  ::base::Time now = Now();
   ResetTimeAndLimits(now);
   ScheduleNextMonitor(now);
 }
@@ -50,36 +50,36 @@ SystemTimeChangeNotifierPeriodicMonitor::
     ~SystemTimeChangeNotifierPeriodicMonitor() = default;
 
 void SystemTimeChangeNotifierPeriodicMonitor::ResetTimeAndLimits(
-    base::Time now) {
+    ::base::Time now) {
   // ScheduleNextMonitor() will adjust actual expected_system_time.
   expected_system_time_ = now;
   monitoring_limit_time_1sec_ =
-      now + base::TimeDelta::FromSeconds(kLimitForMonitorPer1Sec);
+      now + ::base::TimeDelta::FromSeconds(kLimitForMonitorPer1Sec);
   monitoring_limit_time_10sec_ =
       monitoring_limit_time_1sec_ +
-      base::TimeDelta::FromSeconds(kLimitForMonitorPer10Sec);
+      ::base::TimeDelta::FromSeconds(kLimitForMonitorPer10Sec);
 }
 
 void SystemTimeChangeNotifierPeriodicMonitor::ScheduleNextMonitor(
-    base::Time now) {
-  base::TimeDelta next_checking_interval =
-      now <= monitoring_limit_time_1sec_ ? base::TimeDelta::FromSeconds(1) :
-      now <= monitoring_limit_time_10sec_ ? base::TimeDelta::FromSeconds(10) :
-      base::TimeDelta::FromMinutes(10);
+    ::base::Time now) {
+  ::base::TimeDelta next_checking_interval =
+      now <= monitoring_limit_time_1sec_ ? ::base::TimeDelta::FromSeconds(1) :
+      now <= monitoring_limit_time_10sec_ ? ::base::TimeDelta::FromSeconds(10) :
+      ::base::TimeDelta::FromMinutes(10);
   // Adjusting expected_system_time based on now cannot detect continuous system
   // time drift (false negative), but tolerates task delay (false positive).
   // Task delay is expected more than system time drift.
   expected_system_time_ = now + next_checking_interval;
   task_runner_->PostDelayedTask(
       FROM_HERE,
-      base::BindOnce(&SystemTimeChangeNotifierPeriodicMonitor::CheckSystemTime,
+      ::base::BindOnce(&SystemTimeChangeNotifierPeriodicMonitor::CheckSystemTime,
                      weak_factory_.GetWeakPtr()),
       next_checking_interval);
 }
 
 void SystemTimeChangeNotifierPeriodicMonitor::CheckSystemTime() {
-  base::Time now = Now();
-  const base::TimeDelta kInterval10Seconds(base::TimeDelta::FromSeconds(10));
+  ::base::Time now = Now();
+  const ::base::TimeDelta kInterval10Seconds(base::TimeDelta::FromSeconds(10));
   if (now < expected_system_time_ - kInterval10Seconds ||
       now > expected_system_time_ + kInterval10Seconds) {  // Time changed!
     ResetTimeAndLimits(now);
@@ -91,7 +91,7 @@ void SystemTimeChangeNotifierPeriodicMonitor::CheckSystemTime() {
 base::Time SystemTimeChangeNotifierPeriodicMonitor::Now() const {
   if (!fake_now_.is_null())
     return fake_now_;
-  return base::Time::Now();
+  return ::base::Time::Now();
 }
 
 }  // namespace basis

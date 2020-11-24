@@ -195,11 +195,11 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
   return
     somePromise()
   .ThenHere(FROM_HERE,
-    base::BindOnce(
+    ::base::BindOnce(
       /// \note returns promise,
       /// so we will wait for NESTED promise
       &PostPromiseAsio<
-        base::OnceClosure
+        ::base::OnceClosure
       >
       , FROM_HERE
       /// \note |doStartSessionAcceptor| callback
@@ -283,7 +283,7 @@ auto PostPromiseOnAsioContext(const Location& from_here
 template <template <typename> class CallbackType,
           typename TaskReturnType,
           typename = EnableIfIsBaseCallback<CallbackType>>
-scoped_refptr<base::internal::AbstractPromise>
+scoped_refptr<::base::internal::AbstractPromise>
   promisifySynchronousTask(
     const Location& from_here,
     CallbackType<TaskReturnType()> task,
@@ -314,14 +314,14 @@ scoped_refptr<base::internal::AbstractPromise>
         << from_here.ToString();
   }
 
-  scoped_refptr<base::internal::AbstractPromise> promise =
-    base::internal::AbstractPromise::CreateNoPrerequisitePromise(
-        from_here, base::RejectPolicy::kMustCatchRejection,
-        base::internal::DependentList::ConstructUnresolved(),
-        base::internal::PromiseExecutor::Data(
-          base::in_place_type_t<
-              base::internal::PostTaskExecutor<TaskReturnType>>(),
-          base::internal::ToCallbackBase(
+  scoped_refptr<::base::internal::AbstractPromise> promise =
+    ::base::internal::AbstractPromise::CreateNoPrerequisitePromise(
+        from_here, ::base::RejectPolicy::kMustCatchRejection,
+        ::base::internal::DependentList::ConstructUnresolved(),
+        ::base::internal::PromiseExecutor::Data(
+          ::base::in_place_type_t<
+              ::base::internal::PostTaskExecutor<TaskReturnType>>(),
+          ::base::internal::ToCallbackBase(
             std::move(task)
           )));
   return promise;
@@ -334,54 +334,54 @@ scoped_refptr<base::internal::AbstractPromise>
 // USAGE
 //
 //  VoidPromise promise
-//    = base::PostPromise(FROM_HERE
+//    = ::base::PostPromise(FROM_HERE
 //        , periodicAsioTaskRunner_.get()
-//        , base::BindOnce(
+//        , ::base::BindOnce(
 //          &ExampleServer::deletePeriodicAsioExecutor
-//          , base::Unretained(this)
+//          , ::base::Unretained(this)
 //        )
 //      );
-//  base::waitForPromiseResolve(
+//  ::base::waitForPromiseResolve(
 //    promise
-//    , base::ThreadPool::GetInstance()->
+//    , ::base::ThreadPool::GetInstance()->
 //        CreateSequencedTaskRunnerWithTraits(
-//          base::TaskTraits{
-//            base::TaskPriority::BEST_EFFORT
-//            , base::MayBlock()
-//            , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+//          ::base::TaskTraits{
+//            ::base::TaskPriority::BEST_EFFORT
+//            , ::base::MayBlock()
+//            , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
 //          }
 //      )
 //  );
 template <typename ResolveType>
 void waitForPromiseResolve(
-  const base::Location& from_here
-  , SHARED_LIFETIME() base::Promise<ResolveType, base::NoReject> promise
+  const ::base::Location& from_here
+  , SHARED_LIFETIME() ::base::Promise<ResolveType, ::base::NoReject> promise
   // `signal task runner` used to execute callback after promise resolving
-  , scoped_refptr<base::SequencedTaskRunner> signal_task_runner
-      = base::ThreadPool::GetInstance()->
+  , scoped_refptr<::base::SequencedTaskRunner> signal_task_runner
+      = ::base::ThreadPool::GetInstance()->
               CreateSequencedTaskRunnerWithTraits(
-                base::TaskTraits{
-                  base::TaskPriority::BEST_EFFORT
-                  , base::MayBlock()
-                  , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+                ::base::TaskTraits{
+                  ::base::TaskPriority::BEST_EFFORT
+                  , ::base::MayBlock()
+                  , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
                 }
             )
-  , const base::TimeDelta& wait_delta = base::TimeDelta::Max())
+  , const ::base::TimeDelta& wait_delta = ::base::TimeDelta::Max())
 {
-  base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
-    , base::WaitableEvent::InitialState::NOT_SIGNALED);
+  ::base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
+    , ::base::WaitableEvent::InitialState::NOT_SIGNALED);
 
   // `wait task runner` and `signal task runner`
   // must be different sequences to prevent deadlocks
   DCHECK(signal_task_runner
-    != base::MessageLoop::current()->task_runner());
+    != ::base::MessageLoop::current()->task_runner());
   DCHECK(signal_task_runner
-    != base::SequencedTaskRunnerHandle::Get());
+    != ::base::SequencedTaskRunnerHandle::Get());
 
   promise
   .ThenOn(signal_task_runner
      , from_here
-     , base::BindOnce(&base::WaitableEvent::Signal, base::Unretained(&event)));
+     , ::base::BindOnce(&base::WaitableEvent::Signal, ::base::Unretained(&event)));
 
   DVLOG(9)
     << "issued wait from "

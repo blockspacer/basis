@@ -28,7 +28,7 @@ enum ApplicationPathKeys {
 // returns path based on |ApplicationPathKeys|
 MUST_USE_RETURN_VALUE
 bool PathProvider(
-  int key, base::FilePath* result);
+  int key, ::base::FilePath* result);
 
 extern
 const char kAppPathDebugOutputDirectory[];
@@ -39,7 +39,7 @@ const char kAppPathTestOutputDirectory[];
 extern
 const char kAppPathContentDirectory[];
 
-// calls base::PathService::RegisterProvider
+// calls ::base::PathService::RegisterProvider
 void AddPathProvider();
 
 } // namespace basis

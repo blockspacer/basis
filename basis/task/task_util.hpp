@@ -23,9 +23,9 @@ namespace basis {
       std::function<void(base::OnceClosure&&)>
     >::type,
     typename std::decay<
-      base::OnceClosure
+      ::base::OnceClosure
     >::type> bindFrontOnceClosure(
-  base::OnceClosure&& task);
+  ::base::OnceClosure&& task);
 
 // converts `base::OnceCallback<T>` into
 // `std::function<...(...)>`
@@ -46,10 +46,10 @@ namespace basis {
       *(dp.data))
     , ::boost::asio::bind_executor(
         *perConnectionStrand_
-        , basis::bindFrontOnceCallback(
-            base::BindOnce(
+        , ::basis::bindFrontOnceCallback(
+            ::base::BindOnce(
               &WsChannel::onWrite
-              , base::Unretained(this)
+              , ::base::Unretained(this)
               , 1 /// \note `int` bound by `base::BindOnce`
           ))
       )
@@ -61,15 +61,15 @@ template<
   , class... Args
 >
 auto bindFrontOnceCallback(
-  base::OnceCallback<RetType(ArgsType...)>&& task
+  ::base::OnceCallback<RetType(ArgsType...)>&& task
   , Args&&... args)
 {
   using CallbackT
-    = base::OnceCallback<RetType(ArgsType...)>;
+    = ::base::OnceCallback<RetType(ArgsType...)>;
 
   // Extract properties from |task| callback.
   using CallbackTraits
-    = base::internal::CallbackTraits<std::decay_t<CallbackT>>;
+    = ::base::internal::CallbackTraits<std::decay_t<CallbackT>>;
   using ReturnType
     = typename CallbackTraits::ReturnType;
   using ArgType
@@ -91,41 +91,41 @@ auto bindFrontOnceCallback(
       , auto... passedArgs
     ) mutable {
       DCHECK(boundTask);
-      base::rvalue_cast(boundTask).Run(
+      ::base::rvalue_cast(boundTask).Run(
         std::forward<ArgsType>(passedArgs)...
       );
     }
-    , base::rvalue_cast(task)
+    , ::base::rvalue_cast(task)
     , std::forward<Args>(args)...
   );
 }
 
 bool RunsTasksInAnySequenceOf(
-  const std::vector<scoped_refptr<base::SequencedTaskRunner>>& task_runners
+  const std::vector<scoped_refptr<::base::SequencedTaskRunner>>& task_runners
   , bool dcheck_not_empty = true);
 
 // Posts |task| to |task_runner| and blocks until it is executed.
-void PostTaskAndWait(const base::Location& from_here
-  , base::SequencedTaskRunner* task_runner
-  , base::OnceClosure task);
+void PostTaskAndWait(const ::base::Location& from_here
+  , ::base::SequencedTaskRunner* task_runner
+  , ::base::OnceClosure task);
 
 // Redirects task to task runner.
 //
 // USAGE
 //
-//   base::OnceClosure task
-//     = base::internal::bindToTaskRunner(
+//   ::base::OnceClosure task
+//     = ::base::internal::bindToTaskRunner(
 //         FROM_HERE,
-//         base::BindOnce(
+//         ::base::BindOnce(
 //             &ExampleServer::doQuit
-//             , base::Unretained(this)),
-//         base::MessageLoop::current()->task_runner())
+//             , ::base::Unretained(this)),
+//         ::base::MessageLoop::current()->task_runner())
 BASE_EXPORT
 MUST_USE_RETURN_VALUE
 base::OnceClosure bindToTaskRunner(
-  const base::Location& from_here,
-  base::OnceClosure&& task,
-  scoped_refptr<base::SequencedTaskRunner> task_runner,
-  base::TimeDelta delay = base::TimeDelta()) NO_EXCEPTION;
+  const ::base::Location& from_here,
+  ::base::OnceClosure&& task,
+  scoped_refptr<::base::SequencedTaskRunner> task_runner,
+  ::base::TimeDelta delay = ::base::TimeDelta()) NO_EXCEPTION;
 
 } // namespace basis

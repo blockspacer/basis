@@ -167,7 +167,11 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/sequence_bound_flag.cc
   ${BASIS_DIR}/sequence_bound_flag.hpp
   #
-  ${BASIS_DIR}/ECS/components/parent_entity.hpp
+  ${BASIS_DIR}/fail_point/fail_point.hpp
+  ${BASIS_DIR}/fail_point/fail_point.cc
+  #
+  ${BASIS_DIR}/plug_point/plug_point.hpp
+  ${BASIS_DIR}/plug_point/plug_point.cc
   #
   ${BASIS_DIR}/ECS/components/parent_entity.hpp
   #

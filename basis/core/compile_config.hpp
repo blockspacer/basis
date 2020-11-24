@@ -79,7 +79,7 @@
 // namespace BASIS {
 // BASIS_NAMESPACE_BEGIN
 //
-// void Foo();  // BASIS::Foo().
+// void Foo();  // ::basis::Foo().
 //
 // BASIS_NAMESPACE_END
 // }  // namespace BASIS
@@ -545,7 +545,7 @@ static_assert(BASIS_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
 
 // BASIS_USES_STD_ANY
 //
-// Indicates whether BASIS::any is an alias for std::any.
+// Indicates whether ::basis::any is an alias for std::any.
 #if !defined(BASIS_OPTION_USE_STD_ANY)
 #error options.h is misconfigured.
 #elif BASIS_OPTION_USE_STD_ANY == 0 || \
@@ -560,7 +560,7 @@ static_assert(BASIS_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
 
 // BASIS_USES_STD_OPTIONAL
 //
-// Indicates whether BASIS::optional is an alias for std::optional.
+// Indicates whether ::basis::optional is an alias for std::optional.
 #if !defined(BASIS_OPTION_USE_STD_OPTIONAL)
 #error options.h is misconfigured.
 #elif BASIS_OPTION_USE_STD_OPTIONAL == 0 || \
@@ -575,7 +575,7 @@ static_assert(BASIS_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
 
 // BASIS_USES_STD_VARIANT
 //
-// Indicates whether BASIS::variant is an alias for std::variant.
+// Indicates whether ::basis::variant is an alias for std::variant.
 #if !defined(BASIS_OPTION_USE_STD_VARIANT)
 #error options.h is misconfigured.
 #elif BASIS_OPTION_USE_STD_VARIANT == 0 || \
@@ -590,7 +590,7 @@ static_assert(BASIS_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
 
 // BASIS_USES_STD_STRING_VIEW
 //
-// Indicates whether BASIS::string_view is an alias for std::string_view.
+// Indicates whether ::basis::string_view is an alias for std::string_view.
 #if !defined(BASIS_OPTION_USE_STD_STRING_VIEW)
 #error options.h is misconfigured.
 #elif BASIS_OPTION_USE_STD_STRING_VIEW == 0 || \

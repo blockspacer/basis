@@ -17,7 +17,7 @@ public:
   ~ScopedLogRunTime();
 
 private:
-  std::unique_ptr<base::ElapsedTimer> timer_;
+  std::unique_ptr<::base::ElapsedTimer> timer_;
 
   DISALLOW_COPY_AND_ASSIGN(ScopedLogRunTime);
 };

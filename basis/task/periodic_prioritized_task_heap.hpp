@@ -24,7 +24,7 @@ namespace basis {
 // All tasks posted via the PeriodicPrioritizedTaskHeap
 // will run in priority order.
 class PeriodicPrioritizedTaskHeap
-  : public base::RefCountedThreadSafe<PeriodicPrioritizedTaskHeap>
+  : public ::base::RefCountedThreadSafe<PeriodicPrioritizedTaskHeap>
 {
  public:
   // Highest priority will run before other priority values.
@@ -32,7 +32,7 @@ class PeriodicPrioritizedTaskHeap
 
   PeriodicPrioritizedTaskHeap();
 
-  typedef base::RepeatingCallback<
+  typedef ::base::RepeatingCallback<
       void(
         const std::chrono::nanoseconds& current_frame_elapsed_dt
         , const std::chrono::nanoseconds& last_call_elapsed_dt
@@ -45,7 +45,7 @@ class PeriodicPrioritizedTaskHeap
   // Multiple tasks with the same |priority| value are run in
   // order of posting.
   void ScheduleTask(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , Callback task
     , uint32_t priority
     , const std::chrono::nanoseconds& interval);
@@ -57,7 +57,7 @@ class PeriodicPrioritizedTaskHeap
     const std::chrono::nanoseconds& current_frame_elapsed_dt);
 
  private:
-  friend class base::RefCountedThreadSafe<PeriodicPrioritizedTaskHeap>;
+  friend class ::base::RefCountedThreadSafe<PeriodicPrioritizedTaskHeap>;
 
   /// \note from |base::RefCounted| docs:
   /// You should always make your destructor non-public,
@@ -66,7 +66,7 @@ class PeriodicPrioritizedTaskHeap
   ~PeriodicPrioritizedTaskHeap();
 
   struct Job {
-    Job(const base::Location& from_here,
+    Job(const ::base::Location& from_here,
         Callback task,
         uint32_t priority,
         uint32_t task_count,
@@ -77,12 +77,12 @@ class PeriodicPrioritizedTaskHeap
     Job(Job&& other);
     Job& operator=(Job&& other);
 
-    base::Location from_here;
+    ::base::Location from_here;
     Callback task;
     uint32_t priority = 0;
     uint32_t task_count = 0;
     uint32_t iteration = 0;
-    basis::IntervalTimer timer;
+    ::basis::IntervalTimer timer;
 
    private:
     DISALLOW_COPY_AND_ASSIGN(Job);

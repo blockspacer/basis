@@ -28,7 +28,7 @@
 
 #include <string>
 
-namespace util {
+namespace basis {
 
 const ErrorSpace* PosixErrorSpace();
 
@@ -36,4 +36,4 @@ inline Status PosixErrorToStatus(int code, const std::string& message) {
   return Status(PosixErrorSpace(), code, message);
 }
 
-}  // namespace util
+}  // namespace basis

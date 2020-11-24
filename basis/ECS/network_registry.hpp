@@ -39,7 +39,7 @@ public:
   ~NetworkRegistry();
 
   using TaskRunnerType
-    = scoped_refptr<base::SequencedTaskRunner>;
+    = scoped_refptr<::base::SequencedTaskRunner>;
 
   SET_WEAK_SELF(NetworkRegistry)
 
@@ -54,7 +54,7 @@ public:
   /// we just want to force user to use `base::Optional`
   template<typename Type, typename... Args>
   MUST_USE_RETURN_VALUE
-  base::Optional<typename Type::value_type> & reset_or_create_component(
+  ::base::Optional<typename Type::value_type> & reset_or_create_component(
     const std::string debug_name
     , ECS::Entity tcp_entity_id
     , Args &&... args)
@@ -66,19 +66,19 @@ public:
     DCHECK_RUN_ON_SEQUENCED_RUNNER(taskRunner_.get());
 
     const bool useCache
-      = registry_.has<base::Optional<typename Type::value_type>>(tcp_entity_id);
+      = registry_.has<::base::Optional<typename Type::value_type>>(tcp_entity_id);
 
     DVLOG(99)
       << (useCache
           ? ("using preallocated " + debug_name)
           : ("allocating new " + debug_name));
 
-    base::Optional<typename Type::value_type>& result
+    ::base::Optional<typename Type::value_type>& result
       = useCache
         /// \todo use get_or_emplace
-        ? registry_.get<base::Optional<typename Type::value_type>>(tcp_entity_id)
-        : registry_.emplace<base::Optional<typename Type::value_type>>(tcp_entity_id
-            , base::in_place
+        ? registry_.get<::base::Optional<typename Type::value_type>>(tcp_entity_id)
+        : registry_.emplace<::base::Optional<typename Type::value_type>>(tcp_entity_id
+            , ::base::in_place
             , std::forward<Args>(args)...);
 
     // If the value already exists it is overwritten

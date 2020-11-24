@@ -66,13 +66,13 @@ class AppRunners {
 
 #if defined(ENABLE_APP_NON_BLOCK_IO_RUNNER)
     // This is the thread runner that processes non-blocking I/O, i.e. IPC and network.
-    // Blocking I/O should happen in base::ThreadPool. It is joined on shutdown
+    // Blocking I/O should happen in ::base::ThreadPool. It is joined on shutdown
     // (and thus any task posted to it may block shutdown).
     NON_BLOCK_IO,
 #endif // defined(ENABLE_APP_NON_BLOCK_IO_RUNNER)
 
     // NOTE: do not add new threads here. Instead you should just use
-    // base::ThreadPool::Create*TaskRunner to run tasks on the base::ThreadPool.
+    // ::base::ThreadPool::Create*TaskRunner to run tasks on the ::base::ThreadPool.
 
     // This identifier does not represent a thread.  Instead it counts the
     // number of well-known threads.  Insert new well-known threads before this
@@ -81,14 +81,14 @@ class AppRunners {
   };
 
  public:
-  static scoped_refptr<base::SequencedTaskRunner>
+  static scoped_refptr<::base::SequencedTaskRunner>
     getTaskRunner(
       AppRunners::ID identifier) WARN_UNUSED_RESULT;
 
   // register task runner globally with key
   static void
     registerGlobalTaskRunner(const AppRunners::ID& identifier
-      , scoped_refptr<base::SequencedTaskRunner> task_runner);
+      , scoped_refptr<::base::SequencedTaskRunner> task_runner);
 
   // Callable on any thread runner.
   // Returns whether you're currently on a particular thread runner.
@@ -114,8 +114,8 @@ class AppRunners {
 // Returns true if the task may be
 // run at some point in the future, and false if the task definitely
 // will not be run.
-bool runOrPostTaskOn(const base::Location& location
+bool runOrPostTaskOn(const ::base::Location& location
   , AppRunners::ID id
-  , base::OnceClosure task);
+  , ::base::OnceClosure task);
 
 }  // namespace application

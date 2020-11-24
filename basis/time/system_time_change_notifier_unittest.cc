@@ -22,21 +22,21 @@ namespace basis {
 
 namespace {
 
-class SequencedTaskRunnerNoDelay : public base::SequencedTaskRunner {
+class SequencedTaskRunnerNoDelay : public ::base::SequencedTaskRunner {
  public:
   SequencedTaskRunnerNoDelay() {}
 
-  // base::SequencedTaskRunner implementation:
-  bool PostDelayedTask(const base::Location& from_here,
-                       base::OnceClosure task,
-                       base::TimeDelta delay) override {
-    base::ThreadTaskRunnerHandle::Get()->PostTask(from_here, std::move(task));
+  // ::base::SequencedTaskRunner implementation:
+  bool PostDelayedTask(const ::base::Location& from_here,
+                       ::base::OnceClosure task,
+                       ::base::TimeDelta delay) override {
+    ::base::ThreadTaskRunnerHandle::Get()->PostTask(from_here, std::move(task));
     return true;
   }
 
-  bool PostNonNestableDelayedTask(const base::Location& from_here,
-                                  base::OnceClosure task,
-                                  base::TimeDelta delay) override {
+  bool PostNonNestableDelayedTask(const ::base::Location& from_here,
+                                  ::base::OnceClosure task,
+                                  ::base::TimeDelta delay) override {
     return true;
   }
 
@@ -78,13 +78,13 @@ class SystemTimeChangeNotifierTest : public testing::Test {
 
   // Runs pending tasks. It doesn't run tasks schedule after this call.
   void RunPendingTasks() {
-    base::RunLoop run_loop;
-    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
+    ::base::RunLoop run_loop;
+    ::base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
                                                   run_loop.QuitClosure());
     run_loop.Run();
   }
 
-  base::test::SingleThreadTaskEnvironment task_environment_;
+  ::base::test::SingleThreadTaskEnvironment task_environment_;
   std::unique_ptr<SystemTimeChangeNotifierPeriodicMonitor> notifier_;
   std::unique_ptr<TimeChangeObserver> observer_;
 };
@@ -98,11 +98,11 @@ TEST_F(SystemTimeChangeNotifierTest, NotChanged) {
 }
 
 TEST_F(SystemTimeChangeNotifierTest, TimeChangedForwardLessThan10Seconds) {
-  base::Time now = base::Time::Now();
+  ::base::Time now = ::base::Time::Now();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change NOT detected.
-  notifier_->set_fake_now_for_testing(now + base::TimeDelta::FromSeconds(4));
+  notifier_->set_fake_now_for_testing(now + ::base::TimeDelta::FromSeconds(4));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
   RunPendingTasks();
@@ -110,11 +110,11 @@ TEST_F(SystemTimeChangeNotifierTest, TimeChangedForwardLessThan10Seconds) {
 }
 
 TEST_F(SystemTimeChangeNotifierTest, TimeChangedBackwardLessThan10Seconds) {
-  base::Time now = base::Time::Now();
+  ::base::Time now = ::base::Time::Now();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change NOT detected.
-  notifier_->set_fake_now_for_testing(now - base::TimeDelta::FromSeconds(4));
+  notifier_->set_fake_now_for_testing(now - ::base::TimeDelta::FromSeconds(4));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
   RunPendingTasks();
@@ -122,10 +122,10 @@ TEST_F(SystemTimeChangeNotifierTest, TimeChangedBackwardLessThan10Seconds) {
 }
 
 TEST_F(SystemTimeChangeNotifierTest, TimeChangedForwardMoreThan10Seconds) {
-  base::Time now = base::Time::Now();
+  ::base::Time now = ::base::Time::Now();
   EXPECT_EQ(0, observer_->num_time_changed());
 
-  notifier_->set_fake_now_for_testing(now + base::TimeDelta::FromSeconds(40));
+  notifier_->set_fake_now_for_testing(now + ::base::TimeDelta::FromSeconds(40));
   RunPendingTasks();
   // Still 0 since observe callback is running in next run loop.
   EXPECT_EQ(0, observer_->num_time_changed());
@@ -135,10 +135,10 @@ TEST_F(SystemTimeChangeNotifierTest, TimeChangedForwardMoreThan10Seconds) {
 }
 
 TEST_F(SystemTimeChangeNotifierTest, TimeChangedBackwardMoreThan10Seconds) {
-  base::Time now = base::Time::Now();
+  ::base::Time now = ::base::Time::Now();
   EXPECT_EQ(0, observer_->num_time_changed());
 
-  notifier_->set_fake_now_for_testing(now - base::TimeDelta::FromSeconds(40));
+  notifier_->set_fake_now_for_testing(now - ::base::TimeDelta::FromSeconds(40));
   RunPendingTasks();
   // Still 0 since observe callback is running in next run loop.
   EXPECT_EQ(0, observer_->num_time_changed());
@@ -148,61 +148,61 @@ TEST_F(SystemTimeChangeNotifierTest, TimeChangedBackwardMoreThan10Seconds) {
 }
 
 TEST_F(SystemTimeChangeNotifierTest, CannotDetectTimeDriftForward) {
-  base::Time now = base::Time::Now();
+  ::base::Time now = ::base::Time::Now();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change NOT detected. Expected = now + 1, actual = now + 4.
-  notifier_->set_fake_now_for_testing(now + base::TimeDelta::FromSeconds(4));
+  notifier_->set_fake_now_for_testing(now + ::base::TimeDelta::FromSeconds(4));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change NOT detected. Expected = now + 4 + 1, actual = now + 8.
-  notifier_->set_fake_now_for_testing(now + base::TimeDelta::FromSeconds(8));
+  notifier_->set_fake_now_for_testing(now + ::base::TimeDelta::FromSeconds(8));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change NOT detected. Expected = now + 8 + 1, actual = now + 12.
-  notifier_->set_fake_now_for_testing(now + base::TimeDelta::FromSeconds(12));
+  notifier_->set_fake_now_for_testing(now + ::base::TimeDelta::FromSeconds(12));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change detected. Expected = now + 12 + 1, actual = now + 16.
-  notifier_->set_fake_now_for_testing(now + base::TimeDelta::FromSeconds(16));
+  notifier_->set_fake_now_for_testing(now + ::base::TimeDelta::FromSeconds(16));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change detected. Expected = now + 16 + 1, actual = now + 20.
-  notifier_->set_fake_now_for_testing(now + base::TimeDelta::FromSeconds(20));
+  notifier_->set_fake_now_for_testing(now + ::base::TimeDelta::FromSeconds(20));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 }
 
 TEST_F(SystemTimeChangeNotifierTest, CannotDetectTTimeDriftBackward) {
-  base::Time now = base::Time::Now();
+  ::base::Time now = ::base::Time::Now();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change NOT detected. Expected = now + 1, actual = now - 4.
-  notifier_->set_fake_now_for_testing(now - base::TimeDelta::FromSeconds(4));
+  notifier_->set_fake_now_for_testing(now - ::base::TimeDelta::FromSeconds(4));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change NOT detected. Expected = now - 4 + 1, actual = now - 8.
-  notifier_->set_fake_now_for_testing(now - base::TimeDelta::FromSeconds(8));
+  notifier_->set_fake_now_for_testing(now - ::base::TimeDelta::FromSeconds(8));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change detected. Expected = now - 8 + 1, actual = now - 12.
-  notifier_->set_fake_now_for_testing(now - base::TimeDelta::FromSeconds(12));
+  notifier_->set_fake_now_for_testing(now - ::base::TimeDelta::FromSeconds(12));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change detected. Expected = now - 12 + 1, actual = now - 16.
-  notifier_->set_fake_now_for_testing(now - base::TimeDelta::FromSeconds(16));
+  notifier_->set_fake_now_for_testing(now - ::base::TimeDelta::FromSeconds(16));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 
   // Time change detected. Expected = now - 20 + 1, actual = now - 20.
-  notifier_->set_fake_now_for_testing(now - base::TimeDelta::FromSeconds(20));
+  notifier_->set_fake_now_for_testing(now - ::base::TimeDelta::FromSeconds(20));
   RunPendingTasks();
   EXPECT_EQ(0, observer_->num_time_changed());
 }

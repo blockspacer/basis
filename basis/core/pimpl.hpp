@@ -85,7 +85,7 @@
 
 /// \note If you can't detect proper |Size| and |Alignment|,
 /// than compile your app once and search for error message similar to
-/// |pimpl::SizePolicy::Exact>::validate<1, 1>|
+/// |basis::SizePolicy::Exact>::validate<1, 1>|
 /// where |<1, 1>| - proper |Size| and |Alignment|
 
 // Pimpl (Private IMPLemenation) is a class used to
@@ -128,7 +128,7 @@
 // private:
 //   class FooImpl;
 //
-//   pimpl::FastPimpl<
+//   ::basis::FastPimpl<
 //       FooImpl
 //       , /*Size*/1
 //       , /*Alignment*/1
@@ -162,6 +162,8 @@
 //   return m_impl->foo();
 // }
 
+namespace basis {
+
 namespace pimpl {
   /// \note with SizePolicy::Exact your code becomes less portable,
   /// because different compilers may use different sizes and alignments
@@ -175,6 +177,7 @@ namespace pimpl {
     Exact,  // Alignment == alignof(T)
     AtLeast // Alignment >= alignof(T)
   };
+} // namespace pimpl
 
   /// \note Compiler cannot know the size and alignment requirements,
   /// so we must choose them manually.
@@ -191,8 +194,8 @@ namespace pimpl {
       typename T
       , size_t Size
       , size_t Alignment
-      , SizePolicy SizePolicyType = SizePolicy::Exact
-      , AlignPolicy AlignPolicyType = AlignPolicy::Exact
+      , pimpl::SizePolicy SizePolicyType = pimpl::SizePolicy::Exact
+      , pimpl::AlignPolicy AlignPolicyType = pimpl::AlignPolicy::Exact
     >
   class FastPimpl {
 
@@ -229,13 +232,13 @@ namespace pimpl {
     static
     void static_validate() noexcept
     {
-      if constexpr (AlignPolicyType == AlignPolicy::AtLeast)
+      if constexpr (AlignPolicyType == pimpl::AlignPolicy::AtLeast)
       {
         static_assert(
           Alignment >= ActualAlignment
           , "Pimpl: Alignment must be at least alignof(T)");
       }
-      else if constexpr (AlignPolicyType == AlignPolicy::Exact)
+      else if constexpr (AlignPolicyType == pimpl::AlignPolicy::Exact)
       {
         static_assert(
           Alignment == ActualAlignment
@@ -248,13 +251,13 @@ namespace pimpl {
         static_assert(dependent_false<T>::value);
       }
 
-      if constexpr (SizePolicyType == SizePolicy::AtLeast)
+      if constexpr (SizePolicyType == pimpl::SizePolicy::AtLeast)
       {
         static_assert(
           Size >= ActualSize
           , "Pimpl: sizeof(T) must be at least 'Size'");
       }
-      else if constexpr (SizePolicyType == SizePolicy::Exact)
+      else if constexpr (SizePolicyType == pimpl::SizePolicy::Exact)
       {
         static_assert(
           Size == ActualSize
@@ -286,14 +289,14 @@ namespace pimpl {
     static
     void debug_runtime_validate() noexcept
     {
-      if constexpr (AlignPolicyType == AlignPolicy::AtLeast)
+      if constexpr (AlignPolicyType == pimpl::AlignPolicy::AtLeast)
       {
         assert(Alignment >= ActualAlignment
           && "Pimpl: Alignment must be at least alignof(T)"
           && " Alignment:" &&  Alignment
           && " alignment_of<T>:" &&  std::alignment_of<T>::value);
       }
-      else if constexpr (AlignPolicyType == AlignPolicy::Exact)
+      else if constexpr (AlignPolicyType == pimpl::AlignPolicy::Exact)
       {
         assert(Alignment == ActualAlignment
           && "Pimpl: Alignment must be at exactly alignof(T)"
@@ -306,14 +309,14 @@ namespace pimpl {
           && "Wrong AlignPolicy");
       }
 
-      if constexpr (SizePolicyType == SizePolicy::AtLeast)
+      if constexpr (SizePolicyType == pimpl::SizePolicy::AtLeast)
       {
         assert(Size >= ActualSize
           && "Pimpl: sizeof(T) must be at least 'Size'"
           && " Size:" && Size
           && " sizeof<T>:" && sizeof(T));
       }
-      else if constexpr (SizePolicyType == SizePolicy::Exact)
+      else if constexpr (SizePolicyType == pimpl::SizePolicy::Exact)
       {
         assert(Size == ActualSize
           && "Pimpl: sizeof(T) must be exactly 'Size'"
@@ -538,4 +541,4 @@ private:
     std::aligned_storage_t<Size, Alignment> storage_;
   };
 
-} // namespace pimpl
+} // namespace basis

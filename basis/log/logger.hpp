@@ -67,7 +67,7 @@ namespace log {
 //  std::string log_default_id_ = "";
 //};
 
-bool VlogIsOnForLocation(const base::Location& from_here, int verbose_level);
+bool VlogIsOnForLocation(const ::base::Location& from_here, int verbose_level);
 
 } // namespace log
 } // namespace gloer

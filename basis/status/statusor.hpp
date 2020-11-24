@@ -49,7 +49,7 @@
 //
 //  StatusOr<Foo*> FooFactory::MakeNewFoo(int arg) {
 //    if (arg <= 0) {
-//      return ::util::Status(::util::error::INVALID_ARGUMENT,
+//      return ::basis::Status(::basis::error::INVALID_ARGUMENT,
 //                            "Arg must be positive");
 //    } else {
 //      return new Foo(arg);
@@ -66,7 +66,7 @@
 
 #include <base/logging.h>
 
-namespace util {
+namespace basis {
 
 template <typename T>
 class MUST_USE_RESULT StatusOr {
@@ -87,7 +87,7 @@ class MUST_USE_RESULT StatusOr {
   // REQUIRES: status != Status::OK. This requirement is DCHECKed.
   // In optimized builds, passing Status::OK here will have the effect
   // of passing PosixErrorSpace::EINVAL as a fallback.
-  StatusOr(const ::util::Status& status);  // NOLINT
+  StatusOr(const ::basis::Status& status);  // NOLINT
 
   // Construct a new StatusOr with the given value. If T is a plain pointer,
   // value must not be NULL. After calling this constructor, calls to
@@ -146,7 +146,7 @@ class MUST_USE_RESULT StatusOr {
 
   // Returns a reference to our status. If this contains a T, then
   // returns Status::OK.
-  const ::util::Status& status() const;
+  const ::basis::Status& status() const;
 
   // Returns this->status().ok()
   bool ok() const;
@@ -280,7 +280,7 @@ class MUST_USE_RESULT StatusOr {
   void EnsureNotOk();
 
  private:
-  ::util::Status status_;
+  ::basis::Status status_;
   T value_;
 };
 
@@ -292,9 +292,9 @@ namespace internal {
 class StatusOrHelper {
  public:
   // Move type-agnostic error handling to the .cc.
-  static ::util::Status HandleInvalidStatusCtorArg();
-  static ::util::Status HandleNullObjectCtorArg();
-  static void Crash(const ::util::Status& status);
+  static ::basis::Status HandleInvalidStatusCtorArg();
+  static ::basis::Status HandleNullObjectCtorArg();
+  static void Crash(const ::basis::Status& status);
 
   // Customized behavior for StatusOr<T> vs. StatusOr<T*>
   template <typename T>
@@ -316,10 +316,10 @@ struct StatusOrHelper::Specialize<T*> {
 
 template <typename T>
 inline StatusOr<T>::StatusOr()
-    : status_(::util::Status::UNKNOWN), value_() {}
+    : status_(::basis::Status::UNKNOWN), value_() {}
 
 template <typename T>
-inline StatusOr<T>::StatusOr(const ::util::Status& status)
+inline StatusOr<T>::StatusOr(const ::basis::Status& status)
     : status_(status), value_() {
   if (status_.ok()) {
     status_ = internal::StatusOrHelper::HandleInvalidStatusCtorArg();
@@ -328,7 +328,7 @@ inline StatusOr<T>::StatusOr(const ::util::Status& status)
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const T& value)
-    : status_(::util::Status::OK), value_(value) {
+    : status_(::basis::Status::OK), value_(value) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value_)) {
     status_ = internal::StatusOrHelper::HandleNullObjectCtorArg();
   }
@@ -350,7 +350,7 @@ inline StatusOr<T>& StatusOr<T>::operator=(const StatusOr<U>& other) {
 #ifndef SWIG
 template <typename T>
 inline StatusOr<T>::StatusOr(T&& value)
-    : status_(::util::Status::OK), value_(std::move(value)) {
+    : status_(::basis::Status::OK), value_(std::move(value)) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value_)) {
     status_ = internal::StatusOrHelper::HandleNullObjectCtorArg();
   }
@@ -373,7 +373,7 @@ inline StatusOr<T>& StatusOr<T>::operator=(StatusOr<U>&& other) {
 #endif  // SWIG
 
 template <typename T>
-inline const ::util::Status& StatusOr<T>::status() const {
+inline const ::basis::Status& StatusOr<T>::status() const {
   return status_;
 }
 
@@ -410,9 +410,9 @@ inline void StatusOr<T>::EnsureNotOk() {
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os,
-  const ::util::StatusOr<T>& x) {
+  const ::basis::StatusOr<T>& x) {
   os << x.status().ToString();
   return os;
 }
 
-}  // namespace util
+}  // namespace basis

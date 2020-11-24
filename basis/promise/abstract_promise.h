@@ -532,12 +532,12 @@ class BASE_EXPORT AbstractPromise
   void OnCanceled();
 
  private:
-  friend base::RefCountedThreadSafe<AbstractPromise>;
+  friend ::base::RefCountedThreadSafe<AbstractPromise>;
 
   friend class AbstractPromiseTest;
 
   template <typename ResolveType, typename RejectType>
-  friend class base::ManualPromiseResolver;
+  friend class ::base::ManualPromiseResolver;
 
   template <typename T, typename... Args>
   friend class PromiseCallbackHelper;
@@ -736,7 +736,7 @@ class BASE_EXPORT AbstractPromise
     DoubleMoveDetector(const Location& from_here, const char* callback_type);
 
     void CheckForDoubleMoveErrors(
-        const base::Location& new_dependent_location,
+        const ::base::Location& new_dependent_location,
         PromiseExecutor::ArgumentPassingType new_dependent_executor_type);
 
    private:
@@ -820,7 +820,7 @@ class BASE_EXPORT BasePromise {
 
 }  // namespace internal
 
-// Wrapper around scoped_refptr<base::internal::AbstractPromise> which is
+// Wrapper around scoped_refptr<::base::internal::AbstractPromise> which is
 // intended for use by TaskRunner implementations.
 class BASE_EXPORT WrappedPromise {
  public:

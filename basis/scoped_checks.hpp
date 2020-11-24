@@ -92,7 +92,7 @@ struct LOCKABLE AnnotateLockable
 class SCOPED_LOCKABLE SequenceCheckerScope {
  public:
   explicit SequenceCheckerScope(
-    const base::SequenceChecker* thread_like_object)
+    const ::base::SequenceChecker* thread_like_object)
       EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
 
   SequenceCheckerScope(
@@ -104,7 +104,7 @@ class SCOPED_LOCKABLE SequenceCheckerScope {
   ~SequenceCheckerScope() UNLOCK_FUNCTION() {}
 
   static bool CalledOnValidSequence(
-    const base::SequenceChecker* thread_like_object)
+    const ::base::SequenceChecker* thread_like_object)
   {
     return thread_like_object->CalledOnValidSequence();
   }
@@ -114,7 +114,7 @@ class SCOPED_LOCKABLE SequenceCheckerScope {
 class SCOPED_LOCKABLE SequencedTaskRunnerScope {
  public:
   explicit SequencedTaskRunnerScope(
-    const base::SequencedTaskRunner* thread_like_object)
+    const ::base::SequencedTaskRunner* thread_like_object)
       EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
 
   SequencedTaskRunnerScope(
@@ -126,7 +126,7 @@ class SCOPED_LOCKABLE SequencedTaskRunnerScope {
   ~SequencedTaskRunnerScope() UNLOCK_FUNCTION() {}
 
   static bool RunsTasksInCurrentSequence(
-    const base::SequencedTaskRunner* thread_like_object)
+    const ::base::SequencedTaskRunner* thread_like_object)
   {
     return thread_like_object->RunsTasksInCurrentSequence();
   }
@@ -136,7 +136,7 @@ class SCOPED_LOCKABLE SequencedTaskRunnerScope {
 // See http://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 template <typename Executor>
 using AnnotatedStrand
-  = basis::AnnotateLockable<
+  = ::basis::AnnotateLockable<
       ::boost::asio::strand<Executor>
     >;
 
@@ -145,7 +145,7 @@ class SCOPED_LOCKABLE StrandCheckerScope {
  public:
   template <typename Executor>
   explicit StrandCheckerScope(
-    const basis::AnnotateLockable<boost::asio::strand<Executor>>* thread_like_object)
+    const ::basis::AnnotateLockable<boost::asio::strand<Executor>>* thread_like_object)
       EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
 
   StrandCheckerScope(
@@ -263,7 +263,7 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 
 // Type of `x` is `base::SequenceChecker*`
 #define DCHECK_RUN_ON(x)                                              \
-  basis::SequenceCheckerScope seq_check_scope(x); \
+  ::basis::SequenceCheckerScope seq_check_scope(x); \
   DCHECK((x)); \
   DCHECK((x)->CalledOnValidSequence())
 
@@ -271,7 +271,7 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 //
 // USAGE
 //
-// scoped_refptr<base::SequencedTaskRunner> periodicVerifyRunner_
+// scoped_refptr<::base::SequencedTaskRunner> periodicVerifyRunner_
 //   // It safe to read value from any thread because its storage
 //   // expected to be not modified (if properly initialized)
 //   GUARD_WITH_FAKE_LOCK(periodicVerifyRunner_);
@@ -280,7 +280,7 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 // DCHECK(periodicVerifyRunner_);
 // DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicVerifyRunner_.get());
 #define DCHECK_RUN_ON_SEQUENCED_RUNNER(x)                                              \
-  basis::SequencedTaskRunnerScope seq_task_runner_scope(x); \
+  ::basis::SequencedTaskRunnerScope seq_task_runner_scope(x); \
   DCHECK((x)); \
   DCHECK((x)->RunsTasksInCurrentSequence())
 
@@ -295,14 +295,14 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 //   = ::boost::asio::strand<ExecutorType>;
 //
 // // |stream_| and calls to |async_*| are guarded by strand
-// basis::AnnotatedStrand<ExecutorType> perConnectionStrand_
+// ::basis::AnnotatedStrand<ExecutorType> perConnectionStrand_
 //   SET_CUSTOM_THREAD_GUARD_WITH_CHECK(
 //     perConnectionStrand_
 //     // 1. It safe to read value from any thread
 //     // because its storage expected to be not modified.
 //     // 2. On each access to strand check that stream valid
 //     // otherwise `::boost::asio::post` may fail.
-//     , base::BindRepeating(
+//     , ::base::BindRepeating(
 //       [
 //       ](
 //         bool is_stream_valid
@@ -321,7 +321,7 @@ class SCOPED_LOCKABLE StrandCheckerScope {
 // DCHECK_RUN_ON_STRAND(&perConnectionStrand_, ExecutorType);
 //
 #define DCHECK_RUN_ON_STRAND(x, Type)                                              \
-  basis::StrandCheckerScope strand_check_scope(x); \
+  ::basis::StrandCheckerScope strand_check_scope(x); \
   DCHECK((x)); \
   DCHECK((x)->data.running_in_this_thread())
 
@@ -416,11 +416,11 @@ class LOCKABLE
   using RunType = R(Args...);
 
   FakeLockWithCheck(
-    const base::RepeatingCallback<RunType>& callback)
+    const ::base::RepeatingCallback<RunType>& callback)
     : callback_(callback) {}
 
   FakeLockWithCheck(
-    base::RepeatingCallback<RunType>&& callback)
+    ::base::RepeatingCallback<RunType>&& callback)
     : callback_(base::rvalue_cast(callback)) {}
 
   MUST_USE_RETURN_VALUE
@@ -438,7 +438,7 @@ class LOCKABLE
   }
 
  private:
-  base::RepeatingCallback<RunType> callback_;
+  ::base::RepeatingCallback<RunType> callback_;
 
   DISALLOW_COPY_AND_ASSIGN(FakeLockWithCheck);
 };
@@ -452,15 +452,15 @@ class LOCKABLE
 //
 //    using FakeLockRunType = bool();
 //
-//    using FakeLockPolicy = basis::FakeLockPolicyDebugOnly;
+//    using FakeLockPolicy = ::basis::FakeLockPolicyDebugOnly;
 //
 //    MUST_USE_RETURN_VALUE
-//    base::WeakPtr<Listener> weakSelf() const NO_EXCEPTION
+//    ::base::WeakPtr<Listener> weakSelf() const NO_EXCEPTION
 //    {
 //      /// \note `FakeLockPolicySkip` will NOT perform any checks.
 //      /// No need to check thread-safety because `weak_this_`
 //      /// can be passed safely between threads if not modified.
-//      basis::ScopedFakeLockWithCheck<basis::FakeLockPolicySkip, FakeLockRunType>
+//      ::basis::ScopedFakeLockWithCheck<basis::FakeLockPolicySkip, FakeLockRunType>
 //        auto_lock(fakeLockToSequence_, FROM_HERE);
 //
 //      // It is thread-safe to copy |base::WeakPtr|.
@@ -477,15 +477,15 @@ class LOCKABLE
 //    // which is safe to do from any
 //    // thread according to weak_ptr.h (versus calling
 //    // |weak_ptr_factory_.GetWeakPtr() which is not).
-//    const base::WeakPtr<Listener> weak_this_
+//    const ::base::WeakPtr<Listener> weak_this_
 //      GUARDED_BY(fakeLockToSequence_);
 //
 //    /// \note It is not real lock, only annotated as lock.
 //    /// It just calls callback on scope entry AND exit.
-//    basis::FakeLockWithCheck<FakeLockRunType> fakeLockToSequence_{
-//        base::BindRepeating(
+//    ::basis::FakeLockWithCheck<FakeLockRunType> fakeLockToSequence_{
+//        ::base::BindRepeating(
 //          &base::SequenceChecker::CalledOnValidSequence
-//          , base::Unretained(&sequence_checker_)
+//          , ::base::Unretained(&sequence_checker_)
 //        )
 //    };
 //
@@ -509,7 +509,7 @@ class SCOPED_LOCKABLE
 
   ScopedFakeLockWithCheck(
     const FakeLockWithCheck<RunType>& lock
-    , base::Location from_here)
+    , ::base::Location from_here)
     EXCLUSIVE_LOCK_FUNCTION(lock)
     : lock_(lock)
     , from_here_(from_here)
@@ -554,15 +554,15 @@ class SCOPED_LOCKABLE
   /// \note take care of reference limetime
   const FakeLockWithCheck<RunType>& lock_;
 
-  base::Location from_here_;
+  ::base::Location from_here_;
 
   DISALLOW_COPY_AND_ASSIGN(ScopedFakeLockWithCheck);
 };
 
 #define CREATE_FAKE_THREAD_GUARD(Name) \
-  basis::FakeLockWithCheck<bool()> \
+  ::basis::FakeLockWithCheck<bool()> \
     Name { \
-    basis::VerifyNothing::Repeatedly() \
+    ::basis::VerifyNothing::Repeatedly() \
   }
 
 // Per-variable alternative to `GUARDED_BY`
@@ -574,7 +574,7 @@ class SCOPED_LOCKABLE
   CREATE_FAKE_THREAD_GUARD(Name)
 
 #define CREATE_FAKE_THREAD_GUARD_WITH_CHECK(Name, Callback) \
-  basis::FakeLockWithCheck<bool()> \
+  ::basis::FakeLockWithCheck<bool()> \
     Name { \
     Callback \
   }
@@ -590,10 +590,10 @@ class SCOPED_LOCKABLE
 #define CREATE_RECURSIVE_THREAD_COLLISION_GUARD(Name, MutexName) \
   DFAKE_MUTEX(MutexName); \
   CREATE_FAKE_THREAD_GUARD_WITH_CHECK(Name \
-    , base::BindRepeating( \
+    , ::base::BindRepeating( \
       [ \
       ]( \
-        base::ThreadCollisionWarner& debug_collision_warner \
+        ::base::ThreadCollisionWarner& debug_collision_warner \
       ){ \
         DFAKE_SCOPED_RECURSIVE_LOCK(debug_collision_warner); \
         return true; \
@@ -635,7 +635,7 @@ class SCOPED_LOCKABLE
 // That allows to notice (find & debug & fix) code
 // that can be used from multiple threads.
 #define FAKE_CUSTOM_THREAD_GUARD(Name, Policy, Scope) \
-  basis::ScopedFakeLockWithCheck<\
+  ::basis::ScopedFakeLockWithCheck<\
     Policy\
     , Scope\
     , bool()\
@@ -646,8 +646,8 @@ class SCOPED_LOCKABLE
 // FakeLockCheckType::isWholeScope performs check on both scope enter and exit
 #define DCHECK_THREAD_GUARD_SCOPE(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
-    basis::FakeLockPolicyDebugOnly, \
-    basis::FakeLockCheckWholeScope)
+    ::basis::FakeLockPolicyDebugOnly, \
+    ::basis::FakeLockCheckWholeScope)
 
 // FakeLockCheckType::isEnterScope performs check only on scope enter
 //
@@ -658,22 +658,22 @@ class SCOPED_LOCKABLE
 //  DCHECK_THREAD_GUARD_SCOPE_ENTER(MEMBER_GUARD(perConnectionStrand_));
 #define DCHECK_THREAD_GUARD_SCOPE_ENTER(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
-    basis::FakeLockPolicyDebugOnly, \
-    basis::FakeLockCheckEnterScope)
+    ::basis::FakeLockPolicyDebugOnly, \
+    ::basis::FakeLockCheckEnterScope)
 
 #define GUARD_MEMBER_DISALLOW_THREAD_COLLISION(Name) \
   SET_THREAD_COLLISION_GUARD(MEMBER_GUARD(Name))
 
 // USAGE
 //
-//  basis::AnnotatedStrand<ExecutorType> perConnectionStrand_
+//  ::basis::AnnotatedStrand<ExecutorType> perConnectionStrand_
 //    GUARD_MEMBER_WITH_CHECK(
 //      perConnectionStrand_
 //      // 1. It safe to read value from any thread
 //      // because its storage expected to be not modified.
 //      // 2. On each access to strand check that stream valid
 //      // otherwise `::boost::asio::post` may fail.
-//      , base::BindRepeating(
+//      , ::base::BindRepeating(
 //          [] \
 //          (HttpChannel* self) -> bool {
 //            DCHECK_THREAD_GUARD_SCOPE(self->guard_is_stream_valid_);
@@ -683,7 +683,7 @@ class SCOPED_LOCKABLE
 //            /// (it uses executor from stream).
 //            return self->is_stream_valid_.load();
 //          }
-//          , base::Unretained(this)
+//          , ::base::Unretained(this)
 //        )
 //    );
 #define GUARD_MEMBER_WITH_CHECK(Name, Callback) \
@@ -692,14 +692,14 @@ class SCOPED_LOCKABLE
 // FakeLockCheckType::isEnterScope performs check only on scope exit
 #define DCHECK_THREAD_GUARD_SCOPE_EXIT(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
-    basis::FakeLockPolicyDebugOnly, \
-    basis::FakeLockCheckExitScope)
+    ::basis::FakeLockPolicyDebugOnly, \
+    ::basis::FakeLockCheckExitScope)
 
 /// \note avoid `DCHECK_CUSTOM_THREAD_GUARD_NOTHING` if you can
 #define DCHECK_CUSTOM_THREAD_GUARD_NOTHING(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
-    basis::FakeLockPolicySkip, \
-    basis::FakeLockCheckExitScope)
+    ::basis::FakeLockPolicySkip, \
+    ::basis::FakeLockCheckExitScope)
 
 // Documents that variable allowed to be used from any thread
 // and you MUST take care of thread-safety somehow.

@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VERIBLE_COMMON_UTIL_TOP_N_H_
-#define VERIBLE_COMMON_UTIL_TOP_N_H_
+#pragma once
 
-#include <functional>  // for std::greater
-#include <queue>       // for std::priority_queue
+#include <functional>
+#include <queue>
 #include <vector>
 
-namespace verible {
+namespace basis {
 
 // Maintains a collection of best N elements, as determined by a comparator.
 // This class exists as a drop-in replacement for a similar library,
@@ -89,6 +88,4 @@ class TopN {
   Comp comp_;
 };
 
-}  // namespace verible
-
-#endif  // VERIBLE_COMMON_UTIL_TOP_N_H_
+}  // namespace basis

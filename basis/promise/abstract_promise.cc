@@ -166,12 +166,12 @@ void AbstractPromise::IgnoreUncaughtCatchForTesting() {
 
 // static
 CheckedLock& AbstractPromise::GetCheckedLock() {
-  static base::NoDestructor<CheckedLock> instance;
+  static ::base::NoDestructor<CheckedLock> instance;
   return *instance;
 }
 
 void AbstractPromise::DoubleMoveDetector::CheckForDoubleMoveErrors(
-    const base::Location& new_dependent_location,
+    const ::base::Location& new_dependent_location,
     PromiseExecutor::ArgumentPassingType new_dependent_executor_type) {
   switch (new_dependent_executor_type) {
     case PromiseExecutor::ArgumentPassingType::kNoCallback:
@@ -722,7 +722,7 @@ WrappedPromise::WrappedPromise(const Location& from_here, OnceClosure task)
           RejectPolicy::kMustCatchRejection,
           internal::DependentList::ConstructUnresolved(),
           internal::PromiseExecutor::Data(
-              base::in_place_type_t<internal::PostTaskExecutor<void>>(),
+              ::base::in_place_type_t<internal::PostTaskExecutor<void>>(),
               std::move(task)))) {}
 
 WrappedPromise::WrappedPromise(const WrappedPromise& other) = default;

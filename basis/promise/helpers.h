@@ -176,7 +176,7 @@ struct UseMoveSemantics<std::tuple<Ts...>>
 // Usage example:
 //
 //   using Traits = CallbackTraits<
-//       base::OnceCallback<PromiseResult<int, std::string>(float)>;
+//       ::base::OnceCallback<PromiseResult<int, std::string>(float)>;
 //
 //   Traits::
 //     ResolveType is int
@@ -335,7 +335,7 @@ struct EmplaceInnerHelper {
 };
 
 // TODO(alexclarke): Specialize |EmplaceInnerHelper| where RejectStorage is
-// base::Variant to support Promises::All.
+// ::base::Variant to support Promises::All.
 
 template <typename ResolveStorage, typename RejectStorage>
 struct EmplaceHelper {
@@ -596,11 +596,11 @@ struct RunHelper<RepeatingCallback<CbResult(CbArgs...)>,
 template <typename T, typename... Args>
 class PromiseCallbackHelper {
  public:
-  using Callback = base::OnceCallback<void(Args...)>;
-  using RepeatingCallback = base::RepeatingCallback<void(Args...)>;
+  using Callback = ::base::OnceCallback<void(Args...)>;
+  using RepeatingCallback = ::base::RepeatingCallback<void(Args...)>;
 
   static Callback GetResolveCallback(scoped_refptr<AbstractPromise>& promise) {
-    return base::BindOnce(
+    return ::base::BindOnce(
         [](scoped_refptr<AbstractPromise> promise, Args... args) {
           promise->emplace(in_place_type_t<Resolved<T>>(),
                            std::forward<Args>(args)...);
@@ -611,7 +611,7 @@ class PromiseCallbackHelper {
 
   static RepeatingCallback GetRepeatingResolveCallback(
       scoped_refptr<AbstractPromise>& promise) {
-    return base::BindRepeating(
+    return ::base::BindRepeating(
         [](scoped_refptr<AbstractPromise> promise, Args... args) {
           promise->emplace(in_place_type_t<Resolved<T>>(),
                            std::forward<Args>(args)...);
@@ -621,7 +621,7 @@ class PromiseCallbackHelper {
   }
 
   static Callback GetRejectCallback(scoped_refptr<AbstractPromise>& promise) {
-    return base::BindOnce(
+    return ::base::BindOnce(
         [](scoped_refptr<AbstractPromise> promise, Args... args) {
           promise->emplace(in_place_type_t<Rejected<T>>(),
                            std::forward<Args>(args)...);
@@ -632,7 +632,7 @@ class PromiseCallbackHelper {
 
   static RepeatingCallback GetRepeatingRejectCallback(
       scoped_refptr<AbstractPromise>& promise) {
-    return base::BindRepeating(
+    return ::base::BindRepeating(
         [](scoped_refptr<AbstractPromise> promise, Args... args) {
           promise->emplace(in_place_type_t<Rejected<T>>(),
                            std::forward<Args>(args)...);
@@ -727,14 +727,14 @@ template <typename Tuple, size_t... Indices>
 struct TupleConstructor<Tuple, std::index_sequence<Indices...>> {
   template <typename ArgType>
   static auto GetResolvedValueFromPromise(AbstractPromise* arg) {
-    using ResolvedType = base::Resolved<UndoToNonVoidT<ArgType>>;
+    using ResolvedType = ::base::Resolved<UndoToNonVoidT<ArgType>>;
     DCHECK(arg->IsSettled() && arg->IsResolved());
     return ArgMoveSemanticsHelper<ArgType, ResolvedType>::Get(arg);
   }
 
   template <typename ArgType>
   static auto GetOptionallyResolvedValueFromPromise(AbstractPromise* arg) {
-    using ResolvedType = base::Resolved<UndoToNonVoidT<ArgType>>;
+    using ResolvedType = ::base::Resolved<UndoToNonVoidT<ArgType>>;
     if(arg->IsSettled() && arg->IsResolved()) {
       return ArgMoveSemanticsHelper<ArgType, ResolvedType>::Get(arg);
     }
@@ -777,7 +777,7 @@ struct TupleCanResolveHelper<std::tuple<Ts...>> {
 template <typename ResolveT, typename RejectT>
 auto wrapPromiseIntoOnceCallback(Promise<ResolveT, RejectT> targetPromise)
 {
-  return base::BindOnce([
+  return ::base::BindOnce([
     ](
       // `Promise<>` has shared lifetime
       Promise<ResolveT, RejectT> target

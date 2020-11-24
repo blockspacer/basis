@@ -13,15 +13,15 @@ namespace base {
 //
 // {
 //   // ERROR: AddressSanitizer: stack-use-after-scope
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::bindCheckedOnce(
+//     , ::base::bindCheckedOnce(
 //         DEBUG_BIND_CHECKS(
 //           PTR_CHECKER(&tmpClass)
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
-//         , base::Passed(FROM_HERE))
+//         , ::base::Unretained(&tmpClass)
+//         , ::base::Passed(FROM_HERE))
 //   );
 //
 //   DVLOG(9)
@@ -31,7 +31,7 @@ namespace base {
 //     << " to detect `AddressSanitizer: stack-use-after-scope`";
 // }
 #define PTR_CHECKER(PTR_NAME) \
-  base::bindPtrChecker(FROM_HERE, PTR_NAME)
+  ::base::bindPtrChecker(FROM_HERE, PTR_NAME)
 
 #if DCHECK_IS_ON()
 #define DEBUG_PTR_CHECKER(PTR_NAME) \
@@ -49,7 +49,7 @@ class PtrChecker
   GUARD_METHOD_ON_UNKNOWN_THREAD(PtrChecker)
   explicit
   PtrChecker(
-    const base::Location& location
+    const ::base::Location& location
     , U* ptr)
     : ptr_(ptr)
     , location_(location)
@@ -75,8 +75,8 @@ class PtrChecker
   PtrChecker& operator=(
     PtrChecker<PtrType>&& other)
   {
-    ptr_ = base::rvalue_cast(other.ptr_);
-    location_ = base::rvalue_cast(other.location_);
+    ptr_ = ::base::rvalue_cast(other.ptr_);
+    location_ = ::base::rvalue_cast(other.location_);
     return *this;
   }
 
@@ -111,7 +111,7 @@ class PtrChecker
  private:
   PtrType* ptr_ = nullptr;
 
-  base::Location location_;
+  ::base::Location location_;
 
   // Object construction can be on any thread
   CREATE_METHOD_GUARD(PtrChecker);
@@ -127,7 +127,7 @@ class PtrChecker
 
 template <typename PtrType>
 PtrChecker<PtrType> bindPtrChecker(
-  const base::Location& location
+  const ::base::Location& location
   , PtrType* ptr)
 {
   return PtrChecker<PtrType>{location, ptr};

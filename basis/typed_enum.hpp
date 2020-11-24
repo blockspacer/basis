@@ -48,25 +48,25 @@
 //  // TypedEnumSize = 3
 //  DVLOG(9)
 //    << "TypedEnumSize = "
-//    << basis::typedEnumSize<MyEnum>();
+//    << ::basis::typedEnumSize<MyEnum>();
 //
 //  using MyEnumConstIterator
-//    = basis::TypedEnumConstIterator<MyEnum>;
+//    = ::basis::TypedEnumConstIterator<MyEnum>;
 //
 //  // prints:
 //  // iterated enum = kFoo with id = 0
 //  // found enum = kFoo with id = 0
 //  // iterated enum = kBar with id = 1
 //  // iterated enum = kBaz with id = 2
-//  for(MyEnumConstIterator iter = basis::typedEnumBegin<MyEnum>()
-//    ; iter != basis::typedEnumEnd<MyEnum>()
+//  for(MyEnumConstIterator iter = ::basis::typedEnumBegin<MyEnum>()
+//    ; iter != ::basis::typedEnumEnd<MyEnum>()
 //    ; iter++)
 //  {
 //    DVLOG(9)
 //      << "iterated enum = "
 //      << *iter
 //      << " with id = "
-//      << basis::underlying_type(*iter);
+//      << ::basis::underlying_type(*iter);
 //
 //    if(*iter == myEnum)
 //    {
@@ -74,18 +74,18 @@
 //        << "found enum = "
 //        << *iter
 //        << " with id = "
-//        << basis::underlying_type(*iter);
+//        << ::basis::underlying_type(*iter);
 //    }
 //  }
 //
 //  // use `TypedEnumHasher` as 3rd template-parameter of std::unordered_map
-//  const std::unordered_map<MyEnum, const char*, basis::TypedEnumHasher> kMyEnumMessage {
+//  const std::unordered_map<MyEnum, const char*, ::basis::TypedEnumHasher> kMyEnumMessage {
 //    { MyEnum::kFoo, "kFooMessage (not same as ToString(myEnum::kFoo))" },
 //    { MyEnum::kBar, "kBarMessage (not same as ToString(myEnum::kBar))" },
 //    { MyEnum::kBaz, "kBazMessage (not same as ToString(myEnum::kBaz))" },
 //  };
 //
-//  using MyEnumFlags = basis::TypedEnumBitSet<MyEnum>;
+//  using MyEnumFlags = ::basis::TypedEnumBitSet<MyEnum>;
 //
 //  MyEnumFlags myEnumFlags = MyEnumFlags();
 //  myEnumFlags.Set(MyEnum::kFoo);
@@ -140,7 +140,7 @@ ATTRIBUTE_NORETURN void LogInvalidEnumValue(
     const std::string& valueStr,
     Enum enumValue,
     const char* expressionStr,
-    const base::Location& location)
+    const ::base::Location& location)
 {
   LOG(ERROR)
       << location.ToString()
@@ -161,7 +161,7 @@ ATTRIBUTE_NORETURN void LogInvalidEnumValue(
 // USAGE
 //
 // // use `TypedEnumHasher` as 3rd template-parameter of std::unordered_map
-// const std::unordered_map<EnumCode, const char*, basis::TypedEnumHasher>
+// const std::unordered_map<EnumCode, const char*, ::basis::TypedEnumHasher>
 //   kErrorMessage
 // {
 //   { EnumCode::SUCCESS, "Success" },
@@ -198,7 +198,7 @@ template <typename Key>
 using UnorderedMapHashType
   = typename std::conditional<
       std::is_enum<Key>::value
-      , basis::TypedEnumHasher
+      , ::basis::TypedEnumHasher
       , std::hash<Key>
     >::type;
 
@@ -234,7 +234,7 @@ using TypedEnumUnorderedMap
 #define TYPED_ENUM_MAX_OP(s, data, x) \
     (TYPED_ENUM_MAX_ENUM_NAME data, \
      TYPED_ENUM_MAX_PREFIX data, \
-     basis::typed_enum_internal::constexprMax(TYPED_ENUM_MAX_VALUE data, TYPED_ENUM_MAX_ENUM_NAME data::TYPED_ENUM_ITEM_NAME(x)))
+     ::basis::typed_enum_internal::constexprMax(TYPED_ENUM_MAX_VALUE data, TYPED_ENUM_MAX_ENUM_NAME data::TYPED_ENUM_ITEM_NAME(x)))
 
 #define TYPED_ENUM_IMPL(enum_name, enum_type, prefix, list) \
   enum class enum_name : enum_type \
@@ -343,7 +343,7 @@ using TypedEnumUnorderedMap
 template <class EnumType>
 class TypedEnumBitSetIterator {
  public:
-  typedef basis::TypedEnumConstIterator<EnumType> ImplIterator;
+  typedef ::basis::TypedEnumConstIterator<EnumType> ImplIterator;
   typedef std::bitset<basis::typedEnumSize<EnumType>()> BitSet;
 
   TypedEnumBitSetIterator(
@@ -377,7 +377,7 @@ class TypedEnumBitSetIterator {
  private:
   void FindNextSetBit()
   {
-    while (iter_ != basis::typedEnumEnd<EnumType>()
+    while (iter_ != ::basis::typedEnumEnd<EnumType>()
            && !set_->test(underlying_type(*iter_)))
     {
       ++iter_;
@@ -411,8 +411,8 @@ class TypedEnumBitSet {
   {
     for (auto i : inp) {
       DCHECK(underlying_type(i) >= 0
-        && base::checked_cast<size_t>(underlying_type(i))
-            < basis::typedEnumSize<EnumType>());
+        && ::base::checked_cast<size_t>(underlying_type(i))
+            < ::basis::typedEnumSize<EnumType>());
       impl_.set(underlying_type(i));
     }
   }
@@ -420,8 +420,8 @@ class TypedEnumBitSet {
   bool Test(EnumType value) const
   {
     DCHECK(underlying_type(value) >= 0
-      && base::checked_cast<size_t>(underlying_type(value))
-           < basis::typedEnumSize<EnumType>());
+      && ::base::checked_cast<size_t>(underlying_type(value))
+           < ::basis::typedEnumSize<EnumType>());
     return impl_.test(underlying_type(value));
   }
 
@@ -455,8 +455,8 @@ class TypedEnumBitSet {
   TypedEnumBitSet& Set(EnumType value)
   {
     DCHECK(underlying_type(value) >= 0
-      && base::checked_cast<size_t>(underlying_type(value))
-           < basis::typedEnumSize<EnumType>());
+      && ::base::checked_cast<size_t>(underlying_type(value))
+           < ::basis::typedEnumSize<EnumType>());
     impl_.set(underlying_type(value));
     return *this;
   }
@@ -465,8 +465,8 @@ class TypedEnumBitSet {
   TypedEnumBitSet& Unset(EnumType value)
   {
     DCHECK(underlying_type(value) >= 0
-      && base::checked_cast<size_t>(underlying_type(value))
-           < basis::typedEnumSize<EnumType>());
+      && ::base::checked_cast<size_t>(underlying_type(value))
+           < ::basis::typedEnumSize<EnumType>());
     impl_.reset(underlying_type(value));
     return *this;
   }
@@ -475,8 +475,8 @@ class TypedEnumBitSet {
   TypedEnumBitSet& Flip(EnumType value)
   {
     DCHECK(underlying_type(value) >= 0
-      && base::checked_cast<size_t>(underlying_type(value))
-           < basis::typedEnumSize<EnumType>());
+      && ::base::checked_cast<size_t>(underlying_type(value))
+           < ::basis::typedEnumSize<EnumType>());
     impl_.flip(underlying_type(value));
     return *this;
   }

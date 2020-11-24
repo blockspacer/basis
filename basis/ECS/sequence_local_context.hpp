@@ -40,14 +40,14 @@ namespace ECS {
 // Inspired by entt context, see for details:
 // https://github.com/skypjack/entt/wiki/Crash-Course:-entity-component-system
 class SequenceLocalContext
-  : public base::RefCountedThreadSafe<SequenceLocalContext>
+  : public ::base::RefCountedThreadSafe<SequenceLocalContext>
 {
  public:
-  static base::WeakPtr<SequenceLocalContext>
+  static ::base::WeakPtr<SequenceLocalContext>
     getSequenceLocalInstance(
-      const base::Location& from_here
+      const ::base::Location& from_here
       // will be used in `DCHECK(task_runner.RunsTasksInCurrentSequence());`
-      , scoped_refptr<base::SequencedTaskRunner> task_runner);
+      , scoped_refptr<::base::SequencedTaskRunner> task_runner);
 
   UnsafeTypeContext& context()
   {
@@ -75,7 +75,7 @@ class SequenceLocalContext
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   Component& ctx(
-    const base::Location& from_here)
+    const ::base::Location& from_here)
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_)
       << "Unable to use global context from wrong thread "
@@ -96,7 +96,7 @@ class SequenceLocalContext
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   bool try_ctx(
-    const base::Location& from_here)
+    const ::base::Location& from_here)
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_)
       << "Unable to use global context from wrong thread "
@@ -120,7 +120,7 @@ class SequenceLocalContext
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
-  Type& set_once(const base::Location& from_here
+  Type& set_once(const ::base::Location& from_here
     , const std::string& debug_name
     , Args&&... args)
   {
@@ -145,7 +145,7 @@ class SequenceLocalContext
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
-  void unset(const base::Location& from_here)
+  void unset(const ::base::Location& from_here)
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_)
       << "Unable to use global context from wrong thread "
@@ -163,7 +163,7 @@ class SequenceLocalContext
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
-  void try_unset(const base::Location& from_here)
+  void try_unset(const ::base::Location& from_here)
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_)
       << "Unable to use global context from wrong thread "
@@ -188,9 +188,9 @@ class SequenceLocalContext
  private:
   UnsafeTypeContext context_{};
 
-  base::WeakPtrFactory<SequenceLocalContext> weak_ptr_factory_{this};
+  ::base::WeakPtrFactory<SequenceLocalContext> weak_ptr_factory_{this};
 
-  friend class base::RefCountedThreadSafe<SequenceLocalContext>;
+  friend class ::base::RefCountedThreadSafe<SequenceLocalContext>;
 
   SEQUENCE_CHECKER(sequence_checker_);
 

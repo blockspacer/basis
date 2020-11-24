@@ -12,21 +12,21 @@
 
 namespace {
 
-static base::FilePath GetOrCreateDirectory(application::paths::AppPathId path_id)
+static ::base::FilePath GetOrCreateDirectory(application::paths::AppPathId path_id)
 {
   std::unique_ptr<char[]> path(new char[PLATFORM_FILE_MAX_PATH]);
   path[0] = '\0';
   if (application::paths::AppGetPath(
        path_id, path.get(), PLATFORM_FILE_MAX_PATH))
   {
-    base::FilePath directory(path.get());
+    ::base::FilePath directory(path.get());
     if (base::PathExists(directory)
-        || base::CreateDirectory(directory))
+        || ::base::CreateDirectory(directory))
     {
       return directory;
     }
   }
-  return base::FilePath();
+  return ::base::FilePath();
 }
 
 }  // namespace
@@ -35,13 +35,13 @@ namespace application {
 
 namespace paths {
 
-bool PathProvider(int key, base::FilePath* result)
+bool PathProvider(int key, ::base::FilePath* result)
 {
   DCHECK(result);
 
   switch (key) {
     case paths::DIR_APP_DEBUG_OUT: {
-      base::FilePath directory =
+      ::base::FilePath directory =
           GetOrCreateDirectory(kAppPathDebugOutputDirectory);
       if (!directory.empty()) {
         *result = directory;
@@ -56,7 +56,7 @@ bool PathProvider(int key, base::FilePath* result)
 
     case paths::DIR_APP_TEST_OUT:
       {
-        base::FilePath directory =
+        ::base::FilePath directory =
             GetOrCreateDirectory(kAppPathTestOutputDirectory);
         if (!directory.empty()) {
           *result = directory;
@@ -70,12 +70,12 @@ bool PathProvider(int key, base::FilePath* result)
       }
 
     case paths::DIR_APP_WEB_ROOT: {
-      base::FilePath directory =
+      ::base::FilePath directory =
           GetOrCreateDirectory(kAppPathContentDirectory);
       if (!directory.empty()) {
         *result = directory.Append("web");
         const bool dir_created
-          = base::CreateDirectory(*result);
+          = ::base::CreateDirectory(*result);
         if(!dir_created){
           DLOG(ERROR)
             << "Unable to create directory "

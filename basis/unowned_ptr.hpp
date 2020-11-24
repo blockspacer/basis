@@ -34,7 +34,7 @@
 // because an unowned ptr expresses a one to one relationship with some
 // other heap object.
 
-namespace util {
+namespace basis {
 
 template <class Type>
 class UnownedPtr
@@ -253,4 +253,4 @@ inline bool operator!=(const U* lhs, const UnownedPtr<Type>& rhs)
   return rhs != lhs;
 }
 
-}  // namespace util
+}  // namespace basis

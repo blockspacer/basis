@@ -24,7 +24,7 @@ inline CheckedMegabytes bytesToMegabytes(CheckedBytes bytes)
 {
   CheckedMegabytes result(bytes.ValueOrDie());
   using type = CheckedMegabytes::type;
-  result >>= base::saturated_cast<type>(20UL);
+  result >>= ::base::saturated_cast<type>(20UL);
   return result;
 }
 
@@ -37,7 +37,7 @@ inline CheckedBytes kilobytesToBytes(CheckedKilobytes kilobytes)
 {
   CheckedBytes result(kilobytes.ValueOrDie());
   using type = CheckedBytes::type;
-  result <<= base::saturated_cast<type>(10UL);
+  result <<= ::base::saturated_cast<type>(10UL);
   return result;
 }
 
@@ -50,7 +50,7 @@ inline CheckedBytes megabytesToBytes(CheckedMegabytes megabytes)
 {
   CheckedBytes result(megabytes.ValueOrDie());
   using type = CheckedBytes::type;
-  result <<= base::saturated_cast<type>(20UL);
+  result <<= ::base::saturated_cast<type>(20UL);
   return result;
 }
 
@@ -63,7 +63,7 @@ inline CheckedBytes gigabytesToBytes(CheckedGigabytes gigabytes)
 {
   CheckedBytes result(gigabytes.ValueOrDie());
   using type = CheckedBytes::type;
-  result <<= base::saturated_cast<type>(30UL);
+  result <<= ::base::saturated_cast<type>(30UL);
   return result;
 }
 

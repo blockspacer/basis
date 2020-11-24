@@ -11,14 +11,14 @@ ApplicationStateObserver::ApplicationStateObserver() = default;
 ApplicationStateObserver::~ApplicationStateObserver() = default;
 
 #define STATE_STRING(state)                                             \
-  base::StringPrintf("%s (%d)", \
+  ::base::StringPrintf("%s (%d)", \
     application::GetApplicationStateString(state), \
     static_cast<int>(state))
 
 ApplicationStateManager::ApplicationStateManager()
-  : observers_(new base::ObserverListThreadSafe<ApplicationStateObserver>())
+  : observers_(new ::base::ObserverListThreadSafe<ApplicationStateObserver>())
   //, app_loaded_(base::WaitableEvent::ResetPolicy::MANUAL,
-  //              base::WaitableEvent::InitialState::NOT_SIGNALED)
+  //              ::base::WaitableEvent::InitialState::NOT_SIGNALED)
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
 

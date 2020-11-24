@@ -26,34 +26,34 @@ void perSequenceClearTimeBeforeCallbackExecution();
 // class TmpClass
 // {
 //  public:
-//   void TestMe(const base::Location& location)
+//   void TestMe(const ::base::Location& location)
 //   {
 //     // ok: EXEC_TIME_LIMIT_CHECKER < Seconds(2)
-//     base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(2));
+//     ::base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(2));
 //   }
 // };
 // {
-//   base::RepeatingCallback<void(const base::Location& location)> repCb
-//     = base::bindCheckedRepeating(
+//   ::base::RepeatingCallback<void(const ::base::Location& location)> repCb
+//     = ::base::bindCheckedRepeating(
 //         DEBUG_BIND_CHECKS(
 //           EXEC_TIME_LIMIT_CHECKER(base::TimeDelta::FromSeconds(3))
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
+//         , ::base::Unretained(&tmpClass)
 //     );
 //
 //   repCb.Run(FROM_HERE);
 //
 //   task_runner->PostTask(
 //     FROM_HERE
-//     , base::BindOnce(
+//     , ::base::BindOnce(
 //         repCb
 //         , FROM_HERE
 //       )
 //   );
 // }
 #define EXEC_TIME_LIMIT_CHECKER(PARAM) \
-  base::bindExecTimeChecker(FROM_HERE, PARAM)
+  ::base::bindExecTimeChecker(FROM_HERE, PARAM)
 
 #if DCHECK_IS_ON()
 #define DEBUG_EXEC_TIME_LIMIT_CHECKER(PTR_NAME) \
@@ -66,14 +66,14 @@ void perSequenceClearTimeBeforeCallbackExecution();
 class ExecTimeChecker
 {
  public:
-  static constexpr base::TimeDelta kMinExecTime = base::TimeDelta::Min();
+  static constexpr ::base::TimeDelta kMinExecTime = ::base::TimeDelta::Min();
 
-  static constexpr base::TimeDelta kMaxExecTime = base::TimeDelta::Max();
+  static constexpr ::base::TimeDelta kMaxExecTime = ::base::TimeDelta::Max();
 
   GUARD_METHOD_ON_UNKNOWN_THREAD(ExecTimeChecker)
   ExecTimeChecker(
-    const base::Location& location
-    , const base::TimeDelta& limitExecTime)
+    const ::base::Location& location
+    , const ::base::TimeDelta& limitExecTime)
     : limitExecTime_(limitExecTime)
     , location_(location)
   {
@@ -98,8 +98,8 @@ class ExecTimeChecker
   ExecTimeChecker& operator=(
     ExecTimeChecker&& other)
   {
-    limitExecTime_ = base::rvalue_cast(other.limitExecTime_);
-    location_ = base::rvalue_cast(other.location_);
+    limitExecTime_ = ::base::rvalue_cast(other.limitExecTime_);
+    location_ = ::base::rvalue_cast(other.location_);
     return *this;
   }
 
@@ -116,15 +116,15 @@ class ExecTimeChecker
   {
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckAfterInvoker);
 
-    base::Time startExecTime
+    ::base::Time startExecTime
       = perSequenceGetTimeBeforeCallbackExecution();
 
-    base::TimeDelta elapsedTime
-      = base::TimeDelta(base::Time::Now() - startExecTime);
+    ::base::TimeDelta elapsedTime
+      = ::base::TimeDelta(base::Time::Now() - startExecTime);
 
     DCHECK_LE(elapsedTime, kMaxExecTime)
       << location_.ToString()
-      << " Unable to represent execution time in base::TimeDelta";
+      << " Unable to represent execution time in ::base::TimeDelta";
 
     DCHECK_GE(elapsedTime, kMinExecTime)
       << location_.ToString()
@@ -143,9 +143,9 @@ class ExecTimeChecker
   }
 
  private:
-  base::TimeDelta limitExecTime_;
+  ::base::TimeDelta limitExecTime_;
 
-  base::Location location_;
+  ::base::Location location_;
 
   // Object construction can be on any thread
   CREATE_METHOD_GUARD(ExecTimeChecker);
@@ -160,8 +160,8 @@ class ExecTimeChecker
 };
 
 ExecTimeChecker bindExecTimeChecker(
-  const base::Location& location
-  , const base::TimeDelta& val)
+  const ::base::Location& location
+  , const ::base::TimeDelta& val)
 {
   return ExecTimeChecker{
     location

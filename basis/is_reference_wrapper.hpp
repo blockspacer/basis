@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-namespace util {
+namespace basis {
 
 template <class T>
 struct is_reference_wrapper
@@ -12,4 +12,4 @@ template <class U>
 struct is_reference_wrapper<std::reference_wrapper<U> >
   : std::true_type {};
 
-}  // namespace util
+}  // namespace basis

@@ -12,9 +12,9 @@ namespace basis {
       std::function<void(base::OnceClosure&&)>
     >::type,
     typename std::decay<
-      base::OnceClosure
+      ::base::OnceClosure
     >::type> bindFrontOnceClosure(
-  base::OnceClosure&& task)
+  ::base::OnceClosure&& task)
 {
   // Because `std::bind` arg(s) are passed by value as Lvalues
   // we need to use `bind_front_handler`.
@@ -24,20 +24,20 @@ namespace basis {
   // https://stackoverflow.com/a/61422348
   return ::boost::beast::bind_front_handler<
     std::function<void(base::OnceClosure&&)>
-    , base::OnceClosure
+    , ::base::OnceClosure
   >([
     ](
-      base::OnceClosure&& boundTask
+      ::base::OnceClosure&& boundTask
     ) mutable {
       DCHECK(boundTask);
-      base::rvalue_cast(boundTask).Run();
+      ::base::rvalue_cast(boundTask).Run();
     }
-    , base::rvalue_cast(task)
+    , ::base::rvalue_cast(task)
   );
 }
 
 bool RunsTasksInAnySequenceOf(
-  const std::vector<scoped_refptr<base::SequencedTaskRunner> > &task_runners
+  const std::vector<scoped_refptr<::base::SequencedTaskRunner> > &task_runners
   , bool dcheck_not_empty)
 {
   DCHECK(dcheck_not_empty
@@ -52,12 +52,12 @@ bool RunsTasksInAnySequenceOf(
   return false;
 }
 
-void PostTaskAndWait(const base::Location& from_here
-  , base::SequencedTaskRunner* task_runner
-  , base::OnceClosure task)
+void PostTaskAndWait(const ::base::Location& from_here
+  , ::base::SequencedTaskRunner* task_runner
+  , ::base::OnceClosure task)
 {
-  base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
-    , base::WaitableEvent::InitialState::NOT_SIGNALED);
+  ::base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
+    , ::base::WaitableEvent::InitialState::NOT_SIGNALED);
   {
     bool ok = task_runner->PostTask(from_here, std::move(task));
     DCHECK(ok);
@@ -66,7 +66,7 @@ void PostTaskAndWait(const base::Location& from_here
     /// \note task will be executed
     /// after previous due to usage of |base::SequencedTaskRunner|
     bool ok = task_runner->PostTask(FROM_HERE,
-      base::BindOnce(&base::WaitableEvent::Signal, base::Unretained(&event)));
+      ::base::BindOnce(&base::WaitableEvent::Signal, ::base::Unretained(&event)));
     DCHECK(ok);
   }
   // The SequencedTaskRunner guarantees that
@@ -75,10 +75,10 @@ void PostTaskAndWait(const base::Location& from_here
 }
 
 base::OnceClosure bindToTaskRunner(
-  const base::Location& from_here,
-  base::OnceClosure&& task,
-  scoped_refptr<base::SequencedTaskRunner> task_runner,
-  base::TimeDelta delay) NO_EXCEPTION
+  const ::base::Location& from_here,
+  ::base::OnceClosure&& task,
+  scoped_refptr<::base::SequencedTaskRunner> task_runner,
+  ::base::TimeDelta delay) NO_EXCEPTION
 {
   DCHECK(task)
     << from_here.ToString();
@@ -86,13 +86,13 @@ base::OnceClosure bindToTaskRunner(
   DCHECK(task_runner)
     << from_here.ToString();
 
-  return base::BindOnce(
+  return ::base::BindOnce(
     [
     ](
-      const base::Location& from_here,
-      base::OnceClosure&& task,
-      scoped_refptr<base::SequencedTaskRunner> task_runner,
-      base::TimeDelta delay
+      const ::base::Location& from_here,
+      ::base::OnceClosure&& task,
+      scoped_refptr<::base::SequencedTaskRunner> task_runner,
+      ::base::TimeDelta delay
     ){
       if(task_runner->RunsTasksInCurrentSequence())
       {
@@ -106,7 +106,7 @@ base::OnceClosure bindToTaskRunner(
       );
     }
     , from_here
-    , base::Passed(std::move(task))
+    , ::base::Passed(std::move(task))
     , task_runner
     , delay
   );

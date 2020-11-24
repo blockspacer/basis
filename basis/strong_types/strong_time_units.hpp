@@ -24,7 +24,7 @@ inline CheckedSeconds millisecondsToSeconds(CheckedMilliseconds valMs)
 {
   CheckedSeconds result(valMs.ValueOrDie());
   using type = CheckedSeconds::type;
-  result /= base::saturated_cast<type>(1000UL);
+  result /= ::base::saturated_cast<type>(1000UL);
   return result;
 }
 

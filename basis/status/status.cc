@@ -18,17 +18,17 @@
 #include <base/synchronization/lock.h>
 #include <base/lazy_instance.h>
 
-namespace util {
+namespace basis {
 
 // Global registry
 typedef std::unordered_map<std::string, ErrorSpace*, std::hash<std::string> >
     ErrorSpaceTable;
 static ErrorSpaceTable* error_space_table;
 
-base::LazyInstance<base::Lock>::Leaky registry_lock_ =
+base::LazyInstance<::base::Lock>::Leaky registry_lock_ =
   LAZY_INSTANCE_INITIALIZER;
 
-base::LazyInstance<base::Lock>::Leaky init_lock_ =
+base::LazyInstance<::base::Lock>::Leaky init_lock_ =
   LAZY_INSTANCE_INITIALIZER;
 
 // Convert canonical code to a value known to this binary.
@@ -100,7 +100,7 @@ class GenericErrorSpace : public ErrorSpace {
     } else if (error::Code_IsValid(code)) {
       // Lower-case the protocol-compiler assigned name for compatibility
       // with old behavior.
-      status = base::ToLowerASCII(
+      status = ::base::ToLowerASCII(
           error::CodeEnumToString(static_cast<error::Code>(code)));
     } else {
       char buf[30];
@@ -110,7 +110,7 @@ class GenericErrorSpace : public ErrorSpace {
     return status;
   }
 
-  virtual error::Code CanonicalCode(const ::util::Status& status) const {
+  virtual error::Code CanonicalCode(const ::basis::Status& status) const {
     if (status.error_space() == Status::canonical_space()) {
       return MapToLocalCode(status.error_code());
     }
@@ -123,7 +123,7 @@ static const ErrorSpace* generic_space = nullptr;
 static const std::string* empty_string;
 
 static void InitModule() {
-  base::AutoLock initLock(init_lock_.Get());
+  ::base::AutoLock initLock(init_lock_.Get());
   if (initialized) return;
   initialized = true;
   generic_space = new GenericErrorSpace;
@@ -151,12 +151,12 @@ const std::string* Status::EmptyString() {
 // runs after InitChecker.
 struct InitChecker {
   InitChecker() {
-    Check(::util::Status::OK, 0, "", error::OK);
-    Check(::util::Status::CANCELLED, Status::CANCELLED_CODE, "",
+    Check(::basis::Status::OK, 0, "", error::OK);
+    Check(::basis::Status::CANCELLED, Status::CANCELLED_CODE, "",
           error::CANCELLED);
-    Check(::util::Status::UNKNOWN, Status::UNKNOWN_CODE, "", error::UNKNOWN);
+    Check(::basis::Status::UNKNOWN, Status::UNKNOWN_CODE, "", error::UNKNOWN);
   }
-  static void Check(const ::util::Status s, int code, const std::string& msg,
+  static void Check(const ::basis::Status s, int code, const std::string& msg,
                     error::Code canonical_code) {
     assert(s.ok() == (code == 0));
     assert(s.error_code() == code);
@@ -170,7 +170,7 @@ static InitChecker checker;
 
 // Representation for global objects.
 struct Status::Pod {
-  // Structured exactly like ::util::Status, but has no constructor so
+  // Structured exactly like ::basis::Status, but has no constructor so
   // it can be statically initialized
   Rep* rep_;
 };
@@ -315,7 +315,7 @@ void Status::InternalSet(const ErrorSpace* space, int code,
   }
 }
 
-bool Status::EqualsSlow(const ::util::Status& a, const ::util::Status& b) {
+bool Status::EqualsSlow(const ::basis::Status& a, const ::basis::Status& b) {
   if ((a.error_code() == b.error_code()) &&
       (a.error_space() == b.error_space()) &&
       (a.error_message() == b.error_message()) &&
@@ -332,7 +332,7 @@ std::string Status::ToString() const {
     status = "OK";
   } else {
     const ErrorSpace* const space = error_space();
-    status = base::StringPrintf(
+    status = ::base::StringPrintf(
         "%s::%s: %s"
         , space->SpaceName().c_str()
         , space->String(code).c_str()
@@ -359,7 +359,7 @@ Status Status::StripMessage() const {
 }
 
 ErrorSpace::ErrorSpace(const char* name) : name_(name) {
-  base::AutoLock l(registry_lock_.Get());
+  ::base::AutoLock l(registry_lock_.Get());
   if (error_space_table == nullptr) {
     error_space_table = new ErrorSpaceTable;
   }
@@ -367,7 +367,7 @@ ErrorSpace::ErrorSpace(const char* name) : name_(name) {
 }
 
 ErrorSpace::~ErrorSpace() {
-  base::AutoLock l(registry_lock_.Get());
+  ::base::AutoLock l(registry_lock_.Get());
   ErrorSpaceTable::iterator iter = error_space_table->find(name_);
   if (iter != error_space_table->end() && iter->second == this) {
     error_space_table->erase(iter);
@@ -378,7 +378,7 @@ ErrorSpace* ErrorSpace::Find(const std::string& name) {
   {
     InitModule();
   }
-  base::AutoLock l(registry_lock_.Get());
+  ::base::AutoLock l(registry_lock_.Get());
   if (error_space_table == nullptr) {
     return nullptr;
   } else {
@@ -403,6 +403,6 @@ std::string ErrorSpace::String(int code) const {
 // Register canoncial error space.
 // This forces InitModule to run.
 static const ErrorSpace* dummy __attribute__((unused)) =
-    ::util::Status::canonical_space();
+    ::basis::Status::canonical_space();
 
-}  // namespace util
+}  // namespace basis

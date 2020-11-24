@@ -5,12 +5,12 @@
 namespace basis {
 
 ScopedLogRunTime::ScopedLogRunTime()
-  : timer_(std::make_unique<base::ElapsedTimer>())
+  : timer_(std::make_unique<::base::ElapsedTimer>())
 {}
 
 basis::ScopedLogRunTime::~ScopedLogRunTime()
 {
-  base::TimeDelta elapsed_delta = timer_->Elapsed();
+  ::base::TimeDelta elapsed_delta = timer_->Elapsed();
 
   LOG(INFO)
     << "Done in : "

@@ -5,15 +5,15 @@
 #include <base/files/file_util.h>
 #include <base/i18n/icu_util.h>
 
-namespace icu_util {
+namespace basis {
 
-const base::FilePath::CharType kIcuDataFileName[]
+const ::base::FilePath::CharType kIcuDataFileName[]
   = FILE_PATH_LITERAL("./resources/icu/icudtl.dat");
 
 void initICUi18n(
-  const base::FilePath::CharType icuFileName[])
+  const ::base::FilePath::CharType icuFileName[])
 {
-  base::FilePath dir_exe;
+  ::base::FilePath dir_exe;
   if (!base::PathService::Get(base::DIR_EXE, &dir_exe)) {
     NOTREACHED();
   }
@@ -27,7 +27,7 @@ void initICUi18n(
       << dir_exe.Append(icuFileName);
   }
   bool icu_initialized
-    = base::i18n::InitializeICUWithPath(
+    = ::base::i18n::InitializeICUWithPath(
         dir_exe.Append(icuFileName));
   if(!icu_initialized) {
     LOG(WARNING)
@@ -36,4 +36,4 @@ void initICUi18n(
   }
 }
 
-}  // namespace icu_util
+}  // namespace basis

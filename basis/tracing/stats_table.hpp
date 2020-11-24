@@ -181,7 +181,7 @@ class BASE_EXPORT StatsTable {
   std::unique_ptr<StatsTable::Private> impl_;
 
   // The counters_lock_ protects the counters_ hash table.
-  base::Lock counters_lock_;
+  ::base::Lock counters_lock_;
 
   // The counters_ hash map is an in-memory hash of the counters.
   // It is used for quick lookup of counters, but is cannot be used

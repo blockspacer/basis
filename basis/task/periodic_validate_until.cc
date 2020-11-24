@@ -11,9 +11,9 @@ PeriodicValidateUntil::PeriodicValidateUntil()
 }
 
 PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
-  const base::Location& from_here
-  , basis::EndingTimeout&& debugEndingTimeout
-  , basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod
+  const ::base::Location& from_here
+  , ::basis::EndingTimeout&& debugEndingTimeout
+  , ::basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod
   , const std::string& errorText
   , ValidationTaskType&& validationTask)
 {
@@ -26,55 +26,55 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
   DCHECK(base::ThreadPool::GetInstance());
   // wait and signal on different task runners
   timeoutTaskRunner_ =
-    base::ThreadPool::GetInstance()->
+    ::base::ThreadPool::GetInstance()->
     CreateSequencedTaskRunnerWithTraits(
-      base::TaskTraits{
-        base::TaskPriority::BEST_EFFORT
-        , base::MayBlock()
-        , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+      ::base::TaskTraits{
+        ::base::TaskPriority::BEST_EFFORT
+        , ::base::MayBlock()
+        , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
       }
     );
 
   ignore_result(
-    base::PostPromise(from_here
+    ::base::PostPromise(from_here
       , timeoutTaskRunner_.get()
-      , base::BindOnce(
+      , ::base::BindOnce(
           // limit execution time
           &basis::setPeriodicTimeoutCheckerOnSequence
           , from_here
           , timeoutTaskRunner_
-          , base::Passed(base::rvalue_cast(debugEndingTimeout))
+          , ::base::Passed(base::rvalue_cast(debugEndingTimeout))
           // refresh period for (debug-only) execution time limiter
           , COPIED() checkPeriod
           , errorText))
   );
 
   periodicVerifyRunner_
-    = base::ThreadPool::GetInstance()->
+    = ::base::ThreadPool::GetInstance()->
       CreateSequencedTaskRunnerWithTraits(
-        base::TaskTraits{
-          base::TaskPriority::BEST_EFFORT
-          , base::MayBlock()
-          , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+        ::base::TaskTraits{
+          ::base::TaskPriority::BEST_EFFORT
+          , ::base::MayBlock()
+          , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
         }
       );
 
-  return base::PostPromise(
+  return ::base::PostPromise(
     from_here
     // Post our work to the strand, to prevent data race
     , periodicVerifyRunner_.get()
-    , base::BindOnce(
+    , ::base::BindOnce(
         &PeriodicValidateUntil::promiseValidationDone
-        , base::Unretained(this)
-        , base::Passed(base::rvalue_cast(validationTask))
+        , ::base::Unretained(this)
+        , ::base::Passed(base::rvalue_cast(validationTask))
           // refresh period for periodic validation
         , COPIED() checkPeriod
       )
-      , base::IsNestedPromise{true}
+      , ::base::IsNestedPromise{true}
   )
   .ThenOn(periodicVerifyRunner_
     , from_here
-    , base::BindOnce(&basis::unsetPeriodicTaskExecutorOnSequence)
+    , ::base::BindOnce(&basis::unsetPeriodicTaskExecutorOnSequence)
   )
   /// \note promise has shared lifetime,
   /// so we expect it to exist until (at least)
@@ -82,14 +82,14 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
   // reset check of execution time
   .ThenOn(timeoutTaskRunner_
     , from_here
-    , base::BindOnce(&basis::unsetPeriodicTimeoutCheckerOnSequence)
+    , ::base::BindOnce(&basis::unsetPeriodicTimeoutCheckerOnSequence)
   );
 }
 
 PeriodicValidateUntil::VoidPromise
   PeriodicValidateUntil::promiseValidationDone(
     ValidationTaskType&& validationTask
-    , basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod) NO_EXCEPTION
+    , ::basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod) NO_EXCEPTION
 {
   LOG_CALL(DVLOG(99));
 
@@ -99,27 +99,27 @@ PeriodicValidateUntil::VoidPromise
   DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicVerifyRunner_.get());
 
   // promise will be resolved when `validationTask.Run()` returns true
-  base::ManualPromiseResolver<
-      void, base::NoReject
-    > promiseResolver = base::ManualPromiseResolver<
-      void, base::NoReject
+  ::base::ManualPromiseResolver<
+      void, ::base::NoReject
+    > promiseResolver = ::base::ManualPromiseResolver<
+      void, ::base::NoReject
     >(FROM_HERE);
 
   // Bind `GetRepeatingResolveCallback` to passed `validation task`
   DCHECK(validationTask);
-  base::RepeatingClosure wrappedValidationTask
-    = base::BindRepeating(
+  ::base::RepeatingClosure wrappedValidationTask
+    = ::base::BindRepeating(
         validationTask
         , COPIED() promiseResolver.GetRepeatingResolveCallback()
     );
 
   // check periodically until `validationTask.Run()` returns true
-  basis::setPeriodicTaskExecutorOnSequence(
+  ::basis::setPeriodicTaskExecutorOnSequence(
     FROM_HERE
     , periodicVerifyRunner_
     , COPIED() wrappedValidationTask);
 
-  basis::startPeriodicTaskExecutorOnSequence(
+  ::basis::startPeriodicTaskExecutorOnSequence(
     checkPeriod.value());
 
   return promiseResolver.promise();

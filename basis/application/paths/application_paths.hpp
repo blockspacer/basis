@@ -7,12 +7,12 @@ namespace application {
 namespace paths {
 
 // The following keys are used to retreive application-specific paths using
-// base::PathService::Get().
+// ::base::PathService::Get().
 //
 // Example:
 // --------
-//   base::FilePath log_directory;
-//   base::PathService::Get(paths::DIR_APP_DEBUG_OUT, &log_directory);
+//   ::base::FilePath log_directory;
+//   ::base::PathService::Get(paths::DIR_APP_DEBUG_OUT, &log_directory);
 //
 
 enum ApplicationPathKeys {

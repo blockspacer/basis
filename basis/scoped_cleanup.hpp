@@ -20,7 +20,7 @@
 #include "base/macros.h"
 #include "base/logging.h"
 
-namespace util {
+namespace basis {
 
 /// \note see also basis/value_saver.h
 //
@@ -105,4 +105,4 @@ class ScopedCleanup final {
   DISALLOW_COPY_AND_ASSIGN(ScopedCleanup);
 };
 
-}  // namespace util
+}  // namespace basis

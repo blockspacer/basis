@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/util/spacer.h"
+#include "basis/log/spacer.hpp"
 
 #include <cstddef>
 #include <sstream>

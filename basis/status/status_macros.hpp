@@ -6,14 +6,14 @@
 // This library contains helper macros and methods to make returning errors
 // and propagating statuses easier.
 //
-// We use ::util::Status for error codes.  Methods that return status should
+// We use ::basis::Status for error codes.  Methods that return status should
 // have signatures like
-//   ::util::Status Method(arg, ...);
+//   ::basis::Status Method(arg, ...);
 // or
-//   ::util::StatusOr<ValueType> Method(arg, ...);
+//   ::basis::StatusOr<ValueType> Method(arg, ...);
 //
 // Inside the method, to return errors, use the macros
-//   RETURN_ERROR() << "Message with ::util::error::UNKNOWN code";
+//   RETURN_ERROR() << "Message with ::basis::error::UNKNOWN code";
 //   RETURN_ERROR(code_enum)
 //       << "Message with an error code, in that error_code's ErrorSpace "
 //       << "(See ErrorCodeOptions below)";
@@ -33,7 +33,7 @@
 // closure, or it gets run some other way to signal the RPC's termination.
 //   RETURN_RPC_IF_ERROR(rpc, method(args));
 //
-// Use this to propagate the status to a ::util::Task* instance
+// Use this to propagate the status to a ::basis::Task* instance
 // calling task->Return() with the status.
 //   RETURN_TASK_IF_ERROR(task, method(args));
 //
@@ -46,32 +46,32 @@
 // WARNING: ASSIGN_OR_RETURN expands into multiple statements; it cannot be used
 //  in a single statement (e.g. as the body of an if statement without {})!
 //
-// This can optionally be used to return ::util::Status::OK.
+// This can optionally be used to return ::basis::Status::OK.
 //   RETURN_OK();
 //
 // To construct an error without immediately returning it, use MAKE_ERROR,
 // which supports the same argument types as RETURN_ERROR.
-//   ::util::Status status = MAKE_ERROR(...) << "Message";
+//   ::basis::Status status = MAKE_ERROR(...) << "Message";
 //
 // To add additional text onto an existing error, use
-//   ::util::Status new_status = APPEND_ERROR(status) << ", additional details";
+//   ::basis::Status new_status = APPEND_ERROR(status) << ", additional details";
 //
-// These macros can also be assigned to a ::util::StatusOr variable:
-//   ::util::StatusOr<T> status_or = MAKE_ERROR(...) << "Message";
+// These macros can also be assigned to a ::basis::StatusOr variable:
+//   ::basis::StatusOr<T> status_or = MAKE_ERROR(...) << "Message";
 //
 // They can also be used to return from a function that returns
-// ::util::StatusOr:
-//   ::util::StatusOr<T> MyFunction() {
+// ::basis::StatusOr:
+//   ::basis::StatusOr<T> MyFunction() {
 //     RETURN_ERROR(...) << "Message";
 //   }
 //
 //
 // Error codes:
 //
-// Using error codes is optional.  ::util::error::UNKNOWN will be used if no
+// Using error codes is optional.  ::basis::error::UNKNOWN will be used if no
 // code is provided.
 //
-// By default, these macros work with canonical ::util::error::Code codes,
+// By default, these macros work with canonical ::basis::error::Code codes,
 // using the canonical ErrorSpace. These macros will also work with
 // project-specific ErrorSpaces and error code enums if a specialization
 // of ErrorCodeOptions is defined.
@@ -97,7 +97,7 @@
 // Assertion handling:
 //
 // When you would use a CHECK, CHECK_EQ, etc, you can instead use RET_CHECK
-// to return a ::util::Status if the condition is not met:
+// to return a ::basis::Status if the condition is not met:
 //   RET_CHECK(ptr != null);
 //   RET_CHECK_GT(value, 0) << "Optional additional message";
 //   RET_CHECK_FAIL() << "Always fail, like a LOG(FATAL)";
@@ -106,9 +106,9 @@
 // DCHECK and LOG(DFATAL) because they don't ignore errors in opt builds.
 //
 // The RET_CHECK* macros can only be used in functions that return
-// ::util::Status.
+// ::basis::Status.
 //
-// The returned error will have the ::util::error::INTERNAL error code and the
+// The returned error will have the ::basis::error::INTERNAL error code and the
 // message will include the file and line number.  The current stack trace
 // will also be logged.
 
@@ -118,8 +118,8 @@
 #include "basis/status/statusor.hpp"
 
 #include <memory>
-#include <ostream>  // NOLINT
-#include <sstream>  // NOLINT  // IWYU pragma: keep
+#include <ostream>
+#include <sstream> // IWYU pragma: keep
 #include <string>
 #include <vector>
 
@@ -127,7 +127,7 @@
 #include <base/macros.h>
 #include <base/compiler_specific.h>
 
-namespace util {
+namespace basis {
 
 namespace status_macros {
 
@@ -141,7 +141,7 @@ class BaseErrorCodeOptions {
  public:
   // Return the ErrorSpace to use for this error code enum.
   // Not implemented in base class - must be overridden.
-  const ::util::ErrorSpace* GetErrorSpace();
+  const ::basis::ErrorSpace* GetErrorSpace();
 
   // Returns true if errors with this code should be logged upon creation, by
   // default.  (Default can be overridden with modifiers on MakeErrorStream.)
@@ -155,22 +155,22 @@ class ErrorCodeOptions;
 
 // Specialization for the canonical error codes and canonical ErrorSpace.
 template <>
-class ErrorCodeOptions< ::util::error::Code> : public BaseErrorCodeOptions {
+class ErrorCodeOptions< ::basis::error::Code> : public BaseErrorCodeOptions {
  public:
-  const ::util::ErrorSpace* GetErrorSpace() {
-    return ::util::Status::canonical_space();
+  const ::basis::ErrorSpace* GetErrorSpace() {
+    return ::basis::Status::canonical_space();
   }
 };
 
 // Stream object used to collect error messages in MAKE_ERROR macros or
 // append error messages with APPEND_ERROR.
 // It accepts any arguments with operator<< to build an error string, and
-// then has an implicit cast operator to ::util::Status, which converts the
+// then has an implicit cast operator to ::basis::Status, which converts the
 // logged string to a Status object and returns it, after logging the error.
 // At least one call to operator<< is required; a compile time error will be
 // generated if none are given. Errors will only be logged by default for
 // certain status codes, as defined in IsLoggedByDefault. This class will
-// give DFATAL errors if you don't retrieve a ::util::Status exactly once before
+// give DFATAL errors if you don't retrieve a ::basis::Status exactly once before
 // destruction.
 //
 // The class converts into an intermediate wrapper object
@@ -180,7 +180,7 @@ class MakeErrorStream {
  public:
   // Wrapper around MakeErrorStream that only allows for output. This is created
   // as output of the first operator<< call on MakeErrorStream. The bare
-  // MakeErrorStream does not have a ::util::Status operator. The net effect of
+  // MakeErrorStream does not have a ::basis::Status operator. The net effect of
   // that is that you have to call operator<< at least once or else you'll get
   // a compile time error.
   class MakeErrorStreamWithOutput {
@@ -194,13 +194,13 @@ class MakeErrorStream {
       return *this;
     }
 
-    // Implicit cast operators to ::util::Status and ::util::StatusOr.
+    // Implicit cast operators to ::basis::Status and ::basis::StatusOr.
     // Exactly one of these must be called exactly once before destruction.
-    operator ::util::Status() {
+    operator ::basis::Status() {
       return wrapped_error_stream_->GetStatus();
     }
     template <typename T>
-    operator ::util::StatusOr<T>() {
+    operator ::basis::StatusOr<T>() {
       return wrapped_error_stream_->GetStatus();
     }
 
@@ -213,19 +213,19 @@ class MakeErrorStream {
     MakeErrorStream* wrapped_error_stream_;
   };
 
-  // Make an error with ::util::error::UNKNOWN.
+  // Make an error with ::basis::error::UNKNOWN.
   MakeErrorStream(const char* file, int line)
       : impl_(new Impl(file, line,
-                       ::util::Status::canonical_space(),
-                       ::util::error::UNKNOWN, this)) {}
+                       ::basis::Status::canonical_space(),
+                       ::basis::error::UNKNOWN, this)) {}
 
   // Make an error with the given error code and error_space.
   MakeErrorStream(const char* file, int line,
-                  const ::util::ErrorSpace* error_space, int code)
+                  const ::basis::ErrorSpace* error_space, int code)
       : impl_(new Impl(file, line, error_space, code, this)) {}
 
   // Make an error that appends additional messages onto a copy of status.
-  MakeErrorStream(::util::Status status, const char* file, int line)
+  MakeErrorStream(::basis::Status status, const char* file, int line)
       : impl_(new Impl(status, file, line, this)) {}
 
   // Make an error with the given code, inferring its ErrorSpace from
@@ -308,16 +308,16 @@ class MakeErrorStream {
   class Impl {
    public:
     Impl(const char* file, int line,
-         const ::util::ErrorSpace* error_space, int  code,
+         const ::basis::ErrorSpace* error_space, int  code,
          MakeErrorStream* error_stream,
          bool is_logged_by_default = true);
-    Impl(const ::util::Status& status, const char* file, int line,
+    Impl(const ::basis::Status& status, const char* file, int line,
          MakeErrorStream* error_stream);
 
     ~Impl();
 
     // This must be called exactly once before destruction.
-    ::util::Status GetStatus();
+    ::basis::Status GetStatus();
 
     void CheckNotDone() const;
 
@@ -328,7 +328,7 @@ class MakeErrorStream {
    private:
     const char* file_;
     int line_;
-    const ::util::ErrorSpace* error_space_;
+    const ::basis::ErrorSpace* error_space_;
     int code_;
 
     std::string prior_message_;
@@ -338,10 +338,10 @@ class MakeErrorStream {
     LogSeverity log_severity_;
     bool should_log_stack_trace_;
 
-    // Wrapper around the MakeErrorStream object that has a ::util::Status
+    // Wrapper around the MakeErrorStream object that has a ::basis::Status
     // conversion. The first << operator called on MakeErrorStream will return
     // this object, and only this object can implicitly convert to
-    // ::util::Status. The net effect of this is that you'll get a compile time
+    // ::basis::Status. The net effect of this is that you'll get a compile time
     // error if you call MAKE_ERROR etc. without adding any output.
     MakeErrorStreamWithOutput make_error_stream_with_output_wrapper_;
 
@@ -351,28 +351,28 @@ class MakeErrorStream {
   void CheckNotDone() const;
 
   // Returns the status. Used by MakeErrorStreamWithOutput.
-  ::util::Status GetStatus() const { return impl_->GetStatus(); }
+  ::basis::Status GetStatus() const { return impl_->GetStatus(); }
 
   // Store the actual data on the heap to reduce stack frame sizes.
   std::unique_ptr<Impl> impl_;
 };
 
-// Make an error ::util::Status, building message with LOG-style shift
+// Make an error ::basis::Status, building message with LOG-style shift
 // operators.  The error also gets sent to LOG(ERROR).
 //
-// Takes an optional error code parameter. Uses ::util::error::UNKNOWN by
-// default.  Returns a ::util::Status object that must be returned or stored.
+// Takes an optional error code parameter. Uses ::basis::error::UNKNOWN by
+// default.  Returns a ::basis::Status object that must be returned or stored.
 //
 // Examples:
 //   return MAKE_ERROR() << "Message";
 //   return MAKE_ERROR(INTERNAL_ERROR) << "Message";
-//   ::util::Status status = MAKE_ERROR() << "Message";
+//   ::basis::Status status = MAKE_ERROR() << "Message";
 #define MAKE_ERROR(...) \
-  ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, ##__VA_ARGS__)
+  ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, ##__VA_ARGS__)
 
 // accepts custom |base::Location| i.e. |from_here|
 #define MAKE_ERROR_HERE(from_here, ...) \
-  ::util::status_macros::MakeErrorStream(from_here.file_name(), from_here.line_number(), ##__VA_ARGS__)
+  ::basis::status_macros::MakeErrorStream(from_here.file_name(), from_here.line_number(), ##__VA_ARGS__)
 
 // Return a new error based on an existing error,
 // with an additional string appended.
@@ -383,7 +383,7 @@ class MakeErrorStream {
 //   status = APPEND_ERROR(status) << ", more details";
 //   return APPEND_ERROR(status) << ", more details";
 #define APPEND_ERROR(status) \
-  ::util::status_macros::MakeErrorStream((status), __FILE__, __LINE__)
+  ::basis::status_macros::MakeErrorStream((status), __FILE__, __LINE__)
 
 // Shorthand to make an error (with MAKE_ERROR) and return it.
 //   if (error) {
@@ -393,7 +393,7 @@ class MakeErrorStream {
 
 // Return success.
 #define RETURN_OK() \
-  return ::util::Status::OK
+  return ::basis::Status::OK
 
 // A macro for simplify checking and logging a condition. The error code
 // return here is the one that matches the most of the uses.
@@ -402,16 +402,16 @@ class MakeErrorStream {
   } else /* NOLINT */               \
     return MAKE_ERROR(ERR_INVALID_PARAM) << "'" << #cond << "' is false. "
 
-// A simple class to explicitly cast the return value of an ::util::Status
+// A simple class to explicitly cast the return value of an ::basis::Status
 // to bool.
 class BooleanStatus {
  public:
-  BooleanStatus(::util::Status status) : status_(status) {}  // NOLINT
+  BooleanStatus(::basis::Status status) : status_(status) {}  // NOLINT
   // Implicitly cast to bool.
   operator bool() const { return status_.ok(); }
-  inline ::util::Status status() const { return status_; }
+  inline ::basis::Status status() const { return status_; }
  private:
-  ::util::Status status_;
+  ::basis::Status status_;
 };
 
 inline const std::string FixMessage(const std::string& msg) {
@@ -433,7 +433,7 @@ inline const std::string FixMessage(const std::string& msg) {
 }
 
 // A macro for simplifying creation of a new error or appending new info to an
-// error based on the return value of a function that returns ::util::Status.
+// error based on the return value of a function that returns ::basis::Status.
 #define APPEND_STATUS_IF_ERROR(out, expr)                                      \
   if (const BooleanStatus __ret = (expr)) {                                    \
   } else /* NOLINT */                                                          \
@@ -444,7 +444,7 @@ inline const std::string FixMessage(const std::string& msg) {
                   : " ")                                                       \
           << FixMessage(__ret.status().error_message())
 
-// Wraps a ::util::Status so it can be assigned and used in an if-statement.
+// Wraps a ::basis::Status so it can be assigned and used in an if-statement.
 // Implicitly converts from status and to bool.
 namespace internal {
 class UtilStatusConvertibleToBool {
@@ -452,18 +452,18 @@ class UtilStatusConvertibleToBool {
   // Implicity conversion from a status to wrap.
   // Need implicit conversion to allow in if-statement.
   // NOLINTNEXTLINE(runtime/explicit)
-  UtilStatusConvertibleToBool(::util::Status status) : status_(status) {}
+  UtilStatusConvertibleToBool(::basis::Status status) : status_(status) {}
   // Implicity cast to bool. True on ok() and false on error.
   operator bool() const { return LIKELY(status_.ok()); }
   // Returns the wrapped status.
-  ::util::Status status() const { return status_; }
+  ::basis::Status status() const { return status_; }
 
  private:
-  ::util::Status status_;
+  ::basis::Status status_;
 };
 }  // namespace internal
 
-// Run a command that returns a ::util::Status.  If the called code returns an
+// Run a command that returns a ::basis::Status.  If the called code returns an
 // error status, return that status up out of this method too.
 //
 // Example:
@@ -471,7 +471,7 @@ class UtilStatusConvertibleToBool {
 #define RETURN_IF_ERROR(expr)                                                \
   do {                                                                       \
     /* Using _status below to avoid capture problems if expr is "status". */ \
-    const ::util::Status _status = (expr);                                   \
+    const ::basis::Status _status = (expr);                                   \
     if (UNLIKELY(!_status.ok())) {                                 \
       LOG(ERROR) << "Return Error: " << #expr << " failed with " << _status; \
       return _status;                                                        \
@@ -488,18 +488,18 @@ class UtilStatusConvertibleToBool {
 //   RETURN_IF_ERROR_WITH_APPEND(DoThings(4)) << "Things went wrong for " << 4;
 //
 // Args:
-//   expr: Command to run that returns a ::util::Status.
+//   expr: Command to run that returns a ::basis::Status.
 #define RETURN_IF_ERROR_WITH_APPEND(expr)                                     \
   /* Using _status below to avoid capture problems if expr is "status". */    \
   /* We also need the error to be in the else clause, to avoid a dangling  */ \
   /* else in the client code. (see test for example). */                      \
-  if (const ::util::status_macros::internal::UtilStatusConvertibleToBool      \
+  if (const ::basis::status_macros::internal::UtilStatusConvertibleToBool      \
           _status = (expr)) {                                                 \
   } else /* NOLINT */                                                         \
     for (LOG(ERROR) << "Return error: " << #expr << " failed with "           \
                     << _status.status();                                      \
          true;)                                                               \
-    return ::util::status_macros::MakeErrorStream(_status.status(), __FILE__, \
+    return ::basis::status_macros::MakeErrorStream(_status.status(), __FILE__, \
                                                   __LINE__)                   \
         .without_logging()
 
@@ -516,7 +516,7 @@ class UtilStatusConvertibleToBool {
   }                                                                       \
   lhs = statusor.ConsumeValueOrDie();
 
-// Executes an expression that returns a ::util::StatusOr, extracting its value
+// Executes an expression that returns a ::basis::StatusOr, extracting its value
 // into the variable defined by lhs (or returning on error).
 //
 // Example: Declaring and initializing a new value
@@ -541,7 +541,7 @@ class UtilStatusConvertibleToBool {
       STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr);
 
 // If condition is false, this macro returns, from the current function, a
-// ::util::Status with the ::util::error::INTERNAL code.
+// ::basis::Status with the ::basis::error::INTERNAL code.
 // For example:
 //   RET_CHECK(condition) << message;
 // is equivalent to:
@@ -552,12 +552,12 @@ class UtilStatusConvertibleToBool {
 // and logs a stack trace.
 //
 // Intended to be used as a replacement for CHECK where crashes are
-// unacceptable. The containing function must return a ::util::Status.
+// unacceptable. The containing function must return a ::basis::Status.
 #define RET_CHECK(condition)                                             \
   while (UNLIKELY(!(condition)))                               \
-    while (::util::status_macros::helper_log_always_return_true())       \
-  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__,      \
-                                                ::util::error::INTERNAL) \
+    while (::basis::status_macros::helper_log_always_return_true())       \
+  return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__,      \
+                                                ::basis::error::INTERNAL) \
       .with_log_stack_trace()                                            \
       .add_ret_check_failure(#condition)
 
@@ -628,30 +628,30 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 // to reduce the overhead of RET_CHECK statements.
 #define RET_CHECK_OP(name, op, val1, val2) \
   while (std::string* _result = \
-         ::util::status_macros::RetCheck##name##Impl(      \
+         ::basis::status_macros::RetCheck##name##Impl(      \
               google::GetReferenceableValue(val1),         \
               google::GetReferenceableValue(val2),         \
               #val1 " " #op " " #val2))                               \
-    return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                  ::util::error::INTERNAL) \
+    return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+                                                  ::basis::error::INTERNAL) \
         .with_log_stack_trace() \
         .add_ret_check_failure( \
-             ::util::status_macros::internal::ErrorDeleteStringHelper( \
+             ::basis::status_macros::internal::ErrorDeleteStringHelper( \
                  _result).str->c_str())
 #else
 // In optimized mode, use CheckOpString to hint to compiler that
 // the while condition is unlikely.
 #define RET_CHECK_OP(name, op, val1, val2) \
   while (CheckOpString _result = \
-         ::util::status_macros::RetCheck##name##Impl(      \
+         ::basis::status_macros::RetCheck##name##Impl(      \
               google::GetReferenceableValue(val1),         \
               google::GetReferenceableValue(val2),         \
               #val1 " " #op " " #val2))                               \
-    return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                  ::util::error::INTERNAL) \
+    return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+                                                  ::basis::error::INTERNAL) \
         .with_log_stack_trace() \
         .add_ret_check_failure( \
-             ::util::status_macros::internal::ErrorDeleteStringHelper( \
+             ::basis::status_macros::internal::ErrorDeleteStringHelper( \
                  _result.str_).str->c_str())
 #endif  // STATIC_ANALYSIS, !NDEBUG
 
@@ -659,7 +659,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 ///////////////
 
 // If the two values fail the comparison, this macro returns, from the current
-// function, a ::util::Status with code ::util::error::INTERNAL.
+// function, a ::basis::Status with code ::basis::error::INTERNAL.
 // For example,
 //   RET_CHECK_EQ(val1, val2) << message;
 // is equivalent to
@@ -670,7 +670,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 // and logs a stack trace.
 //
 // Intended to be used as a replacement for CHECK_* where crashes are
-// unacceptable. The containing function must return a ::util::Status.
+// unacceptable. The containing function must return a ::basis::Status.
 #define RET_CHECK_EQ(val1, val2) RET_CHECK_OP(_EQ, ==, val1, val2)
 #define RET_CHECK_NE(val1, val2) RET_CHECK_OP(_NE, !=, val1, val2)
 #define RET_CHECK_LE(val1, val2) RET_CHECK_OP(_LE, <=, val1, val2)
@@ -690,10 +690,10 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 #define RET_CHECK_FAIL() \
   LOG(ERROR) << "Return Error: " << " at "                          \
              << __FILE__ << ":" << __LINE__;                        \
-  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                ::util::error::INTERNAL) \
+  return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+                                                ::basis::error::INTERNAL) \
       .with_log_stack_trace() \
       .add_ret_check_fail_failure()
 
 }  // namespace status_macros
-}  // namespace util
+}  // namespace basis

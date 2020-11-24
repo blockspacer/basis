@@ -25,10 +25,10 @@ I18n::I18n(const char* pref_locale)
   DETACH_FROM_SEQUENCE(sequence_checker_);
 
   if(pref_locale == nullptr) {
-    base::i18n::SetICUDefaultLocale(uloc_getDefault());
+    ::base::i18n::SetICUDefaultLocale(uloc_getDefault());
     // Convert ICU locale to chrome ("en_US" to "en-US", etc.).
     std::string canonicalLocale
-      = base::i18n::GetCanonicalLocale(uloc_getDefault());
+      = ::base::i18n::GetCanonicalLocale(uloc_getDefault());
     VLOG(9)
       << "SetICUDefaultLocale: "
       << uloc_getDefault()
@@ -38,26 +38,26 @@ I18n::I18n(const char* pref_locale)
 
   // sanity check
   {
-    const base::string16 pattern = base::ASCIIToUTF16(
+    const ::base::string16 pattern = ::base::ASCIIToUTF16(
         "{1, plural, "
         "=1 {The cert for {0} expired yesterday.}"
         "=7 {The cert for {0} expired a week ago.}"
         "other {The cert for {0} expired # days ago.}}");
     std::string result
-      = base::UTF16ToASCII(
-          base::i18n::MessageFormatter::FormatWithNumberedArgs(
+      = ::base::UTF16ToASCII(
+          ::base::i18n::MessageFormatter::FormatWithNumberedArgs(
         pattern, "example.com", 1));
     DCHECK_EQ(
       "The cert for example.com expired yesterday.", result)
       << "maybe you forgot to init ICU before i18n?";
-    result = base::UTF16ToASCII(
-      base::i18n::MessageFormatter::FormatWithNumberedArgs(
+    result = ::base::UTF16ToASCII(
+      ::base::i18n::MessageFormatter::FormatWithNumberedArgs(
         pattern, "example.com", 7));
     DCHECK_EQ(
       "The cert for example.com expired a week ago.", result)
       << "maybe you forgot to init ICU before i18n?";
-    result = base::UTF16ToASCII(
-      base::i18n::MessageFormatter::FormatWithNumberedArgs(
+    result = ::base::UTF16ToASCII(
+      ::base::i18n::MessageFormatter::FormatWithNumberedArgs(
         pattern, "example.com", 15));
     DCHECK_EQ(
       "The cert for example.com expired 15 days ago.", result)

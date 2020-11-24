@@ -15,7 +15,7 @@ void initThreadPool(
   const int backgroundMaxThreads
   , const int foregroundMaxThreads
   // when to reclaim idle threads
-  , base::TimeDelta kSuggestedReclaimTime
+  , ::base::TimeDelta kSuggestedReclaimTime
 ){
   DCHECK(!base::ThreadPool::GetInstance());
 
@@ -29,7 +29,7 @@ void initThreadPool(
   // * The main thread is assumed to be busy, cap foreground workers at
   //   |num_cores - 1|.
   const int num_cores
-    = base::SysInfo::NumberOfProcessors();
+    = ::base::SysInfo::NumberOfProcessors();
 
   if(num_cores < backgroundMaxThreads)
   {
@@ -51,12 +51,12 @@ void initThreadPool(
       << " num_cores = " << num_cores;
   }
 
-  std::unique_ptr<base::ThreadPool> thread_pool_
-    = std::make_unique<base::internal::ThreadPoolImpl>("Test");
+  std::unique_ptr<::base::ThreadPool> thread_pool_
+    = std::make_unique<::base::internal::ThreadPoolImpl>("Test");
 
-  base::ThreadPool::SetInstance(std::move(thread_pool_));
-  base::ThreadPool::GetInstance()->Start(
-    base::internal::ThreadPoolImpl::InitParams{
+  ::base::ThreadPool::SetInstance(std::move(thread_pool_));
+  ::base::ThreadPool::GetInstance()->Start(
+    ::base::internal::ThreadPoolImpl::InitParams{
       {backgroundMaxThreads, kSuggestedReclaimTime}
       , {foregroundMaxThreads, kSuggestedReclaimTime}
     }

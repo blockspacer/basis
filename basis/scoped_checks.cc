@@ -6,7 +6,7 @@ namespace basis {
 /// It just calls callback on scope entry AND exit.
 basis::FakeLockWithCheck<bool()>
   fakeLockDocumentNotThreadChecked {
-    basis::VerifyNothing::Repeatedly()
+    ::basis::VerifyNothing::Repeatedly()
   };
 
 } // namespace basis

@@ -66,9 +66,9 @@ class UnsafeTypeContext
     UnsafeTypeContext&& other)
     : UnsafeTypeContext()
     {
-      vars_ = base::rvalue_cast(other.vars_);
+      vars_ = ::base::rvalue_cast(other.vars_);
 
-      typeCounter_ = base::rvalue_cast(other.typeCounter_);
+      typeCounter_ = ::base::rvalue_cast(other.typeCounter_);
     }
 
   // Move assignment operator
@@ -81,9 +81,9 @@ class UnsafeTypeContext
   {
     if (this != &rhs)
     {
-      vars_ = base::rvalue_cast(rhs.vars_);
+      vars_ = ::base::rvalue_cast(rhs.vars_);
 
-      typeCounter_ = base::rvalue_cast(rhs.typeCounter_);
+      typeCounter_ = ::base::rvalue_cast(rhs.typeCounter_);
     }
 
     return *this;
@@ -159,7 +159,7 @@ class UnsafeTypeContext
    * @tparam Type Type of object to set.
    */
   template<typename Type>
-  void unset_var(const base::Location& from_here)
+  void unset_var(const ::base::Location& from_here)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
@@ -262,7 +262,7 @@ class UnsafeTypeContext
     Type* channelCtx
       = &ctx_or_set_var<Type>(
           debug_name
-          , base::in_place
+          , ::base::in_place
           , std::forward<Args>(args)...);
 
     // If the value already exists it is overwritten

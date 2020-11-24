@@ -2,11 +2,11 @@
 
 #include <base/files/file_path.h>
 
-namespace icu_util {
+namespace basis {
 
-extern const base::FilePath::CharType kIcuDataFileName[];
+extern const ::base::FilePath::CharType kIcuDataFileName[];
 
 void initICUi18n(
-  const base::FilePath::CharType icuFileName[] = kIcuDataFileName);
+  const ::base::FilePath::CharType icuFileName[] = kIcuDataFileName);
 
-}  // namespace icu_util
+}  // namespace basis

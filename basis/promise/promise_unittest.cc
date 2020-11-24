@@ -701,7 +701,7 @@ TEST_F(PromiseTest, ThenWhichAlwayRejectsTypeTwo) {
 TEST_F(PromiseTest, ThenWhichAlwayRejectsTypeThree) {
   ManualPromiseResolver<int> p(FROM_HERE);
 
-  base::RunLoop run_loop;
+  ::base::RunLoop run_loop;
 
   p.promise()
       .ThenHere(FROM_HERE, BindLambdaForTesting([&](int result) {
@@ -1222,7 +1222,7 @@ TEST_F(PromiseTest, CurriedVoidPromiseModified) {
     RunLoop run_loop;
     p.ThenHere(FROM_HERE, BindOnce([](Promise<int> promise) { return promise; },
                                    promise_resolver->promise()))
-        .ThenHere(FROM_HERE, base::BindOnce([](int v) { EXPECT_EQ(v, 42); }))
+        .ThenHere(FROM_HERE, ::base::BindOnce([](int v) { EXPECT_EQ(v, 42); }))
         .ThenHere(FROM_HERE, run_loop.QuitClosure());
     PostTask(FROM_HERE, {ThreadPool()}, BindLambdaForTesting([&]() {
                promise_resolver->Resolve(42);

@@ -17,11 +17,11 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-namespace util {
+namespace basis {
 namespace {
 
-using ::util::Status;
-using util::PosixErrorToStatus;
+using ::basis::Status;
+using ::basis::PosixErrorToStatus;
 
 class Base1 {
  public:
@@ -618,4 +618,4 @@ BENCHMARK(BM_StatusOrFactoryFailPosixString);
 #endif  // BENCHMARK
 
 }  // namespace
-}  // namespace util
+}  // namespace basis

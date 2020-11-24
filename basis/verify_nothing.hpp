@@ -22,22 +22,22 @@ namespace basis {
 class BASE_EXPORT VerifyNothing {
  public:
   template <typename... Args>
-  operator base::RepeatingCallback<bool(Args...)>() const {
+  operator ::base::RepeatingCallback<bool(Args...)>() const {
     return Repeatedly<Args...>();
   }
   template <typename... Args>
-  operator base::OnceCallback<bool(Args...)>() const {
+  operator ::base::OnceCallback<bool(Args...)>() const {
     return Once<Args...>();
   }
   // Explicit way of specifying a specific callback type when the compiler can't
   // deduce it.
   template <typename... Args>
-  static base::RepeatingCallback<bool(Args...)> Repeatedly() {
-    return base::BindRepeating([](Args... /*args*/){ return true; });
+  static ::base::RepeatingCallback<bool(Args...)> Repeatedly() {
+    return ::base::BindRepeating([](Args... /*args*/){ return true; });
   }
   template <typename... Args>
-  static base::OnceCallback<bool(Args...)> Once() {
-    return base::BindOnce([](Args... /*args*/) { return true; });
+  static ::base::OnceCallback<bool(Args...)> Once() {
+    return ::base::BindOnce([](Args... /*args*/) { return true; });
   }
 };
 

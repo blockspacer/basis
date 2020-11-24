@@ -38,29 +38,29 @@ public:
     , char* argv[]
     , const bool auto_start_tracer
     , const std::string event_categories
-    , const base::FilePath& outDir
-    , const base::FilePath::CharType icuFileName[]
-    , const base::FilePath::CharType traceReportFileName[]
+    , const ::base::FilePath& outDir
+    , const ::base::FilePath::CharType icuFileName[]
+    , const ::base::FilePath::CharType traceReportFileName[]
     , const int threadsNum);
 
 public:
-  base::FilePath dir_exe_{};
+  ::base::FilePath dir_exe_{};
 
-  basis::ScopedLogRunTime scopedLogRunTime{};
+  ::basis::ScopedLogRunTime scopedLogRunTime{};
 
   // This object instance is required (for example,
   // LazyInstance, MessageLoop).
-  base::AtExitManager at_exit{};
+  ::base::AtExitManager at_exit{};
 
-  /// \note creates base::MessageLoop::current()
-  base::MessageLoopForIO main_thread_message_loop{};
+  /// \note creates ::base::MessageLoop::current()
+  ::base::MessageLoopForIO main_thread_message_loop{};
 
   // allows to schedule arbitrary tasks on main loop
-  scoped_refptr<base::SingleThreadTaskRunner> main_loop_task_runner;
+  scoped_refptr<::base::SingleThreadTaskRunner> main_loop_task_runner;
 
   std::unique_ptr<i18n::I18n> i18n;
 
-  std::unique_ptr<const base::FilePath> traceReportPath_;
+  std::unique_ptr<const ::base::FilePath> traceReportPath_;
 
 private:
   SEQUENCE_CHECKER(sequence_checker_);

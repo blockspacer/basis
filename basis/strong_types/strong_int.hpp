@@ -119,19 +119,19 @@ public:
   template <typename ValType>
   ValType checked_cast() const
   {
-    return base::checked_cast<ValType>(value_);
+    return ::base::checked_cast<ValType>(value_);
   }
 
   template <typename ValType>
   ValType strict_cast() const
   {
-    return base::strict_cast<ValType>(value_);
+    return ::base::strict_cast<ValType>(value_);
   }
 
   template <typename ValType>
   ValType saturated_cast() const
   {
-    return base::saturated_cast<ValType>(value_);
+    return ::base::saturated_cast<ValType>(value_);
   }
 
   NativeType Max() const
@@ -310,7 +310,7 @@ public:
     static_assert(
       std::is_integral<ArgType>::value
       , "Invalid integer type for StrongInt::operator*=");
-    value_ *= base::strict_cast<NativeType>(arg);
+    value_ *= ::base::strict_cast<NativeType>(arg);
     return *this;
   }
   template<typename ArgType>
@@ -318,7 +318,7 @@ public:
     static_assert(
       std::is_integral<ArgType>::value
       , "Invalid integer type for StrongInt::operator*=");
-    value_ /= base::strict_cast<NativeType>(arg);
+    value_ /= ::base::strict_cast<NativeType>(arg);
     return *this;
   }
   template<typename ArgType>
@@ -326,7 +326,7 @@ public:
     static_assert(
       std::is_integral<ArgType>::value
       , "Invalid integer type for StrongInt::operator*=");
-    value_ %= base::strict_cast<NativeType>(arg);
+    value_ %= ::base::strict_cast<NativeType>(arg);
     return *this;
   }
   StrongInt& operator<<=(int64_t arg) {

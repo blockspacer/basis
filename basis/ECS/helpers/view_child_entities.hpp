@@ -109,7 +109,7 @@ auto viewChildEntities(
   ECS::foreachChildEntity<TagType>(
     REFERENCED(registry)
     , parentEntityId
-    , base::BindRepeating(
+    , ::base::BindRepeating(
       [
       ](
         ECS::Registry& registry

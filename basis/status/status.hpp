@@ -17,7 +17,7 @@
 
 // TODO(unknown): Move to Abseil-status when it is available.
 //
-namespace util {
+namespace basis {
 namespace error {
 enum Code {
   OK = 0,
@@ -44,9 +44,9 @@ static const enum Code Code_MIN = Code::OK;
 static const enum Code Code_MAX = Code::DATA_LOSS;
 inline bool Code_IsValid(int c) { return (c >= Code_MIN) && (c <= Code_MAX); }
 }  // end namespace error
-}  // end namespace util
+}  // end namespace basis
 
-namespace util {
+namespace basis {
 
 using logging::LogSeverity;
 
@@ -70,7 +70,7 @@ class MUST_USE_RESULT Status final {
   // code, and error message.  If "code == 0", error_message is
   // ignored and a Status object identical to Status::OK is
   // constructed.
-  Status(::util::error::Code code, const std::string& error_message);
+  Status(::basis::error::Code code, const std::string& error_message);
 
   // Creates a status in the specified "space", "code" and the
   // associated error message.  If "code == 0", (space,msg) are ignored
@@ -137,7 +137,7 @@ class MUST_USE_RESULT Status final {
 
   // Returns the canonical code for this Status value.  Automatically
   // converts to the canonical space if necessary.
-  ::util::error::Code CanonicalCode() const;
+  ::basis::error::Code CanonicalCode() const;
 
   // Sets the equivalent canonical code for a Status with a
   // non-canonical error space.
@@ -148,7 +148,7 @@ class MUST_USE_RESULT Status final {
 
   // Returns true iff this->CanonicalCode() == expected.
   MUST_USE_RETURN_VALUE
-  bool Matches(::util::error::Code expected) const;
+  bool Matches(::basis::error::Code expected) const;
 
   // Returns true iff this has the same error_space, error_code,
   // and canonical_code as "x".  I.e., the two Status objects are
@@ -176,7 +176,7 @@ class MUST_USE_RESULT Status final {
   void IgnoreError() const;
 
   // Swap the contents of *this with *that
-  void Swap(util::Status* that) {
+  void Swap(basis::Status* that) {
     Rep* t = this->rep_;
     this->rep_ = that->rep_;
     that->rep_ = t;
@@ -231,7 +231,7 @@ class MUST_USE_RESULT Status final {
                      int canonical_code);
   static void ResetRep(Rep* rep, const ErrorSpace*, int code,
                        const std::string&, int canonical_code);
-  static bool EqualsSlow(const ::util::Status& a, const ::util::Status& b);
+  static bool EqualsSlow(const ::basis::Status& a, const ::basis::Status& b);
 
   // Machinery for linker initialization of the global Status objects.
   struct Pod;
@@ -273,8 +273,8 @@ class ErrorSpace {
   // mapping. The default is to always return UNKNOWN. It is an error to pass a
   // Status that does not belong to this space; ErrorSpace implementations
   // should return UNKNOWN in that case.
-  virtual ::util::error::Code CanonicalCode(
-      const ::util::Status& status) const {
+  virtual ::basis::error::Code CanonicalCode(
+      const ::basis::Status& status) const {
     return error::UNKNOWN;
   }
 
@@ -301,12 +301,12 @@ class ErrorSpace {
   const std::string name_;
 };
 
-// ::util::Status success comparison.
+// ::basis::Status success comparison.
 // This is better than CHECK((val).ok()) because the embedded
 // error string gets printed by the CHECK_EQ.
-#define CHECK_OK(val) CHECK_EQ(::util::Status::OK, (val))
-#define QCHECK_OK(val) QCHECK_EQ(::util::Status::OK, (val))
-#define DCHECK_OK(val) DCHECK_EQ(::util::Status::OK, (val))
+#define CHECK_OK(val) CHECK_EQ(::basis::Status::OK, (val))
+#define QCHECK_OK(val) QCHECK_EQ(::basis::Status::OK, (val))
+#define DCHECK_OK(val) DCHECK_EQ(::basis::Status::OK, (val))
 
 // -----------------------------------------------------------------
 // Implementation details follow
@@ -357,7 +357,7 @@ inline bool Status::operator==(const Status& x) const {
 
 inline bool Status::operator!=(const Status& x) const { return !(*this == x); }
 
-inline bool Status::Matches(::util::error::Code expected) const {
+inline bool Status::Matches(::basis::error::Code expected) const {
   return CanonicalCode() == expected;
 }
 
@@ -374,8 +374,8 @@ inline Status OkStatus() { return Status(); }
 
 class StatusBuilder {
  public:
-  StatusBuilder(::util::error::Code code,
-    const base::Location& from_here)
+  StatusBuilder(::basis::error::Code code,
+    const ::base::Location& from_here)
       : code_(code),
         line_(from_here.line_number()),
         file_(from_here.file_name()),
@@ -384,14 +384,14 @@ class StatusBuilder {
         log_type_(LogType::kDisabled) {}
 
   StatusBuilder& Log(LogSeverity severity) {
-    if (code_ == ::util::error::Code::OK) return *this;
+    if (code_ == ::basis::error::Code::OK) return *this;
     log_type_ = LogType::kLog;
     log_severity_ = severity;
     return *this;
   }
 
   StatusBuilder& VLog(int level) {
-    if (code_ == ::util::error::Code::OK) return *this;
+    if (code_ == ::basis::error::Code::OK) return *this;
     log_type_ = LogType::kVLog;
     log_verbose_level_ = level;
     return *this;
@@ -408,7 +408,7 @@ class StatusBuilder {
 
   template <typename T>
   StatusBuilder& operator<<(const T& value) {
-    base::StrAppend(&stream_, value);
+    ::base::StrAppend(&stream_, value);
     return *this;
   }
 
@@ -434,7 +434,7 @@ class StatusBuilder {
     kVLog,
   };
 
-  const ::util::error::Code code_;
+  const ::basis::error::Code code_;
   const int line_;
   const std::string file_;
   LogSeverity log_severity_;
@@ -444,83 +444,83 @@ class StatusBuilder {
 };
 
 inline StatusBuilder AbortedErrorBuilder(
-  const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::ABORTED, from_here);
+  const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::ABORTED, from_here);
 }
 
 inline StatusBuilder AlreadyExistsErrorBuilder(
-  const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::ALREADY_EXISTS, from_here);
+  const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::ALREADY_EXISTS, from_here);
 }
 
 inline StatusBuilder CancelledErrorBuilder(
-  const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::CANCELLED, from_here);
+  const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::CANCELLED, from_here);
 }
 
 inline StatusBuilder DataLossErrorBuilder(
-  const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::DATA_LOSS, from_here);
+  const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::DATA_LOSS, from_here);
 }
 
 inline StatusBuilder DeadlineExceededErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::DEADLINE_EXCEEDED, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::DEADLINE_EXCEEDED, from_here);
 }
 
 inline StatusBuilder FailedPreconditionErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::FAILED_PRECONDITION, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::FAILED_PRECONDITION, from_here);
 }
 
 inline StatusBuilder InternalErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::INTERNAL, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::INTERNAL, from_here);
 }
 
 inline StatusBuilder InvalidArgumentErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::INVALID_ARGUMENT, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::INVALID_ARGUMENT, from_here);
 }
 
 inline StatusBuilder NotFoundErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::NOT_FOUND, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::NOT_FOUND, from_here);
 }
 
 inline StatusBuilder OutOfRangeErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::OUT_OF_RANGE, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::OUT_OF_RANGE, from_here);
 }
 
 inline StatusBuilder PermissionDeniedErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::PERMISSION_DENIED, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::PERMISSION_DENIED, from_here);
 }
 
 inline StatusBuilder UnauthenticatedErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::UNAUTHENTICATED, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::UNAUTHENTICATED, from_here);
 }
 
 inline StatusBuilder ResourceExhaustedErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::RESOURCE_EXHAUSTED, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::RESOURCE_EXHAUSTED, from_here);
 }
 
 inline StatusBuilder UnavailableErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::UNAVAILABLE, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::UNAVAILABLE, from_here);
 }
 
 inline StatusBuilder UnimplementedErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::UNIMPLEMENTED, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::UNIMPLEMENTED, from_here);
 }
 
 inline StatusBuilder UnknownErrorBuilder(
-    const base::Location& from_here) {
-  return StatusBuilder(::util::error::Code::UNKNOWN, from_here);
+    const ::base::Location& from_here) {
+  return StatusBuilder(::basis::error::Code::UNKNOWN, from_here);
 }
 
-}  // namespace util
+}  // namespace basis

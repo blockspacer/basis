@@ -10,8 +10,8 @@ void initThreadPool(
   const int backgroundMaxThreads
   , const int foregroundMaxThreads
   // when to reclaim idle threads
-  , base::TimeDelta kSuggestedReclaimTime
-      = base::TimeDelta::FromSeconds(30)
+  , ::base::TimeDelta kSuggestedReclaimTime
+      = ::base::TimeDelta::FromSeconds(30)
 );
 
 }  // namespace basis

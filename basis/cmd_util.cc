@@ -68,11 +68,11 @@ void initCommandLine(int argc, char* argv[])
 {
   // see https://peter.sh/experiments/chromium-command-line-switches/
   DCHECK(!base::CommandLine::InitializedForCurrentProcess());
-  base::CommandLine::Init(argc, argv);
+  ::base::CommandLine::Init(argc, argv);
 
   DCHECK(base::CommandLine::ForCurrentProcess());
-  base::CommandLine* command_line
-    = base::CommandLine::ForCurrentProcess();
+  ::base::CommandLine* command_line
+    = ::base::CommandLine::ForCurrentProcess();
 
   // sets default command-line switches
   // initialize |g_vlog_info| i.e. |switches::kV| in debug mode

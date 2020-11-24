@@ -52,7 +52,7 @@ struct AllowOnlyNestedPromise<Promise<ResolveT, RejectT>>
 };
 
 // We can't include post_task.h here so we forward declare it.
-BASE_EXPORT scoped_refptr<base::SequencedTaskRunner> CreateSequencedTaskRunnerWithTraits(
+BASE_EXPORT scoped_refptr<::base::SequencedTaskRunner> CreateSequencedTaskRunnerWithTraits(
     const TaskTraits& traits);
 
 // Inspired by ES6 promises, Promise<> is a PostTask based callback system for
@@ -325,7 +325,7 @@ class Promise : public internal::BasePromise {
   {
     return ThenOn(task_runner, from_here,
                   internal::wrapPromiseIntoOnceCallback(on_resolve)
-                  , base::IsNestedPromise{true});
+                  , ::base::IsNestedPromise{true});
   }
 
   // Wraps passed promise into callback that returns it as nested promise.
@@ -340,7 +340,7 @@ class Promise : public internal::BasePromise {
       , from_here
       , internal::wrapPromiseIntoOnceCallback(on_resolve)
       , internal::wrapPromiseIntoOnceCallback(on_reject)
-      , base::IsNestedPromise{true});
+      , ::base::IsNestedPromise{true});
   }
 
   template <typename ThenCb>
@@ -525,7 +525,7 @@ class Promise : public internal::BasePromise {
     return ThenHere(from_here
       , internal::wrapPromiseIntoOnceCallback(on_resolve)
       , internal::wrapPromiseIntoOnceCallback(on_reject)
-      , base::IsNestedPromise{true});
+      , ::base::IsNestedPromise{true});
   }
 
   template <typename ThenCb, typename CatchCb>
@@ -605,7 +605,7 @@ class Promise : public internal::BasePromise {
   {
     return ThenHere(from_here
       , internal::wrapPromiseIntoOnceCallback(on_resolve)
-      , base::IsNestedPromise{true});
+      , ::base::IsNestedPromise{true});
   }
 
   // A task to execute |finally_callback| on |task_runner| is posted after the

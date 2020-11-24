@@ -20,7 +20,7 @@
 // To define a sequence, just create a class that extends this one using the
 // Curiously Recurring Template Pattern:
 //
-//   struct MySequence : util::StaticSequence<MySequence> {};
+//   struct MySequence : ::basis::StaticSequence<MySequence> {};
 //
 // To require that a function run on that sequence, add a Key parameter from the
 // sequence:
@@ -31,7 +31,7 @@
 //
 //   // Can run on any thread.
 //   void MyFunctionThreadSafe(int x, int y) {
-//     MySequence::PostTask(FROM_HERE, base::BindOnce(&MyFunction, x, y));
+//     MySequence::PostTask(FROM_HERE, ::base::BindOnce(&MyFunction, x, y));
 //   }
 //
 // You can also add the Key as the final parameter to instance methods to
@@ -45,16 +45,16 @@
 //   void CallMyMethodFromOriginThreadSafe(MyStruct* m) {
 //     MySequence::PostTask(
 //         FROM_HERE,
-//         base::BindOnce(&MyStruct::MyMethod, base::Unretained(m), 0, 0));
+//         ::base::BindOnce(&MyStruct::MyMethod, ::base::Unretained(m), 0, 0));
 //   }
 //
 // If a class is tightly coupled to a given sequence (i.e. expects to always be
 // called on that sequence), it may be worth wrapping in Sequenced, which is
-// similar to base::SequenceBound but will work with statically-sequenced
+// similar to ::base::SequenceBound but will work with statically-sequenced
 // method calls. This will also ensure the destructor is run on the same
 // sequence.
 
-namespace util {
+namespace basis {
 
 template <typename T, typename TraitsProvider>
 class StaticSequence;
@@ -63,25 +63,25 @@ namespace internal {
 
 // Provides a TaskRunner and can persist after the message loop is destroyed,
 // which is useful if e.g. a StaticTaskRunnerHolder outlives a
-// base::test::TaskEnvironment in tests. Only usable by StaticSequence.
+// ::base::test::TaskEnvironment in tests. Only usable by StaticSequence.
 class StaticTaskRunnerHolder
-    : public base::MessageLoopCurrent::DestructionObserver {
+    : public ::base::MessageLoopCurrent::DestructionObserver {
  public:
   ~StaticTaskRunnerHolder() override;
 
  private:
   template <typename T, typename TraitsProvider>
-  friend class ::util::StaticSequence;
+  friend class ::basis::StaticSequence;
 
   explicit StaticTaskRunnerHolder(base::TaskTraits traits);
 
   void WillDestroyCurrentMessageLoop() override;
 
-  const scoped_refptr<base::SequencedTaskRunner>& Get();
+  const scoped_refptr<::base::SequencedTaskRunner>& Get();
 
-  const base::TaskTraits traits_;
+  const ::base::TaskTraits traits_;
   bool initialized_;
-  scoped_refptr<base::SequencedTaskRunner> task_runner_;
+  scoped_refptr<::base::SequencedTaskRunner> task_runner_;
 };
 
 }  // namespace internal
@@ -94,22 +94,22 @@ class StaticTaskRunnerHolder
 //
 //   class MyBackgroundService {
 //     struct BackgroundTaskTraitsProvider {
-//       static constexpr base::TaskTraits GetTraits() {
+//       static constexpr ::base::TaskTraits GetTraits() {
 //         return {
-//           base::TaskPriority::BEST_EFFORT,
-//           base::MayBlock(),
+//           ::base::TaskPriority::BEST_EFFORT,
+//           ::base::MayBlock(),
 //         };
 //       }
 //     };
 //    public:
 //     struct BackgroundSequence
-//         : util::StaticSequence<BackgroundSequence,
+//         : ::basis::StaticSequence<BackgroundSequence,
 //                                BackgroundTaskTraitsProvider> {};
 //     void DoBackgroundWork(const std::string& request,
 //                           const BackgroundSequence::Key&);
 //   };
 struct DefaultStaticSequenceTraitsProvider {
-  static constexpr base::TaskTraits GetTraits() { return base::TaskTraits(); }
+  static constexpr ::base::TaskTraits GetTraits() { return ::base::TaskTraits(); }
 };
 
 // A class that extends StaticSequence is a holder for a process-global
@@ -145,10 +145,10 @@ class StaticSequence {
     const Key* operator&() const = delete;
   };
 
-  static const scoped_refptr<base::SequencedTaskRunner>& TaskRunner() {
+  static const scoped_refptr<::base::SequencedTaskRunner>& TaskRunner() {
     // A StaticTaskRunnerHolder is able to regenerate a TaskRunner after the
     // global thread pool is destroyed and re-created (which can happen between
-    // unittests that use base::test::TaskEnvironment).
+    // unittests that use ::base::test::TaskEnvironment).
     static internal::StaticTaskRunnerHolder task_runner(
         TraitsProvider::GetTraits());
     return task_runner.Get();
@@ -159,11 +159,11 @@ class StaticSequence {
   // PostedTo, the StaticSequence whose PostTask method was called; and
   // Expected, the StaticSequence whose Key was requested by the task.
   template <typename U>
-  using IncompatibleCallback = base::OnceCallback<void(const U&)>;
+  using IncompatibleCallback = ::base::OnceCallback<void(const U&)>;
   template <typename U, typename Expected = typename U::Sequence>
   static void PostTask(
       IncompatibleCallback<U> cb,
-      const base::Location& from_here = base::Location::Current()) {
+      const ::base::Location& from_here = ::base::Location::Current()) {
     using PostedTo = T;
     static_assert(invalid<PostedTo, Expected>,
                   "Attempting to post a statically-sequenced task to the wrong "
@@ -171,11 +171,11 @@ class StaticSequence {
   }
 
   template <typename U>
-  using IncompatibleNonConstCallback = base::OnceCallback<void(U&)>;
+  using IncompatibleNonConstCallback = ::base::OnceCallback<void(U&)>;
   template <typename U, typename Expected = typename U::Sequence>
   static void PostTask(
       IncompatibleNonConstCallback<U> cb,
-      const base::Location& from_here = base::Location::Current()) {
+      const ::base::Location& from_here = ::base::Location::Current()) {
     static_assert(invalid<IncompatibleNonConstCallback<U>>,
                   "Did you forget to add `const` to the Key parameter of the "
                   "bound functor?");
@@ -184,18 +184,18 @@ class StaticSequence {
   // Takes a callback that specifically requires that it be invoked from this
   // sequence. Such callbacks can only be invoked through this method because
   // the Key is only constructible here.
-  using CompatibleCallback = base::OnceCallback<void(const Key&)>;
+  using CompatibleCallback = ::base::OnceCallback<void(const Key&)>;
   static void PostTask(
       CompatibleCallback cb,
-      const base::Location& from_here = base::Location::Current()) {
+      const ::base::Location& from_here = ::base::Location::Current()) {
     TaskRunner()->PostTask(from_here,
-                           base::BindOnce(std::move(cb), std::ref(key_)));
+                           ::base::BindOnce(std::move(cb), std::ref(key_)));
   }
 
   // Takes any closure with no unbound arguments.
   static void PostTask(
-      base::OnceClosure cb,
-      const base::Location& from_here = base::Location::Current()) {
+      ::base::OnceClosure cb,
+      const ::base::Location& from_here = ::base::Location::Current()) {
     TaskRunner()->PostTask(from_here, std::move(cb));
   }
 
@@ -223,7 +223,7 @@ class StaticSequence {
   // unnecessary mallocs. Prefer this to PostTask() when possible to reduce
   // runtime overhead.
   template <typename F, typename... Args>
-  static void Post(const base::Location& from_here, F&& f, Args&&... args) {
+  static void Post(const ::base::Location& from_here, F&& f, Args&&... args) {
     TaskRunner()->PostTask(
         from_here, BindHelper<needs_key<F>, F, Args...>::Bind(
                        std::forward<F>(f), std::forward<Args>(args)...));
@@ -272,15 +272,15 @@ class StaticSequence {
 
   template <typename... Args>
   struct BindHelper<false, Args...> {
-    static base::OnceClosure Bind(Args... args) {
-      return base::BindOnce(std::forward<Args>(args)...);
+    static ::base::OnceClosure Bind(Args... args) {
+      return ::base::BindOnce(std::forward<Args>(args)...);
     }
   };
 
   template <typename... Args>
   struct BindHelper<true, Args...> {
-    static base::OnceClosure Bind(Args... args) {
-      return base::BindOnce(std::forward<Args>(args)..., std::ref(key_));
+    static ::base::OnceClosure Bind(Args... args) {
+      return ::base::BindOnce(std::forward<Args>(args)..., std::ref(key_));
     }
   };
 
@@ -301,20 +301,20 @@ class Sequenced {
   template <typename... Args>
   explicit Sequenced(Args&&... args) : obj_(Uninitialized()) {
     Sequence::Post(FROM_HERE, &Sequenced::Construct<Args...>,
-                   base::Unretained(this), std::forward<Args>(args)...);
+                   ::base::Unretained(this), std::forward<Args>(args)...);
   }
 
   template <typename... Args, typename... Bound>
-  void Post(const base::Location& from_here,
+  void Post(const ::base::Location& from_here,
             void (T::*method)(Args...),
             Bound&&... args) {
     Sequence::Post(from_here, &Sequenced::Call<decltype(method), Bound...>,
-                   base::Unretained(this), method,
+                   ::base::Unretained(this), method,
                    std::forward<Bound>(args)...);
   }
 
  private:
-  using UniquePtr = std::unique_ptr<T, base::OnTaskRunnerDeleter>;
+  using UniquePtr = std::unique_ptr<T, ::base::OnTaskRunnerDeleter>;
   template <typename... Args>
   void Construct(Args&&... args, const typename Sequence::Key& key) {
     obj_ = MakeUnique<Args...>(std::forward<Args>(args)..., key);
@@ -322,18 +322,18 @@ class Sequenced {
 
   static UniquePtr Uninitialized() {
     return UniquePtr(nullptr,
-                     base::OnTaskRunnerDeleter(Sequence::TaskRunner()));
+                     ::base::OnTaskRunnerDeleter(Sequence::TaskRunner()));
   }
 
   template <typename... Args>
   UniquePtr MakeUnique(Args&&... args, const typename Sequence::Key&) {
     return UniquePtr(new T(std::forward<Args>(args)...),
-                     base::OnTaskRunnerDeleter(Sequence::TaskRunner()));
+                     ::base::OnTaskRunnerDeleter(Sequence::TaskRunner()));
   }
 
   template <typename Method, typename... Bound>
   void Call(Method method, Bound&&... args, const typename Sequence::Key& key) {
-    Sequence::Run(base::BindOnce(method, base::Unretained(obj_.get()),
+    Sequence::Run(base::BindOnce(method, ::base::Unretained(obj_.get()),
                                  std::forward<Bound>(args)...),
                   key);
   }

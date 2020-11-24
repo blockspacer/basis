@@ -15,17 +15,17 @@ void perSequenceStoreTimeBeforeCallbackExecution()
     << "Sequence must be set "
     << FROM_HERE.ToString();
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
-        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+        FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
   PerSequenceExecTimeCheckerStartTime& result
     = sequenceLocalContext->set_once<PerSequenceExecTimeCheckerStartTime>(
         FROM_HERE
         , "Timeout.PerSequenceExecTimeCheckerStartTime." + FROM_HERE.ToString()
-        , base::in_place
-        , base::Time::Now()
+        , ::base::in_place
+        , ::base::Time::Now()
       );
   ignore_result(result);
 }
@@ -36,9 +36,9 @@ base::Time perSequenceGetTimeBeforeCallbackExecution()
     << "Sequence must be set "
     << FROM_HERE.ToString();
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
-        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+        FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
   PerSequenceExecTimeCheckerStartTime& result
@@ -55,9 +55,9 @@ void perSequenceClearTimeBeforeCallbackExecution()
     << "Sequence must be set "
     << FROM_HERE.ToString();
 
-  base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
+  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
     = ECS::SequenceLocalContext::getSequenceLocalInstance(
-        FROM_HERE, base::SequencedTaskRunnerHandle::Get());
+        FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
   sequenceLocalContext->unset<PerSequenceExecTimeCheckerStartTime>(

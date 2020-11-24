@@ -28,14 +28,14 @@ public:
   SimulationRegistry();
 
   void set_task_runner(
-    scoped_refptr<base::SequencedTaskRunner> task_runner)
+    scoped_refptr<::base::SequencedTaskRunner> task_runner)
     noexcept;
 
   ~SimulationRegistry();
 
   // can be used to acess registry on same thread that created |SimulationRegistry|,
   // may be useful to init registry
-  ECS::Registry& registry_unsafe(const base::Location& from_here) noexcept;
+  ECS::Registry& registry_unsafe(const ::base::Location& from_here) noexcept;
 
   // can be used to acess registry on task runner
   ECS::Registry& registry() noexcept;
@@ -44,7 +44,7 @@ public:
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
-  ECS::Entity create(const base::Location& from_here)
+  ECS::Entity create(const ::base::Location& from_here)
   {
     DCHECK(task_runner_);
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
@@ -56,7 +56,7 @@ public:
   /// \note large `inline` functions cause Cache misses
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
-  decltype(auto) get(const base::Location& from_here
+  decltype(auto) get(const ::base::Location& from_here
     , const ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -76,7 +76,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   decltype(auto) try_get(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -96,7 +96,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   decltype(auto) get_or_emplace(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const ECS::Entity entity
     , Args &&... args)
   {
@@ -113,7 +113,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   decltype(auto) clear(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -132,7 +132,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   bool has_components(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -145,7 +145,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   bool valid(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -159,7 +159,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   bool has(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -174,7 +174,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   bool any(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , const ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -188,7 +188,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   void destroy(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -202,7 +202,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   void destroy(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , It first
     , It last)
   {
@@ -216,7 +216,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   void emplace(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , ECS::Entity entity
     , Args &&... args)
   {
@@ -234,7 +234,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   void emplace_or_replace(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , ECS::Entity entity
     , Args &&... args)
   {
@@ -249,7 +249,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   void remove(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -263,7 +263,7 @@ public:
   /// and affect efficiency negatively, so keep it small
   inline /* `inline` to eleminate function call overhead */
   void remove_if_exists(
-    const base::Location& from_here
+    const ::base::Location& from_here
     , ECS::Entity entity)
   {
     DCHECK(task_runner_);
@@ -273,7 +273,7 @@ public:
   }
 
   scoped_refptr<
-      base::SequencedTaskRunner
+      ::base::SequencedTaskRunner
     > task_runner()
   {
     DCHECK(task_runner_);
@@ -284,13 +284,13 @@ private:
   SEQUENCE_CHECKER(sequence_checker_);
 
   scoped_refptr<
-      base::SequencedTaskRunner
+      ::base::SequencedTaskRunner
     > task_runner_;
 
-  // base::WeakPtr can be used to ensure that any callback bound
+  // ::base::WeakPtr can be used to ensure that any callback bound
   // to an object is canceled when that object is destroyed
   // (guarantees that |this| will not be used-after-free).
-  base::WeakPtrFactory<
+  ::base::WeakPtrFactory<
       SimulationRegistry
     > weak_this_factory_;
 

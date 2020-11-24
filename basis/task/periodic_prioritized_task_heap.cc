@@ -7,7 +7,7 @@
 namespace basis {
 
 PeriodicPrioritizedTaskHeap::Job::Job(
-  const base::Location& from_here,
+  const ::base::Location& from_here,
   Callback task,
   uint32_t priority,
   uint32_t task_count,
@@ -34,7 +34,7 @@ PeriodicPrioritizedTaskHeap::PeriodicPrioritizedTaskHeap()
 }
 
 void PeriodicPrioritizedTaskHeap::ScheduleTask(
-  const base::Location& from_here
+  const ::base::Location& from_here
   , Callback task
   , uint32_t priority
   , const std::chrono::nanoseconds& interval)

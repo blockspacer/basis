@@ -8,7 +8,7 @@ namespace gloer {
 namespace log {
 
 bool VlogIsOnForLocation(
-  const base::Location& from_here
+  const ::base::Location& from_here
   , int verbose_level)
 {
   return (verbose_level <=

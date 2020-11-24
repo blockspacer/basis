@@ -14,7 +14,7 @@
 namespace ECS {
 
 using ForeachChildEntityCb
-  = base::RepeatingCallback<
+  = ::base::RepeatingCallback<
       void(ECS::Registry&, ECS::Entity parentId, ECS::Entity childId)
     >;
 
@@ -26,7 +26,7 @@ using ForeachChildEntityCb
 //  ECS::foreachChildEntity<TagType>(
 //    REFERENCED(registry)
 //    , parentEntityId
-//    , base::BindRepeating(
+//    , ::base::BindRepeating(
 //        [
 //        ](
 //          ECS::Entity parentEntityId

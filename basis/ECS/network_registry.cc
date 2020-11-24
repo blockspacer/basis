@@ -26,12 +26,12 @@ NetworkRegistry::NetworkRegistry()
       weak_this_(
         weak_ptr_factory_.GetWeakPtr()))
   , taskRunner_{
-      base::ThreadPool::GetInstance()->
+      ::base::ThreadPool::GetInstance()->
         CreateSequencedTaskRunnerWithTraits(
-          base::TaskTraits{
-            base::TaskPriority::BEST_EFFORT
-            , base::MayBlock()
-            , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+          ::base::TaskTraits{
+            ::base::TaskPriority::BEST_EFFORT
+            , ::base::MayBlock()
+            , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
           }
         )}
   , registry_()

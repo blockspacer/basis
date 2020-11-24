@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/util/spacer.h"
+#include "basis/log/spacer.hpp"
 
 #include <cstddef>
 #include <iostream>
 
-namespace verible {
+namespace basis {
 
 std::ostream& operator<<(std::ostream& stream, const Spacer& spacer) {
   for (size_t i = 0; i < spacer.repeat; ++i) {
@@ -26,4 +26,4 @@ std::ostream& operator<<(std::ostream& stream, const Spacer& spacer) {
   return stream;
 }
 
-}  // namespace verible
+}  // namespace basis

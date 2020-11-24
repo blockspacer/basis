@@ -12,7 +12,7 @@ namespace base {
 namespace internal {
 
 base::OnceClosure ClosureExecutePromise(base::WrappedPromise task) {
-  return base::BindOnce(
+  return ::base::BindOnce(
     [](base::WrappedPromise task) {
       task.Execute();
     }
@@ -36,7 +36,7 @@ bool PostPromiseHelperInternal(const boost::asio::executor& executor
     executor,
     ::boost::beast::bind_front_handler([
       ](
-        base::OnceClosure&& boundTask
+        ::base::OnceClosure&& boundTask
       ){
         std::move(boundTask).Run();
       }
@@ -56,7 +56,7 @@ bool PostPromiseHelperInternal(boost::asio::io_context& context
     context,
     ::boost::beast::bind_front_handler([
       ](
-        base::OnceClosure&& boundTask
+        ::base::OnceClosure&& boundTask
       ){
         std::move(boundTask).Run();
       }

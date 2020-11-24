@@ -41,7 +41,7 @@ class SystemTimeChangeNotifier {
   void NotifySystemTimeChanged();
 
  private:
-  scoped_refptr<base::ObserverListThreadSafe<Observer>> observer_list_;
+  scoped_refptr<::base::ObserverListThreadSafe<Observer>> observer_list_;
 
   DISALLOW_COPY_AND_ASSIGN(SystemTimeChangeNotifier);
 };
@@ -56,7 +56,7 @@ class SystemTimeChangeNotifierPeriodicMonitor
     : public SystemTimeChangeNotifier {
  public:
   explicit SystemTimeChangeNotifierPeriodicMonitor(
-      const scoped_refptr<base::SequencedTaskRunner>& task_runner);
+      const scoped_refptr<::base::SequencedTaskRunner>& task_runner);
   ~SystemTimeChangeNotifierPeriodicMonitor() override;
 
   // For unittests.
@@ -68,18 +68,18 @@ class SystemTimeChangeNotifierPeriodicMonitor
   void ScheduleNextMonitor(base::Time now);
   void CheckSystemTime();
 
-  // Returns base::Time::Now() unless fake_now is set.
-  base::Time Now() const;
+  // Returns ::base::Time::Now() unless fake_now is set.
+  ::base::Time Now() const;
 
-  const scoped_refptr<base::SequencedTaskRunner> task_runner_;
+  const scoped_refptr<::base::SequencedTaskRunner> task_runner_;
 
-  base::Time expected_system_time_;
-  base::Time monitoring_limit_time_1sec_;
-  base::Time monitoring_limit_time_10sec_;
+  ::base::Time expected_system_time_;
+  ::base::Time monitoring_limit_time_1sec_;
+  ::base::Time monitoring_limit_time_10sec_;
 
-  base::Time fake_now_;
+  ::base::Time fake_now_;
 
-  base::WeakPtrFactory<SystemTimeChangeNotifierPeriodicMonitor> weak_factory_;
+  ::base::WeakPtrFactory<SystemTimeChangeNotifierPeriodicMonitor> weak_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(SystemTimeChangeNotifierPeriodicMonitor);
 };

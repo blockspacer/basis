@@ -92,7 +92,7 @@ private:
   ~UnsafeGlobalContext();
 
 private:
-  friend struct base::DefaultSingletonTraits<UnsafeGlobalContext>;
+  friend struct ::base::DefaultSingletonTraits<UnsafeGlobalContext>;
 
   UnsafeTypeContext context_{};
 

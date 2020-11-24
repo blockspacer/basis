@@ -20,29 +20,29 @@ namespace base {
 // class TmpClass
 // {
 //  public:
-//   void TestMe(const base::Location& location)
+//   void TestMe(const ::base::Location& location)
 //   {
-//     base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(2));
+//     ::base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(2));
 //   }
 // };
 // {
-//   base::RepeatingCallback<void(const base::Location& location)> repCb
-//     = base::bindCheckedRepeating(
+//   ::base::RepeatingCallback<void(const ::base::Location& location)> repCb
+//     = ::base::bindCheckedRepeating(
 //         DEBUG_BIND_CHECKS(
 //           DELAY_TIME_LIMIT_CHECKER(base::TimeDelta::FromSeconds(3))
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
+//         , ::base::Unretained(&tmpClass)
 //     );
 //
 //   repCb.Run(FROM_HERE); // delay check ok + elapsed 2 sec in `&TmpClass::TestMe`
 //
-//   base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(2));
+//   ::base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(2));
 //
 //   repCb.Run(FROM_HERE); // delay check fail, elapsed 4 sec totally
 // }
 #define DELAY_TIME_LIMIT_CHECKER(PARAM) \
-  base::bindDelayTimeChecker(FROM_HERE, PARAM)
+  ::base::bindDelayTimeChecker(FROM_HERE, PARAM)
 
 #if DCHECK_IS_ON()
 #define DEBUG_DELAY_TIME_LIMIT_CHECKER(PTR_NAME) \
@@ -55,14 +55,14 @@ namespace base {
 class DelayTimeChecker
 {
  public:
-  static constexpr base::TimeDelta kMinDelayTime = base::TimeDelta::Min();
+  static constexpr ::base::TimeDelta kMinDelayTime = ::base::TimeDelta::Min();
 
-  static constexpr base::TimeDelta kMaxDelayTime = base::TimeDelta::Max();
+  static constexpr ::base::TimeDelta kMaxDelayTime = ::base::TimeDelta::Max();
 
   GUARD_METHOD_ON_UNKNOWN_THREAD(DelayTimeChecker)
   DelayTimeChecker(
-    const base::Location& location
-    , const base::TimeDelta& limitDelayTime)
+    const ::base::Location& location
+    , const ::base::TimeDelta& limitDelayTime)
     : startDelayTime_(base::Time::Now())
     , limitDelayTime_(limitDelayTime)
     , location_(location)
@@ -89,9 +89,9 @@ class DelayTimeChecker
   DelayTimeChecker& operator=(
     DelayTimeChecker&& other)
   {
-    startDelayTime_ = base::rvalue_cast(other.startDelayTime_);
-    limitDelayTime_ = base::rvalue_cast(other.limitDelayTime_);
-    location_ = base::rvalue_cast(other.location_);
+    startDelayTime_ = ::base::rvalue_cast(other.startDelayTime_);
+    limitDelayTime_ = ::base::rvalue_cast(other.limitDelayTime_);
+    location_ = ::base::rvalue_cast(other.location_);
     return *this;
   }
 
@@ -100,12 +100,12 @@ class DelayTimeChecker
   {
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckBeforeInvoker);
 
-    base::TimeDelta elapsedTime
-      = base::TimeDelta(base::Time::Now() - startDelayTime_);
+    ::base::TimeDelta elapsedTime
+      = ::base::TimeDelta(base::Time::Now() - startDelayTime_);
 
     DCHECK_LE(elapsedTime, kMaxDelayTime)
       << location_.ToString()
-      << " Unable to represent delay time in base::TimeDelta";
+      << " Unable to represent delay time in ::base::TimeDelta";
 
     CHECK_LE(elapsedTime, limitDelayTime_)
       << location_.ToString()
@@ -124,11 +124,11 @@ class DelayTimeChecker
   }
 
  private:
-  base::Time startDelayTime_;
+  ::base::Time startDelayTime_;
 
-  base::TimeDelta limitDelayTime_;
+  ::base::TimeDelta limitDelayTime_;
 
-  base::Location location_;
+  ::base::Location location_;
 
   // Object construction can be on any thread
   CREATE_METHOD_GUARD(DelayTimeChecker);
@@ -143,8 +143,8 @@ class DelayTimeChecker
 };
 
 DelayTimeChecker bindDelayTimeChecker(
-  const base::Location& location
-  , const base::TimeDelta& val)
+  const ::base::Location& location
+  , const ::base::TimeDelta& val)
 {
   return DelayTimeChecker{
     location

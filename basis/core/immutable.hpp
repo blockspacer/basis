@@ -23,7 +23,7 @@
 //
 //   LargeObjectList my_stuff;
 //   ... fill my_stuff with lots of LargeObjects ...
-//   some_loop->PostTask(FROM_HERE, base::BindOnce(&ProcessStuff, my_stuff));
+//   some_loop->PostTask(FROM_HERE, ::base::BindOnce(&ProcessStuff, my_stuff));
 //
 // The last line incurs the cost of copying my_stuff, which is
 // undesirable.  Here's the above code re-written using Immutable<T>:
@@ -40,7 +40,7 @@
 //   LargeObjectList my_stuff;
 //   ... fill my_stuff with lots of LargeObjects ...
 //   some_loop->PostTask(
-//       FROM_HERE, base::Bind(&ProcessStuff, MakeImmutable(&my_stuff)));
+//       FROM_HERE, ::base::Bind(&ProcessStuff, MakeImmutable(&my_stuff)));
 //
 // The last line, which resets my_stuff to a default-initialized
 // state, incurs only the cost of a swap of LargeObjectLists, which is
@@ -70,7 +70,7 @@ namespace internal {
 
 template <typename T, typename Traits>
 class ImmutableCore
-    : public base::RefCountedThreadSafe<ImmutableCore<T, Traits>> {
+    : public ::base::RefCountedThreadSafe<ImmutableCore<T, Traits>> {
  public:
   // wrapper_ is always explicitly default-initialized to handle
   // primitive types and the case where Traits::Wrapper == T.
@@ -85,7 +85,7 @@ class ImmutableCore
   const T& Get() const { return Traits::Unwrap(wrapper_); }
 
  private:
-  friend class base::RefCountedThreadSafe<ImmutableCore<T, Traits>>;
+  friend class ::base::RefCountedThreadSafe<ImmutableCore<T, Traits>>;
 
   ~ImmutableCore() { Traits::DestroyWrapper(&wrapper_); }
 

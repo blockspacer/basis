@@ -29,7 +29,7 @@ SimulationRegistry::SimulationRegistry()
 }
 
 void SimulationRegistry::set_task_runner(
-  scoped_refptr<base::SequencedTaskRunner> task_runner) noexcept
+  scoped_refptr<::base::SequencedTaskRunner> task_runner) noexcept
 {
   DCHECK(!task_runner_);
   task_runner_ = task_runner;
@@ -41,7 +41,7 @@ SimulationRegistry::~SimulationRegistry()
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
-Registry &SimulationRegistry::registry_unsafe(const base::Location& from_here) noexcept
+Registry &SimulationRegistry::registry_unsafe(const ::base::Location& from_here) noexcept
 {
   ignore_result(from_here);
   return registry_;

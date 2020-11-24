@@ -11,18 +11,18 @@
 #include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
 
-TEST(StatusTestUtil, ExpectOkSuccess) { EXPECT_OK(::util::Status::OK); }
+TEST(StatusTestUtil, ExpectOkSuccess) { EXPECT_OK(::basis::Status::OK); }
 
-TEST(StatusTestUtil, AssertOkSuccess) { ASSERT_OK(::util::Status::OK); }
+TEST(StatusTestUtil, AssertOkSuccess) { ASSERT_OK(::basis::Status::OK); }
 
 TEST(StatusTestUtil, ExpectOkFailure) {
-  ::util::Status error_status(::util::error::UNKNOWN, "error_status_message");
+  ::basis::Status error_status(::basis::error::UNKNOWN, "error_status_message");
   EXPECT_NONFATAL_FAILURE(EXPECT_OK(error_status), "error_status_message");
 }
 
 TEST(StatusTestUtil, AssertOkFailure) {
   EXPECT_FATAL_FAILURE(
-      ASSERT_OK(::util::Status(::util::error::UNKNOWN, "error_status_message")),
+      ASSERT_OK(::basis::Status(::basis::error::UNKNOWN, "error_status_message")),
       "error_status_message");
 }
 

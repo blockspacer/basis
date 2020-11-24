@@ -14,7 +14,7 @@ namespace ECS {
 
 namespace {
 base::LazyInstance<
-    base::SequenceLocalStorageSlot<
+    ::base::SequenceLocalStorageSlot<
       scoped_refptr<SequenceLocalContext>
     >
 >::Leaky
@@ -36,8 +36,8 @@ SequenceLocalContext::~SequenceLocalContext()
 
 base::WeakPtr<SequenceLocalContext>
   SequenceLocalContext::getSequenceLocalInstance(
-    const base::Location& from_here
-    , scoped_refptr<base::SequencedTaskRunner> task_runner)
+    const ::base::Location& from_here
+    , scoped_refptr<::base::SequencedTaskRunner> task_runner)
 {
   DCHECK(base::SequencedTaskRunnerHandle::IsSet())
     << "SequenceLocalStorageSlot cannot be used because no "
@@ -48,7 +48,7 @@ base::WeakPtr<SequenceLocalContext>
    * (note that `getSequenceLocalInstance` called NOT from `timeout_task_runner`):
       .ThenOn(timeout_task_runner
         , FROM_HERE
-        , base::BindOnce(
+        , ::base::BindOnce(
             &ECS::SequenceLocalContext::unset<PeriodicCheckUntilTime>
             , ECS::SequenceLocalContext::getSequenceLocalInstance(
                 FROM_HERE, timeout_task_runner)

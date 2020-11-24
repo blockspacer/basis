@@ -11,8 +11,8 @@
 //
 // Overview:
 // `bindChecked*` runs custom checks before and after callback execution.
-// base::bindCheckedOnce() and base::bindCheckedRepeating() are helpers for creating
-// base::OnceCallback and base::RepeatingCallback objects respectively and performing
+// ::base::bindCheckedOnce() and ::base::bindCheckedRepeating() are helpers for creating
+// ::base::OnceCallback and ::base::RepeatingCallback objects respectively and performing
 // checks upon callback usage.
 //
 // MOTIVATION
@@ -50,7 +50,7 @@
 //  public:
 //   TmpClass(){}
 //
-//   void TestMe(const base::Location& location)
+//   void TestMe(const ::base::Location& location)
 //   {
 //     LOG_CALL(DVLOG(99))
 //       << " a "
@@ -60,15 +60,15 @@
 //       << " location.ToString() "
 //       << location.ToString();
 //
-//     base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(1));
+//     ::base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(1));
 //   }
 //
 //   int a = 6;
 //   std::string b = "hi!";
 // };
 //
-// base::OnceCallback<int(const std::string&, int)> test1
-//   = base::bindCheckedOnce(
+// ::base::OnceCallback<int(const std::string&, int)> test1
+//   = ::base::bindCheckedOnce(
 //       DEBUG_BIND_CHECKS(
 //         REF_CHECKER(runLoop)
 //         , PTR_CHECKER(&runLoop)
@@ -84,46 +84,46 @@
 // DCHECK(base::rvalue_cast(test1).Run("hi", 2) == 4);
 //
 // DCHECK(base::ThreadPool::GetInstance());
-// scoped_refptr<base::SequencedTaskRunner> task_runner =
-//   base::ThreadPool::GetInstance()->
+// scoped_refptr<::base::SequencedTaskRunner> task_runner =
+//   ::base::ThreadPool::GetInstance()->
 //   CreateSequencedTaskRunnerWithTraits(
-//     base::TaskTraits{
-//       base::TaskPriority::BEST_EFFORT
-//       , base::MayBlock()
-//       , base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+//     ::base::TaskTraits{
+//       ::base::TaskPriority::BEST_EFFORT
+//       , ::base::MayBlock()
+//       , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
 //     }
 //   );
 //
 // TmpClass tmpClass;
 // {
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::bindCheckedOnce(
+//     , ::base::bindCheckedOnce(
 //         DEBUG_BIND_CHECKS(
 //           REF_CHECKER(tmpClass)
 //           , PTR_CHECKER(&tmpClass)
 //           , EXACT_CALL_COUNT_CHECKER(1)
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
-//         , base::Passed(FROM_HERE))
+//         , ::base::Unretained(&tmpClass)
+//         , ::base::Passed(FROM_HERE))
 //   );
 //
 //   task_runner->PostTask(
 //     FROM_HERE
-//     , base::bindCheckedOnce(
+//     , ::base::bindCheckedOnce(
 //         DEBUG_BIND_CHECKS(
 //           REF_CHECKER(tmpClass)
 //           , PTR_CHECKER(&tmpClass)
 //           , EXACT_CALL_COUNT_CHECKER(1)
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
-//         , base::Passed(FROM_HERE))
+//         , ::base::Unretained(&tmpClass)
+//         , ::base::Passed(FROM_HERE))
 //   );
 //
-//   base::RepeatingCallback<void(const base::Location& location)> repCb
-//     = base::bindCheckedRepeating(
+//   ::base::RepeatingCallback<void(const ::base::Location& location)> repCb
+//     = ::base::bindCheckedRepeating(
 //         DEBUG_BIND_CHECKS(
 //           REF_CHECKER(tmpClass)
 //           , PTR_CHECKER(&tmpClass)
@@ -132,18 +132,18 @@
 //           , DELAY_TIME_LIMIT_CHECKER(base::TimeDelta::FromSeconds(15))
 //         )
 //         , &TmpClass::TestMe
-//         , base::Unretained(&tmpClass)
+//         , ::base::Unretained(&tmpClass)
 //     );
 //
 //   repCb.Run(FROM_HERE);
 //
-//   base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(1));
+//   ::base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(1));
 //
 //   repCb.Run(FROM_HERE);
 //
-//   base::MessageLoop::current().task_runner()->PostTask(
+//   ::base::MessageLoop::current().task_runner()->PostTask(
 //     FROM_HERE
-//     , base::BindOnce(
+//     , ::base::BindOnce(
 //         repCb
 //         , FROM_HERE
 //       )
@@ -151,7 +151,7 @@
 //
 //   task_runner->PostTask(
 //     FROM_HERE
-//     , base::BindOnce(
+//     , ::base::BindOnce(
 //         repCb
 //         , FROM_HERE
 //       )
@@ -182,7 +182,7 @@ struct BindChecks final
   BindChecks& operator=(
     BindChecks<ForwardBoundArgs...>&& other)
   {
-    bound_checks_ = base::rvalue_cast(other.bound_checks_);
+    bound_checks_ = ::base::rvalue_cast(other.bound_checks_);
     return *this;
   }
 
@@ -203,7 +203,7 @@ struct BindChecks final
 
 /// \note prefer `DEBUG_BIND_CHECKS` for performance reasons
 #define BIND_CHECKS(...) \
-  base::buildBindChecks(__VA_ARGS__)
+  ::base::buildBindChecks(__VA_ARGS__)
 
 #if DCHECK_IS_ON()
 #define DEBUG_BIND_CHECKS(...) \
@@ -251,7 +251,7 @@ struct CheckedBindState final : BindStateBase {
     // CallbackCancellationTraits<>::IsCancelled returns always false.
     // Otherwise, it's std::true_type.
     return new CheckedBindState(IsCancellable{}, invoke_func,
-                         base::rvalue_cast(checker),
+                         ::base::rvalue_cast(checker),
                          std::forward<ForwardFunctor>(functor),
                          std::forward<ForwardBoundArgs>(bound_args)...);
   }
@@ -353,7 +353,7 @@ struct MakeCheckedBindStateTypeImpl<CheckerType, true, Functor, Receiver, BoundA
       !std::is_pointer<DecayedReceiver>::value ||
           IsRefCountedType<std::remove_pointer_t<DecayedReceiver>>::value,
       "Receivers may not be raw pointers. If using a raw pointer here is safe"
-      " and has no lifetime concerns, use base::Unretained() and document why"
+      " and has no lifetime concerns, use ::base::Unretained() and document why"
       " it's safe.");
   static_assert(!HasRefCountedTypeAsRawPtr<std::decay_t<BoundArgs>...>::value,
                 "A parameter is a refcounted type and needs scoped_refptr.");
@@ -543,13 +543,13 @@ bindCheckedOnce(CheckerType&& checker
   using InvokeFuncStorage = internal::BindStateBase::InvokeFuncStorage;
   CallbackType result = CallbackType(CheckedBindState::Create(
       reinterpret_cast<InvokeFuncStorage>(invoke_func),
-      base::rvalue_cast(checker),
+      ::base::rvalue_cast(checker),
       std::forward<Functor>(functor), std::forward<Args>(args)...));
 
   return result;
 }
 
-// Special cases for binding to a base::Callback without extra bound arguments.
+// Special cases for binding to a ::base::Callback without extra bound arguments.
 template <typename Signature>
 OnceCallback<Signature> bindCheckedOnce(OnceCallback<Signature> closure) {
   return closure;
@@ -594,7 +594,7 @@ bindCheckedRepeating(CheckerType&& checker, Functor&& functor, Args&&... args) {
   using InvokeFuncStorage = internal::BindStateBase::InvokeFuncStorage;
   return CallbackType(CheckedBindState::Create(
       reinterpret_cast<InvokeFuncStorage>(invoke_func),
-      base::rvalue_cast(checker),
+      ::base::rvalue_cast(checker),
       std::forward<Functor>(functor), std::forward<Args>(args)...));
 }
 

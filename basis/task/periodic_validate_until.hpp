@@ -45,15 +45,15 @@ namespace basis {
 //
 // USAGE
 //
-// basis::PeriodicValidateUntil periodicValidateUntil_{};
+// ::basis::PeriodicValidateUntil periodicValidateUntil_{};
 //
-// basis::PeriodicValidateUntil::ValidationTaskType validationTask
-//   = base::BindRepeating(
+// ::basis::PeriodicValidateUntil::ValidationTaskType validationTask
+//   = ::base::BindRepeating(
 //       [
 //       ](
 //         boost::asio::io_context& ioc
 //         , ECS::NetworkRegistry& asio_registry
-//         , COPIED() base::RepeatingClosure resolveCallback
+//         , COPIED() ::base::RepeatingClosure resolveCallback
 //       ){
 //         LOG(INFO)
 //           << "waiting for cleanup of asio registry...";
@@ -67,16 +67,16 @@ namespace basis {
 //   );
 //
 // return periodicValidateUntil_.runPromise(FROM_HERE
-//   , basis::EndingTimeout{
-//       base::TimeDelta::FromSeconds(15)} // debug-only expiration time
-//   , basis::PeriodicCheckUntil::CheckPeriod{
-//       base::TimeDelta::FromSeconds(1)}
+//   , ::basis::EndingTimeout{
+//       ::base::TimeDelta::FromSeconds(15)} // debug-only expiration time
+//   , ::basis::PeriodicCheckUntil::CheckPeriod{
+//       ::base::TimeDelta::FromSeconds(1)}
 //   , "destruction of allocated connections hanged" // debug-only error
-//   , base::rvalue_cast(validationTask)
+//   , ::base::rvalue_cast(validationTask)
 // )
 // .ThenHere(
 //   FROM_HERE
-//   , base::BindOnce(
+//   , ::base::BindOnce(
 //     []
 //     ()
 //     {
@@ -88,17 +88,17 @@ namespace basis {
 class PeriodicValidateUntil {
  public:
   using VoidPromise
-    = base::Promise<void, base::NoReject>;
+    = ::base::Promise<void, ::base::NoReject>;
 
   using ValidationTaskType
-    = base::RepeatingCallback<void(base::RepeatingClosure /*resolveCallback*/)>;
+    = ::base::RepeatingCallback<void(base::RepeatingClosure /*resolveCallback*/)>;
 
   PeriodicValidateUntil();
 
   VoidPromise runPromise(
-    const base::Location& from_here
-    , basis::EndingTimeout&& debugEndingTimeout
-    , basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod
+    const ::base::Location& from_here
+    , ::basis::EndingTimeout&& debugEndingTimeout
+    , ::basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod
     , const std::string& errorText
     , ValidationTaskType&& validationTask);
 
@@ -109,7 +109,7 @@ class PeriodicValidateUntil {
     return periodicVerifyRunner_->RunsTasksInCurrentSequence();
   }
 
-  scoped_refptr<base::SequencedTaskRunner> taskRunner()
+  scoped_refptr<::base::SequencedTaskRunner> taskRunner()
   {
     DCHECK_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
 
@@ -119,13 +119,13 @@ class PeriodicValidateUntil {
  private:
   VoidPromise promiseValidationDone(
     ValidationTaskType&& validationTask
-    , basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod) NO_EXCEPTION;
+    , ::basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod) NO_EXCEPTION;
 
  private:
-  scoped_refptr<base::SequencedTaskRunner> periodicVerifyRunner_
+  scoped_refptr<::base::SequencedTaskRunner> periodicVerifyRunner_
     GUARD_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
 
-  scoped_refptr<base::SequencedTaskRunner> timeoutTaskRunner_
+  scoped_refptr<::base::SequencedTaskRunner> timeoutTaskRunner_
     GUARD_MEMBER_OF_UNKNOWN_THREAD(timeoutTaskRunner_);
 
   SEQUENCE_CHECKER(sequence_checker_);

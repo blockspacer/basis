@@ -15,6 +15,6 @@ void initTracing(
   , const std::string& event_categories);
 
 void writeTraceReport(
-  const base::FilePath& output_filepath);
+  const ::base::FilePath& output_filepath);
 
 }  // namespace basis

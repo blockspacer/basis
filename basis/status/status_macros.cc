@@ -28,18 +28,20 @@ using ::logging::LOG_FATAL;
 using ::logging::LOG_INFO;
 using ::logging::LOG_WARNING;
 
-static ::basis::Status MakeStatus(const ::basis::ErrorSpace* error_space, int code,
+static ::basis::Status MakeStatus(const ::base::Location location, const ::basis::ErrorSpace* error_space, int code,
                                  const std::string& message) {
-  return ::basis::Status(error_space, code, message);
+  return ::basis::Status(location, error_space, code, message);
 }
 
 // Log the error at the given severity, optionally with a stack trace.
 // If log_severity is NUM_SEVERITIES, nothing is logged.
-static void LogError(const ::basis::Status& status, const char* filename,
-                     int line, LogSeverity log_severity,
-                     bool should_log_stack_trace) {
+static void LogError(const ::basis::Status& status
+  , const ::base::Location location
+  , LogSeverity log_severity
+  , bool should_log_stack_trace)
+{
   if (LIKELY(log_severity != ::logging::LOG_NUM_SEVERITIES)) {
-    LogMessage log_message(filename, line, log_severity);
+    LogMessage log_message(location.file_name(), location.line_number(), log_severity);
     log_message.stream() << status;
     // Logging actually happens in LogMessage destructor.
   }
@@ -50,7 +52,7 @@ static void LogError(const ::basis::Status& status, const char* filename,
 // should_log is false, or log_severity is NUM_SEVERITIES).  If
 // should_log_stack_trace is true, the stack trace is included in the log
 // message (ignored if should_log is false).
-static ::basis::Status MakeError(const char* filename, int line,
+static ::basis::Status MakeError(const ::base::Location location,
                                 const ::basis::ErrorSpace* error_space, int code,
                                 const std::string& message,
                                 bool should_log, LogSeverity log_severity,
@@ -60,9 +62,9 @@ static ::basis::Status MakeError(const char* filename, int line,
     error_space = ::basis::Status::canonical_space();
     code = ::basis::error::UNKNOWN;
   }
-  const ::basis::Status status = MakeStatus(error_space, code, message);
+  const ::basis::Status status = MakeStatus(location, error_space, code, message);
   if (LIKELY(should_log)) {
-    LogError(status, filename, line, log_severity, should_log_stack_trace);
+    LogError(status, location, log_severity, should_log_stack_trace);
   }
   return status;
 }
@@ -80,10 +82,12 @@ static LogSeverity GetSuppressedSeverity(
   }
 }
 
-void LogErrorWithSuppression(const ::basis::Status& status, const char* filename,
-                             int line, int log_level) {
+void LogErrorWithSuppression(const ::basis::Status& status
+  , const ::base::Location location
+  , int log_level)
+{
   const LogSeverity severity = GetSuppressedSeverity(::logging::LOG_ERROR, log_level);
-  LogError(status, filename, line, severity,
+  LogError(status, location, severity,
            false /* should_log_stack_trace */);
 }
 
@@ -94,9 +98,9 @@ void MakeErrorStream::CheckNotDone() const {
 }
 
 MakeErrorStream::Impl::Impl(
-    const char* file, int line, const ::basis::ErrorSpace* error_space, int code,
+    const ::base::Location& location, const ::basis::ErrorSpace* error_space, int code,
     MakeErrorStream* error_stream, bool is_logged_by_default)
-    : file_(file), line_(line), error_space_(error_space), code_(code),
+    : location_(location), error_space_(error_space), code_(code),
       is_done_(false),
       should_log_(is_logged_by_default),
       log_severity_(::logging::LOG_ERROR),
@@ -107,10 +111,10 @@ MakeErrorStream::Impl::Impl(
 #endif // DCHECK_IS_ON()
       make_error_stream_with_output_wrapper_(error_stream) {}
 
-MakeErrorStream::Impl::Impl(const ::basis::Status& status, const char* file,
-                            int line, MakeErrorStream* error_stream)
-    : file_(file),
-      line_(line),
+MakeErrorStream::Impl::Impl(const ::basis::Status& status
+  , const ::base::Location& location
+  , MakeErrorStream* error_stream)
+    : location_(location),
       // Make sure we show some error, even if the call is incorrect.
       error_space_(!status.ok() ? status.error_space()
                                 : ::basis::Status::canonical_space()),
@@ -135,7 +139,7 @@ MakeErrorStream::Impl::~Impl() {
 
   LOG_IF(DFATAL, !is_done_)
       << "MakeErrorStream destructed without getting Status: "
-      << file_ << ":" << line_ << " " << stream_.str();
+      << location_.ToString() << " " << stream_.str();
 }
 
 ::basis::Status MakeErrorStream::Impl::GetStatus() {
@@ -146,7 +150,7 @@ MakeErrorStream::Impl::~Impl() {
   // as a temporary, loaded with a message, and then casted to Status.
   LOG_IF(DFATAL, is_done_)
       << "MakeErrorStream got Status more than once: "
-      << file_ << ":" << line_ << " " << stream_.str();
+      << location_.ToString() << " " << stream_.str();
 
   is_done_ = true;
 
@@ -154,14 +158,13 @@ MakeErrorStream::Impl::~Impl() {
   std::string str = ::base::StrCat({prior_message_, stream_str});
   if (UNLIKELY(str.empty())) {
     return MakeError(
-        file_, line_, error_space_, code_,
-        ::base::StrCat({str, "Error without message at ", file_, ":",
-                     std::to_string(line_)}),
+        location_, error_space_, code_,
+        ::base::StrCat({str, "Error without message at ", location_.ToString()}),
         true /* should_log */, ::logging::LOG_ERROR /* log_severity */,
         should_log_stack_trace_);
   } else {
     const LogSeverity actual_severity = ::logging::LOG_ERROR;
-    return MakeError(file_, line_, error_space_, code_, str,
+    return MakeError(location_, error_space_, code_, str,
                      should_log_, actual_severity, should_log_stack_trace_);
   }
 }
@@ -169,7 +172,7 @@ MakeErrorStream::Impl::~Impl() {
 void MakeErrorStream::Impl::CheckNotDone() const {
   LOG_IF(DFATAL, is_done_)
       << "MakeErrorStream shift called after getting Status: "
-      << file_ << ":" << line_ << " " << stream_.str();
+      << location_.ToString() << " " << stream_.str();
 }
 
 }  // namespace status_macros

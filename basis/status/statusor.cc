@@ -21,7 +21,7 @@ namespace internal {
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
   // TODO(unknown): Change this to ::basis::error::INVALID_ARGUMENT.
-  return ::basis::PosixErrorToStatus(EINVAL, kMessage);
+  return ::basis::PosixErrorToStatus(FROM_HERE, EINVAL, kMessage);
 }
 
 ::basis::Status StatusOrHelper::HandleNullObjectCtorArg() {
@@ -30,7 +30,7 @@ namespace internal {
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
   // TODO(unknown): Change this to ::basis::error::INVALID_ARGUMENT.
-  return ::basis::PosixErrorToStatus(EINVAL, kMessage);
+  return ::basis::PosixErrorToStatus(FROM_HERE, EINVAL, kMessage);
 }
 
 void StatusOrHelper::Crash(const ::basis::Status& status) {

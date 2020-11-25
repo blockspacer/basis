@@ -15,8 +15,6 @@
 #include <base/strings/strcat.h>
 #include <base/synchronization/lock.h>
 
-// TODO(unknown): Move to Abseil-status when it is available.
-//
 namespace basis {
 namespace error {
 enum Code {
@@ -64,13 +62,15 @@ class ErrorSpace;
 class MUST_USE_RESULT Status final {
  public:
   // Creates a "successful" status.
-  Status();
+  Status(const ::base::Location& from_here);
 
   // Create a status in the canonical error space with the specified
   // code, and error message.  If "code == 0", error_message is
   // ignored and a Status object identical to Status::OK is
   // constructed.
-  Status(::basis::error::Code code, const std::string& error_message);
+  Status(const ::base::Location& from_here
+    , ::basis::error::Code code
+    , const std::string& error_message);
 
   // Creates a status in the specified "space", "code" and the
   // associated error message.  If "code == 0", (space,msg) are ignored
@@ -80,7 +80,10 @@ class MUST_USE_RESULT Status final {
   // two-argument constructor.
   //
   // REQUIRES: space != NULL
-  Status(const ErrorSpace* space, int code, const std::string& msg);
+  Status(const ::base::Location& from_here
+    , const ErrorSpace* space
+    , int code
+    , const std::string& msg);
 
   Status(const Status&);
   Status& operator=(const Status& x);
@@ -94,11 +97,6 @@ class MUST_USE_RESULT Status final {
     UNKNOWN_CODE = 2,    // For unknown spaces/codes
   };
 
-  // Some pre-defined Status objects
-  static const Status& OK;  // Identical to 0-arg constructor
-  static const Status& CANCELLED;
-  static const Status& UNKNOWN;
-
   // Return the canonical error space.
   static const ErrorSpace* canonical_space();
 
@@ -106,7 +104,10 @@ class MUST_USE_RESULT Status final {
   // (space,msg) are ignored and a Status object identical to Status::OK
   // is constructed.
   // REQUIRES: code == 0 OR space != NULL
-  void SetError(const ErrorSpace* space, int code, const std::string& msg);
+  void SetError(const ::base::Location& location
+    , const ErrorSpace* space
+    , int code
+    , const std::string& msg);
 
   // If "ok()", stores "new_status" into *this.  If "!ok()", preserves
   // the current "error_code()/error_message()/error_space()",
@@ -128,6 +129,9 @@ class MUST_USE_RESULT Status final {
 
   MUST_USE_RETURN_VALUE
   int error_code() const;
+
+  MUST_USE_RETURN_VALUE
+  const ::base::Location& location() const;
 
   MUST_USE_RETURN_VALUE
   const std::string& error_message() const;
@@ -198,6 +202,7 @@ class MUST_USE_RESULT Status final {
     int canonical_code;             // 0 means use space to calculate
     const ErrorSpace* space_ptr;    // NULL means canonical_space()
     std::string* message_ptr;       // NULL means empty
+    ::base::Location location;
   };
   Rep* rep_;  // Never NULL.
 
@@ -215,7 +220,7 @@ class MUST_USE_RESULT Status final {
     }
   }
 
-  void InternalSet(const ErrorSpace* space, int code, const std::string& msg,
+  void InternalSet(const ::base::Location& location, const ErrorSpace* space, int code, const std::string& msg,
                    int canonical_code);
 
   // Returns the canonical code from the status protocol buffer (if present) or
@@ -227,10 +232,17 @@ class MUST_USE_RESULT Status final {
   void PrepareToModify();
 
   MUST_USE_RETURN_VALUE
-  static Rep* NewRep(const ErrorSpace*, int code, const std::string&,
-                     int canonical_code);
-  static void ResetRep(Rep* rep, const ErrorSpace*, int code,
-                       const std::string&, int canonical_code);
+  static Rep* NewRep(const ::base::Location& location
+    , const ErrorSpace*
+    , int code
+    , const std::string&
+    , int canonical_code);
+  static void ResetRep(Rep* rep
+    , const ::base::Location& location
+    , const ErrorSpace*
+    , int code
+    , const std::string&
+    , int canonical_code);
   static bool EqualsSlow(const ::basis::Status& a, const ::basis::Status& b);
 
   // Machinery for linker initialization of the global Status objects.
@@ -304,14 +316,17 @@ class ErrorSpace {
 // ::basis::Status success comparison.
 // This is better than CHECK((val).ok()) because the embedded
 // error string gets printed by the CHECK_EQ.
-#define CHECK_OK(val) CHECK_EQ(::basis::Status::OK, (val))
-#define QCHECK_OK(val) QCHECK_EQ(::basis::Status::OK, (val))
-#define DCHECK_OK(val) DCHECK_EQ(::basis::Status::OK, (val))
+#define CHECK_OK(val) CHECK((val).ok()) << (val)
+#define QCHECK_OK(val) QCHECK((val).ok()) << (val)
+#define DCHECK_OK(val) DCHECK((val).ok()) << (val)
 
 // -----------------------------------------------------------------
 // Implementation details follow
 
-inline Status::Status() : rep_(&global_reps[0]) {}
+inline Status::Status(const ::base::Location& location)
+{
+  rep_ = NewRep(location, canonical_space(), OK_CODE, "", ::basis::error::OK);
+}
 
 inline Status::Status(const Status& x) : rep_(x.rep_) { Ref(rep_); }
 
@@ -336,6 +351,10 @@ inline Status::~Status() { Unref(rep_); }
 inline bool Status::ok() const { return rep_->code == 0; }
 
 inline int Status::error_code() const { return rep_->code; }
+
+inline const ::base::Location& Status::location() const {
+  return rep_->location;
+}
 
 inline const std::string& Status::error_message() const {
   return rep_->message_ptr ? *rep_->message_ptr : *EmptyString();
@@ -366,161 +385,10 @@ extern std::ostream& operator<<(std::ostream& os, const Status& x);
 // Returns an OK status, equivalent to a default constructed instance. This was
 // recently introduced in google3 in CL/132673373 and now everything is being
 // moved to use this instead.
-Status OkStatus();
+Status OkStatus(const ::base::Location& location);
 
 #ifndef SWIG
-inline Status OkStatus() { return Status(); }
+inline Status OkStatus(const ::base::Location& location) { return Status(location); }
 #endif  // SWIG
-
-class StatusBuilder {
- public:
-  StatusBuilder(::basis::error::Code code,
-    const ::base::Location& from_here)
-      : code_(code),
-        line_(from_here.line_number()),
-        file_(from_here.file_name()),
-        log_severity_(logging::LOG_INFO),
-        log_verbose_level_(0),
-        log_type_(LogType::kDisabled) {}
-
-  StatusBuilder& Log(LogSeverity severity) {
-    if (code_ == ::basis::error::Code::OK) return *this;
-    log_type_ = LogType::kLog;
-    log_severity_ = severity;
-    return *this;
-  }
-
-  StatusBuilder& VLog(int level) {
-    if (code_ == ::basis::error::Code::OK) return *this;
-    log_type_ = LogType::kVLog;
-    log_verbose_level_ = level;
-    return *this;
-  }
-
-  StatusBuilder& LogError() { return Log(logging::LOG_ERROR); }
-  StatusBuilder& LogWarning() { return Log(logging::LOG_WARNING); }
-  StatusBuilder& LogInfo() { return Log(logging::LOG_INFO); }
-
-  StatusBuilder& operator<<(base::StringPiece value) {
-    stream_.append(value.data(), value.size());
-    return *this;
-  }
-
-  template <typename T>
-  StatusBuilder& operator<<(const T& value) {
-    ::base::StrAppend(&stream_, value);
-    return *this;
-  }
-
-  MUST_USE_RETURN_VALUE
-  operator Status() const& {
-    Status status(code_, stream_);
-    if (log_type_ == LogType::kDisabled) return status;
-    logging::LogMessage log_message(file_.c_str(), line_, log_severity_);
-    log_message.stream() << status;
-    return status;
-  }
-
-  MUST_USE_RETURN_VALUE
-  int line() const { return line_; }
-
-  MUST_USE_RETURN_VALUE
-  const std::string& file() const { return file_; }
-
- private:
-  enum class LogType {
-    kDisabled,
-    kLog,
-    kVLog,
-  };
-
-  const ::basis::error::Code code_;
-  const int line_;
-  const std::string file_;
-  LogSeverity log_severity_;
-  int log_verbose_level_;
-  LogType log_type_;
-  std::string stream_;
-};
-
-inline StatusBuilder AbortedErrorBuilder(
-  const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::ABORTED, from_here);
-}
-
-inline StatusBuilder AlreadyExistsErrorBuilder(
-  const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::ALREADY_EXISTS, from_here);
-}
-
-inline StatusBuilder CancelledErrorBuilder(
-  const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::CANCELLED, from_here);
-}
-
-inline StatusBuilder DataLossErrorBuilder(
-  const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::DATA_LOSS, from_here);
-}
-
-inline StatusBuilder DeadlineExceededErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::DEADLINE_EXCEEDED, from_here);
-}
-
-inline StatusBuilder FailedPreconditionErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::FAILED_PRECONDITION, from_here);
-}
-
-inline StatusBuilder InternalErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::INTERNAL, from_here);
-}
-
-inline StatusBuilder InvalidArgumentErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::INVALID_ARGUMENT, from_here);
-}
-
-inline StatusBuilder NotFoundErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::NOT_FOUND, from_here);
-}
-
-inline StatusBuilder OutOfRangeErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::OUT_OF_RANGE, from_here);
-}
-
-inline StatusBuilder PermissionDeniedErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::PERMISSION_DENIED, from_here);
-}
-
-inline StatusBuilder UnauthenticatedErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::UNAUTHENTICATED, from_here);
-}
-
-inline StatusBuilder ResourceExhaustedErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::RESOURCE_EXHAUSTED, from_here);
-}
-
-inline StatusBuilder UnavailableErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::UNAVAILABLE, from_here);
-}
-
-inline StatusBuilder UnimplementedErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::UNIMPLEMENTED, from_here);
-}
-
-inline StatusBuilder UnknownErrorBuilder(
-    const ::base::Location& from_here) {
-  return StatusBuilder(::basis::error::Code::UNKNOWN, from_here);
-}
 
 }  // namespace basis

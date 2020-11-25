@@ -5,88 +5,18 @@
 
 #include "basis/status/posix_error_space.hpp" // IWYU pragma: associated
 
-#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string>
+#if defined(OS_POSIX) || defined(OS_FUCHSIA)
+#include <errno.h>
+#endif
 
 #include <base/logging.h>
-
-namespace {
-
-// glibc has traditionally implemented two incompatible versions of
-// strerror_r(). There is a poorly defined convention for picking the
-// version that we want, but it is not clear whether it even works with
-// all versions of glibc.
-// So, instead, we provide this wrapper that automatically detects the
-// version that is in use, and then implements POSIX semantics.
-// N.B. In addition to what POSIX says, we also guarantee that "buf" will
-// be set to an empty string, if this function failed. This means, in most
-// cases, you do not need to check the error code and you can directly
-// use the value of "buf". It will never have an undefined value.
-// DEPRECATED: Use StrError(int) instead.
-int posix_strerror_r(int err, char *buf, size_t len) {
-  // Sanity check input parameters
-  if (buf == NULL || len <= 0) {
-    errno = EINVAL;
-    return -1;
-  }
-
-  // Reset buf and errno, and try calling whatever version of strerror_r()
-  // is implemented by glibc
-  buf[0] = '\000';
-  int old_errno = errno;
-  errno = 0;
-  char *rc = reinterpret_cast<char *>(strerror_r(err, buf, len));
-
-  // Both versions set errno on failure
-  if (errno) {
-    // Should already be there, but better safe than sorry
-    buf[0]     = '\000';
-    return -1;
-  }
-  errno = old_errno;
-
-  // POSIX is vague about whether the string will be terminated, although
-  // is indirectly implies that typically ERANGE will be returned, instead
-  // of truncating the string. This is different from the GNU implementation.
-  // We play it safe by always terminating the string explicitly.
-  buf[len-1] = '\000';
-
-  // If the function succeeded, we can use its exit code to determine the
-  // semantics implemented by glibc
-  if (!rc) {
-    return 0;
-  } else {
-    // GNU semantics detected
-    if (rc == buf) {
-      return 0;
-    } else {
-      buf[0] = '\000';
-#if defined(OS_MACOSX) || defined(OS_FREEBSD) || defined(OS_OPENBSD)
-      if (reinterpret_cast<intptr_t>(rc) < sys_nerr) {
-        // This means an error on MacOSX or FreeBSD.
-        return -1;
-      }
+#include <base/strings/stringprintf.h>
+#if defined(OS_POSIX) || defined(OS_FUCHSIA)
+#include <base/posix/safe_strerror.h>
 #endif
-      strncat(buf, rc, len-1);
-      return 0;
-    }
-  }
-}
-
-// A thread-safe replacement for strerror(). Returns a string describing the
-// given POSIX error code.
-std::string StrError(int err) {
-  char buf[100];
-  int rc = posix_strerror_r(err, buf, sizeof(buf));
-  if ((rc < 0) || (buf[0] == '\000')) {
-    snprintf(buf, sizeof(buf), "Error number %d", err);
-  }
-  return buf;
-}
-
-} // namespace
 
 namespace basis {
 
@@ -112,8 +42,11 @@ PosixErrorSpace::PosixErrorSpace() : ErrorSpace("basis::PosixErrorSpace") {}
 
 PosixErrorSpace::~PosixErrorSpace() {}
 
-// TODO(unknown): Move to glog/StrError().
-std::string PosixErrorSpace::String(int code) const { return StrError(code); }
+std::string PosixErrorSpace::String(int code) const
+{
+  return base::safe_strerror(code) +
+         base::StringPrintf(" (%d)", code);
+}
 
 ::basis::error::Code PosixErrorSpace::CanonicalCode(
     const ::basis::Status& status) const {

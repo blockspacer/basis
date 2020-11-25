@@ -214,26 +214,26 @@ class MakeErrorStream {
   };
 
   // Make an error with ::basis::error::UNKNOWN.
-  MakeErrorStream(const char* file, int line)
-      : impl_(new Impl(file, line,
+  MakeErrorStream(const base::Location& location)
+      : impl_(new Impl(location,
                        ::basis::Status::canonical_space(),
                        ::basis::error::UNKNOWN, this)) {}
 
   // Make an error with the given error code and error_space.
-  MakeErrorStream(const char* file, int line,
+  MakeErrorStream(const ::base::Location& location,
                   const ::basis::ErrorSpace* error_space, int code)
-      : impl_(new Impl(file, line, error_space, code, this)) {}
+      : impl_(new Impl(location, error_space, code, this)) {}
 
   // Make an error that appends additional messages onto a copy of status.
-  MakeErrorStream(::basis::Status status, const char* file, int line)
-      : impl_(new Impl(status, file, line, this)) {}
+  MakeErrorStream(::basis::Status status, const ::base::Location& location)
+      : impl_(new Impl(status, location, this)) {}
 
   // Make an error with the given code, inferring its ErrorSpace from
   // code's type using the specialized ErrorCodeOptions.
   template <typename ERROR_CODE_TYPE>
-  MakeErrorStream(const char* file, int line, ERROR_CODE_TYPE code)
+  MakeErrorStream(const ::base::Location& location, ERROR_CODE_TYPE code)
     : impl_(new Impl(
-          file, line,
+          location,
           ErrorCodeOptions<ERROR_CODE_TYPE>().GetErrorSpace(),
           code, this,
           ErrorCodeOptions<ERROR_CODE_TYPE>().IsLoggedByDefault(code))) {}
@@ -290,14 +290,13 @@ class MakeErrorStream {
 
   // Adds RET_CHECK failure text to error message.
   MakeErrorStreamWithOutput& add_ret_check_failure(const char* condition) {
-    return *this << "RET_CHECK failure (" << impl_->file_ << ":" << impl_->line_
+    return *this << "RET_CHECK failure (" << impl_->location_.ToString()
                  << ") " << condition << " ";
   }
 
   // Adds RET_CHECK_FAIL text to error message.
   MakeErrorStreamWithOutput& add_ret_check_fail_failure() {
-    return *this << "RET_CHECK_FAIL failure (" << impl_->file_ << ":"
-                 << impl_->line_ << ") ";
+    return *this << "RET_CHECK_FAIL failure (" << impl_->location_.ToString() << ") ";
   }
 
   // MakeErrorStream is neither copyable nor movable.
@@ -307,11 +306,11 @@ class MakeErrorStream {
  private:
   class Impl {
    public:
-    Impl(const char* file, int line,
+    Impl(const ::base::Location& location,
          const ::basis::ErrorSpace* error_space, int  code,
          MakeErrorStream* error_stream,
          bool is_logged_by_default = true);
-    Impl(const ::basis::Status& status, const char* file, int line,
+    Impl(const ::basis::Status& status, const ::base::Location& location,
          MakeErrorStream* error_stream);
 
     ~Impl();
@@ -326,8 +325,7 @@ class MakeErrorStream {
     Impl& operator=(const Impl&) = delete;
 
    private:
-    const char* file_;
-    int line_;
+    const ::base::Location location_;
     const ::basis::ErrorSpace* error_space_;
     int code_;
 
@@ -368,11 +366,11 @@ class MakeErrorStream {
 //   return MAKE_ERROR(INTERNAL_ERROR) << "Message";
 //   ::basis::Status status = MAKE_ERROR() << "Message";
 #define MAKE_ERROR(...) \
-  ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, ##__VA_ARGS__)
+  ::basis::status_macros::MakeErrorStream(FROM_HERE, ##__VA_ARGS__)
 
 // accepts custom |base::Location| i.e. |from_here|
 #define MAKE_ERROR_HERE(from_here, ...) \
-  ::basis::status_macros::MakeErrorStream(from_here.file_name(), from_here.line_number(), ##__VA_ARGS__)
+  ::basis::status_macros::MakeErrorStream(from_here, ##__VA_ARGS__)
 
 // Return a new error based on an existing error,
 // with an additional string appended.
@@ -383,7 +381,7 @@ class MakeErrorStream {
 //   status = APPEND_ERROR(status) << ", more details";
 //   return APPEND_ERROR(status) << ", more details";
 #define APPEND_ERROR(status) \
-  ::basis::status_macros::MakeErrorStream((status), __FILE__, __LINE__)
+  ::basis::status_macros::MakeErrorStream((status), FROM_HERE)
 
 // Shorthand to make an error (with MAKE_ERROR) and return it.
 //   if (error) {
@@ -393,14 +391,14 @@ class MakeErrorStream {
 
 // Return success.
 #define RETURN_OK() \
-  return ::basis::Status::OK
+  return ::basis::OkStatus(FROM_HERE)
 
 // A macro for simplify checking and logging a condition. The error code
 // return here is the one that matches the most of the uses.
-#define RETURN_ERR_IF_FALSE(cond) \
+#define RETURN_ERR_IF_FALSE(cond, ...) \
   if (LIKELY(cond)) {    \
   } else /* NOLINT */               \
-    return MAKE_ERROR(ERR_INVALID_PARAM) << "'" << #cond << "' is false. "
+    return MAKE_ERROR(__VA_ARGS__) << "'" << #cond << "' is false. "
 
 // A simple class to explicitly cast the return value of an ::basis::Status
 // to bool.
@@ -493,14 +491,14 @@ class UtilStatusConvertibleToBool {
   /* Using _status below to avoid capture problems if expr is "status". */    \
   /* We also need the error to be in the else clause, to avoid a dangling  */ \
   /* else in the client code. (see test for example). */                      \
-  if (const ::basis::status_macros::internal::UtilStatusConvertibleToBool      \
+  if (const ::basis::status_macros::internal::UtilStatusConvertibleToBool     \
           _status = (expr)) {                                                 \
   } else /* NOLINT */                                                         \
     for (LOG(ERROR) << "Return error: " << #expr << " failed with "           \
                     << _status.status();                                      \
          true;)                                                               \
-    return ::basis::status_macros::MakeErrorStream(_status.status(), __FILE__, \
-                                                  __LINE__)                   \
+    return ::basis::status_macros::MakeErrorStream(_status.status(),          \
+                                                  FROM_HERE)                  \
         .without_logging()
 
 // Internal helper for concatenating macro values.
@@ -556,7 +554,7 @@ class UtilStatusConvertibleToBool {
 #define RET_CHECK(condition)                                             \
   while (UNLIKELY(!(condition)))                               \
     while (::basis::status_macros::helper_log_always_return_true())       \
-  return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__,      \
+  return ::basis::status_macros::MakeErrorStream(FROM_HERE,      \
                                                 ::basis::error::INTERNAL) \
       .with_log_stack_trace()                                            \
       .add_ret_check_failure(#condition)
@@ -632,7 +630,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
               google::GetReferenceableValue(val1),         \
               google::GetReferenceableValue(val2),         \
               #val1 " " #op " " #val2))                               \
-    return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+    return ::basis::status_macros::MakeErrorStream(FROM_HERE, \
                                                   ::basis::error::INTERNAL) \
         .with_log_stack_trace() \
         .add_ret_check_failure( \
@@ -647,7 +645,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
               google::GetReferenceableValue(val1),         \
               google::GetReferenceableValue(val2),         \
               #val1 " " #op " " #val2))                               \
-    return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+    return ::basis::status_macros::MakeErrorStream(FROM_HERE, \
                                                   ::basis::error::INTERNAL) \
         .with_log_stack_trace() \
         .add_ret_check_failure( \
@@ -690,7 +688,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 #define RET_CHECK_FAIL() \
   LOG(ERROR) << "Return Error: " << " at "                          \
              << __FILE__ << ":" << __LINE__;                        \
-  return ::basis::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+  return ::basis::status_macros::MakeErrorStream(FROM_HERE,         \
                                                 ::basis::error::INTERNAL) \
       .with_log_stack_trace() \
       .add_ret_check_fail_failure()

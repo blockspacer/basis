@@ -49,7 +49,7 @@
 //
 //  StatusOr<Foo*> FooFactory::MakeNewFoo(int arg) {
 //    if (arg <= 0) {
-//      return ::basis::Status(::basis::error::INVALID_ARGUMENT,
+//      return ::basis::Status(FROM_HERE, ::basis::error::INVALID_ARGUMENT,
 //                            "Arg must be positive");
 //    } else {
 //      return new Foo(arg);
@@ -75,7 +75,7 @@ class MUST_USE_RESULT StatusOr {
 
  public:
   // Construct a new StatusOr with Status::UNKNOWN status
-  StatusOr();
+  StatusOr(const base::Location& location);
 
   // Construct a new StatusOr with the given non-ok status. After calling
   // this constructor, calls to ValueOrDie() will CHECK-fail.
@@ -100,7 +100,7 @@ class MUST_USE_RESULT StatusOr {
   // REQUIRES: if T is a plain pointer, value != NULL. This requirement is
   // DCHECKed. In optimized builds, passing a NULL pointer here will have
   // the effect of passing PosixErrorSpace::EINVAL as a fallback.
-  StatusOr(const T& value);  // NOLINT
+  StatusOr(const base::Location& location, const T& value);  // NOLINT
 
   // Copy constructor.
   StatusOr(const StatusOr& other) = default;
@@ -115,11 +115,6 @@ class MUST_USE_RESULT StatusOr {
   // Conversion assignment operator, T must be assignable from U
   template <typename U>
   StatusOr& operator=(const StatusOr<U>& other);
-
-  // NOLINTNEXTLINE(runtime/explicit)
-  StatusOr(const StatusBuilder& status_builder) : status_(status_builder) {
-    EnsureNotOk();
-  }
 
 #ifndef SWIG
   // Move constructor and move-assignment operator.
@@ -137,7 +132,7 @@ class MUST_USE_RESULT StatusOr {
   // However, this could result in extra copy operations unless we use
   // std::move to avoid them, and we can't use std::move because this code
   // needs to be portable to C++03.
-  StatusOr(T&& value);  // NOLINT
+  StatusOr(const base::Location& location, T&& value);  // NOLINT
   template <typename U>
   StatusOr(StatusOr<U>&& other);  // NOLINT
   template <typename U>
@@ -315,8 +310,8 @@ struct StatusOrHelper::Specialize<T*> {
 }  // namespace internal
 
 template <typename T>
-inline StatusOr<T>::StatusOr()
-    : status_(::basis::Status::UNKNOWN), value_() {}
+inline StatusOr<T>::StatusOr(const base::Location& location)
+    : status_(location), value_() {}
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const ::basis::Status& status)
@@ -327,8 +322,8 @@ inline StatusOr<T>::StatusOr(const ::basis::Status& status)
 }
 
 template <typename T>
-inline StatusOr<T>::StatusOr(const T& value)
-    : status_(::basis::Status::OK), value_(value) {
+inline StatusOr<T>::StatusOr(const base::Location& location, const T& value)
+    : status_(location), value_(value) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value_)) {
     status_ = internal::StatusOrHelper::HandleNullObjectCtorArg();
   }
@@ -349,8 +344,8 @@ inline StatusOr<T>& StatusOr<T>::operator=(const StatusOr<U>& other) {
 
 #ifndef SWIG
 template <typename T>
-inline StatusOr<T>::StatusOr(T&& value)
-    : status_(::basis::Status::OK), value_(std::move(value)) {
+inline StatusOr<T>::StatusOr(const base::Location& location, T&& value)
+    : status_(location), value_(std::move(value)) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value_)) {
     status_ = internal::StatusOrHelper::HandleNullObjectCtorArg();
   }
@@ -405,7 +400,7 @@ inline void StatusOr<T>::EnsureOk() const {
 
 template <typename T>
 inline void StatusOr<T>::EnsureNotOk() {
-  if (ok()) internal::StatusOrHelper::HandleInvalidStatusCtorArg();
+  if (ok()) ignore_result(internal::StatusOrHelper::HandleInvalidStatusCtorArg());
 }
 
 template <typename T>

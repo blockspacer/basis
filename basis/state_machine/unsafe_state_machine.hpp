@@ -292,7 +292,7 @@ class UnsafeStateMachine {
     DVLOG(99)
       << "Changing current state to " << current_state_.load();
 
-    return ::basis::OkStatus();
+    return ::basis::OkStatus(FROM_HERE);
   }
 
   // Returns whether a given state-event pair results in a valid transition.
@@ -305,18 +305,18 @@ class UnsafeStateMachine {
     const auto transitions = table_.find(from_state);
     if (transitions == table_.end()) {
       return ::basis::Status(
-        ::basis::error::INTERNAL, "Invalid transition.");
+        FROM_HERE, ::basis::error::INTERNAL, "Invalid transition.");
     }
 
     // No transition from this state with the given event.
     const auto next_state_iter = transitions->second.find(event);
     if (next_state_iter == transitions->second.end()) {
       return ::basis::Status(
-        ::basis::error::INTERNAL, "Invalid transition.");
+        FROM_HERE, ::basis::error::INTERNAL, "Invalid transition.");
     }
 
     // A valid transition was found; return the next state.
-    return next_state_iter->second;
+    return {FROM_HERE, next_state_iter->second};
   }
 
  private:

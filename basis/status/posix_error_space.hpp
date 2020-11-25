@@ -32,8 +32,8 @@ namespace basis {
 
 const ErrorSpace* PosixErrorSpace();
 
-inline Status PosixErrorToStatus(int code, const std::string& message) {
-  return Status(PosixErrorSpace(), code, message);
+inline Status PosixErrorToStatus(const base::Location& location, int code, const std::string& message) {
+  return Status(location, PosixErrorSpace(), code, message);
 }
 
 }  // namespace basis

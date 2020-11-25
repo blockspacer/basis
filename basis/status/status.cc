@@ -17,6 +17,7 @@
 #include <base/strings/stringprintf.h>
 #include <base/synchronization/lock.h>
 #include <base/lazy_instance.h>
+#include <base/strings/substitute.h>
 
 namespace basis {
 
@@ -103,9 +104,7 @@ class GenericErrorSpace : public ErrorSpace {
       status = ::base::ToLowerASCII(
           error::CodeEnumToString(static_cast<error::Code>(code)));
     } else {
-      char buf[30];
-      snprintf(buf, sizeof(buf), "%d", code);
-      status = buf;
+      status = base::Substitute("$1", code);;
     }
     return status;
   }
@@ -144,53 +143,18 @@ const std::string* Status::EmptyString() {
   return empty_string;
 }
 
-#ifndef NDEBUG
-// Support for testing that global state can be used before it is
-// constructed.  We place this code before the initialization of
-// the globals to ensure that any constructor emitted for the globals
-// runs after InitChecker.
-struct InitChecker {
-  InitChecker() {
-    Check(::basis::Status::OK, 0, "", error::OK);
-    Check(::basis::Status::CANCELLED, Status::CANCELLED_CODE, "",
-          error::CANCELLED);
-    Check(::basis::Status::UNKNOWN, Status::UNKNOWN_CODE, "", error::UNKNOWN);
-  }
-  static void Check(const ::basis::Status s, int code, const std::string& msg,
-                    error::Code canonical_code) {
-    assert(s.ok() == (code == 0));
-    assert(s.error_code() == code);
-    assert(s.error_space() == Status::canonical_space());
-    assert(s.error_message() == msg);
-    assert(s.ToCanonical().error_code() == canonical_code);
-  }
-};
-static InitChecker checker;
-#endif
-
 // Representation for global objects.
 struct Status::Pod {
   // Structured exactly like ::basis::Status, but has no constructor so
   // it can be statically initialized
   Rep* rep_;
 };
+
 Status::Rep Status::global_reps[3] = {
-    {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, 0, nullptr, nullptr},
-    {ATOMIC_VAR_INIT(kGlobalRef), CANCELLED_CODE, 0, nullptr, nullptr},
-    {ATOMIC_VAR_INIT(kGlobalRef), UNKNOWN_CODE, 0, nullptr, nullptr}};
+  {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, 0, nullptr, nullptr, FROM_HERE}
+};
 
-const Status::Pod Status::globals[3] = {{&Status::global_reps[0]},
-                                        {&Status::global_reps[1]},
-                                        {&Status::global_reps[2]}};
-
-// This form of type-punning does not work with -Werror=strict-aliasing,
-// which we use in depot3 builds.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-const Status& Status::OK = *reinterpret_cast<const Status*>(&globals[0]);
-const Status& Status::CANCELLED = *reinterpret_cast<const Status*>(&globals[1]);
-const Status& Status::UNKNOWN = *reinterpret_cast<const Status*>(&globals[2]);
-#pragma GCC diagnostic pop
+const Status::Pod Status::globals[3] = {{&Status::global_reps[0]}};
 
 void Status::UnrefSlow(Rep* r) {
   DCHECK(r->ref != kGlobalRef);
@@ -203,25 +167,35 @@ void Status::UnrefSlow(Rep* r) {
   }
 }
 
-Status::Rep* Status::NewRep(const ErrorSpace* space, int code,
-                            const std::string& msg, int canonical_code) {
+Status::Rep* Status::NewRep(const ::base::Location& location
+  , const ErrorSpace* space
+  , int code
+  , const std::string& msg
+  , int canonical_code)
+{
   DCHECK(space != nullptr);
-  DCHECK_NE(code, 0);
   Rep* rep = new Rep;
   rep->ref = 1;
   rep->message_ptr = nullptr;
-  ResetRep(rep, space, code, msg, canonical_code);
+  rep->location = location;
+  ResetRep(rep, location, space, code, msg, canonical_code);
   return rep;
 }
 
-void Status::ResetRep(Rep* rep, const ErrorSpace* space, int code,
-                      const std::string& msg, int canonical_code) {
+void Status::ResetRep(Rep* rep
+  , const ::base::Location& location
+  , const ErrorSpace* space
+  , int code
+  , const std::string& msg
+  , int canonical_code)
+{
   DCHECK(rep != nullptr);
   DCHECK_EQ(rep->ref, 1);
   DCHECK(space != canonical_space() || canonical_code == 0);
   rep->code = code;
   rep->space_ptr = space;
   rep->canonical_code = canonical_code;
+  rep->location = location;
   if (rep->message_ptr == nullptr) {
     rep->message_ptr = new std::string(msg.data(), msg.size());
   } else if (msg != *rep->message_ptr) {
@@ -231,23 +205,20 @@ void Status::ResetRep(Rep* rep, const ErrorSpace* space, int code,
   }
 }
 
-Status::Status(error::Code code, const std::string& msg) {
-  if (code == 0) {
-    // Construct an OK status
-    rep_ = &global_reps[0];
-  } else {
-    rep_ = NewRep(canonical_space(), code, msg, 0);
-  }
+Status::Status(const ::base::Location& location
+  , error::Code code
+  , const std::string& msg)
+{
+  rep_ = NewRep(location, canonical_space(), code, msg, ::basis::error::OK);
 }
 
-Status::Status(const ErrorSpace* space, int code, const std::string& msg) {
+Status::Status(const ::base::Location& location
+  , const ErrorSpace* space
+  , int code
+  , const std::string& msg)
+{
   DCHECK(space != nullptr);
-  if (code == 0) {
-    // Construct an OK status
-    rep_ = &global_reps[0];
-  } else {
-    rep_ = NewRep(space, code, msg, 0);
-  }
+  rep_ = NewRep(location, space, code, msg, ::basis::error::OK);
 }
 
 int Status::RawCanonicalCode() const {
@@ -273,7 +244,7 @@ void Status::SetCanonicalCode(int canonical_code) {
 
 Status Status::ToCanonical() const {
   int code = RawCanonicalCode();
-  return Status(canonical_space(), code, error_message());
+  return Status(location(), canonical_space(), code, error_message());
 }
 
 void Status::Clear() {
@@ -281,41 +252,49 @@ void Status::Clear() {
   rep_ = &global_reps[0];
 }
 
-void Status::SetError(const ErrorSpace* space, int code,
-                      const std::string& msg) {
-  InternalSet(space, code, msg, 0);
+void Status::SetError(const ::base::Location& location
+  , const ErrorSpace* space
+  , int code
+  , const std::string& msg)
+{
+  InternalSet(location, space, code, msg, ::basis::error::OK);
 }
 
 void Status::PrepareToModify() {
   DCHECK(!ok());
   if (rep_->ref != 1) {
     Rep* old_rep = rep_;
-    rep_ = NewRep(error_space(), error_code(), error_message(),
+    rep_ = NewRep(location(), error_space(), error_code(), error_message(),
                   old_rep->canonical_code);
     Unref(old_rep);
   }
 }
 
-void Status::InternalSet(const ErrorSpace* space, int code,
-                         const std::string& msg, int canonical_code) {
+void Status::InternalSet(const ::base::Location& location
+  , const ErrorSpace* space
+  , int code
+  , const std::string& msg
+  , int canonical_code)
+{
   DCHECK(space != nullptr);
   if (code == 0) {
     // Construct an OK status
     Clear();
   } else if (rep_->ref == 1) {
     // Update in place
-    ResetRep(rep_, space, code, msg, canonical_code);
+    ResetRep(rep_, location, space, code, msg, canonical_code);
   } else {
     // If we are doing an update, then msg may point into rep_.
     // Wait to Unref rep_ *after* we copy these into the new rep_,
     // so that it will stay alive and unmodified while we're working.
     Rep* old_rep = rep_;
-    rep_ = NewRep(space, code, msg, canonical_code);
+    rep_ = NewRep(location, space, code, msg, canonical_code);
     Unref(old_rep);
   }
 }
 
 bool Status::EqualsSlow(const ::basis::Status& a, const ::basis::Status& b) {
+  /// \note ignore location() in comparison
   if ((a.error_code() == b.error_code()) &&
       (a.error_space() == b.error_space()) &&
       (a.error_message() == b.error_message()) &&
@@ -329,15 +308,20 @@ std::string Status::ToString() const {
   std::string status;
   const int code = error_code();
   if (code == 0) {
-    status = "OK";
+    status = base::Substitute(
+      "OK ($1)"
+      , location());
   } else {
     const ErrorSpace* const space = error_space();
-    status = ::base::StringPrintf(
-        "%s::%s: %s"
-        , space->SpaceName().c_str()
-        , space->String(code).c_str()
-        , error_message().c_str());
+    DCHECK_PTR(space);
+    status = base::Substitute(
+      "$1::$2::$3::$4"
+      , space->SpaceName()
+      , space->String(code)
+      , error_message()
+      , location());
   }
+
   return status;
 }
 
@@ -355,7 +339,7 @@ void Status::IgnoreError() const {
 }
 
 Status Status::StripMessage() const {
-  return Status(error_space(), error_code(), std::string());
+  return Status(location(), error_space(), error_code(), std::string());
 }
 
 ErrorSpace::ErrorSpace(const char* name) : name_(name) {
@@ -395,9 +379,7 @@ ErrorSpace* ErrorSpace::Find(const std::string& name) {
 // somehow somebody ends up invoking one of these methods during
 // the subclass construction/destruction phase.
 std::string ErrorSpace::String(int code) const {
-  char buf[30];
-  snprintf(buf, sizeof(buf), "%d", code);
-  return buf;
+  return base::Substitute("$1", code);
 }
 
 // Register canoncial error space.

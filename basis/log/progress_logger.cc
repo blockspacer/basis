@@ -1,4 +1,4 @@
-#include "basis/progress_logger.hpp" // IWYU pragma: associated
+#include "basis/log/progress_logger.hpp" // IWYU pragma: associated
 
 #include <algorithm>
 #include <ostream>

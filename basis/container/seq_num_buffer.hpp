@@ -14,6 +14,11 @@
 #include <base/logging.h>
 #include <base/trace_event/trace_event.h>
 
+// Fixed-size circular buffer that stores tick numbers (seq. num.) mapped to some data
+// (usually stores snapshots of server state at specific loop iteration numbers).
+// Only latest snapshots saved i.e. `tickNumToBufferIndex`
+// maps tick number (from 0 to inf) to buffer index (from 0 to buffer size)
+//
 namespace backend {
 
 //enum class PlayerLoadState {
@@ -41,8 +46,9 @@ struct UserCommand
   bool isDropped = false;
 };
 
-/// \note expected to work with ordeded sequence without holes or duplication
-/// i.e. server snapshot generation using SequenceBuffer
+/// \note expected to work with ordeded sequence num. (tick num.)
+/// without holes or duplication.
+/// i.e. server snapshot generation using LatestTickBuffer
 /// will store N last snapshots made by server
 /// \note conatainer expects that mapping tick num. to value
 /// is not frequent operation
@@ -52,14 +58,14 @@ struct UserCommand
 // 2) buffer that maps tick num. to value i.e.
 //    [tick4, tick2, tick3]
 template<typename Type, TickBufferSizeType Size>
-class SequenceBuffer {
+class LatestTickBuffer {
 public:
   typedef std::function<
     void(const Type&, const TickNumType&)
   > EachCb;
 
 public:
-  SequenceBuffer() {
+  LatestTickBuffer() {
     clear();
   }
 
@@ -155,7 +161,7 @@ public:
     ///    tickNum = 1 => buffer[1 % 6] => buffer[1]
     ///    tickNum = 6 => buffer[6 % 6] => buffer[0]
     ///    tickNum = 7 => buffer[7 % 6] => buffer[1]
-    ///    tickNum = 133 => buffer[63 % 6] => buffer[3]
+    ///    tickNum = 63 => buffer[63 % 6] => buffer[3]
     const TickNumType tickIndex = tickNum % buffer_.size();
     return tickIndex;
   }
@@ -165,7 +171,14 @@ private:
 
   TickNumType latestTick_ = 0;
 
+  // maps buffer index (from 0 to buffer size) to tick num. (from 0 to inf)
+  // i.e. sequences_[maxBufferSize_] == latestTick_
+  // i.e. sequences_[maxBufferSize_ - 1] == latestTick_ - 1
+  // i.e. sequences_[maxBufferSize_ - 2] == latestTick_ - 2
   std::array<std::optional<TickNumType>, Size> sequences_{};
+
+  // maps buffer index (from 0 to buffer size) to snapshot with custom data
+  // i.e. buffer_[latestTick_] == Type{...}
   std::array<Type, Size> buffer_{};
 };
 

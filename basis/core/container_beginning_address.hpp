@@ -7,7 +7,7 @@ namespace base {
 
 // safely get the beginning address of a vector
 template<typename T>
-inline T *BeginningAddress(
+inline T* beginningAddress(
   std::vector<T>& vec)
 {
   if (vec.size() == 0) {
@@ -19,7 +19,7 @@ inline T *BeginningAddress(
 // safely get the beginning address of a vector
 // (const overload)
 template<typename T>
-inline const T *BeginningAddress(
+inline const T* beginningAddress(
   const std::vector<T>& vec)
 {
   if (vec.size() == 0) {
@@ -30,7 +30,7 @@ inline const T *BeginningAddress(
 
 
 // safely get the beginning address of a string
-inline char* BeginningAddress(
+inline char* beginningAddress(
   std::string& str)
 {
   if (str.length() == 0) {
@@ -41,7 +41,7 @@ inline char* BeginningAddress(
 
 // safely get the beginning address of a string
 // (const overload)
-inline const char* BeginningAddress(
+inline const char* beginningAddress(
   const std::string& str)
 {
   if (str.length() == 0) {

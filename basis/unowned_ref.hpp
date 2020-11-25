@@ -7,7 +7,7 @@
 #include <base/macros.h>
 #include <base/threading/thread_collision_warner.h>
 
-#include <basis/is_reference_wrapper.hpp>
+#include <basis/concept/is_reference_wrapper.hpp>
 
 namespace basis {
 

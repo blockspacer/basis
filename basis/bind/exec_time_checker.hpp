@@ -4,7 +4,7 @@
 #include <base/bind.h>
 #include <base/time/time.h>
 
-#include <basis/scoped_checks.hpp>
+#include <basis/checks_and_guard_annotations.hpp>
 
 namespace base {
 

@@ -19,19 +19,19 @@ namespace basis {
 // An object of this type modifies a given variable in the constructor
 // and restores its original value in the destructor.
 template <typename T>
-class ValueSaver {
+class ScopedValueSaver {
  public:
-  ValueSaver(T* p, const T& newval) : ptr_(p), oldval_(*ptr_) {
+  ScopedValueSaver(T* p, const T& newval) : ptr_(p), oldval_(*ptr_) {
     *ptr_ = newval;
   }
   // The one-arg version just uses the current value as newval.
-  explicit ValueSaver(T* p) : ptr_(p), oldval_(*ptr_) {}
+  explicit ScopedValueSaver(T* p) : ptr_(p), oldval_(*ptr_) {}
 
-  ~ValueSaver() { *ptr_ = oldval_; }
+  ~ScopedValueSaver() { *ptr_ = oldval_; }
 
-  ValueSaver(ValueSaver&&) = delete;
-  ValueSaver(const ValueSaver&) = delete;
-  ValueSaver& operator=(const ValueSaver&) = delete;
+  ScopedValueSaver(ScopedValueSaver&&) = delete;
+  ScopedValueSaver(const ScopedValueSaver&) = delete;
+  ScopedValueSaver& operator=(const ScopedValueSaver&) = delete;
 
  private:
   T* const ptr_;

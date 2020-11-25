@@ -4,10 +4,13 @@
 #include <base/sequence_checker.h>
 #include <base/compiler_specific.h>
 
-#include <basis/scoped_checks.hpp>
+#include <basis/checks_and_guard_annotations.hpp>
 
 namespace basis {
 
+// Wraps `bool` with thread-safety checks.
+// You can change flag multiple times (unlike `base::AtomicFlag`)
+//
 class SequenceBoundFlag
 {
  public:

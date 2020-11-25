@@ -1,16 +1,21 @@
 #pragma once
 
-#include <cassert>
 #include <limits>
 #include <base/logging.h>
 
 /// \note in most cases use `saturated_cast` or `strict_cast`
-/// see https://github.com/blockspacer/chromium_base_conan/blob/8e45a5dc6abfc06505fd660c08ad43c592daf5aa/base/numerics/safe_conversions.h#L201
+/// see `base/numerics/safe_conversions.h`
 
-// checks during runtime
+#define DCHECK_NOT_TRUNCATED(ValueType, CastType, value) \
+  DCHECK(static_cast<ValueType>(static_cast<CastType>(value)) == value \
+           && "Cast truncates value"); \
+  DCHECK(value >= std::numeric_limits<CastType>::min()); \
+  DCHECK(value <= std::numeric_limits<CastType>::max())
+
+// checks during runtime (only in DEBUG builds!)
 // if there is a value overflow/underflow when using static_cast
 //
-// EXAMPLE (g++):
+// EXAMPLE:
 // int main() {
 //   std::int64_t ll
 //     = std::numeric_limits<std::int64_t>::max();
@@ -20,14 +25,12 @@
 //     = static_cast<std::int32_t>(ll);
 //   std::cout << t << "\n"; // 0
 //   std::int32_t m
-//     = checked_static_cast<std::int32_t>(ll);
-//   std::cout << m << "\n"; // "Cast truncates value"' failed.
+//     = numeric_static_cast<std::int32_t>(ll);
+//   std::cout << m << "\n"; // DCHECK failed with "Cast truncates value"'.
 // }
-template <typename T, typename U>
-T numeric_static_cast(U value) {
-  DCHECK(static_cast<U>(static_cast<T>(value)) == value
-           && "Cast truncates value");
-  DCHECK(value >= std::numeric_limits<T>::min());
-  DCHECK(value <= std::numeric_limits<T>::max());
-  return static_cast<T>(value);
+template <typename CastType, typename ValueType>
+CastType numeric_static_cast(ValueType value)
+{
+  DCHECK_NOT_TRUNCATED(ValueType, CastType, value);
+  return static_cast<CastType>(value);
 }

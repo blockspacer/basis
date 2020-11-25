@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "basis/scoped_checks.hpp"
+#include "basis/checks_and_guard_annotations.hpp"
 
 #include <base/timer/timer.h>
 #include <base/time/time.h>

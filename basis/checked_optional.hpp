@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basis/verify_nothing.hpp"
+#include "basis/bind/verify_nothing.hpp"
 
 #include <boost/algorithm/string.hpp>
 
@@ -14,12 +14,15 @@
 #include <base/strings/string_piece.h>
 #include <base/threading/thread_collision_warner.h>
 
-#include <basis/bitmask.h>
+#include <basis/core/bitmask.hpp>
 
 #include <functional>
 #include <map>
 #include <string>
 
+/// \note Prefer custom annotations with checks (see `checks_and_guard_annotations.hpp`)
+/// to `CheckedOptional`
+//
 namespace basis {
 
 enum class CheckedOptionalPermissions

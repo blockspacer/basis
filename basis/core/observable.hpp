@@ -4,10 +4,11 @@
 
 // Safe Observer/Observable implementation.
 //
+// Use to receive any changes in specific value.
+//
 // When using ObserverListThreadSafe, we were running into issues since there
 // was no synchronization between getting the existing value, and registering
-// as an observer. See go/cast-platform-design-synchronized-value for more
-// details.
+// as an observer.
 //
 // To fix this issue, and to make observing values safer and simpler in general,
 // use the Observable/Observer pattern in this file. When you have a value that
@@ -133,6 +134,7 @@ class Observer {
 
   ~Observer();
 
+  /// \note you can NOT register multiple callbacks
   void SetOnUpdateCallback(base::RepeatingClosure callback) {
     on_update_callback_ = std::move(callback);
   }
@@ -172,7 +174,7 @@ class Observable {
   Observer<T> Observe();
 
   void SetValue(const T& new_value);
-  const T& GetValue() const;  // NOT threadsafe!
+  const T& GetValueUnsafe() const; // NOT threadsafe!
   T GetValueThreadSafe() const;
 
  private:
@@ -201,7 +203,7 @@ class ObservableInternals
     }
   }
 
-  const T& GetValue() const { return value_; }
+  const T& GetValueUnsafe() const { return value_; } // NOT threadsafe!
 
   T GetValueThreadSafe() const {
     ::base::AutoLock lock(lock_);
@@ -413,7 +415,7 @@ void Observable<T>::SetValue(const T& new_value) {
 
 template <typename T>
 const T& Observable<T>::GetValue() const {
-  return internals_->GetValue();
+  return internals_->GetValueUnsafe();
 }
 
 template <typename T>

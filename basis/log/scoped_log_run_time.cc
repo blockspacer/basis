@@ -1,4 +1,4 @@
-#include "basis/scoped_log_run_time.hpp" // IWYU pragma: associated
+#include "basis/log/scoped_log_run_time.hpp" // IWYU pragma: associated
 
 #include <base/timer/elapsed_timer.h>
 

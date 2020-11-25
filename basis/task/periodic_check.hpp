@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 
-#include "basis/scoped_checks.hpp"
+#include "basis/checks_and_guard_annotations.hpp"
 #include "basis/strong_types/strong_alias.hpp"
 #include "basis/promise/promise.h"
 #include "basis/promise/helpers.h"

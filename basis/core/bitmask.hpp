@@ -2,7 +2,7 @@
 
 namespace basis {
 
-/// \note See also basis/enum_set.hpp
+/// \note See also `basis/core/enum_set.hpp` and `basis/core/typed_enum.hpp`
 //
 // see http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
 //

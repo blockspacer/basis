@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basis/scoped_checks.hpp"
+#include "basis/checks_and_guard_annotations.hpp"
 
 #include <base/macros.h>
 #include <base/sequence_checker.h>

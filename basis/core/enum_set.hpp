@@ -10,6 +10,8 @@
 
 namespace basis {
 
+/// \note See also `basis/core/bitmask.hpp` and `basis/core/typed_enum.hpp`
+//
 // |EnumSet| USAGE:
 //
 // enum class TestEnum {

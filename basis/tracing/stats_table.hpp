@@ -28,7 +28,7 @@
 #include <base/synchronization/lock.h>
 #include <base/threading/thread_local_storage.h>
 
-namespace base {
+namespace basis {
 
 template <class K,
           class V,
@@ -189,11 +189,11 @@ class BASE_EXPORT StatsTable {
   // we don't have a counter in our hash table, another process may
   // have created it.
   CountersMap counters_;
-  ThreadLocalStorage::Slot tls_index_;
+  ::base::ThreadLocalStorage::Slot tls_index_;
 
   static StatsTable* global_table_;
 
   DISALLOW_COPY_AND_ASSIGN(StatsTable);
 };
 
-}  // namespace base
+}  // namespace basis

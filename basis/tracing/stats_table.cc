@@ -19,13 +19,13 @@
 #include "errno.h"
 #endif
 
-namespace base {
+namespace basis {
 
 // A helper class that acquires the shared memory lock while
 // the SharedMemoryAutoLock is in scope.
 class SharedMemoryAutoLock {
  public:
-  explicit SharedMemoryAutoLock(SharedMemory* shared_memory)
+  explicit SharedMemoryAutoLock(::base::SharedMemory* shared_memory)
       : shared_memory_(shared_memory) {
     /// \todo do we need it here?
     //shared_memory_->Lock();
@@ -37,7 +37,7 @@ class SharedMemoryAutoLock {
   }
 
  private:
-  SharedMemory* shared_memory_;
+  ::base::SharedMemory* shared_memory_;
   DISALLOW_COPY_AND_ASSIGN(SharedMemoryAutoLock);
 };
 
@@ -122,7 +122,7 @@ class StatsTable::Private {
     int max_threads;
   };
 
-  SharedMemory* shared_memory() { return shared_memory_.get(); }
+  ::base::SharedMemory* shared_memory() { return shared_memory_.get(); }
 
   // Accessors for our header pointers
   TableHeader* table_header() const { return table_header_; }
@@ -136,7 +136,7 @@ class StatsTable::Private {
     return &thread_names_table_[
       (slot_id-1) * (StatsTable::kMaxThreadNameLength)];
   }
-  PlatformThreadId* thread_tid(int slot_id) const {
+  ::base::PlatformThreadId* thread_tid(int slot_id) const {
     return &(thread_tid_table_[slot_id-1]);
   }
   int* thread_pid(int slot_id) const {
@@ -164,10 +164,10 @@ class StatsTable::Private {
   // Initializes our in-memory pointers into a pre-created StatsTable.
   void ComputeMappedPointers(void* memory);
 
-  std::unique_ptr<SharedMemory> shared_memory_;
+  std::unique_ptr<::base::SharedMemory> shared_memory_;
   TableHeader* table_header_;
   char* thread_names_table_;
-  PlatformThreadId* thread_tid_table_;
+  ::base::PlatformThreadId* thread_tid_table_;
   int* thread_pid_table_;
   char* counter_names_table_;
   int* data_table_;
@@ -185,7 +185,7 @@ StatsTable::Private::Private(
     counter_names_table_(nullptr),
     data_table_(nullptr)
 {
-  shared_memory_ = std::make_unique<SharedMemory>();
+  shared_memory_ = std::make_unique<::base::SharedMemory>();
 
   if (!shared_memory_->CreateNamedDeprecated(name, true, size)) {
     /// \todo return result code
@@ -240,7 +240,7 @@ void StatsTable::Private::ComputeMappedPointers(void* memory) {
             max_threads() * StatsTable::kMaxThreadNameLength;
   offset += AlignOffset(offset);
 
-  thread_tid_table_ = reinterpret_cast<PlatformThreadId*>(data + offset);
+  thread_tid_table_ = reinterpret_cast<::base::PlatformThreadId*>(data + offset);
   offset += sizeof(int) * max_threads();
   offset += AlignOffset(offset);
 
@@ -333,10 +333,10 @@ int StatsTable::RegisterCurrentThread(const std::string& name) {
     std::string thread_name = name;
     if (name.empty())
       thread_name = kUnknownName;
-    strlcpy(impl_->thread_name(slot), thread_name.c_str(),
+    ::base::strlcpy(impl_->thread_name(slot), thread_name.c_str(),
             kMaxThreadNameLength);
-    *(impl_->thread_tid(slot)) = PlatformThread::CurrentId();
-    *(impl_->thread_pid(slot)) = GetCurrentProcId();
+    *(impl_->thread_tid(slot)) = ::base::PlatformThread::CurrentId();
+    *(impl_->thread_pid(slot)) = ::base::GetCurrentProcId();
   }
 
   // Set our thread local storage.
@@ -371,7 +371,7 @@ int StatsTable::FindOrAddCounter(const std::string& name) {
 
   // Create a scope for our auto-lock.
   {
-    AutoLock scoped_lock(counters_lock_);
+    ::base::AutoLock scoped_lock(counters_lock_);
 
     // Attempt to find the counter.
     CountersMap::const_iterator iter;
@@ -556,13 +556,13 @@ int StatsTable::AddCounter(const std::string& name) {
     std::string counter_name = name;
     if (name.empty())
       counter_name = kUnknownName;
-    strlcpy(impl_->counter_name(counter_id), counter_name.c_str(),
+    ::base::strlcpy(impl_->counter_name(counter_id), counter_name.c_str(),
             kMaxCounterNameLength);
   }
 
   // now add to our in-memory cache
   {
-    AutoLock lock(counters_lock_);
+    ::base::AutoLock lock(counters_lock_);
     counters_[name] = counter_id;
   }
   return counter_id;
@@ -579,4 +579,4 @@ StatsTable::TLSData* StatsTable::GetTLSData() const {
   return data;
 }
 
-}  // namespace base
+}  // namespace basis

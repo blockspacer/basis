@@ -20,7 +20,7 @@
 
 #include "gtest/gtest.h"
 
-namespace verible {
+namespace basis {
 namespace {
 
 TEST(SpacerTest, DefaultSpaces) {
@@ -43,4 +43,4 @@ TEST(SpacerTest, CustomSpaces) {
 }
 
 }  // namespace
-}  // namespace verible
+}  // namespace basis

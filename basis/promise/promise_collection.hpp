@@ -7,7 +7,7 @@
 #include <base/logging.h>
 #include <base/sequence_checker.h>
 
-#include <basis/bitmask.h>
+#include <basis/core/bitmask.hpp>
 #include <basis/promise/promise.h>
 #include <basis/promise/promise_value.h>
 

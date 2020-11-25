@@ -14,7 +14,7 @@
 #include "base/test/task_environment.h"
 #include "base/threading/thread.h"
 
-#include "basis/core/observer.hpp"
+#include "basis/core/observable.hpp"
 
 #include "testing/gtest/include/gtest/gtest.h"
 

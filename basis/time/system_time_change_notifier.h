@@ -13,7 +13,7 @@
 
 namespace base {
 class SequencedTaskRunner;
-}
+} // namespace base
 
 namespace basis {
 

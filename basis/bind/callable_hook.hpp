@@ -6,12 +6,12 @@
 #include <base/threading/thread_collision_warner.h>
 #include <base/rvalue_cast.h>
 
-#include <basis/polymorphic_downcast.hpp>
+#include <basis/core/polymorphic_downcast.hpp>
 #include <basis/unowned_ref.hpp>
 #include <basis/strong_types/strong_int.hpp>
 #include <base/bind.h>
 #include <base/callback.h>
-#include <basis/scoped_checks.hpp>
+#include <basis/checks_and_guard_annotations.hpp>
 
 #include <map>
 #include <string>

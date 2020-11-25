@@ -7,7 +7,7 @@
 #include <base/message_loop/message_loop.h>
 #include <base/sequence_checker.h>
 
-#include <basis/scoped_log_run_time.hpp>
+#include <basis/log/scoped_log_run_time.hpp>
 
 #include <string>
 #include <vector>

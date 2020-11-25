@@ -1,7 +1,7 @@
 #pragma once
 
-#include "basis/verify_nothing.hpp"
-#include "basis/scoped_checks.hpp"
+#include "basis/bind/verify_nothing.hpp"
+#include "basis/checks_and_guard_annotations.hpp"
 
 #include <base/macros.h>
 #include <base/sequence_checker.h>
@@ -15,7 +15,7 @@
 #include <base/sequenced_task_runner.h>
 #include <base/thread_annotations.h>
 
-#include <basis/bitmask.h>
+#include <basis/core/bitmask.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>

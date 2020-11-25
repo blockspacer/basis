@@ -10,7 +10,7 @@
 #include <base/strings/string_piece.h>
 #include <base/threading/thread_collision_warner.h>
 
-#include <basis/bitmask.h>
+#include <basis/core/bitmask.hpp>
 
 #include <functional>
 #include <map>

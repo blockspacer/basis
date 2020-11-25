@@ -3,7 +3,7 @@
 #include <base/rvalue_cast.h>
 #include <base/bind.h>
 
-#include <basis/scoped_checks.hpp>
+#include <basis/checks_and_guard_annotations.hpp>
 
 #include <atomic>
 

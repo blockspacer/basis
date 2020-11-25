@@ -33,6 +33,8 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/threading/thread_pool_util.hpp
   ${BASIS_DIR}/threading/thread_pool_util.cc
+  ${BASIS_DIR}/threading/thread_health_checker.hpp
+  ${BASIS_DIR}/threading/thread_health_checker.cc
   #
   ${BASIS_DIR}/tracing/tracing_util.hpp
   ${BASIS_DIR}/tracing/tracing_util.cc
@@ -42,18 +44,21 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/tracing/stats_table.hpp
   ${BASIS_DIR}/tracing/stats_table.cc
   #
-  ${BASIS_DIR}/scoped_log_run_time.hpp
-  ${BASIS_DIR}/scoped_log_run_time.cc
-  #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
   #
+  ${BASIS_DIR}/log/scoped_log_run_time.hpp
+  ${BASIS_DIR}/log/scoped_log_run_time.cc
   ${BASIS_DIR}/core/immutable.hpp
   ${BASIS_DIR}/core/numeric_static_cast.hpp
   ${BASIS_DIR}/core/pimpl.hpp
   ${BASIS_DIR}/core/weak_handle.hpp
-  #
-  ${BASIS_DIR}/enum_set.hpp
-  ${BASIS_DIR}/polymorphic_downcast.hpp
+  ${BASIS_DIR}/core/enum_set.hpp
+  ${BASIS_DIR}/core/bitmask.hpp
+  ${BASIS_DIR}/core/typed_enum.hpp
+  ${BASIS_DIR}/core/polymorphic_downcast.hpp
+  ${BASIS_DIR}/core/polymorphic_upcast.hpp
+  ${BASIS_DIR}/core/sequence_bound_flag.cc
+  ${BASIS_DIR}/core/sequence_bound_flag.hpp
   #
   ${BASIS_DIR}/task/periodic_prioritized_task_heap.hpp
   ${BASIS_DIR}/task/periodic_prioritized_task_heap.cc
@@ -131,6 +136,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/log/logger.hpp
   ${BASIS_DIR}/log/log_util.hpp
   ${BASIS_DIR}/log/log_util.cc
+  ${BASIS_DIR}/log/progress_logger.cc
+  ${BASIS_DIR}/log/progress_logger.hpp
   #
   ${BASIS_DIR}/task/task_util.cc
   ${BASIS_DIR}/task/task_util.hpp
@@ -143,13 +150,8 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/state_machine/unsafe_state_machine.hpp
   #
-  ${BASIS_DIR}/scoped_sequence_context_var.hpp
-  ${BASIS_DIR}/scoped_sequence_context_var.cc
-  #
-  ${BASIS_DIR}/scoped_checks.hpp
-  ${BASIS_DIR}/scoped_checks.cc
-  #
-  ${BASIS_DIR}/verify_nothing.hpp
+  ${BASIS_DIR}/checks_and_guard_annotations.hpp
+  ${BASIS_DIR}/checks_and_guard_annotations.cc
   #
   ${BASIS_DIR}/checked_optional.hpp
   #
@@ -160,12 +162,6 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/unowned_ref.hpp
   #
   ${BASIS_DIR}/promise/promise_collection.hpp
-  #
-  ${BASIS_DIR}/progress_logger.cc
-  ${BASIS_DIR}/progress_logger.hpp
-  #
-  ${BASIS_DIR}/sequence_bound_flag.cc
-  ${BASIS_DIR}/sequence_bound_flag.hpp
   #
   ${BASIS_DIR}/fail_point/fail_point.hpp
   ${BASIS_DIR}/fail_point/fail_point.cc
@@ -193,12 +189,10 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/bind/exec_time_checker.cc
   ${BASIS_DIR}/bind/callable_hook.hpp
   ${BASIS_DIR}/bind/callable_hook.cc
+  ${BASIS_DIR}/bind/verify_nothing.hpp
   #
   ${BASIS_DIR}/ECS/simulation_registry.cc
   ${BASIS_DIR}/ECS/simulation_registry.hpp
-  #
-  ${BASIS_DIR}/ECS/global_context.cc
-  ${BASIS_DIR}/ECS/global_context.hpp
   #
   ${BASIS_DIR}/ECS/unsafe_context.cc
   ${BASIS_DIR}/ECS/unsafe_context.hpp

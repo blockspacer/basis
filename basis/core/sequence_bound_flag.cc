@@ -1,4 +1,4 @@
-#include "basis/sequence_bound_flag.hpp" // IWYU pragma: associated
+#include "basis/core/sequence_bound_flag.hpp" // IWYU pragma: associated
 
 #include <base/logging.h>
 

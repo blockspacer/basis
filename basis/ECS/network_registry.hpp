@@ -3,7 +3,7 @@
 #include "basis/ECS/ecs.hpp"
 
 #include "basis/unowned_ptr.hpp" // IWYU pragma: keep
-#include "basis/scoped_checks.hpp" // IWYU pragma: keep
+#include "basis/checks_and_guard_annotations.hpp" // IWYU pragma: keep
 
 #include <base/timer/timer.h>
 #include <base/time/time.h>

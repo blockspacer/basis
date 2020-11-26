@@ -26,7 +26,7 @@ namespace ECS {
 /// (constructed entity is entity that has all required components).
 /// \note Make sure that not fully created entities are properly freed
 /// (usually that means that they must have some relationship component
-/// (like `FirstChildComponent`, `ChildLinkedList` etc.)
+/// (like `FirstChildComponent`, `ChildSiblings` etc.)
 /// that will allow them to be freed upon parent entity destruction).
 /// /// \note Do not forget to skip entity updates
 /// if it has `ECS::DelayedConstruction` component.

@@ -8,7 +8,7 @@ namespace ECS {
 
 // Represents element of hierarchy
 //
-// `ChildLinkedList` component must be emplaced into child entity.
+// `ChildSiblings` component must be emplaced into child entity.
 //
 // Allows to represent hierarchies in ECS model
 // without ruining the performance.
@@ -35,7 +35,7 @@ namespace ECS {
 * while(curr != ECS::NULL_ENTITY)
 * {
 *   // ...
-*   ChildLinkedList* currRelationComp = registry.try_get<ChildLinkedList>(curr);
+*   ChildSiblings* currRelationComp = registry.try_get<ChildSiblings>(curr);
 *   // Assume that all entities have the relationship component.
 *   DCHECK(currRelationComp);
 *   curr = currRelationComp->next;
@@ -45,10 +45,10 @@ namespace ECS {
 // USAGE
 //
 // // Same entity may have multiple (different) lists of children entities like so:
-// using ChildenNode = ChildLinkedList<class NodeTag>;
-// using ChildenWeaponGroup = ChildLinkedList<class WeaponGroupTag>;
+// using ChildenNode = ChildSiblings<class NodeTag>;
+// using ChildenWeaponGroup = ChildSiblings<class WeaponGroupTag>;
 template <typename TagT>
-struct ChildLinkedList
+struct ChildSiblings
 {
   using TagType = TagT;
 

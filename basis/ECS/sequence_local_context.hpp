@@ -36,7 +36,7 @@ struct DefaultSingletonTraits;
 
 namespace ECS {
 
-// Context that bound to single sequence.
+// Stores context variables that bound to single sequence.
 // Inspired by entt context, see for details:
 // https://github.com/skypjack/entt/wiki/Crash-Course:-entity-component-system
 class SequenceLocalContext

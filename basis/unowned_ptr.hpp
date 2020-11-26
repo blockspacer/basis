@@ -205,6 +205,14 @@ public:
     return !!pObj_;
   }
 
+  // implicit conversion
+  NOT_THREAD_SAFE_FUNCTION()
+  operator Type&() NO_EXCEPTION
+  {
+    DCHECK(pObj_);
+    return *pObj_;
+  }
+
   NOT_THREAD_SAFE_FUNCTION()
   Type& operator*() const
   {

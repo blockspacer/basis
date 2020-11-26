@@ -11,11 +11,27 @@
 #include <base/logging.h>
 #include <base/strings/strcat.h>
 #include <base/strings/utf_string_conversions.h>
+#include <base/debug/stack_trace.h>
+#include <base/feature_list.h>
 
-/// \todo
-//DEFINE_bool(status_macros_log_stack_trace, false,
-//            "If set, all errors generated will log a stack trace.");
-//DECLARE_bool(util_status_save_stack_trace);
+// If enabled `Status` will print stack trace on error by default.
+// Can be changed using `.without_log_stack_trace()`.
+constexpr char kFeaturePrintStatusStackTraceName[]
+  = "print_status_macro_stack_trace";
+
+// --enable-features=print_status_macro_stack_trace,...
+const base::Feature kFeaturePrintStatusStackTrace {
+  kFeaturePrintStatusStackTraceName, base::FEATURE_DISABLED_BY_DEFAULT
+};
+
+// If enabled, than status macros will print additional error into log.
+constexpr char kFeaturePrintStatusMacroErrorName[]
+  = "print_status_macro_error";
+
+// --enable-features=print_status_macro_error,...
+const base::Feature kFeaturePrintStatusMacroError {
+  kFeaturePrintStatusMacroErrorName, base::FEATURE_DISABLED_BY_DEFAULT
+};
 
 namespace basis {
 namespace status_macros {
@@ -28,6 +44,11 @@ using ::logging::LOG_FATAL;
 using ::logging::LOG_INFO;
 using ::logging::LOG_WARNING;
 
+bool IsMacroErrorLoggedByDefault()
+{
+  return base::FeatureList::IsEnabled(kFeaturePrintStatusMacroError);
+}
+
 static ::basis::Status MakeStatus(const ::base::Location location, const ::basis::ErrorSpace* error_space, int code,
                                  const std::string& message) {
   return ::basis::Status(location, error_space, code, message);
@@ -35,7 +56,7 @@ static ::basis::Status MakeStatus(const ::base::Location location, const ::basis
 
 // Log the error at the given severity, optionally with a stack trace.
 // If log_severity is NUM_SEVERITIES, nothing is logged.
-static void LogError(const ::basis::Status& status
+void LogError(const ::basis::Status& status
   , const ::base::Location location
   , LogSeverity log_severity
   , bool should_log_stack_trace)
@@ -43,6 +64,11 @@ static void LogError(const ::basis::Status& status
   if (LIKELY(log_severity != ::logging::LOG_NUM_SEVERITIES)) {
     LogMessage log_message(location.file_name(), location.line_number(), log_severity);
     log_message.stream() << status;
+    if(UNLIKELY(should_log_stack_trace))
+    {
+      ::base::debug::StackTrace trace;
+      log_message.stream() << "\nStackTrace:\n"<< trace;
+    }
     // Logging actually happens in LogMessage destructor.
   }
 }
@@ -63,12 +89,13 @@ static ::basis::Status MakeError(const ::base::Location location,
     code = ::basis::error::UNKNOWN;
   }
   const ::basis::Status status = MakeStatus(location, error_space, code, message);
-  if (LIKELY(should_log)) {
+  if (UNLIKELY(should_log)) {
     LogError(status, location, log_severity, should_log_stack_trace);
   }
   return status;
 }
 
+/// \todo unused
 // Returns appropriate log severity based on suppression level, or
 // NUM_SEVERITIES to indicate that logging should be disabled.
 static LogSeverity GetSuppressedSeverity(
@@ -82,6 +109,7 @@ static LogSeverity GetSuppressedSeverity(
   }
 }
 
+/// \todo unused
 void LogErrorWithSuppression(const ::basis::Status& status
   , const ::base::Location location
   , int log_level)
@@ -104,11 +132,7 @@ MakeErrorStream::Impl::Impl(
       is_done_(false),
       should_log_(is_logged_by_default),
       log_severity_(::logging::LOG_ERROR),
-#if DCHECK_IS_ON()
-      should_log_stack_trace_(true), /// \todo FLAGS_status_macros_log_stack_trace
-#else
-      should_log_stack_trace_(false), /// \todo FLAGS_status_macros_log_stack_trace
-#endif // DCHECK_IS_ON()
+      should_log_stack_trace_(base::FeatureList::IsEnabled(kFeaturePrintStatusStackTrace)),
       make_error_stream_with_output_wrapper_(error_stream) {}
 
 MakeErrorStream::Impl::Impl(const ::basis::Status& status
@@ -123,13 +147,9 @@ MakeErrorStream::Impl::Impl(const ::basis::Status& status
       is_done_(false),
       // Error code type is not visible here, so we can't call
       // IsLoggedByDefault.
-      should_log_(true),
+      should_log_(IsMacroErrorLoggedByDefault()),
       log_severity_(::logging::LOG_ERROR),
-#if DCHECK_IS_ON()
-      should_log_stack_trace_(true), /// \todo FLAGS_status_macros_log_stack_trace
-#else
-      should_log_stack_trace_(false), /// \todo FLAGS_status_macros_log_stack_trace
-#endif // DCHECK_IS_ON()
+      should_log_stack_trace_(base::FeatureList::IsEnabled(kFeaturePrintStatusStackTrace)),
       make_error_stream_with_output_wrapper_(error_stream) {
   DCHECK(!status.ok()) << "Attempted to append error text to status OK";
 }
@@ -160,7 +180,7 @@ MakeErrorStream::Impl::~Impl() {
     return MakeError(
         location_, error_space_, code_,
         ::base::StrCat({str, "Error without message at ", location_.ToString()}),
-        true /* should_log */, ::logging::LOG_ERROR /* log_severity */,
+        IsMacroErrorLoggedByDefault() /* should_log */, ::logging::LOG_ERROR /* log_severity */,
         should_log_stack_trace_);
   } else {
     const LogSeverity actual_severity = ::logging::LOG_ERROR;

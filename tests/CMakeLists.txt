@@ -301,6 +301,12 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-i18n
     "${i18n_deps}" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  set ( money_deps
+    money.test.cpp
+  )
+  tests_add_executable(${ROOT_PROJECT_NAME}-money
+    "${money_deps}" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   set ( fakeit_deps
     fakeit.test.cpp
   )

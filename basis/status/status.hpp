@@ -196,6 +196,9 @@ class MUST_USE_RESULT Status final {
  private:
   // Reference-counted representation
   static const unsigned int kGlobalRef = 0;
+
+  /// \todo remove shared representation
+  /// and check how `StatusOr` behaves during moves and copies.
   struct Rep {
     std::atomic<unsigned int> ref;  // reference count.
     int code;                       // code >= 0
@@ -382,9 +385,7 @@ inline bool Status::Matches(::basis::error::Code expected) const {
 
 extern std::ostream& operator<<(std::ostream& os, const Status& x);
 
-// Returns an OK status, equivalent to a default constructed instance. This was
-// recently introduced in google3 in CL/132673373 and now everything is being
-// moved to use this instead.
+// Returns an OK status, equivalent to a default constructed instance.
 Status OkStatus(const ::base::Location& location);
 
 #ifndef SWIG

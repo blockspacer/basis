@@ -74,6 +74,12 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/status/status_macros.cc
   ${BASIS_DIR}/status/posix_error_space.hpp
   ${BASIS_DIR}/status/posix_error_space.cc
+  ${BASIS_DIR}/status/app_error_space.hpp
+  ${BASIS_DIR}/status/app_error_space.cc
+  #
+  ${BASIS_DIR}/money/money.hpp
+  ${BASIS_DIR}/money/money_util.hpp
+  ${BASIS_DIR}/money/money_util.cc
   #
   ${BASIS_DIR}/application/application.hpp
   ${BASIS_DIR}/application/application.cc
@@ -92,9 +98,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/application/posix/paths/application_get_path.cc
   ${BASIS_DIR}/application/posix/application_configuration_posix.hpp
   #
-  ${BASIS_DIR}/test/do_nothing_promise.h
-  ${BASIS_DIR}/test/do_nothing_promise.cc
-  #
+  ${BASIS_DIR}/promise/do_nothing_promise.h
+  ${BASIS_DIR}/promise/do_nothing_promise.cc
   ${BASIS_DIR}/promise/abstract_promise.cc
   ${BASIS_DIR}/promise/abstract_promise.h
   ${BASIS_DIR}/promise/all_container_executor.h
@@ -169,21 +174,21 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/plug_point/plug_point.hpp
   ${BASIS_DIR}/plug_point/plug_point.cc
   #
-  ${BASIS_DIR}/ECS/components/parent_entity.hpp
+  ${BASIS_DIR}/ECS/components/relationship/parent_entity.hpp
   #
-  ${BASIS_DIR}/ECS/components/first_child_in_linked_list.hpp
+  ${BASIS_DIR}/ECS/components/relationship/first_child_in_linked_list.hpp
   #
-  ${BASIS_DIR}/ECS/components/child_linked_list_size.hpp
+  ${BASIS_DIR}/ECS/components/relationship/top_level_children_count.hpp
   #
-  ${BASIS_DIR}/ECS/components/child_linked_list.hpp
+  ${BASIS_DIR}/ECS/components/relationship/child_siblings.hpp
   #
-  ${BASIS_DIR}/ECS/helpers/remove_child_entity.hpp
+  ${BASIS_DIR}/ECS/helpers/relationship/remove_child_from_top_level.hpp
   #
-  ${BASIS_DIR}/ECS/helpers/foreach_child_entity.hpp
+  ${BASIS_DIR}/ECS/helpers/relationship/foreach_top_level_child.hpp
   #
-  ${BASIS_DIR}/ECS/helpers/view_child_entities.hpp
+  ${BASIS_DIR}/ECS/helpers/relationship/view_top_level_children.hpp
   #
-  ${BASIS_DIR}/ECS/helpers/prepend_child_entity.hpp
+  ${BASIS_DIR}/ECS/helpers/relationship/prepend_child_entity.hpp
   #
   ${BASIS_DIR}/bind/exec_time_checker.hpp
   ${BASIS_DIR}/bind/exec_time_checker.cc
@@ -200,8 +205,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/ECS/sequence_local_context.cc
   ${BASIS_DIR}/ECS/sequence_local_context.hpp
   #
-  ${BASIS_DIR}/ECS/network_registry.cc
-  ${BASIS_DIR}/ECS/network_registry.hpp
+  ${BASIS_DIR}/ECS/safe_registry.cc
+  ${BASIS_DIR}/ECS/safe_registry.hpp
   #
   ${BASIS_DIR}/ECS/ecs.hpp
   #

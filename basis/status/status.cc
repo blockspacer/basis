@@ -315,7 +315,7 @@ std::string Status::ToString() const {
     const ErrorSpace* const space = error_space();
     DCHECK_PTR(space);
     status = base::Substitute(
-      "$1::$2::$3::$4"
+      "$1 $2 $3 ($4)"
       , space->SpaceName()
       , space->String(code)
       , error_message()

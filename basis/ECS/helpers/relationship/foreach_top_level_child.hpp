@@ -2,28 +2,31 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/helpers/has_parent_components.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/helpers/relationship/has_parent_components.hpp>
 
 #include <base/logging.h>
 #include <base/callback.h>
 
 namespace ECS {
 
-using ForeachChildEntityCb
+using foreachTopLevelChildCb
   = ::base::RepeatingCallback<
       void(ECS::Registry&, ECS::Entity parentId, ECS::Entity childId)
     >;
 
+/// \note does not iterate hierarchy recursively
+/// i.e. does not iterate children of children of children...
+//
 // Iterates each entity in linked list
 // and calls callback on each iterated entity.
 //
 // USAGE
 //
-//  ECS::foreachChildEntity<TagType>(
+//  ECS::foreachTopLevelChild<TagType>(
 //    REFERENCED(registry)
 //    , parentEntityId
 //    , ::base::BindRepeating(
@@ -46,15 +49,15 @@ template <
   typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-void foreachChildEntity(
+void foreachTopLevelChild(
   ECS::Registry& registry
   , ECS::Entity parentId
-  , ForeachChildEntityCb callback)
+  , foreachTopLevelChildCb callback)
 {
   using FirstChildComponent = ECS::FirstChildInLinkedList<TagType>;
-  using ChildrenComponent = ECS::ChildLinkedList<TagType>;
+  using ChildrenComponent = ECS::ChildSiblings<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ECS::ChildLinkedListSize<TagType, size_t>;
+  using ChildrenSizeComponent = ECS::TopLevelChildrenCount<TagType, size_t>;
   using ParentComponent = ECS::ParentEntity<TagType>;
 
   if(parentId == ECS::NULL_ENTITY)

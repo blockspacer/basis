@@ -2,36 +2,39 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/has_parent_components.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/helpers/relationship/has_parent_components.hpp>
 
 #include <base/logging.h>
 
 namespace ECS {
 
-// Unlike `isParentOf` or `isChildOf` it will iterate all
-// nodes in linked list until `childIdToFind` found,
+/// \note does not iterate hierarchy recursively
+/// i.e. does not iterate children of children of children...
+//
+// Unlike `isParentAtTopLevelOf` or `isChildAtTopLevelOf` it will iterate all
+// nodes in linked list (only at top level) until `childIdToFind` found,
 // even if `ParentComponent` alrady points to `parentId`.
-/// \note prefer `isParentOf` or `isChildOf` because of
-/// performance reasons.
+/// \note prefer `isParentAtTopLevelOf` or `isChildAtTopLevelOf` because of performance reasons
+/// (you can check if element is part of hierarchy without iteration).
 /// \note returns `false` if child not found
 /// \note expects no child element duplication in linked list
 template <
   typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-bool hasChildInLinkedList(
+bool hasChildAtTopLevel(
   ECS::Registry& registry
   , ECS::Entity parentId
   , ECS::Entity childIdToFind)
 {
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
-  using ChildrenComponent = ChildLinkedList<TagType>;
+  using ChildrenComponent = ChildSiblings<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
+  using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
   using ParentComponent = ParentEntity<TagType>;
 
   if(parentId == ECS::NULL_ENTITY

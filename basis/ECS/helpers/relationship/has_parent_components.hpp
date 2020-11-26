@@ -2,10 +2,10 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
 
 #include <base/logging.h>
 
@@ -22,7 +22,7 @@ bool hasParentComponents(
 {
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
+  using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
 
   return
     entityId != ECS::NULL_ENTITY

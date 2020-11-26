@@ -52,7 +52,7 @@
 //      return ::basis::Status(FROM_HERE, ::basis::error::INVALID_ARGUMENT,
 //                            "Arg must be positive");
 //    } else {
-//      return new Foo(arg);
+//      return {FROM_HERE, new Foo(arg)};
 //    }
 //  }
 //
@@ -139,12 +139,30 @@ class MUST_USE_RESULT StatusOr {
   StatusOr& operator=(StatusOr<U>&& other);
 #endif  // SWIG
 
-  // Returns a reference to our status. If this contains a T, then
-  // returns Status::OK.
+  // Returns a reference to our status.
+  // If this contains a T, then returns Status::OK.
+  MUST_USE_RETURN_VALUE
   const ::basis::Status& status() const;
 
   // Returns this->status().ok()
+  MUST_USE_RETURN_VALUE
   bool ok() const;
+
+  // Returns this->status().error_code()
+  MUST_USE_RETURN_VALUE
+  int error_code() const;
+
+  // Returns this->status().location()
+  MUST_USE_RETURN_VALUE
+  const ::base::Location& location() const;
+
+  // Returns this->status().error_message()
+  MUST_USE_RETURN_VALUE
+  const ::std::string& error_message() const;
+
+  // Returns this->status().error_space()
+  MUST_USE_RETURN_VALUE
+  const ErrorSpace* error_space() const;
 
   // Returns a reference to our current value, or CHECK-fails if !this->ok().
   // If you need to initialize a T object from the stored value,
@@ -375,6 +393,26 @@ inline const ::basis::Status& StatusOr<T>::status() const {
 template <typename T>
 inline bool StatusOr<T>::ok() const {
   return status_.ok();
+}
+
+template <typename T>
+inline int StatusOr<T>::error_code() const {
+  return status_.error_code();
+}
+
+template <typename T>
+inline const ::base::Location& StatusOr<T>::location() const {
+  return status_.location();
+}
+
+template <typename T>
+inline const std::string& StatusOr<T>::error_message() const {
+  return status_.error_message();
+}
+
+template <typename T>
+inline const ErrorSpace* StatusOr<T>::error_space() const {
+  return status_.error_space();
 }
 
 template <typename T>

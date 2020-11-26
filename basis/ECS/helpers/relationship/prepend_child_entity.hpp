@@ -2,19 +2,19 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/is_child_of.hpp>
-#include <basis/ECS/helpers/has_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/helpers/relationship/is_child_at_top_level_of.hpp>
+#include <basis/ECS/helpers/relationship/has_child_at_top_level.hpp>
 
 #include <base/logging.h>
 
 namespace ECS {
 
-// Adds id of existing entity to linked list
-// as first element (NOT as last element as you may want!).
+// Adds id of existing entity to linked list (at toplevel depth)
+// as first element (modifies `FirstChildInLinkedList` component).
 // Used to represent hierarchies in ECS model.
 //
 /// \note Assumes that `childId` does not have `ParentEntity`
@@ -32,9 +32,9 @@ void prependChildEntity(
   , ECS::Entity childId)
 {
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
-  using ChildrenComponent = ChildLinkedList<TagType>;
+  using ChildrenComponent = ChildSiblings<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
+  using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
   using ParentComponent = ParentEntity<TagType>;
 
   if(parentId == ECS::NULL_ENTITY
@@ -43,7 +43,7 @@ void prependChildEntity(
     return;
   }
 
-  DCHECK(!isChildOf<TagType>(REFERENCED(registry), parentId, childId));
+  DCHECK(!isChildAtTopLevelOf<TagType>(REFERENCED(registry), parentId, childId));
 
   // sanity check
   DCHECK(parentId != childId);
@@ -135,9 +135,9 @@ void prependChildEntity(
 
   DCHECK_CHILD_ENTITY_COMPONENTS(childId, &registry, TagType);
 
-  DCHECK(isChildOf<TagType>(REFERENCED(registry), parentId, childId));
+  DCHECK(isChildAtTopLevelOf<TagType>(REFERENCED(registry), parentId, childId));
 
-  DCHECK(hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childId));
+  DCHECK(hasChildAtTopLevel<TagType>(REFERENCED(registry), parentId, childId));
 
 }
 

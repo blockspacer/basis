@@ -26,22 +26,22 @@
 
 namespace ECS {
 
-// Network registry is entt::registry
+// Safe registry is entt::registry
 // bound to task runner (for thread-safety reasons).
 // see for details:
 // https://github.com/skypjack/entt/wiki
 /// \note cause entt API is not thread-safe
 /// we must wrap it to ensure thread-safety
-class LOCKABLE NetworkRegistry {
+class LOCKABLE SafeRegistry {
 public:
-  NetworkRegistry();
+  SafeRegistry();
 
-  ~NetworkRegistry();
+  ~SafeRegistry();
 
   using TaskRunnerType
     = scoped_refptr<::base::SequencedTaskRunner>;
 
-  SET_WEAK_SELF(NetworkRegistry)
+  SET_WEAK_SELF(SafeRegistry)
 
   /// \note works only if `Type` is `base::Optional<...>`
   /// because optional allows to re-create variable using same storage
@@ -153,14 +153,15 @@ public:
     return taskRunner_;
   }
 
-  // Shortcut for `.registry`
+  // MOTIVATION
   //
-  // BEFORE
-  // DCHECK(obj.registry().empty());
+  // Allows to convert `SafeRegistry` to `ECS::Registry&` implicitly
+  // i.e. function that accepts `ECS::Registry&` will accept `SafeRegistry`.
   //
-  // AFTER
-  // DCHECK((*obj).empty());
-  const ECS::Registry& operator*() const
+  // USAGE
+  //
+  // ECS::Registry& ecs_reg = static_cast<ECS::Registry&>(safe_reg);
+  operator ECS::Registry&() NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
     DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
@@ -173,7 +174,27 @@ public:
     return registry_;
   }
 
-  ECS::Registry& operator*()
+  // Shortcut for `.registry`
+  //
+  // BEFORE
+  // DCHECK(obj.registry().empty());
+  //
+  // AFTER
+  // DCHECK((*obj).empty());
+  const ECS::Registry& operator*() const NO_EXCEPTION
+    PUBLIC_METHOD_RUN_ON(taskRunner_.get())
+  {
+    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+
+    /// \note we assume that purpose of
+    /// calling `operator*` is to change registry,
+    /// so we need to validate thread-safety
+    DCHECK_RUN_ON_SEQUENCED_RUNNER(taskRunner_.get());
+
+    return registry_;
+  }
+
+  ECS::Registry& operator*() NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
     DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
@@ -228,7 +249,7 @@ public:
 private:
   SEQUENCE_CHECKER(sequence_checker_);
 
-  // modification of |NetworkRegistry_| guarded by |taskRunner_|
+  // modification of |SafeRegistry_| guarded by |taskRunner_|
   /// \note do not destruct |Listener| while |taskRunner_|
   /// has scheduled or executing tasks
   TaskRunnerType taskRunner_
@@ -239,16 +260,16 @@ private:
   ECS::Registry registry_
     GUARD_MEMBER_OF_UNKNOWN_THREAD(registry_);
 
-  SET_WEAK_POINTERS(NetworkRegistry);
+  SET_WEAK_POINTERS(SafeRegistry);
 
-  DISALLOW_COPY_AND_ASSIGN(NetworkRegistry);
+  DISALLOW_COPY_AND_ASSIGN(SafeRegistry);
 };
 
 // Helper class used by DCHECK_RUN_ON
 class SCOPED_LOCKABLE NetRegistryScope {
  public:
   explicit NetRegistryScope(
-    const ECS::NetworkRegistry* thread_like_object)
+    const ECS::SafeRegistry* thread_like_object)
       EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
 
   NetRegistryScope(
@@ -260,25 +281,25 @@ class SCOPED_LOCKABLE NetRegistryScope {
   ~NetRegistryScope() UNLOCK_FUNCTION() {}
 
   static bool RunsTasksInCurrentSequence(
-    const ECS::NetworkRegistry* thread_like_object)
+    const ECS::SafeRegistry* thread_like_object)
   {
     return thread_like_object->RunsTasksInCurrentSequence();
   }
 };
 
-// Type of `x` is `NetworkRegistry*`
+// Type of `x` is `SafeRegistry*`
 //
 // USAGE
 //
-// NetworkRegistry networkRegistry_
+// SafeRegistry registry_
 //   // It safe to read value from any thread because its storage
 //   // expected to be not modified (if properly initialized)
-//   SET_CUSTOM_THREAD_GUARD(networkRegistry_);
+//   SET_CUSTOM_THREAD_GUARD(registry_);
 // // ...
-// DCHECK_THREAD_GUARD_SCOPE(networkRegistry_);
-// DCHECK_RUN_ON_NET_REGISTRY(&networkRegistry_);
-#define DCHECK_RUN_ON_NET_REGISTRY(x)                                              \
-  ECS::NetRegistryScope net_registry_scope(x); \
+// DCHECK_THREAD_GUARD_SCOPE(registry_);
+// DCHECK_RUN_ON_REGISTRY(&registry_);
+#define DCHECK_RUN_ON_REGISTRY(x)                                              \
+  ECS::NetRegistryScope internal_registry_scope(x); \
   DCHECK((x)); \
   DCHECK((x)->RunsTasksInCurrentSequence())
 

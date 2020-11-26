@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_TEST_DO_NOTHING_PROMISE_H_
-#define BASE_TEST_DO_NOTHING_PROMISE_H_
+#pragma once
 
 #include "basis/promise/no_op_promise_executor.h"
 
@@ -39,5 +38,3 @@ struct DoNothingPromiseBuilder {
 };
 
 }  // namespace base
-
-#endif  // BASE_TEST_DO_NOTHING_PROMISE_H_

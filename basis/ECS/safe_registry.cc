@@ -1,4 +1,4 @@
-#include "basis/ECS/network_registry.hpp" // IWYU pragma: associated
+#include "basis/ECS/safe_registry.hpp" // IWYU pragma: associated
 
 #include <base/logging.h>
 #include <base/files/file.h>
@@ -19,7 +19,7 @@
 
 namespace ECS {
 
-NetworkRegistry::NetworkRegistry()
+SafeRegistry::SafeRegistry()
   : ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_ptr_factory_(COPIED(this)))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
@@ -39,7 +39,7 @@ NetworkRegistry::NetworkRegistry()
   DETACH_FROM_SEQUENCE(sequence_checker_);
 }
 
-NetworkRegistry::~NetworkRegistry()
+SafeRegistry::~SafeRegistry()
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }

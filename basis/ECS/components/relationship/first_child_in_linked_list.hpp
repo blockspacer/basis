@@ -6,7 +6,7 @@
 
 namespace ECS {
 
-// Represents first element of hierarchy
+// Represents first element of hierarchy (at toplevel depth)
 // (first element of linked list that stores children related to parent entity).
 // `FirstChildInLinkedList` component must be emplaced into parent entity.
 //

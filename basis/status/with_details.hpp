@@ -33,7 +33,7 @@
 // You need to log both success reasons (different success reasons)
 // and fail (crash) reasons somehow.
 // But it is bad to log something in API function,
-// so you need to return reason string.
+// so you need to return reason string using `WithDetails`.
 //
 namespace basis {
 

@@ -2,12 +2,12 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/helpers/has_parent_components.hpp>
-#include <basis/ECS/helpers/is_child_of.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/helpers/relationship/has_parent_components.hpp>
+#include <basis/ECS/helpers/relationship/is_child_at_top_level_of.hpp>
 
 #include <base/logging.h>
 #include <base/callback.h>
@@ -54,15 +54,18 @@ private:
   DISALLOW_COPY_AND_ASSIGN(ScopedChildView);
 };
 
+/// \note does not iterate hierarchy recursively
+/// i.e. does not iterate children of children of children...
+//
 // Iterates each entity in linked list to create view associated with them.
 //
 // USAGE
 //
 //  auto scopedView
-//    = ECS::viewChildEntities<TagType>(
-//      REFERENCED(registry)
-//      , parentEntityId
-//    );
+//    = ECS::viewTopLevelChildren<TagType>(
+//        REFERENCED(registry)
+//        , parentEntityId
+//      );
 //
 //  for(const ECS::Entity& childId: scopedView.view())
 //  {
@@ -72,9 +75,9 @@ private:
 //
 //    DCHECK_PARENT_ENTITY_COMPONENTS(parentEntityId, &registry, TagType);
 //
-//    // update `prev` and `next` links in `ChildLinkedList` hierarchy
+//    // update `prev` and `next` links in `ChildSiblings` hierarchy
 //    bool isRemovedFromListLinks
-//      = removeChildLinks<TagType>(
+//      = removeFromSiblings<TagType>(
 //          REFERENCED(registry)
 //          , childId // childIdToRemove
 //          , childId // listBeginId
@@ -92,21 +95,21 @@ template <
   typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-auto viewChildEntities(
+auto viewTopLevelChildren(
   ECS::Registry& registry
   , ECS::Entity parentEntityId)
 {
-  using ChildrenComponent = ChildLinkedList<TagType>;
+  using ChildrenComponent = ChildSiblings<TagType>;
   using ParentComponent = ParentEntity<TagType>;
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
+  using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
 
   CREATE_ECS_TAG(Internal_ChildrenToView);
 
   DCHECK(registry.view<Internal_ChildrenToView>().empty());
 
-  ECS::foreachChildEntity<TagType>(
+  ECS::foreachTopLevelChild<TagType>(
     REFERENCED(registry)
     , parentEntityId
     , ::base::BindRepeating(
@@ -121,7 +124,7 @@ auto viewChildEntities(
         DCHECK_PARENT_ENTITY_COMPONENTS(parentId, &registry, TagType);
         DCHECK_CHILD_ENTITY_COMPONENTS(childId, &registry, TagType);
 
-        DCHECK(isChildOf<TagType>(REFERENCED(registry), parentId, childId));
+        DCHECK(isChildAtTopLevelOf<TagType>(REFERENCED(registry), parentId, childId));
 
         DCHECK(!registry.has<Internal_ChildrenToView>(childId));
         registry.emplace<Internal_ChildrenToView>(childId);

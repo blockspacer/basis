@@ -13,11 +13,11 @@ public:
 private:
   class FooImpl;
 
-  pimpl::FastPimpl<
+  ::basis::FastPimpl<
       FooImpl
       , /*Size*/40
       , /*Alignment*/1
-      , pimpl::SizePolicy::AtLeast
-      , pimpl::AlignPolicy::AtLeast
+      , ::basis::pimpl::SizePolicy::AtLeast
+      , ::basis::pimpl::AlignPolicy::AtLeast
     > m_impl;
 };

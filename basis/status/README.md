@@ -6,11 +6,122 @@ Developer guide for error handling
 
 Read comments in `status_macros.h`
 
+## TIPS AND TRICKS: Combine `StatusOr` and `WithDetails` (see `with_details.hpp`).
+
+That allows to provide custom reason text to successfull `StatusOr` (not only error message text).
+
+In functions with priority-ordered return statements, this helps with identifying the statement that took effect.
+
+But it is bad to log something in API function, so you need to return reason string using `WithDetails`.
+
+## TIPS AND TRICKS: Make debugging easy
+
+You can include extensive free form information in the error message string, but do not forget that you can access source code location that created `Status` (using `.location()` method).
+
+## TIPS AND TRICKS: Use macros to simplify these common checks:
+
+Suppose we want to read number from file or string, lets create helper functions:
+
+```cpp
+static ::basis::StatusOr<int> ParseInt(const std::string& str)
+{
+  using namespace ::app_error_space;
+
+  std::size_t index = 0;
+  int result = std::stoi(str, &index);
+  if(index == str.length()){
+    // successful conversion
+    return {FROM_HERE, result};
+  }
+
+  // something in the string stopped the conversion, at index
+  RETURN_ERROR(ERR_INVALID_PARAM).without_logging()
+    << "Invalid input string:"
+    << str;
+}
+
+static ::basis::Status GetContents(const std::string& path, std::string* data)
+{
+  using namespace ::app_error_space;
+
+  if(path.empty())
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Invalid path.";
+
+  *data = path; // for test purposes only
+
+  RETURN_OK();
+}
+```
+
+BEFORE:
+
+```cpp
+static ::basis::StatusOr<int> ReadNumber(const std::string& path) {
+  std::string data;
+  auto status = GetContents(path, &data);
+  if (!status.ok()) return status;
+
+  auto number_or = ParseInt(data)
+  if (!number_or.ok()) {
+    return number_or.status()
+  }
+
+  return number.ConsumeValueOrDie();
+}
+```
+
+AFTER:
+
+```cpp
+static ::basis::StatusOr<int> ReadNumber(const std::string& path) {
+  std::string data;
+  RETURN_IF_ERROR(GetContents(path, &data));
+
+  ASSIGN_OR_RETURN(int number, ParseInt(data));
+  return {FROM_HERE, number};
+}
+```
+
+USAGE:
+
+```cpp
+int main()
+{
+  DVLOG(99)
+    << " ReadNumber 327: "
+    << ReadNumber("327"); // OK
+  DVLOG(99)
+    << " ReadNumber abc: "
+    << ReadNumber("abc"); // ERR
+  DVLOG(99)
+    << " ReadNumber xyz: ";
+  ::basis::StatusOr<int> readNumberStatusOr = ReadNumber("xyz");
+  // `!status.ok()` required by APPEND_ERROR
+  DCHECK(!readNumberStatusOr.ok());
+  ::basis::Status readNumberStatus = readNumberStatusOr.status();
+  DVLOG(99)
+    << " Performing APPEND_ERROR ";
+  readNumberStatus = APPEND_ERROR(readNumberStatus).with_log_stack_trace()
+      << " Custom error appended.";
+  DVLOG(99)
+    << " Performing APPEND_ERROR ";
+  readNumberStatus = APPEND_ERROR(readNumberStatus).without_logging()
+      << " Another error appended.";
+  DVLOG(99)
+    << " Performing APPEND_STATUS_IF_ERROR ";
+  APPEND_STATUS_IF_ERROR(readNumberStatus, ParseInt("foo").status());
+  DVLOG(99)
+    << " Result xyz: "
+    << readNumberStatus; // ERR
+  LOG_IF_ERROR(readNumberStatus);
+  exit(0);
+}
+```
+
 ## How to map custom error code to status code
 
-Option 1: See https://github.com/stratum/stratum/blob/9f5bd2b285badbef11e81eca6c31d4a3c4342843/stratum/hal/lib/bcm/macros.h
-
-Option 2: See `app_error_space.hpp`
+See `app_error_space.hpp`
 
 ## MUST READ
 
@@ -20,26 +131,30 @@ Option 2: See `app_error_space.hpp`
 
 ## constructors
 
-For constructors, the style guide is pretty specific not to do heavy work that could fail in constructors, and prefer factory functions (plus making the constructor private) to make sure you don?t get a half-formed object.
+For constructors, the style guide is pretty specific not to do heavy work that could fail in constructors, and prefer factory functions (plus making the constructor private) to make sure you do not get a half-formed object.
 
 ## Use `Status(Or)` for error handling
 
 Explicitly declare your function to be capable of returning an error.
 
 ```cpp
-Functions which can produce an error should return a tensorflow::Status. To propagate an error status, use the TF_RETURN_IF_ERROR macro.
+Functions which can produce an error should return a Status.
 
-TF_RETURN_IF_ERROR(f());
+To propagate an error status, use the RETURN_IF_ERROR macro.
+
+RETURN_IF_ERROR(f());
 
 StatusOr
-StatusOr<T> is the union of a Status object and a T object. It offers a way to use return values instead of output parameters for functions which may fail.
+StatusOr<T> is the union of a Status object and a T object.
+
+It offers a way to use return values instead of output parameters for functions which may fail.
 
 For example, consider the code:
 
 Output out;
 Status s = foo(&out);
 if (!s.ok()) {
-  return s;
+  return {FROM_HERE, s};
 }
 out.DoSomething();
 With StatusOr<T>, we can write this as
@@ -53,17 +168,17 @@ Pros:
 
 Return values are easier to reason about than output parameters.
 
-The types returned through StatusOr<T> don't need to support empty states. To return a type as an output parameter, we must either use a unique_ptr<T> or support an empty state for the type so that we can initialize the type before passing it as an output parameter. StatusOr<T> reduces the number of objects we have in an "uninitialized" state.
+The types returned through StatusOr<T> don't need to support empty states.
+
+To return a type as an output parameter, we must either use a unique_ptr<T> or support an empty state for the type so that we can initialize the type before passing it as an output parameter.
+
+StatusOr<T> reduces the number of objects we have in an "uninitialized" state.
 
 Cons:
 
-StatusOr<T> adds complexity. It raises questions about what happens when T is null and how StatusOr<T> behaves during moves and copies. StatusOr<T> also generally comes with macros such as ASSIGN_OR_RETURN, which add additional complexity.
+StatusOr<T> adds complexity. It raises questions about what happens when T is null and how StatusOr<T> behaves during moves and copies.
 
-The current Tensorflow codebase exclusively uses Status instead of StatusOr<T>, so switching over would require a significant amount of work.
-
-Decision:
-
-Tensorflow foregoes the use of StatusOr<> because it doesn't add enough value to justify additional complexity.
+StatusOr<T> also generally comes with macros such as ASSIGN_OR_RETURN, which add additional complexity.
 ```
 
 ```cpp
@@ -112,9 +227,9 @@ Tensorflow foregoes the use of StatusOr<> because it doesn't add enough value to
 //
 //  StatusOr<Foo*> FooFactory::MakeNewFoo(int arg) {
 //    if (arg <= 0) {
-//      return tensorflow::InvalidArgument("Arg must be positive");
+//      return InvalidArgument("Arg must be positive");
 //    } else {
-//      return new Foo(arg);
+//      return {FROM_HERE, new Foo(arg)};
 //    }
 //  }
 //
@@ -127,7 +242,7 @@ Tensorflow foregoes the use of StatusOr<> because it doesn't add enough value to
 Example:
 
 ```cpp
-::util::Status ReadProtoFromBinFile(const std::string& filename,
+::basis::Status ReadProtoFromBinFile(const std::string& filename,
                                     ::google::protobuf::Message* message) {
   std::string buffer;
   RETURN_IF_ERROR(ReadFileToString(filename, &buffer));
@@ -136,22 +251,22 @@ Example:
                                     << filename << " to proto.";
   }
 
-  return ::util::OkStatus();
+  return ::basis::OkStatus(FROM_HERE);
 }
 
-::util::StatusOr<std::unique_ptr<Query>> Adapter::Subscribe(
+::basis::StatusOr<std::unique_ptr<Query>> Adapter::Subscribe(
     const std::vector<Path>& paths,
     std::unique_ptr<ChannelWriter<PhalDB>> writer, absl::Duration poll_time) {
   ASSIGN_OR_RETURN(auto db_query, database_->MakeQuery(paths));
   RETURN_IF_ERROR(db_query->Subscribe(std::move(writer), poll_time));
-  return db_query;
+  return {FROM_HERE, db_query};
 }
 
-::util::Status BFSwitch::VerifyChassisConfig(const ChassisConfig& config) {
+::basis::Status BFSwitch::VerifyChassisConfig(const ChassisConfig& config) {
   // First make sure PHAL is happy with the config then continue with the rest
   // of the managers and nodes.
   absl::ReaderMutexLock l(&chassis_lock);
-  ::util::Status status = ::util::OkStatus();
+  ::basis::Status status = ::basis::OkStatus(FROM_HERE);
   APPEND_STATUS_IF_ERROR(status, phal_interface_->VerifyChassisConfig(config));
   APPEND_STATUS_IF_ERROR(status,
                          bf_chassis_manager_->VerifyChassisConfig(config));
@@ -183,9 +298,9 @@ Example:
   return status;
 }
 
-::util::Status BFChassisManager::UnregisterEventWriters() {
+::basis::Status BFChassisManager::UnregisterEventWriters() {
   absl::WriterMutexLock l(&chassis_lock);
-  ::util::Status status = ::util::OkStatus();
+  ::basis::Status status = ::basis::OkStatus(FROM_HERE);
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
   if (!port_status_change_event_channel_->Close()) {
@@ -216,7 +331,7 @@ Example:
   return status;
 }
 
-::util::StatusOr<int> BFChassisManager::GetUnitFromNodeId(
+::basis::StatusOr<int> BFChassisManager::GetUnitFromNodeId(
     uint64 node_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -253,4 +368,149 @@ enum Code {
   DO_NOT_USE_RESERVED_FOR_FUTURE_EXPANSION_USE_DEFAULT_IN_SWITCH_INSTEAD_ = 20,
   // **DO NOT ADD ANYTHING TO THIS**
 };
+```
+
+## Example
+
+```cpp
+static ::basis::Status testErrInternal()
+{
+  ::basis::Status status =
+    MAKE_ERROR()
+      << "testErrInternal_text";
+  return status;
+}
+
+static ::basis::Status testErrInternal2()
+{
+  RETURN_ERROR(/*ERR_INVALID_PARAM*/)
+      << "testErrInternal2_text";
+}
+
+static ::basis::Status testErrInternal3()
+{
+  int port = -1;
+
+  RETURN_ERR_IF_FALSE(port >= 0)
+      << "Port ID must be non-negative. Attempted to get port " << port;
+
+  NOTREACHED();
+
+  //RETURN_ERROR(/*ERR_INVALID_PARAM*/);
+  ::basis::Status status =
+    MAKE_ERROR()
+      << "testErrInternal3_text";
+  return status;
+}
+
+static ::basis::Status testOk()
+{
+  RETURN_OK();
+}
+
+static ::basis::Status testOk2()
+{
+  return ::basis::OkStatus(FROM_HERE);
+}
+
+static ::basis::StatusOr<std::string> or_testErrInternal()
+{
+  ::basis::StatusOr<std::string> status =
+    MAKE_ERROR()
+      << "or_testErrInternal_text";
+  return status;
+}
+
+static ::basis::StatusOr<std::string> or_testErrInternal2()
+{
+  RETURN_ERROR(/*ERR_INVALID_PARAM*/)
+      << "Unsupported or_testErrInternal2.";
+}
+
+static ::basis::StatusOr<std::string> or_testOk()
+{
+  return {FROM_HERE, "or_testOk!!"};
+}
+
+static ::basis::StatusOr<std::string> or_testErrInternal3()
+{
+  int port = -1;
+
+  RETURN_ERR_IF_FALSE(port >= 0)
+      << "Port ID must be non-negative. Attempted to get port " << port;
+
+  NOTREACHED();
+
+  //RETURN_ERROR(/*ERR_INVALID_PARAM*/);
+  ::basis::Status status =
+    MAKE_ERROR()
+      << "or_testErrInternal3_text";
+  return status;
+}
+
+static ::basis::StatusOr<std::string> or_testOk2()
+{
+  return {FROM_HERE, "or_testOk2!!"};
+}
+
+int main()
+{
+  {
+    ::basis::Status resErrInternal
+      = testErrInternal();
+    ::basis::Status resErrInternal2
+      = testErrInternal2();
+    ::basis::Status resErrInternal3
+      = testErrInternal3();
+    ::basis::Status resOk
+      = testOk();
+    ::basis::Status resOk2
+      = testOk2();
+    DVLOG(99)
+      << " resErrInternal "
+      << resErrInternal;
+    DVLOG(99)
+      << " resErrInternal2 "
+      << resErrInternal2;
+    DVLOG(99)
+      << " resErrInternal3 "
+      << resErrInternal3;
+    DVLOG(99)
+      << " resOk "
+      << resOk;
+    DVLOG(99)
+      << " resOk2 "
+      << resOk2;
+  }
+
+  {
+    ::basis::StatusOr<std::string> or_resErrInternal
+      = or_testErrInternal();
+    ::basis::StatusOr<std::string> or_resErrInternal2
+      = or_testErrInternal2();
+    ::basis::StatusOr<std::string> or_resErrInternal3
+      = or_testErrInternal3();
+    ::basis::StatusOr<std::string> or_resOk
+      = or_testOk();
+    ::basis::StatusOr<std::string> or_resOk2
+      = or_testOk2();
+    DVLOG(99)
+      << " or_resErrInternal "
+      << or_resErrInternal;
+    DVLOG(99)
+      << " or_resErrInternal2 "
+      << or_resErrInternal2;
+    DVLOG(99)
+      << " or_resErrInternal3 "
+      << or_resErrInternal3;
+    DVLOG(99)
+      << " or_resOk "
+      << or_resOk;
+    DVLOG(99)
+      << " or_resOk2 "
+      << or_resOk2;
+  }
+
+  exit(0);
+}
 ```

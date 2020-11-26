@@ -2,32 +2,35 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/has_parent_components.hpp>
-#include <basis/ECS/helpers/has_child_components.hpp>
-#include <basis/ECS/helpers/has_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/helpers/relationship/has_parent_components.hpp>
+#include <basis/ECS/helpers/relationship/has_child_components.hpp>
+#include <basis/ECS/helpers/relationship/has_child_at_top_level.hpp>
 #include <base/logging.h>
 
 namespace ECS {
 
-// Unlike `hasChildInLinkedList` it will not iterate nodes in linked list,
+/// \note does not iterate hierarchy recursively
+/// i.e. does not iterate children of children of children...
+//
+// Unlike `hasChildAtTopLevel` it will not iterate nodes in linked list,
 // but check only `ParentComponent`.
 template <
   typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-bool isParentOf(
+bool isParentAtTopLevelOf(
   ECS::Registry& registry
   , ECS::Entity parentId
   , ECS::Entity childId)
 {
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
-  using ChildrenComponent = ChildLinkedList<TagType>;
+  using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
+  using ChildrenComponent = ChildSiblings<TagType>;
   using ParentComponent = ParentEntity<TagType>;
 
   if(parentId == ECS::NULL_ENTITY
@@ -64,8 +67,8 @@ bool isParentOf(
     = registry.get<ParentComponent>(childId).parentId == parentId;
 
   DCHECK(isParentByComponent
-    ? hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childId)
-    : !hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childId));
+    ? hasChildAtTopLevel<TagType>(REFERENCED(registry), parentId, childId)
+    : !hasChildAtTopLevel<TagType>(REFERENCED(registry), parentId, childId));
 
   return isParentByComponent;
 }

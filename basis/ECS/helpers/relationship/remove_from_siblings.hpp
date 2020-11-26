@@ -2,21 +2,20 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/is_child_of.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/helpers/relationship/is_child_at_top_level_of.hpp>
 
 #include <base/logging.h>
 
 namespace ECS {
 
 // Does not remove any components,
-// only updates `prev` and `next` links in `ChildLinkedList` hierarchy
+// only updates `prev` and `next` links in `ChildSiblings` hierarchy
 // i.e. you must remove some components from parent and child entity manually
-/// \note removes element only once (expects no duplicates)
-/// \note does not remove `ChildLinkedList` component from child
+/// \note expects no duplicates
+/// \note does not remove `ChildSiblings` component from child
 /// \note does not remove `ParentEntity` component from child
 /// \note does not remove child from parent components
 /// (for example, does not update children count in parent)
@@ -24,7 +23,7 @@ template <
   typename TagType // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-bool removeChildLinks(
+bool removeFromSiblings(
   ECS::Registry& registry
   , ECS::Entity childIdToRemove
   // starting element for search (search includes `listBeginId`)
@@ -32,7 +31,7 @@ bool removeChildLinks(
   // ending element for search (search includes `listEndId`)
   , ECS::Entity listEndId = ECS::NULL_ENTITY)
 {
-  using ChildrenComponent = ChildLinkedList<TagType>;
+  using ChildrenComponent = ChildSiblings<TagType>;
   using ParentComponent = ParentEntity<TagType>;
 
   if(childIdToRemove == ECS::NULL_ENTITY
@@ -66,6 +65,7 @@ bool removeChildLinks(
 
         DCHECK_CHILD_ENTITY_COMPONENTS(currPrevId, &registry, TagType);
 
+        // sanity check: siblings must have same parent
         DCHECK_EQ(registry.get<ParentComponent>(currPrevId).parentId
           , registry.get<ParentComponent>(curr).parentId);
 
@@ -82,6 +82,7 @@ bool removeChildLinks(
 
         DCHECK_CHILD_ENTITY_COMPONENTS(currNextId, &registry, TagType);
 
+        // sanity check: siblings must have same parent
         DCHECK_EQ(registry.get<ParentComponent>(currNextId).parentId
           , registry.get<ParentComponent>(curr).parentId);
 

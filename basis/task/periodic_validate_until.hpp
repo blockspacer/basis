@@ -52,7 +52,7 @@ namespace basis {
 //       [
 //       ](
 //         boost::asio::io_context& ioc
-//         , ECS::NetworkRegistry& asio_registry
+//         , ECS::SafeRegistry& asio_registry
 //         , COPIED() ::base::RepeatingClosure resolveCallback
 //       ){
 //         LOG(INFO)

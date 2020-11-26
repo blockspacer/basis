@@ -2,22 +2,25 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/has_parent_components.hpp>
-#include <basis/ECS/helpers/has_child_components.hpp>
-#include <basis/ECS/helpers/remove_child_components.hpp>
-#include <basis/ECS/helpers/remove_child_links.hpp>
-#include <basis/ECS/helpers/remove_parent_components.hpp>
-#include <basis/ECS/helpers/has_child_in_linked_list.hpp>
-#include <basis/ECS/helpers/is_child_of.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/helpers/relationship/has_parent_components.hpp>
+#include <basis/ECS/helpers/relationship/has_child_components.hpp>
+#include <basis/ECS/helpers/relationship/remove_child_components.hpp>
+#include <basis/ECS/helpers/relationship/remove_from_siblings.hpp>
+#include <basis/ECS/helpers/relationship/remove_parent_components.hpp>
+#include <basis/ECS/helpers/relationship/has_child_at_top_level.hpp>
+#include <basis/ECS/helpers/relationship/is_child_at_top_level_of.hpp>
 
 #include <base/logging.h>
 
 namespace ECS {
 
+/// \note does not iterate hierarchy recursively
+/// i.e. does not iterate children of children of children...
+//
 // Removes id of existing entity from linked list
 // and modifies components in parent and child entity.
 //
@@ -28,15 +31,15 @@ template <
   typename TagType  // unique type tag for all children
 >
 MUST_USE_RETURN_VALUE
-bool removeChildEntity(
+bool removeChildFromTopLevel(
   ECS::Registry& registry
   , ECS::Entity parentId
   , ECS::Entity childIdToRemove)
 {
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
-  using ChildrenComponent = ChildLinkedList<TagType>;
+  using ChildrenComponent = ChildSiblings<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
+  using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
   using ParentComponent = ParentEntity<TagType>;
 
   if(childIdToRemove == ECS::NULL_ENTITY
@@ -77,7 +80,7 @@ bool removeChildEntity(
 
     DCHECK_NE(childIdToRemove, firstChild.firstId);
 
-    DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+    DCHECK(!hasChildAtTopLevel<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
     return false;
   }
@@ -88,9 +91,9 @@ bool removeChildEntity(
   ChildrenComponent& childrenCompToRemove
     = registry.get<ChildrenComponent>(childIdToRemove);
 
-  if(!isChildOf<TagType>(REFERENCED(registry), parentId, childIdToRemove))
+  if(!isChildAtTopLevelOf<TagType>(REFERENCED(registry), parentId, childIdToRemove))
   {
-    DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+    DCHECK(!hasChildAtTopLevel<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
     DCHECK_NE(childIdToRemove, firstChild.firstId);
 
@@ -99,10 +102,10 @@ bool removeChildEntity(
   }
 
   /// \note change `firstChild` 
-  /// before modifications in `ChildLinkedList` hierarchy
+  /// before modifications in `ChildSiblings` hierarchy
   if(childIdToRemove == firstChild.firstId)
   {
-    DCHECK(hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+    DCHECK(hasChildAtTopLevel<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
     // mark as first element in list
     firstChild.firstId = childrenCompToRemove.nextId;
@@ -117,13 +120,13 @@ bool removeChildEntity(
     }
   }
 
-  // update `prev` and `next` links in `ChildLinkedList` hierarchy
+  // update `prev` and `next` links in `ChildSiblings` hierarchy
   bool isRemovedFromListLinks
-    = removeChildLinks<TagType>(
+    = removeFromSiblings<TagType>(
         REFERENCED(registry)
         , childIdToRemove // childIdToRemove
         // because `childIdToRemove` same as `listBeginId`
-        // it will take 1 iteraton to perform `removeChildLinks`
+        // it will take 1 iteraton to perform `removeFromSiblings`
         , childIdToRemove // listBeginId
         , ECS::NULL_ENTITY // listEndId
       );
@@ -170,10 +173,10 @@ bool removeChildEntity(
   );
 
   // child was removed from list
-  DCHECK(!hasChildInLinkedList<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+  DCHECK(!hasChildAtTopLevel<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
   // child was removed from parent components
-  DCHECK(!isChildOf<TagType>(REFERENCED(registry), parentId, childIdToRemove));
+  DCHECK(!isChildAtTopLevelOf<TagType>(REFERENCED(registry), parentId, childIdToRemove));
 
   return true;
 }

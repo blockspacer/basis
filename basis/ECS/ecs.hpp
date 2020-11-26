@@ -161,7 +161,7 @@ inline std::ostream& operator<<(
   { \
     DCHECK_ECS_ENTITY(__name__, __registry_ptr__); \
     DCHECK((__registry_ptr__)->has<ParentEntity<__tag_type__>>(__name__)); \
-    DCHECK((__registry_ptr__)->has<ChildLinkedList<__tag_type__>>(__name__)); \
+    DCHECK((__registry_ptr__)->has<ChildSiblings<__tag_type__>>(__name__)); \
   }
 
 // check that parent entity has all required components
@@ -176,8 +176,8 @@ inline std::ostream& operator<<(
     bool hasFirstChild \
       = (__registry_ptr__)->has<FirstChildInLinkedList<__tag_type__>>(__name__); \
     DCHECK(hasFirstChild); \
-    bool hasChildLinkedListSize \
-      = (__registry_ptr__)->has<ChildLinkedListSize<__tag_type__, size_t>>(__name__); \
-    DCHECK(hasChildLinkedListSize); \
+    bool hasTopLevelChildrenCount \
+      = (__registry_ptr__)->has<TopLevelChildrenCount<__tag_type__, size_t>>(__name__); \
+    DCHECK(hasTopLevelChildrenCount); \
   }
 } // namespace ECS

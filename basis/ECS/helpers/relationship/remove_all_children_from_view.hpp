@@ -2,21 +2,24 @@
 
 #include <basis/ECS/ecs.hpp>
 
-#include <basis/ECS/components/child_linked_list.hpp>
-#include <basis/ECS/components/first_child_in_linked_list.hpp>
-#include <basis/ECS/components/parent_entity.hpp>
-#include <basis/ECS/components/child_linked_list_size.hpp>
-#include <basis/ECS/helpers/foreach_child_entity.hpp>
-#include <basis/ECS/helpers/view_child_entities.hpp>
-#include <basis/ECS/helpers/remove_child_links.hpp>
-#include <basis/ECS/helpers/remove_parent_components.hpp>
-#include <basis/ECS/helpers/remove_child_components.hpp>
-#include <basis/ECS/helpers/is_child_of.hpp>
+#include <basis/ECS/components/relationship/child_siblings.hpp>
+#include <basis/ECS/components/relationship/first_child_in_linked_list.hpp>
+#include <basis/ECS/components/relationship/parent_entity.hpp>
+#include <basis/ECS/components/relationship/top_level_children_count.hpp>
+#include <basis/ECS/helpers/relationship/foreach_top_level_child.hpp>
+#include <basis/ECS/helpers/relationship/view_top_level_children.hpp>
+#include <basis/ECS/helpers/relationship/remove_from_siblings.hpp>
+#include <basis/ECS/helpers/relationship/remove_parent_components.hpp>
+#include <basis/ECS/helpers/relationship/remove_child_components.hpp>
+#include <basis/ECS/helpers/relationship/is_child_at_top_level_of.hpp>
 
 #include <base/logging.h>
 
 namespace ECS {
 
+/// \todo not tested with recursive hierarchy
+/// i.e. does not iterate children of children of children...
+//
 // Removes all children associated with `parent`.
 // Does modification of components both in parent and children.
 /// \note does not destroy children entities,
@@ -51,7 +54,7 @@ void removeAllChildrenFromView(
   using ParentComponent = ParentEntity<TagType>;
   using FirstChildComponent = FirstChildInLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
-  using ChildrenSizeComponent = ChildLinkedListSize<TagType, size_t>;
+  using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
 
   auto targetView
     = registry.view<
@@ -73,10 +76,10 @@ void removeAllChildrenFromView(
     DCHECK_PARENT_ENTITY_COMPONENTS(parentEntityId, &registry, TagType);
 
     auto scopedView
-      = ECS::viewChildEntities<TagType>(
-        REFERENCED(registry)
-        , parentEntityId
-      );
+      = ECS::viewTopLevelChildren<TagType>(
+          REFERENCED(registry)
+          , parentEntityId
+        );
 
     for(const ECS::Entity& childId: scopedView.view())
     {
@@ -86,15 +89,15 @@ void removeAllChildrenFromView(
 
       DCHECK_PARENT_ENTITY_COMPONENTS(parentEntityId, &registry, TagType);
 
-      DCHECK(isChildOf<TagType>(REFERENCED(registry), parentEntityId, childId));
+      DCHECK(isChildAtTopLevelOf<TagType>(REFERENCED(registry), parentEntityId, childId));
 
-      // update `prev` and `next` links in `ChildLinkedList` hierarchy
+      // update `prev` and `next` links in `ChildSiblings` hierarchy
       bool isRemovedFromListLinks
-        = removeChildLinks<TagType>(
+        = removeFromSiblings<TagType>(
             REFERENCED(registry)
             , childId // childIdToRemove
             // because `childIdToRemove` same as `listBeginId`
-            // it will take 1 iteraton to perform `removeChildLinks`
+            // it will take 1 iteraton to perform `removeFromSiblings`
             , childId // listBeginId
             , ECS::NULL_ENTITY // listEndId
           );

@@ -30,7 +30,7 @@ namespace ECS {
 // using ParentNode = ParentEntity<class NodeTag>;
 // using ParentWeaponGroup = ParentEntity<class WeaponGroupTag>;
 template <typename TagT>
-struct ParentEntity
+CREATE_ECS_COMPONENT(ParentEntity)
 {
   using TagType = TagT;
 
@@ -39,3 +39,5 @@ struct ParentEntity
 };
 
 } // namespace ECS
+
+ECS_DECLARE_METATYPE_TEMPLATE_1ARG(ParentEntity);

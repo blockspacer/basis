@@ -54,6 +54,8 @@ private:
   DISALLOW_COPY_AND_ASSIGN(ScopedChildView);
 };
 
+CREATE_ECS_TAG(Internal_ChildrenToView);
+
 /// \note does not iterate hierarchy recursively
 /// i.e. does not iterate children of children of children...
 //
@@ -105,8 +107,6 @@ auto viewTopLevelChildren(
   /// \note we assume that size of all children can be stored in `size_t`
   using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
 
-  CREATE_ECS_TAG(Internal_ChildrenToView);
-
   DCHECK(registry.view<Internal_ChildrenToView>().empty());
 
   ECS::foreachTopLevelChild<TagType>(
@@ -137,3 +137,5 @@ auto viewTopLevelChildren(
 }
 
 } // namespace ECS
+
+ECS_DECLARE_METATYPE(Internal_ChildrenToView);

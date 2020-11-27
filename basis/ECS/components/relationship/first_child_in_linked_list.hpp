@@ -20,7 +20,7 @@ namespace ECS {
 // using FirstNode = FirstChildInLinkedList<class NodeTag>;
 // using FirstWeaponGroup = FirstChildInLinkedList<class WeaponGroupTag>;
 template <typename TagT>
-struct FirstChildInLinkedList
+CREATE_ECS_COMPONENT(FirstChildInLinkedList)
 {
   using TagType = TagT;
 
@@ -29,3 +29,5 @@ struct FirstChildInLinkedList
 };
 
 } // namespace ECS
+
+ECS_DECLARE_METATYPE_TEMPLATE_1ARG(FirstChildInLinkedList);

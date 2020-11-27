@@ -17,6 +17,11 @@
 
 namespace ECS {
 
+// To work around issues during iterations we store aside
+// the entities and the components to be removed
+// and perform the operations at the end of the iteration.
+CREATE_ECS_TAG(Internal_ChildrenToRemove);
+
 /// \todo not tested with recursive hierarchy
 /// i.e. does not iterate children of children of children...
 //
@@ -65,11 +70,6 @@ void removeAllChildrenFromView(
           Exclude...
         >
       );
-
-  // To work around issues during iterations we store aside
-  // the entities and the components to be removed
-  // and perform the operations at the end of the iteration.
-  CREATE_ECS_TAG(Internal_ChildrenToRemove);
 
   for(const ECS::Entity& parentEntityId: targetView)
   {
@@ -157,3 +157,5 @@ void removeAllChildrenFromView(
 }
 
 } // namespace ECS
+
+ECS_DECLARE_METATYPE(Internal_ChildrenToRemove);

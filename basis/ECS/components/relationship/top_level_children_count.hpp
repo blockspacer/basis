@@ -18,7 +18,7 @@ namespace ECS {
 // using ChildenSizeNode = TopLevelChildrenCount<class NodeTag, size_t>;
 // using ChildenSizeWeaponGroup = TopLevelChildrenCount<class WeaponGroupTag, size_t>;
 template <typename TagT, typename SizeT>
-struct TopLevelChildrenCount
+CREATE_ECS_COMPONENT(TopLevelChildrenCount)
 {
   using SizeType = SizeT;
   using TagType = TagT;
@@ -27,3 +27,5 @@ struct TopLevelChildrenCount
 };
 
 } // namespace ECS
+
+ECS_DECLARE_METATYPE_TEMPLATE_2ARG(TopLevelChildrenCount);

@@ -73,7 +73,6 @@ public:
     checkForLifetimeIssues();
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   UnownedPtr(
     UnownedPtr&& other)
   {
@@ -89,7 +88,6 @@ public:
     }
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   UnownedPtr& operator=(
     UnownedPtr&& other)
   {
@@ -106,7 +104,6 @@ public:
     return *this;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   UnownedPtr& operator=(
     UNOWNED_LIFETIME(Type*) that)
   {
@@ -120,7 +117,6 @@ public:
     return *this;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   UnownedPtr& operator=(
     const UnownedPtr& that)
   {
@@ -137,28 +133,24 @@ public:
     return *this;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   bool operator==(
     const UnownedPtr& that) const
   {
     return Get() == that.Get();
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   bool operator!=(
     const UnownedPtr& that) const
   {
     return !(*this == that);
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   bool operator<(
     const UnownedPtr& that) const
   {
     return std::less<Type*>()(Get(), that.Get());
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   template <typename U>
   bool operator==(
     const U* that) const
@@ -166,7 +158,6 @@ public:
     return Get() == that;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   template <typename U>
   bool operator!=(
     const U* that) const
@@ -178,7 +169,6 @@ public:
   /// so call it manually.
   /// \note Do not do stupid things like
   /// `delete unownedPtr.Get();` // WRONG
-  NOT_THREAD_SAFE_FUNCTION()
   Type* Get() const
   {
     return pObj_;
@@ -187,7 +177,6 @@ public:
   /// \note it does not destruct |pObj_|,
   /// it just sets |pObj_| to nullptr without memory deallocation
   /// Use `Release()` when you want to delete |pObj_|
-  NOT_THREAD_SAFE_FUNCTION()
   Type* Release()
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
@@ -199,28 +188,24 @@ public:
     return pTemp;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   explicit operator bool() const
   {
     return !!pObj_;
   }
 
   // implicit conversion
-  NOT_THREAD_SAFE_FUNCTION()
   operator Type&() NO_EXCEPTION
   {
     DCHECK(pObj_);
     return *pObj_;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   Type& operator*() const
   {
     DCHECK(pObj_);
     return *pObj_;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   Type* operator->() const
   {
     DCHECK(pObj_);

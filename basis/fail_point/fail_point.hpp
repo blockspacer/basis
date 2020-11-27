@@ -15,6 +15,52 @@
 #include <functional>
 #include <string>
 
+// USAGE
+//
+// STRONG_FAIL_POINT(FailPoint_RecievedData);
+//
+#define STRONG_FAIL_POINT(VAR) \
+  using VAR \
+    = ::basis::StrongFailPoint< \
+          class FP_##VAR##Tag \
+        >
+
+// USAGE
+//
+// GET_FAIL_POINT(failPoint, FailPoint_FP1);
+// if(UNLIKELY(failPoint->checkFail()))
+// {
+//   DCHECK_EQ(failPoint->data().FindIntPath("int_key").value(), 1234);
+// }
+#define GET_FAIL_POINT(VAR, ...) \
+  __VA_ARGS__* VAR = \
+    __VA_ARGS__::GetInstance(FROM_HERE, \
+      ::basis::FailPointName{STRINGIFY_VA_ARG(__VA_ARGS__)})
+
+// USAGE
+//
+// GET_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
+// RETURN_IF_FAIL_POINT_FAIL(failPointPtr, REFERENCED(message));
+#define RETURN_IF_FAIL_POINT(failPoint, ...) \
+  do {                                       \
+    if(UNLIKELY(failPoint->checkFail()))     \
+    {                                        \
+      return;                                \
+    }                                        \
+  } while (0)
+
+// USAGE
+//
+// GET_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
+// SET_IF_FAIL_POINT(failPointPtr, forceClosing = true);
+#define SET_IF_FAIL_POINT(failPoint, ...) \
+  do {                                    \
+    if(UNLIKELY(failPoint->checkFail()))  \
+    {                                     \
+      __VA_ARGS__;                        \
+    }                                     \
+  } while (0)
+
 // A FailPoint is a hook mechanism allowing testing behavior to occur
 // at prearranged execution points.
 //
@@ -31,30 +77,30 @@
 // {
 //   // `plugin A` includes "my_fail_points.hpp"
 //
-//   FailPoint_FP1* fp1
-//     = FailPoint_FP1::GetInstance(FROM_HERE, ::basis::FailPointName{"fp1"});
+//   FailPoint_FP1* failPoint
+//     = FailPoint_FP1::GetInstance(FROM_HERE, ::basis::FailPointName{"failPoint"});
 //
-//   fp1->setFailure();
+//   failPoint->setFailure();
 //
-//   fp1->enable();
+//   failPoint->enable();
 //
 //   ::base::Value val1(::base::Value::Type::DICTIONARY);
 //   val1.SetKey("bool_key", ::base::Value{false});
 //   val1.SetKey("int_key", ::base::Value{1234});
 //   val1.SetKey("double_key", ::base::Value{12.34567});
 //   val1.SetKey("string_key", ::base::Value{"str"});
-//   fp1->setData(val1);
+//   failPoint->setData(val1);
 // }
 //
 // // on `plugin B` thread, while app is running
 // {
 //   // `plugin B` includes "my_fail_points.hpp"
 //
-//   FailPoint_FP1* fp1
-//     = FailPoint_FP1::GetInstance(FROM_HERE, ::basis::FailPointName{"fp1"});
-//   if(UNLIKELY(fp1->checkFail()))
+//   FailPoint_FP1* failPoint
+//     = FailPoint_FP1::GetInstance(FROM_HERE, ::basis::FailPointName{"failPoint"});
+//   if(UNLIKELY(failPoint->checkFail()))
 //   {
-//     DCHECK_EQ(fp1->data().FindIntPath("int_key").value(), 1234);
+//     DCHECK_EQ(failPoint->data().FindIntPath("int_key").value(), 1234);
 //   }
 // }
 //

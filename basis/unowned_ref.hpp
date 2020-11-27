@@ -38,7 +38,6 @@ public:
     : UnownedRef(that.Ref())
   {}
 
-  NOT_THREAD_SAFE_FUNCTION()
   UnownedRef(
     UnownedRef&& other)
   {
@@ -60,7 +59,6 @@ public:
     }
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   UnownedRef& operator=(
     const UnownedRef& that)
   {
@@ -88,7 +86,6 @@ public:
       , void
       >
     >
-  NOT_THREAD_SAFE_FUNCTION()
   explicit UnownedRef(
     UNOWNED_LIFETIME(const U& pObj))
     : COPIED(pObj_(&pObj))
@@ -101,7 +98,6 @@ public:
   template <
     typename U
     >
-  NOT_THREAD_SAFE_FUNCTION()
   UnownedRef(
     UNOWNED_LIFETIME(const std::reference_wrapper<U>& pObj))
     : COPIED(pObj_(&pObj.get()))
@@ -132,7 +128,6 @@ public:
   // to be NOT changed after construction
   // (but some patterns like object pool require
   // possibility of modification to avoid allocations).
-  NOT_THREAD_SAFE_FUNCTION()
   void reset(
     UNOWNED_LIFETIME(Type*) that)
   {
@@ -147,32 +142,27 @@ public:
     }
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   bool operator==(const UnownedRef& that) const
   {
     return Get() == that.Get();
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   bool operator!=(const UnownedRef& that) const
   {
     return !(*this == that);
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   bool operator<(const UnownedRef& that) const
   {
     return std::less<Type*>()(Get(), that.Get());
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   template <typename U>
   bool operator==(const U& that) const
   {
     return Get() == &that;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   template <typename U>
   bool operator!=(const U& that) const
   {
@@ -180,13 +170,11 @@ public:
   }
 
   // implicit conversion
-  NOT_THREAD_SAFE_FUNCTION()
   operator Type&() NO_EXCEPTION
   {
     return Ref();
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   Type& Ref() const
   {
     DCHECK(pObj_);
@@ -195,20 +183,17 @@ public:
 
   /// \note Do not do stupid things like
   /// `delete unownedRef.Get();` // WRONG
-  NOT_THREAD_SAFE_FUNCTION()
   Type* Get() const
   {
     return pObj_;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   Type& operator*() const
   {
     DCHECK(pObj_);
     return *pObj_;
   }
 
-  NOT_THREAD_SAFE_FUNCTION()
   Type* operator->() const
   {
     DCHECK(pObj_);

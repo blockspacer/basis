@@ -17,6 +17,58 @@
 #include <functional>
 #include <string>
 
+// USAGE
+//
+// STRONG_PLUG_POINT(PlugPoint_RecievedData, base::Optional<bool>(const std::string&));
+//
+#define STRONG_PLUG_POINT(VAR, ...) \
+  using VAR \
+    = ::basis::StrongPlugPoint< \
+          class PP_##VAR##Tag \
+          , __VA_ARGS__ \
+        >
+
+// USAGE
+//
+// GET_PLUG_POINT(plugPoint, FailPoint_FP1);
+// const base::Optional<bool> pluggedReturn = plugPoint->Run(int{1}, double{3.0});
+// if(UNLIKELY(pluggedReturn))
+// {
+//   return pluggedReturn.value();
+// }
+#define GET_PLUG_POINT(VAR, ...) \
+  __VA_ARGS__* VAR = \
+    __VA_ARGS__::GetInstance(FROM_HERE, \
+      ::basis::PlugPointName{STRINGIFY_VA_ARG(__VA_ARGS__)})
+
+// USAGE
+//
+// GET_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
+// RETURN_IF_PLUG_POINT_HAS_VALUE(plugPointPtr, REFERENCED(message));
+#define RETURN_IF_PLUG_POINT_HAS_VALUE(plugPoint, ...) \
+  do {                                                 \
+    const base::Optional<bool> pluggedReturn           \
+      = plugPoint->Run(__VA_ARGS__);                   \
+    if(UNLIKELY(pluggedReturn))                        \
+    {                                                  \
+      return;                                          \
+    }                                                  \
+  } while (0)
+
+// USAGE
+//
+// GET_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
+// RETURN_IF_PLUG_POINT_WITH_VALUE(plugPointPtr, REFERENCED(message));
+#define RETURN_IF_PLUG_POINT_WITH_VALUE(plugPoint, ...) \
+  do {                                                  \
+    const base::Optional<std::string> pluggedReturn     \
+      = plugPoint->Run(__VA_ARGS__);                    \
+    if(UNLIKELY(pluggedReturn))                         \
+    {                                                   \
+      return pluggedReturn.value();                     \
+    }                                                   \
+  } while (0)
+
 // A PlugPoint is a hook mechanism allowing custom behavior to occur
 // at prearranged execution points.
 //
@@ -214,7 +266,7 @@ class PlugPointStorage
 // (we assume that usually most of plug points are disabled).
 //
 template<typename Tag, typename T>
-struct StrongPlugPoint;
+class StrongPlugPoint;
 
 /// \note works only with single callback
 //
@@ -233,12 +285,12 @@ struct StrongPlugPoint;
 //  {
 //    // `plugin A` includes "my_plug_points.hpp"
 //
-//    PlugPoint_FP1* fp1
-//      = PlugPoint_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"fp1"});
+//    PlugPoint_FP1* plugPoint
+//      = PlugPoint_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"plugPoint"});
 //
-//    fp1->enable();
+//    plugPoint->enable();
 //
-//    subscription = fp1->setCallback(base::BindRepeating(
+//    subscription = plugPoint->setCallback(base::BindRepeating(
 //      [
 //      ](
 //        int a
@@ -254,9 +306,9 @@ struct StrongPlugPoint;
 //  {
 //    // `plugin B` includes "my_plug_points.hpp"
 //
-//    PlugPoint_FP1* fp1
-//      = PlugPoint_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"fp1"});
-//    const base::Optional<bool> pluggedReturn = fp1->Run(int{1}, double{3.0});
+//    PlugPoint_FP1* plugPoint
+//      = PlugPoint_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"plugPoint"});
+//    const base::Optional<bool> pluggedReturn = plugPoint->Run(int{1}, double{3.0});
 //    if(UNLIKELY(pluggedReturn))
 //    {
 //      return pluggedReturn.value();
@@ -514,7 +566,7 @@ class PlugPointNotifierStorage
 // (we assume that usually most of plug points are disabled).
 //
 template<typename Tag, typename T>
-struct StrongPlugPointNotifier;
+class StrongPlugPointNotifier;
 
 /// \note works only with callbacks that return void
 //
@@ -537,12 +589,12 @@ struct StrongPlugPointNotifier;
 //  {
 //    // `plugin A` includes "my_plug_points.hpp"
 //
-//    PlugPointNotifier_FP1* fp1
-//      = PlugPointNotifier_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"fp1"});
+//    PlugPointNotifier_FP1* plugPoint
+//      = PlugPointNotifier_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"plugPoint"});
 //
-//    fp1->enable();
+//    plugPoint->enable();
 //
-//    notifier_subscriptions.push_back(fp1->addCallback(basis::PlugPointPriority::High,
+//    notifier_subscriptions.push_back(plugPoint->addCallback(basis::PlugPointPriority::High,
 //      base::BindRepeating(
 //        [
 //        ](
@@ -554,7 +606,7 @@ struct StrongPlugPointNotifier;
 //        }
 //      )));
 //
-//    notifier_subscriptions.push_back(fp1->addCallback(basis::PlugPointPriority::Lowest,
+//    notifier_subscriptions.push_back(plugPoint->addCallback(basis::PlugPointPriority::Lowest,
 //      base::BindRepeating(
 //        [
 //        ](
@@ -571,9 +623,9 @@ struct StrongPlugPointNotifier;
 //  {
 //    // `plugin B` includes "my_plug_points.hpp"
 //
-//    PlugPointNotifier_FP1* fp1
-//      = PlugPointNotifier_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"fp1"});
-//    fp1->Notify(int{1}, double{3.0});
+//    PlugPointNotifier_FP1* plugPoint
+//      = PlugPointNotifier_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"plugPoint"});
+//    plugPoint->Notify(int{1}, double{3.0});
 //  }
 //
 template<
@@ -1004,7 +1056,7 @@ class PlugPointRunnerStorage
 // (we assume that usually most of plug points are disabled).
 //
 template<typename Tag, typename T>
-struct StrongPlugPointRunner;
+class StrongPlugPointRunner;
 
 /// \note works only with callbacks that return base::Optional<T>
 //
@@ -1027,12 +1079,12 @@ struct StrongPlugPointRunner;
 //  {
 //    // `plugin A` includes "my_plug_points.hpp"
 //
-//    PlugPointRunner_FP1* fp1
-//      = PlugPointRunner_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"fp1"});
+//    PlugPointRunner_FP1* plugPoint
+//      = PlugPointRunner_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"plugPoint"});
 //
-//    fp1->enable();
+//    plugPoint->enable();
 //
-//    runner_subscriptions.push_back(fp1->addCallback(basis::PlugPointPriority::High
+//    runner_subscriptions.push_back(plugPoint->addCallback(basis::PlugPointPriority::High
 //      , base::BindRepeating(
 //        [
 //        ](
@@ -1044,7 +1096,7 @@ struct StrongPlugPointRunner;
 //        }
 //      )));
 //
-//    runner_subscriptions.push_back(fp1->addCallback(basis::PlugPointPriority::Lowest
+//    runner_subscriptions.push_back(plugPoint->addCallback(basis::PlugPointPriority::Lowest
 //      , base::BindRepeating(
 //        [
 //        ](
@@ -1061,9 +1113,9 @@ struct StrongPlugPointRunner;
 //  {
 //    // `plugin B` includes "my_plug_points.hpp"
 //
-//    PlugPointRunner_FP1* fp1
-//      = PlugPointRunner_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"fp1"});
-//    const base::Optional<bool> pluggedReturn = fp1->RunUntilHasValue(int{1}, double{3.0});
+//    PlugPointRunner_FP1* plugPoint
+//      = PlugPointRunner_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"plugPoint"});
+//    const base::Optional<bool> pluggedReturn = plugPoint->RunUntilHasValue(int{1}, double{3.0});
 //    if(UNLIKELY(pluggedReturn))
 //    {
 //      return pluggedReturn.value();

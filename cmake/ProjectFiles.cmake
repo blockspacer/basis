@@ -190,6 +190,9 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/ECS/helpers/relationship/prepend_child_entity.hpp
   #
+  ${BASIS_DIR}/ECS/helpers/lifetime/populate_delayed_construction_components.hpp
+  ${BASIS_DIR}/ECS/helpers/lifetime/populate_delayed_construction_components.cc
+  #
   ${BASIS_DIR}/bind/exec_time_checker.hpp
   ${BASIS_DIR}/bind/exec_time_checker.cc
   ${BASIS_DIR}/bind/callable_hook.hpp
@@ -209,6 +212,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/ECS/safe_registry.hpp
   #
   ${BASIS_DIR}/ECS/ecs.hpp
+  ${BASIS_DIR}/ECS/ecs.cc
   #
   ${BASIS_DIR}/ECS/tags.hpp
+  ${BASIS_DIR}/ECS/tags.cc
 )

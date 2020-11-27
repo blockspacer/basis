@@ -26,6 +26,15 @@
 
 namespace ECS {
 
+// `reset_or_create_component` works only with `base::Optional` for now
+namespace safe_registry_internal {
+template <typename T>
+struct is_optional : std::false_type {};
+
+template <typename T>
+struct is_optional<base::Optional<T>> : std::true_type {};
+} // namespace safe_registry_internal
+
 // Safe registry is entt::registry
 // bound to task runner (for thread-safety reasons).
 // see for details:
@@ -54,7 +63,7 @@ public:
   /// we just want to force user to use `base::Optional`
   template<typename Type, typename... Args>
   MUST_USE_RETURN_VALUE
-  ::base::Optional<typename Type::value_type> & reset_or_create_component(
+  ::base::Optional<typename Type::value_type>& reset_or_create_component(
     const std::string debug_name
     , ECS::Entity tcp_entity_id
     , Args &&... args)
@@ -64,6 +73,9 @@ public:
     DCHECK_MEMBER_OF_UNKNOWN_THREAD(registry_);
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(taskRunner_.get());
+
+    static_assert(ECS::safe_registry_internal::is_optional<Type>::value,
+                  "Use reset_or_create_component only if type is base::Optional.");
 
     const bool useCache
       = registry_.has<::base::Optional<typename Type::value_type>>(tcp_entity_id);

@@ -7,17 +7,11 @@
 
 namespace ECS {
 
+// Marks entity that can be re-used from memory pool (memory cache)
 CREATE_ECS_TAG(UnusedTag)
 
-} // namespace ECS
-
-namespace ECS {
-
+// Marks entity that must be destructed
 CREATE_ECS_TAG(NeedToDestroyTag)
-
-} // namespace ECS
-
-namespace ECS {
 
 // Marks not fully created entities.
 // Can be used to detect if entity was fully constructed
@@ -48,10 +42,6 @@ namespace ECS {
 /// \note component expected to be removed after 1 tick
 CREATE_ECS_TAG(DelayedConstruction)
 
-} // namespace ECS
-
-namespace ECS {
-
 /// \note It does NOT ALWAYS mark fully created entities because
 /// that component expected to be removed after 1 tick from
 /// any fully created entity.
@@ -60,3 +50,11 @@ namespace ECS {
 CREATE_ECS_TAG(DelayedConstructionJustDone)
 
 } // namespace ECS
+
+ECS_DECLARE_METATYPE(UnusedTag)
+
+ECS_DECLARE_METATYPE(NeedToDestroyTag)
+
+ECS_DECLARE_METATYPE(DelayedConstruction)
+
+ECS_DECLARE_METATYPE(DelayedConstructionJustDone)

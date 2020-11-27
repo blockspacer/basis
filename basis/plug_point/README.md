@@ -2,6 +2,7 @@
 
 * Plug points are similar to `sigslot`
 * Plug points have priority
+* Useful for fault-injection testing.
 * Useful for plugin system (plugin may want to modify original logic, not only process events).
 * Plug points use `std::unique_ptr<MyPlugPoint::Subscription>` similar to `base::CallbackList`
 
@@ -10,6 +11,12 @@ Plug points are similar to synchronous event dispatching or sigslot i.e. single 
 NOTE: It is also possible to use single plug point `StrongPlugPoint` (can store only one callback) and plug point without return value (`PlugPointNotifierStorage`, can store only callback<void(...)>)
 
 See `StrongPlugPointRunner` in `plug_point.hpp`.
+
+## What to use: `plug points` or `fail points`
+
+`fail points` can not return custom data or recieve input data (`fail point` is like simple bool).
+
+So use `plug points` when you need to return custom data or recieve input data.
 
 ## What to use: `plug points` or `entt::dispatcher`?
 
@@ -91,4 +98,12 @@ std::vector<
     return pluggedReturn.value();
   }
 }
+```
+
+## TIPS AND TRICKS: use macros
+
+```cpp
+STRONG_PLUG_POINT(PlugPoint_RecievedData, base::Optional<bool>(const std::string&));
+GET_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
+RETURN_IF_PLUG_POINT_WITH_VALUE(plugPointPtr, REFERENCED(message));
 ```

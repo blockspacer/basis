@@ -14,6 +14,7 @@
 #include <base/macros.h>
 #include <base/logging.h>
 #include <base/location.h>
+#include <base/optional.h>
 #include <base/sequenced_task_runner.h>
 #include <base/threading/thread_checker.h>
 #include <base/memory/weak_ptr.h>
@@ -36,6 +37,15 @@ struct DefaultSingletonTraits;
 } // namespace base
 
 namespace ECS {
+
+// `reset_or_create_var` works only with `base::Optional` for now
+namespace unsafe_context_internal {
+template <typename T>
+struct is_optional : std::false_type {};
+
+template <typename T>
+struct is_optional<base::Optional<T>> : std::true_type {};
+} // namespace unsafe_context_internal
 
 using idType = std::uint32_t;
 
@@ -250,6 +260,9 @@ class UnsafeTypeContext
     , Args &&... args)
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+    static_assert(ECS::unsafe_context_internal::is_optional<Type>::value,
+                  "Use reset_or_create_var only if type is base::Optional.");
 
     const bool useCache
       = try_ctx_var<Type>();

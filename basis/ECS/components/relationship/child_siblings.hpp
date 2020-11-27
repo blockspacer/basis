@@ -48,7 +48,7 @@ namespace ECS {
 // using ChildenNode = ChildSiblings<class NodeTag>;
 // using ChildenWeaponGroup = ChildSiblings<class WeaponGroupTag>;
 template <typename TagT>
-struct ChildSiblings
+CREATE_ECS_COMPONENT(ChildSiblings)
 {
   using TagType = TagT;
 
@@ -60,3 +60,5 @@ struct ChildSiblings
 };
 
 } // namespace ECS
+
+ECS_DECLARE_METATYPE_TEMPLATE_1ARG(ChildSiblings);

@@ -7,13 +7,16 @@
 #include <entt/core/type_info.hpp> // IWYU pragma: keep
 #include <entt/core/type_traits.hpp> // IWYU pragma: keep
 #include <entt/entity/group.hpp> // IWYU pragma: keep
+#include <entt/core/hashed_string.hpp> // IWYU pragma: keep
 
+#include <base/macros.h>
 #include <base/logging.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <sstream>
 #include <type_traits>
+#include <string>
 
 // using a hashed string under VS could generate a warning.
 // it's expected and harmless. However, it can be annoying.
@@ -112,6 +115,18 @@ struct get_t: entt::type_list<Type...>{};
 template<typename... Type>
 inline constexpr get_t<Type...> get{};
 
+template<typename... Type>
+struct remove_t: entt::type_list<Type...> {};
+
+template<typename... Type>
+inline constexpr remove_t<Type...> remove{};
+
+template<typename... Type>
+struct emplace_t: entt::type_list<Type...> {};
+
+template<typename... Type>
+inline constexpr emplace_t<Type...> emplace{};
+
 // allow to print entity identifier
 inline std::ostream& operator<<(
   std::ostream& stream, Entity entity_id)
@@ -121,11 +136,88 @@ inline std::ostream& operator<<(
     << entt::to_integral(entity_id);
 }
 
+// Meta information about ECS component or ECS tag that can be
+// accessed at run time.
+// Used by `ECS_DECLARE_METATYPE`
+struct TypeMeta {
+  std::string name{};
+};
+
+// Used by `ECS_DECLARE_METATYPE`
+//
+// USAGE
+//
+// DCHECK(!ECS::setOrFindTypeMeta(entt::type_info<ECS::UnusedTag>::id(), ...).name.empty());
+//
+TypeMeta setOrFindTypeMeta(const ENTT_ID_TYPE id, const TypeMeta& data);
+
 #define ECS_LABEL(__name__) \
   using __name__ = entt::tag<#__name__ ## _hs>
 
+template<typename T>
+struct TypeMetaRegistrator {};
+
+#define ECS_DEFINE_METATYPE(...) \
+  namespace ECS { \
+  bool TypeMetaRegistrator<__VA_ARGS__>::isInit = \
+    ECS::setOrFindTypeMeta( \
+        entt::type_info<__VA_ARGS__>::id() \
+        , TypeMeta{ STRINGIFY_VA_ARG(__VA_ARGS__) }).name != ""; \
+  } /* namespace ECS */
+
+#define ECS_DEFINE_METATYPE_TEMPLATE(...) \
+  namespace ECS { \
+  template<> \
+  bool TypeMetaRegistrator<__VA_ARGS__>::isInit = \
+    ECS::setOrFindTypeMeta( \
+        entt::type_info<__VA_ARGS__>::id() \
+        , TypeMeta{ STRINGIFY_VA_ARG(__VA_ARGS__) }).name != ""; \
+  } /* namespace ECS */
+
+#define ECS_DECLARE_METATYPE(TAG_NAME) \
+  namespace ECS { \
+  /* Used to call once per type `ECS::setTypeMeta` */ \
+  /* Approach inspired by `Q_DECLARE_METATYPE` */ \
+  template<> \
+  struct TypeMetaRegistrator<TAG_NAME> \
+  { \
+    static ENTT_ID_TYPE id() { return entt::type_info<TAG_NAME>::id();} \
+    static std::string name() { return std::string{entt::type_info<TAG_NAME>::name()};} \
+    static bool isInit; \
+  }; \
+  } /* namespace ECS */
+
+#define ECS_DECLARE_METATYPE_TEMPLATE_1ARG(TAG_NAME) \
+  namespace ECS { \
+  /* Used to call once per type `ECS::setTypeMeta` */ \
+  /* Approach inspired by `Q_DECLARE_METATYPE_TEMPLATE_1ARG` */ \
+  template<typename T1> \
+  struct TypeMetaRegistrator<TAG_NAME<T1>> \
+  { \
+    static ENTT_ID_TYPE id() { return entt::type_info<TAG_NAME<T1>>::id();} \
+    static std::string name() { return std::string{entt::type_info<TAG_NAME<T1>>::name()};} \
+    static bool isInit; \
+  }; \
+  } /* namespace ECS */
+
+#define ECS_DECLARE_METATYPE_TEMPLATE_2ARG(TAG_NAME) \
+  namespace ECS { \
+  /* Used to call once per type `ECS::setTypeMeta` */ \
+  /* Approach inspired by `Q_DECLARE_METATYPE_TEMPLATE_2ARG` */ \
+  template<typename T1, typename T2> \
+  struct TypeMetaRegistrator<TAG_NAME<T1, T2>> \
+  { \
+    static ENTT_ID_TYPE id() { return entt::type_info<TAG_NAME<T1, T2>>::id();} \
+    static std::string name() { return std::string{entt::type_info<TAG_NAME<T1, T2>>::name()};} \
+    static bool isInit; \
+  }; \
+  } /* namespace ECS */
+
 #define CREATE_ECS_TAG(TAG_NAME) \
   ECS_LABEL(TAG_NAME);
+
+#define CREATE_ECS_COMPONENT(COMPONENT_NAME) \
+  struct COMPONENT_NAME
 
 #define LOCATION_ECS_TAG_NAME1(x) \
   #x
@@ -150,6 +242,9 @@ inline std::ostream& operator<<(
     DCHECK(__name__ != ECS::NULL_ENTITY); \
     DCHECK((__registry_ptr__)->valid(__name__)); \
   }
+
+#define DCHECK_ECS_COMPONENT(...) \
+  DCHECK(!ECS::setOrFindTypeMeta(STRINGIFY_VA_ARG(__VA_ARGS__), ECS::TypeMeta{}).name.empty());
 
 // check that child entity has all required components
 //

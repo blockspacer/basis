@@ -28,44 +28,19 @@ class Location;
 #define DVLOG_LOC(from_here, verbose_level)              \
   VLOG_LOC_IF(from_here, verbose_level, DCHECK_IS_ON())
 
+// USAGE:
+// #define MY_FILE_VERBOSE_LOG 1
+// command_line->AppendSwitchASCII(switches::kV, "1");
+// DVLOG(1) << "number of arguments: " << argc;
+//
+#define DVLOG_LOC_IF(from_here, verbose_level, condition)  \
+  VLOG_LOC_IF(from_here, verbose_level, DCHECK_IS_ON() && condition)
+
 #define VLOG_LOC(from_here, verbose_level)              \
   VLOG_LOC_IF(from_here, verbose_level, 1)
 
 namespace gloer {
 namespace log {
-
-///**
-// * Supported log levels: DEBUG, INFO, WARNING, FATAL
-// *
-// * Example usage:
-// *
-// * @code{.cpp}
-// * LOG(WARNING) << "This log " << "call";
-// * @endcode
-// **/
-//class Logger {
-//public:
-//  Logger();
-//
-//  //Logger(bool enableConsoleSink, bool enableFileSink);
-//
-//  ~Logger();
-//
-//  void shutdown();
-//
-//  void initLogging(const std::string& log_file = "");
-//
-//private:
-//  //bool enableConsoleSink_ = true;
-//
-//  //bool enableFileSink_ = true;
-//
-//  std::string log_prefix_ = "server";
-//
-//  std::string log_directory_ = "";
-//
-//  std::string log_default_id_ = "";
-//};
 
 bool VlogIsOnForLocation(const ::base::Location& from_here, int verbose_level);
 

@@ -1,4 +1,4 @@
-#include "FixedTimeStep.hpp" // IWYU pragma: associated
+#include "fixed_time_step.hpp" // IWYU pragma: associated
 
 namespace basis {
 

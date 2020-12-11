@@ -273,8 +273,8 @@ public:
     , ::base::StringPiece reason_why_using_unsafe
     , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once())
   {
-    ignore_result(from_here);
-    ignore_result(reason_why_using_unsafe);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_using_unsafe);
     ::base::rvalue_cast(check_unsafe_allowed).Run();
     return value_;
   }
@@ -286,8 +286,8 @@ public:
     , ::base::StringPiece reason_why_using_unsafe
     , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once()) const
   {
-    ignore_result(from_here);
-    ignore_result(reason_why_using_unsafe);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_using_unsafe);
     ::base::rvalue_cast(check_unsafe_allowed).Run();
     return value_;
   }
@@ -353,8 +353,8 @@ public:
     , ::base::StringPiece reason_why_using_unsafe
     , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once())
   {
-    ignore_result(from_here);
-    ignore_result(reason_why_using_unsafe);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_using_unsafe);
     ::base::rvalue_cast(check_unsafe_allowed).Run();
 
     return value_.value();
@@ -368,8 +368,8 @@ public:
     , ::base::StringPiece reason_why_using_unsafe
     , ::base::OnceClosure&& check_unsafe_allowed = ::base::DoNothing::Once()) const
   {
-    ignore_result(from_here);
-    ignore_result(reason_why_using_unsafe);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_using_unsafe);
     ::base::rvalue_cast(check_unsafe_allowed).Run();
     return value_.value();
   }
@@ -532,8 +532,8 @@ public:
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
-    ignore_result(from_here);
-    ignore_result(reason_why_using_unsafe);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_using_unsafe);
     ::base::rvalue_cast(check_unsafe_allowed).Run();
 
     return value_.emplace(std::forward<Args>(args)...);
@@ -571,8 +571,8 @@ public:
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
-    ignore_result(from_here);
-    ignore_result(reason_why_using_unsafe);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_using_unsafe);
     ::base::rvalue_cast(check_unsafe_allowed).Run();
 
     value_.reset();
@@ -586,8 +586,8 @@ public:
 
     DCHECK(hasReadPermission());
 
-    ignore_result(from_here);
-    ignore_result(reason_why_make_invalid);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_make_invalid);
 
     ::basis::removeBit(CheckedOptionalPermissions
       , ::basis::CheckedOptionalPermissions::Readable);
@@ -601,8 +601,8 @@ public:
 
     DCHECK(hasModifyPermission());
 
-    ignore_result(from_here);
-    ignore_result(reason_why_make_invalid);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_make_invalid);
 
     ::basis::removeBit(CheckedOptionalPermissions
       , ::basis::CheckedOptionalPermissions::Modifiable);
@@ -616,8 +616,8 @@ public:
 
     DCHECK(!hasReadPermission());
 
-    ignore_result(from_here);
-    ignore_result(reason_why_make_valid);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_make_valid);
 
     ::basis::addBit(CheckedOptionalPermissions
       , ::basis::CheckedOptionalPermissions::Readable);
@@ -631,8 +631,8 @@ public:
 
     DCHECK(!hasModifyPermission());
 
-    ignore_result(from_here);
-    ignore_result(reason_why_make_valid);
+    UNREFERENCED_PARAMETER(from_here);
+    UNREFERENCED_PARAMETER(reason_why_make_valid);
 
     ::basis::addBit(CheckedOptionalPermissions
       , ::basis::CheckedOptionalPermissions::Modifiable);

@@ -17,7 +17,7 @@ class DummyChecker
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(DummyChecker);
 
     /// \note fold expression requires C++17
-    ((void)(ignore_result(args)), ...);
+    ((void)(UNREFERENCED_PARAMETER(args)), ...);
   }
 
   // check call count on callback destruction

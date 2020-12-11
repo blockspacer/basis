@@ -27,3 +27,9 @@ STRONG_FAIL_POINT(FailPoint_RecievedData);
 GET_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
 RETURN_IF_FAIL_POINT_FAIL(failPointPtr, REFERENCED(message));
 ```
+
+## FAQ
+
+* How to create event that's expected to happen once?
+
+Use `base::OneShotEvent`

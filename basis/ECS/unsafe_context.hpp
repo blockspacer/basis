@@ -142,7 +142,7 @@ class UnsafeTypeContext
       }
     );
 #if !DCHECK_IS_ON()
-    ignore_result(debug_name);
+    UNREFERENCED_PARAMETER(debug_name);
 #endif // DCHECK_IS_ON()
 
     DVLOG(9)

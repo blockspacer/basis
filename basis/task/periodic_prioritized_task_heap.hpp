@@ -1,6 +1,6 @@
 #pragma once
 
-#include <basis/timer/IntervalTimer.hpp>
+#include <basis/timer/interval_timer.hpp>
 
 #include <algorithm>
 #include <cstdint>

@@ -1,4 +1,4 @@
-#include "IntervalTimer.hpp" // IWYU pragma: associated
+#include "interval_timer.hpp" // IWYU pragma: associated
 
 namespace basis {
 

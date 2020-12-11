@@ -28,6 +28,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/i18n/icu_util.hpp
   ${BASIS_DIR}/i18n/icu_util.cc
   #
+  ${BASIS_DIR}/memory/any_ptr.hpp
+  #
   ${BASIS_DIR}/cmd_util.hpp
   ${BASIS_DIR}/cmd_util.cc
   #
@@ -59,6 +61,7 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/core/polymorphic_upcast.hpp
   ${BASIS_DIR}/core/sequence_bound_flag.cc
   ${BASIS_DIR}/core/sequence_bound_flag.hpp
+  ${BASIS_DIR}/core/retrier.hpp
   #
   ${BASIS_DIR}/task/periodic_prioritized_task_heap.hpp
   ${BASIS_DIR}/task/periodic_prioritized_task_heap.cc
@@ -126,16 +129,16 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/promise/then_and_catch_executor.cc
   ${BASIS_DIR}/promise/then_and_catch_executor.h
   #
-  ${BASIS_DIR}/time_step/FixedTimeStep.hpp
-  ${BASIS_DIR}/time_step/FixedTimeStep.cc
-  ${BASIS_DIR}/time_step/FixedTimeStepLoop.hpp
-  ${BASIS_DIR}/time_step/FixedTimeStepLoop.cc
+  ${BASIS_DIR}/time_step/fixed_time_step.hpp
+  ${BASIS_DIR}/time_step/fixed_time_step.cc
+  ${BASIS_DIR}/time_step/fixed_time_step_loop.hpp
+  ${BASIS_DIR}/time_step/fixed_time_step_loop.cc
   #
-  ${BASIS_DIR}/timer/IntervalTimer.hpp
-  ${BASIS_DIR}/timer/IntervalTimer.cc
+  ${BASIS_DIR}/timer/interval_timer.hpp
+  ${BASIS_DIR}/timer/interval_timer.cc
   #
-  ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.hpp
-  ${BASIS_DIR}/concurrency/LockFreeProducerConsumerQueue.cc
+  ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.hpp
+  ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.cc
   #
   ${BASIS_DIR}/log/logger.cc
   ${BASIS_DIR}/log/logger.hpp
@@ -198,6 +201,22 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/bind/callable_hook.hpp
   ${BASIS_DIR}/bind/callable_hook.cc
   ${BASIS_DIR}/bind/verify_nothing.hpp
+  #
+  ${BASIS_DIR}/strings/string_util.cc
+  ${BASIS_DIR}/strings/string_util.hpp
+  #
+  ${BASIS_DIR}/files/file_util.cc
+  ${BASIS_DIR}/files/file_util.hpp
+  #
+  ${BASIS_DIR}/rate/data_rate_limiter.cc
+  ${BASIS_DIR}/rate/data_rate_limiter.hpp
+  ${BASIS_DIR}/rate/rate_tracker.cc
+  ${BASIS_DIR}/rate/rate_tracker.hpp
+  ${BASIS_DIR}/rate/rate_tracker.cc
+  ${BASIS_DIR}/rate/rate_statistics.hpp
+  ${BASIS_DIR}/rate/rate_accumulator.hpp
+  ${BASIS_DIR}/rate/moving_average.cc
+  ${BASIS_DIR}/rate/moving_average.hpp
   #
   ${BASIS_DIR}/ECS/simulation_registry.cc
   ${BASIS_DIR}/ECS/simulation_registry.hpp

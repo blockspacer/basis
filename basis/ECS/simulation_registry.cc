@@ -43,7 +43,7 @@ SimulationRegistry::~SimulationRegistry()
 
 Registry &SimulationRegistry::registry_unsafe(const ::base::Location& from_here) noexcept
 {
-  ignore_result(from_here);
+  UNREFERENCED_PARAMETER(from_here);
   return registry_;
 }
 

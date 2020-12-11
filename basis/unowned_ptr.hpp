@@ -63,7 +63,7 @@ public:
   {
     DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 
-    ignore_result(ptr);
+    UNREFERENCED_PARAMETER(ptr);
   }
 
   ~UnownedPtr()
@@ -213,11 +213,12 @@ public:
   }
 
   // check that object is alive, use memory tool like ASAN
+  /// \note ignores nullptr
   inline void checkForLifetimeIssues() const
   {
     // Works with `-fsanitize=address,undefined`
 #if defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
-    if (pObj_)
+    if (pObj_ != nullptr)
       reinterpret_cast<const volatile uint8_t*>(pObj_)[0];
 #endif
   }

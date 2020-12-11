@@ -300,8 +300,7 @@ void setPeriodicTimeoutCheckerOnSequence(
         from_here, task_runner);
 
   DCHECK(sequenceLocalContext);
-  PeriodicCheckUntilTime& result
-    = sequenceLocalContext->set_once<PeriodicCheckUntilTime>(
+  ignore_result(sequenceLocalContext->set_once<PeriodicCheckUntilTime>(
         from_here
         , "Timeout.PeriodicCheckUntilTime." + from_here.ToString()
         , task_runner
@@ -309,8 +308,7 @@ void setPeriodicTimeoutCheckerOnSequence(
         , endingTimeout
         // timer update frequency
         , checkPeriod
-      );
-  ignore_result(result);
+      ));
 }
 
 void unsetPeriodicTimeoutCheckerOnSequence()

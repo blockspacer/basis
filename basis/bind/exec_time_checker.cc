@@ -20,14 +20,12 @@ void perSequenceStoreTimeBeforeCallbackExecution()
         FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);
-  PerSequenceExecTimeCheckerStartTime& result
-    = sequenceLocalContext->set_once<PerSequenceExecTimeCheckerStartTime>(
+  ignore_result(sequenceLocalContext->set_once<PerSequenceExecTimeCheckerStartTime>(
         FROM_HERE
         , "Timeout.PerSequenceExecTimeCheckerStartTime." + FROM_HERE.ToString()
         , ::base::in_place
         , ::base::Time::Now()
-      );
-  ignore_result(result);
+      ));
 }
 
 base::Time perSequenceGetTimeBeforeCallbackExecution()

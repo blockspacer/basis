@@ -107,3 +107,9 @@ STRONG_PLUG_POINT(PlugPoint_RecievedData, base::Optional<bool>(const std::string
 GET_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
 RETURN_IF_PLUG_POINT_WITH_VALUE(plugPointPtr, REFERENCED(message));
 ```
+
+## FAQ
+
+* How to create event that's expected to happen once?
+
+Use `base::OneShotEvent`

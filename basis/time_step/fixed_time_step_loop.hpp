@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basis/time_step/FixedTimeStep.hpp"
+#include "basis/time_step/fixed_time_step.hpp"
 #include <chrono>
 #include <functional>
 #include <base/logging.h> // for DCHECK

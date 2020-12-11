@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #pragma once
 
 #include <atomic>
@@ -9,36 +25,23 @@
 #include <cstddef>
 #include <cstdint>
 
-// detection for 64 bit
-#if defined(__x86_64__) || defined(_M_X64)
-#define FOLLY_X64 1
-#else
-#define FOLLY_X64 0
-#endif
-
+#ifndef FOLLY_ARM
 #if defined(__arm__)
 #define FOLLY_ARM 1
 #else
 #define FOLLY_ARM 0
 #endif
+#endif // FOLLY_ARM
 
-#if defined(__aarch64__)
-#define FOLLY_AARCH64 1
+#if !defined(FOLLY_MOBILE)
+#if defined(__ANDROID__) || \
+    (defined(__APPLE__) &&  \
+     (TARGET_IPHONE_SIMULATOR || TARGET_OS_SIMULATOR || TARGET_OS_IPHONE))
+#define FOLLY_MOBILE 1
 #else
-#define FOLLY_AARCH64 0
+#define FOLLY_MOBILE 0
 #endif
-
-#if defined(__powerpc64__)
-#define FOLLY_PPC64 1
-#else
-#define FOLLY_PPC64 0
-#endif
-
-#if FOLLY_MOBILE
-constexpr auto kIsMobile = true;
-#else
-constexpr auto kIsMobile = false;
-#endif
+#endif // FOLLY_MOBILE
 
 #if defined(__linux__) && !FOLLY_MOBILE
 constexpr auto kIsLinux = true;
@@ -61,9 +64,6 @@ constexpr auto kIsLinux = false;
 namespace basis {
 
 constexpr bool kIsArchArm = FOLLY_ARM == 1;
-constexpr bool kIsArchAmd64 = FOLLY_X64 == 1;
-constexpr bool kIsArchAArch64 = FOLLY_AARCH64 == 1;
-constexpr bool kIsArchPPC64 = FOLLY_PPC64 == 1;
 
 //  has_extended_alignment
 //

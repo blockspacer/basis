@@ -791,13 +791,17 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 
 /// \note use only in tests (gtest)
 /// EXPECT_* yields a nonfatal failure, allowing the function to continue running
+#ifndef EXPECT_OK
 #define EXPECT_OK(x) \
   EXPECT_TRUE(x.ok())
+#endif // EXPECT_OK
 
 /// \note use only in tests (gtest)
 /// ASSERT_* yields a fatal failure and returns from the current function
+#ifndef ASSERT_OK
 #define ASSERT_OK(x) \
   ASSERT_TRUE(x.ok())
+#endif // ASSERT_OK
 
 /// \note use only in tests (gtest)
 /// EXPECT_* yields a nonfatal failure, allowing the function to continue running
@@ -807,8 +811,10 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 // using namespace basis::error;
 // EXPECT_ERROR_CODE(OUT_OF_RANGE, tryAddMoney(a, b));
 //
+#ifndef EXPECT_ERROR_CODE
 #define EXPECT_ERROR_CODE(code, x) \
   EXPECT_EQ(code, x.error_code())
+#endif // EXPECT_ERROR_CODE
 
 /// \note use only in tests (gtest)
 /// ASSERT_* yields a fatal failure and returns from the current function
@@ -818,8 +824,10 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 // using namespace basis::error;
 // ASSERT_ERROR_CODE(OUT_OF_RANGE, tryAddMoney(a, b));
 //
+#ifndef ASSERT_ERROR_CODE
 #define ASSERT_ERROR_CODE(code, x) \
   ASSERT_EQ(code, x.error_code())
+#endif // ASSERT_ERROR_CODE
 
 }  // namespace status_macros
 }  // namespace basis

@@ -4,7 +4,7 @@
 
 #include "basis/static_sequence/static_sequence.hpp"
 
-#include "base/task/thread_pool.h"
+#include <base/task/thread_pool/thread_pool.h>
 
 namespace basis {
 namespace internal {
@@ -21,7 +21,7 @@ void StaticTaskRunnerHolder::WillDestroyCurrentMessageLoop() {
 
 const scoped_refptr<::base::SequencedTaskRunner>& StaticTaskRunnerHolder::Get() {
   if (!initialized_) {
-    task_runner_ = ::base::ThreadPool::CreateSequencedTaskRunner(traits_);
+     task_runner_ = ::base::ThreadPool::GetInstance()->CreateSequencedTaskRunnerWithTraits(traits_);
     ::base::MessageLoopCurrent::Get().AddDestructionObserver(this);
     initialized_ = true;
   }

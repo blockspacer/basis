@@ -17,10 +17,9 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cmath>
 
 namespace basis {
-
-namespace basis_impl {
 
 // tl;dr: Robust and efficient online computation of statistics,
 //        using Welford's method for variance. [1]
@@ -30,7 +29,7 @@ namespace basis_impl {
 //
 /// \note RemoveSample() won't affect min and max.
 /// If you want a full-fledged moving window over N last samples,
-/// please use `RateAccumulator`.
+/// please use `MovingRateStatistics`.
 //
 // The measures return base::nullopt if no samples were fed (Size() == 0),
 // otherwise the returned optional is guaranteed to contain a value.
@@ -40,7 +39,7 @@ namespace basis_impl {
 //
 // USAGE
 //
-// RateStatistics<int> stats;
+// FixedRateStatistics<int> stats;
 // stats.AddSample(2);
 // stats.AddSample(2);
 // stats.AddSample(-1);
@@ -54,7 +53,7 @@ namespace basis_impl {
 // Rationale: we often need greater precision for measures
 //            than for the samples themselves.
 template <typename T>
-class RateStatistics {
+class FixedRateStatistics {
  public:
   // Update stats ////////////////////////////////////////////
 
@@ -89,7 +88,7 @@ class RateStatistics {
   }
 
   // Merge other stats, as if samples were added one by one, but in O(1).
-  void MergeStatistics(const RateStatistics<T>& other) {
+  void MergeStatistics(const FixedRateStatistics<T>& other) {
     if (other.size_ == 0) {
       return;
     }
@@ -101,7 +100,7 @@ class RateStatistics {
     // Each cumulant must be corrected.
     //   * from: sum((x_i - mean_)?)
     //   * to:   sum((x_i - new_mean)?)
-    auto delta = [new_mean](const RateStatistics<T>& stats) {
+    auto delta = [new_mean](const FixedRateStatistics<T>& stats) {
       return stats.size_ * (new_mean * (new_mean - 2 * stats.mean_) +
                             stats.mean_ * stats.mean_);
     };
@@ -165,7 +164,5 @@ class RateStatistics {
   double mean_ = 0;
   double cumul_ = 0;  // Variance * size_, sometimes noted m2.
 };
-
-}  // namespace basis_impl
 
 } // namespace basis

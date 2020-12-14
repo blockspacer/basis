@@ -267,14 +267,14 @@ class ObservableInternals
     void AddObserver(Observer<T>* observer) {
       DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
       DCHECK(observer);
-      DCHECK(!base::Contains(observers_, observer));
+      DCHECK(std::find(observers_.begin(), observers_.end(), observer) == observers_.end());
       observers_.push_back(observer);
     }
 
     void RemoveObserver(Observer<T>* observer) {
       DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
       DCHECK(observer);
-      DCHECK(base::Contains(observers_, observer));
+      DCHECK(std::find(observers_.begin(), observers_.end(), observer) != observers_.end());
       observers_.erase(
           std::remove(observers_.begin(), observers_.end(), observer),
           observers_.end());
@@ -414,7 +414,7 @@ void Observable<T>::SetValue(const T& new_value) {
 }
 
 template <typename T>
-const T& Observable<T>::GetValue() const {
+const T& Observable<T>::GetValueUnsafe() const {
   return internals_->GetValueUnsafe();
 }
 

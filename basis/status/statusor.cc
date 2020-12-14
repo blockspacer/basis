@@ -17,7 +17,7 @@ namespace internal {
 
 ::basis::Status StatusOrHelper::HandleInvalidStatusCtorArg() {
   const char* kMessage =
-      "Status::OK is not a valid constructor argument to StatusOr<T>";
+      "OK Status is not a valid constructor argument to StatusOr<T>";
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
   // TODO(unknown): Change this to ::basis::error::INVALID_ARGUMENT.

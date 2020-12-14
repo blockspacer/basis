@@ -2,7 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/bind_to_task_runner.h"
+#include "testsCommon.h"
+
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "base/test/scoped_task_environment.h"
+#include "basis/bind/bind_to_task_runner.h"
 
 #include <memory>
 #include <utility>
@@ -11,9 +20,6 @@
 #include "base/bind_helpers.h"
 #include "base/callback.h"
 #include "base/run_loop.h"
-#include "base/test/task_environment.h"
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
 
 using ::testing::Pointee;
 
@@ -50,7 +56,7 @@ class BindToTaskRunnerTest : public ::testing::Test {
  public:
   ~BindToTaskRunnerTest() override { ::base::RunLoop().RunUntilIdle(); }
 
-  ::base::test::SingleThreadTaskEnvironment task_environment_;
+  ::base::test::ScopedTaskEnvironment task_environment_;
   MockCallbacks callbacks_;
 };
 

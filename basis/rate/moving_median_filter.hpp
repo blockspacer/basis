@@ -10,9 +10,11 @@
 
 #pragma once
 
-#include "basis/rate/percentile_filter.h"
+#include "basis/rate/percentile_filter.hpp"
 
 #include <base/logging.h>
+
+#include <list>
 
 namespace basis {
 

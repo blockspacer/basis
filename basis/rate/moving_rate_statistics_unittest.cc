@@ -8,10 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "basis/rate/rate_accumulator.hpp" // IWYU pragma: associated
+#include "testsCommon.h"
 
-#include "base/test/task_environment.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "basis/rate/moving_rate_statistics.hpp" // IWYU pragma: associated
 
 #include <random>
 
@@ -22,7 +27,7 @@ namespace {
 const double kLearningRate = 0.5;
 
 // Add |n| samples drawn from uniform distribution in [a;b].
-void FillStatsFromUniformDistribution(RateAccumulator<double>& stats,
+void FillStatsFromUniformDistribution(MovingRateStatistics<double>& stats,
                                       int n,
                                       double a,
                                       double b) {
@@ -35,8 +40,8 @@ void FillStatsFromUniformDistribution(RateAccumulator<double>& stats,
 }
 }  // namespace
 
-TEST(RateAccumulatorTest, ZeroSamples) {
-  RateAccumulator<int> accum(10);
+TEST(MovingRateStatisticsTest, ZeroSamples) {
+  MovingRateStatistics<int> accum(10);
 
   EXPECT_EQ(0U, accum.count());
   EXPECT_DOUBLE_EQ(0.0, accum.ComputeMean());
@@ -45,8 +50,8 @@ TEST(RateAccumulatorTest, ZeroSamples) {
   EXPECT_EQ(0, accum.ComputeMax());
 }
 
-TEST(RateAccumulatorTest, SomeSamples) {
-  RateAccumulator<int> accum(10);
+TEST(MovingRateStatisticsTest, SomeSamples) {
+  MovingRateStatistics<int> accum(10);
   for (int i = 0; i < 4; ++i) {
     accum.AddSample(i);
   }
@@ -59,8 +64,8 @@ TEST(RateAccumulatorTest, SomeSamples) {
   EXPECT_EQ(3, accum.ComputeMax());
 }
 
-TEST(RateAccumulatorTest, RollingSamples) {
-  RateAccumulator<int> accum(10);
+TEST(MovingRateStatisticsTest, RollingSamples) {
+  MovingRateStatistics<int> accum(10);
   for (int i = 0; i < 12; ++i) {
     accum.AddSample(i);
   }
@@ -73,8 +78,8 @@ TEST(RateAccumulatorTest, RollingSamples) {
   EXPECT_EQ(11, accum.ComputeMax());
 }
 
-TEST(RateAccumulatorTest, ResetSamples) {
-  RateAccumulator<int> accum(10);
+TEST(MovingRateStatisticsTest, ResetSamples) {
+  MovingRateStatistics<int> accum(10);
 
   for (int i = 0; i < 10; ++i) {
     accum.AddSample(100);
@@ -97,8 +102,8 @@ TEST(RateAccumulatorTest, ResetSamples) {
   EXPECT_EQ(4, accum.ComputeMax());
 }
 
-TEST(RateAccumulatorTest, RollingSamplesDouble) {
-  RateAccumulator<double> accum(10);
+TEST(MovingRateStatisticsTest, RollingSamplesDouble) {
+  MovingRateStatistics<double> accum(10);
   for (int i = 0; i < 23; ++i) {
     accum.AddSample(5 * i);
   }
@@ -111,8 +116,8 @@ TEST(RateAccumulatorTest, RollingSamplesDouble) {
   EXPECT_DOUBLE_EQ(110.0, accum.ComputeMax());
 }
 
-TEST(RateAccumulatorTest, ComputeWeightedMeanCornerCases) {
-  RateAccumulator<int> accum(10);
+TEST(MovingRateStatisticsTest, ComputeWeightedMeanCornerCases) {
+  MovingRateStatistics<int> accum(10);
   EXPECT_DOUBLE_EQ(0.0, accum.ComputeWeightedMean(kLearningRate));
   EXPECT_DOUBLE_EQ(0.0, accum.ComputeWeightedMean(0.0));
   EXPECT_DOUBLE_EQ(0.0, accum.ComputeWeightedMean(1.1));
@@ -127,23 +132,23 @@ TEST(RateAccumulatorTest, ComputeWeightedMeanCornerCases) {
   EXPECT_NEAR(6.0, accum.ComputeWeightedMean(kLearningRate), 0.1);
 }
 
-TEST(RateAccumulatorTest, VarianceFromUniformDistribution) {
+TEST(MovingRateStatisticsTest, VarianceFromUniformDistribution) {
   // Check variance converge to 1/12 for [0;1) uniform distribution.
   // Acts as a sanity check for NumericStabilityForVariance test.
-  RateAccumulator<double> stats(/*max_count=*/0.5e6);
+  MovingRateStatistics<double> stats(/*max_count=*/0.5e6);
   FillStatsFromUniformDistribution(stats, 1e6, 0, 1);
 
   EXPECT_NEAR(stats.ComputeVariance(), 1. / 12, 1e-3);
 }
 
-TEST(RateAccumulatorTest, NumericStabilityForVariance) {
+TEST(MovingRateStatisticsTest, NumericStabilityForVariance) {
   // Same test as VarianceFromUniformDistribution,
   // except the range is shifted to [1e9;1e9+1).
   // Variance should also converge to 1/12.
   // NB: Although we lose precision for the samples themselves, the fractional
   //     part still enjoys 22 bits of mantissa and errors should even out,
   //     so that couldn't explain a mismatch.
-  RateAccumulator<double> stats(/*max_count=*/0.5e6);
+  MovingRateStatistics<double> stats(/*max_count=*/0.5e6);
   FillStatsFromUniformDistribution(stats, 1e6, 1e9, 1e9 + 1);
 
   EXPECT_NEAR(stats.ComputeVariance(), 1. / 12, 1e-3);

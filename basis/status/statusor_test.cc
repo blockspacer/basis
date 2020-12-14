@@ -5,6 +5,14 @@
 
 // Unit tests for StatusOr
 
+#include "testsCommon.h"
+
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
 #include "basis/status/statusor.hpp"
 #include "basis/status/posix_error_space.hpp"
 
@@ -14,8 +22,6 @@
 #include <algorithm>
 
 #include <base/logging.h>
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
 namespace basis {
 namespace {
@@ -53,7 +59,7 @@ class CopyNoAssign {
 
 StatusOr<std::unique_ptr<int>> ReturnUniquePtr() {
   // Uses implicit constructor from T&&
-  return std::unique_ptr<int>(new int(0));
+  return {FROM_HERE, std::unique_ptr<int>(new int(0))};
 }
 
 TEST(StatusOr, TestMoveOnlyInitialization) {
@@ -92,59 +98,60 @@ TEST(StatusOr, TestMoveOnlyVector) {
   // Sanity check that StatusOr<MoveOnly> works in vector.
   std::vector<StatusOr<std::unique_ptr<int>>> vec;
   vec.push_back(ReturnUniquePtr());
-  vec.resize(2);
+  vec.push_back(StatusOr<std::unique_ptr<int>>{FROM_HERE});
   auto another_vec = std::move(vec);
   EXPECT_TRUE(another_vec[0].ok());
   EXPECT_EQ(0, *another_vec[0].ValueOrDie());
-  EXPECT_EQ(Status::UNKNOWN, another_vec[1].status());
+  EXPECT_EQ(::basis::UnknownStatus(FROM_HERE), another_vec[1].status());
 }
 
 TEST(StatusOr, TestDefaultCtor) {
-  StatusOr<int> thing;
+  StatusOr<int> thing(FROM_HERE);
   EXPECT_FALSE(thing.ok());
-  EXPECT_TRUE(thing.status().Matches(Status::UNKNOWN));
+  EXPECT_TRUE(thing.status().Matches(::basis::UnknownStatus(FROM_HERE)));
+  EXPECT_FALSE(thing.status().Matches(::basis::OkStatus(FROM_HERE)));
 }
 
 TEST(StatusOrDeathTest, TestDefaultCtorValue) {
-  StatusOr<int> thing;
+  StatusOr<int> thing(FROM_HERE);
   EXPECT_FALSE(thing.ok());
-  EXPECT_DEATH(thing.ValueOrDie(), "generic::unknown");
+  EXPECT_DEATH(thing.ValueOrDie(), "Attempting to fetch value instead of handling error.*generic.*unknown.*");
 }
 
 TEST(StatusOr, TestStatusCtor) {
-  StatusOr<int> thing(Status::CANCELLED);
+  StatusOr<int> thing(::basis::CancelledStatus(FROM_HERE));
   EXPECT_FALSE(thing.ok());
-  EXPECT_TRUE(thing.status().Matches(Status::CANCELLED));
+  EXPECT_TRUE(thing.status().Matches(::basis::CancelledStatus(FROM_HERE)));
 }
 
 TEST(StatusOrDeathTest, TestStatusCtorStatusOk) {
   EXPECT_DEBUG_DEATH({
     // This will DCHECK
-    StatusOr<int> thing(Status::OK);
+    StatusOr<int> thing(::basis::OkStatus(FROM_HERE));
     // In optimized mode, we are actually going to get EINVAL for
     // status here, rather than crashing, so check that.
     EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "Status::OK is not a valid constructor argument");
+    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(FROM_HERE, EINVAL, "")));
+  }, "OK Status is not a valid constructor argument");
 }
 
 TEST(StatusOr, TestValueCtor) {
   const int kI = 4;
-  StatusOr<int> thing(kI);
+  StatusOr<int> thing(FROM_HERE, kI);
   EXPECT_TRUE(thing.ok());
   EXPECT_EQ(kI, thing.ValueOrDie());
 }
 
 TEST(StatusOr, TestCopyCtorStatusOk) {
   const int kI = 4;
-  StatusOr<int> original(kI);
+  StatusOr<int> original(FROM_HERE, kI);
   StatusOr<int> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
   EXPECT_EQ(original.ValueOrDie(), copy.ValueOrDie());
 }
 
 TEST(StatusOr, TestCopyCtorStatusNotOk) {
-  StatusOr<int> original(Status::CANCELLED);
+  StatusOr<int> original(::basis::CancelledStatus(FROM_HERE));
   StatusOr<int> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
 }
@@ -152,7 +159,7 @@ TEST(StatusOr, TestCopyCtorStatusNotOk) {
 TEST(StatusOr, TestCopyCtorNonAssignable) {
   const int kI = 4;
   CopyNoAssign value(kI);
-  StatusOr<CopyNoAssign> original(value);
+  StatusOr<CopyNoAssign> original(FROM_HERE, value);
   StatusOr<CopyNoAssign> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
   EXPECT_EQ(original.ValueOrDie().foo, copy.ValueOrDie().foo);
@@ -160,146 +167,146 @@ TEST(StatusOr, TestCopyCtorNonAssignable) {
 
 TEST(StatusOr, TestCopyCtorStatusOKConverting) {
   const int kI = 4;
-  StatusOr<int> original(kI);
+  StatusOr<int> original(FROM_HERE, kI);
   StatusOr<double> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
   EXPECT_DOUBLE_EQ(original.ValueOrDie(), copy.ValueOrDie());
 }
 
 TEST(StatusOr, TestCopyCtorStatusNotOkConverting) {
-  StatusOr<int> original(Status::CANCELLED);
+  StatusOr<int> original(::basis::CancelledStatus(FROM_HERE));
   StatusOr<double> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
 }
 
 TEST(StatusOr, TestAssignmentStatusOk) {
   const int kI = 4;
-  StatusOr<int> source(kI);
-  StatusOr<int> target;
+  StatusOr<int> source(FROM_HERE, kI);
+  StatusOr<int> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
   EXPECT_EQ(source.ValueOrDie(), target.ValueOrDie());
 }
 
 TEST(StatusOr, TestAssignmentStatusNotOk) {
-  StatusOr<int> source(Status::CANCELLED);
-  StatusOr<int> target;
+  StatusOr<int> source(::basis::CancelledStatus(FROM_HERE));
+  StatusOr<int> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
 }
 
 TEST(StatusOr, TestAssignmentStatusOKConverting) {
   const int kI = 4;
-  StatusOr<int> source(kI);
-  StatusOr<double> target;
+  StatusOr<int> source(FROM_HERE, kI);
+  StatusOr<double> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
   EXPECT_DOUBLE_EQ(source.ValueOrDie(), target.ValueOrDie());
 }
 
 TEST(StatusOr, TestAssignmentStatusNotOkConverting) {
-  StatusOr<int> source(Status::CANCELLED);
-  StatusOr<double> target;
+  StatusOr<int> source(::basis::CancelledStatus(FROM_HERE));
+  StatusOr<double> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
 }
 
 TEST(StatusOr, TestStatus) {
-  StatusOr<int> good(4);
+  StatusOr<int> good(FROM_HERE, 4);
   EXPECT_TRUE(good.ok());
-  StatusOr<int> bad(Status::CANCELLED);
+  StatusOr<int> bad(::basis::CancelledStatus(FROM_HERE));
   EXPECT_FALSE(bad.ok());
-  EXPECT_TRUE(bad.status().Matches(Status::CANCELLED));
+  EXPECT_TRUE(bad.status().Matches(::basis::CancelledStatus(FROM_HERE)));
 }
 
 TEST(StatusOr, TestValue) {
   const int kI = 4;
-  StatusOr<int> thing(kI);
+  StatusOr<int> thing(FROM_HERE, kI);
   EXPECT_TRUE(thing.ok());
   EXPECT_EQ(kI, thing.ValueOrDie());
 }
 
 TEST(StatusOr, TestValueConst) {
   const int kI = 4;
-  const StatusOr<int> thing(kI);
+  const StatusOr<int> thing(FROM_HERE, kI);
   EXPECT_TRUE(thing.ok());
   EXPECT_EQ(kI, thing.ValueOrDie());
 }
 
 TEST(StatusOrDeathTest, TestValueNotOk) {
-  StatusOr<int> thing(Status::CANCELLED);
+  StatusOr<int> thing(::basis::CancelledStatus(FROM_HERE));
   EXPECT_FALSE(thing.ok());
-  EXPECT_DEATH(thing.ValueOrDie(), "generic::cancelled");
+  EXPECT_DEATH(thing.ValueOrDie(), "Attempting to fetch value instead of handling error.*generic.*cancelled.*");
 }
 
 TEST(StatusOrDeathTest, TestValueNotOkConst) {
-  const StatusOr<int> thing(Status::UNKNOWN);
+  const StatusOr<int> thing(::basis::UnknownStatus(FROM_HERE));
   EXPECT_FALSE(thing.ok());
-  EXPECT_DEATH(thing.ValueOrDie(), "generic::unknown");
+  EXPECT_DEATH(thing.ValueOrDie(), "Attempting to fetch value instead of handling error.*generic.*unknown.*");
 }
 
 TEST(StatusOr, TestPointerDefaultCtor) {
-  StatusOr<int*> thing;
+  StatusOr<int*> thing(FROM_HERE);
   EXPECT_FALSE(thing.ok());
-  EXPECT_TRUE(thing.status().Matches(Status::UNKNOWN));
+  EXPECT_TRUE(thing.status().Matches(::basis::UnknownStatus(FROM_HERE)));
 }
 
 TEST(StatusOrDeathTest, TestPointerDefaultCtorValue) {
-  StatusOr<int*> thing;
+  StatusOr<int*> thing(FROM_HERE);
   EXPECT_FALSE(thing.ok());
-  EXPECT_DEATH(thing.ValueOrDie(), "generic::unknown");
+  EXPECT_DEATH(thing.ValueOrDie(), "Attempting to fetch value instead of handling error.*generic.*unknown.*");
 }
 
 TEST(StatusOr, TestPointerStatusCtor) {
-  StatusOr<int*> thing(Status::CANCELLED);
+  StatusOr<int*> thing(::basis::CancelledStatus(FROM_HERE));
   EXPECT_FALSE(thing.ok());
-  EXPECT_TRUE(thing.status().Matches(Status::CANCELLED));
+  EXPECT_TRUE(thing.status().Matches(::basis::CancelledStatus(FROM_HERE)));
 }
 
 TEST(StatusOrDeathTest, TestPointerStatusCtorStatusOk) {
   EXPECT_DEBUG_DEATH({
-    StatusOr<int*> thing(Status::OK);
+    StatusOr<int*> thing(::basis::OkStatus(FROM_HERE));
     // In optimized mode, we are actually going to get EINVAL for
     // status here, rather than crashing, so check that.
     EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "Status::OK is not a valid constructor argument");
+    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(FROM_HERE, EINVAL, "")));
+  }, "OK Status is not a valid constructor argument");
 }
 
 TEST(StatusOr, TestPointerValueCtor) {
   const int kI = 4;
-  StatusOr<const int*> thing(&kI);
+  StatusOr<const int*> thing(FROM_HERE, &kI);
   EXPECT_TRUE(thing.ok());
   EXPECT_EQ(&kI, thing.ValueOrDie());
 }
 
 TEST(StatusOrDeathTest, TestPointerValueCtorNullValue) {
   EXPECT_DEBUG_DEATH({
-    StatusOr<int*> thing(NULL);
+    StatusOr<int*> thing(FROM_HERE, NULL);
     // In optimized mode, we are actually going to get EINVAL for
     // status here, rather than DCHECKing, so verify that
     EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
+    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(FROM_HERE, EINVAL, "")));
   }, "NULL is not a valid constructor argument to StatusOr");
 }
 
 TEST(StatusOr, TestPointerCopyCtorStatusOk) {
   const int kI = 0;
-  StatusOr<const int*> original(&kI);
+  StatusOr<const int*> original(FROM_HERE, &kI);
   StatusOr<const int*> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
   EXPECT_EQ(original.ValueOrDie(), copy.ValueOrDie());
 }
 
 TEST(StatusOr, TestPointerCopyCtorStatusNotOk) {
-  StatusOr<int*> original(Status::CANCELLED);
+  StatusOr<int*> original(::basis::CancelledStatus(FROM_HERE));
   StatusOr<int*> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
 }
 
 TEST(StatusOr, TestPointerCopyCtorStatusOKConverting) {
   Derived derived;
-  StatusOr<Derived*> original(&derived);
+  StatusOr<Derived*> original(FROM_HERE, &derived);
   StatusOr<Base2*> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
   EXPECT_EQ(static_cast<const Base2*>(original.ValueOrDie()),
@@ -307,31 +314,31 @@ TEST(StatusOr, TestPointerCopyCtorStatusOKConverting) {
 }
 
 TEST(StatusOr, TestPointerCopyCtorStatusNotOkConverting) {
-  StatusOr<Derived*> original(Status::CANCELLED);
+  StatusOr<Derived*> original(::basis::CancelledStatus(FROM_HERE));
   StatusOr<Base2*> copy(original);
   EXPECT_TRUE(copy.status().Matches(original.status()));
 }
 
 TEST(StatusOr, TestPointerAssignmentStatusOk) {
   const int kI = 0;
-  StatusOr<const int*> source(&kI);
-  StatusOr<const int*> target;
+  StatusOr<const int*> source(FROM_HERE, &kI);
+  StatusOr<const int*> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
   EXPECT_EQ(source.ValueOrDie(), target.ValueOrDie());
 }
 
 TEST(StatusOr, TestPointerAssignmentStatusNotOk) {
-  StatusOr<int*> source(Status::CANCELLED);
-  StatusOr<int*> target;
+  StatusOr<int*> source(::basis::CancelledStatus(FROM_HERE));
+  StatusOr<int*> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
 }
 
 TEST(StatusOr, TestPointerAssignmentStatusOKConverting) {
   Derived derived;
-  StatusOr<Derived*> source(&derived);
-  StatusOr<Base2*> target;
+  StatusOr<Derived*> source(FROM_HERE, &derived);
+  StatusOr<Base2*> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
   EXPECT_EQ(static_cast<const Base2*>(source.ValueOrDie()),
@@ -339,44 +346,44 @@ TEST(StatusOr, TestPointerAssignmentStatusOKConverting) {
 }
 
 TEST(StatusOr, TestPointerAssignmentStatusNotOkConverting) {
-  StatusOr<Derived*> source(Status::CANCELLED);
-  StatusOr<Base2*> target;
+  StatusOr<Derived*> source(::basis::CancelledStatus(FROM_HERE));
+  StatusOr<Base2*> target(FROM_HERE);
   target = source;
   EXPECT_TRUE(target.status().Matches(source.status()));
 }
 
 TEST(StatusOr, TestPointerStatus) {
   const int kI = 0;
-  StatusOr<const int*> good(&kI);
+  StatusOr<const int*> good(FROM_HERE, &kI);
   EXPECT_TRUE(good.ok());
-  StatusOr<const int*> bad(Status::CANCELLED);
-  EXPECT_TRUE(bad.status().Matches(Status::CANCELLED));
+  StatusOr<const int*> bad(::basis::CancelledStatus(FROM_HERE));
+  EXPECT_TRUE(bad.status().Matches(::basis::CancelledStatus(FROM_HERE)));
 }
 
 TEST(StatusOr, TestPointerValue) {
   const int kI = 0;
-  StatusOr<const int*> thing(&kI);
+  StatusOr<const int*> thing(FROM_HERE, &kI);
   EXPECT_TRUE(thing.ok());
   EXPECT_EQ(&kI, thing.ValueOrDie());
 }
 
 TEST(StatusOr, TestPointerValueConst) {
   const int kI = 0;
-  const StatusOr<const int*> thing(&kI);
+  const StatusOr<const int*> thing(FROM_HERE, &kI);
   EXPECT_TRUE(thing.ok());
   EXPECT_EQ(&kI, thing.ValueOrDie());
 }
 
 TEST(StatusOrDeathTest, TestPointerValueNotOk) {
-  StatusOr<int*> thing(Status::CANCELLED);
+  StatusOr<int*> thing(::basis::CancelledStatus(FROM_HERE));
   EXPECT_FALSE(thing.ok());
-  EXPECT_DEATH(thing.ValueOrDie(), "generic::cancelled");
+  EXPECT_DEATH(thing.ValueOrDie(), "Attempting to fetch value instead of handling error.*generic.*cancelled.*");
 }
 
 TEST(StatusOrDeathTest, TestPointerValueNotOkConst) {
-  const StatusOr<int*> thing(Status::CANCELLED);
+  const StatusOr<int*> thing(::basis::CancelledStatus(FROM_HERE));
   EXPECT_FALSE(thing.ok());
-  EXPECT_DEATH(thing.ValueOrDie(), "generic::cancelled");
+  EXPECT_DEATH(thing.ValueOrDie(), "Attempting to fetch value instead of handling error.*generic.*cancelled.*");
 }
 
 #ifdef BENCHMARK
@@ -405,22 +412,22 @@ class BenchmarkFactory {
   // the user provided pointer result.
   Status ArgumentFactory(T** result) ABSL_ATTRIBUTE_NOINLINE {
     *result = value_;
-    return Status::OK;
+    return ::basis::OkStatus(FROM_HERE);
   }
 
   Status ArgumentFactoryFail(T** result) ABSL_ATTRIBUTE_NOINLINE {
     *result = NULL;
-    return Status::CANCELLED;
+    return ::basis::CancelledStatus(FROM_HERE);
   }
 
   Status ArgumentFactoryFailPosix(T** result) ABSL_ATTRIBUTE_NOINLINE {
     *result = NULL;
-    return PosixErrorToStatus(EINVAL, "");
+    return PosixErrorToStatus(FROM_HERE, EINVAL, "");
   }
 
   Status ArgumentFactoryFailPosixString(T** result) ABSL_ATTRIBUTE_NOINLINE {
     *result = NULL;
-    return PosixErrorToStatus(
+    return PosixErrorToStatus(FROM_HERE,
         EINVAL, "a big string of message junk that will never be read");
   }
 
@@ -428,20 +435,20 @@ class BenchmarkFactory {
   // is OK, then the StatusOr<T*> will hold a T*. Otherwise, it will
   // hold a status explaining the error.
   StatusOr<T*> StatusOrFactory() ABSL_ATTRIBUTE_NOINLINE {
-    return static_cast<T*>(value_);
+    return {FROM_HERE, static_cast<T*>(value_)};
   }
 
   StatusOr<T*> StatusOrFactoryFail() ABSL_ATTRIBUTE_NOINLINE {
-    return Status::CANCELLED;
+    return ::basis::CancelledStatus(FROM_HERE);
   }
 
   StatusOr<T*> StatusOrFactoryFailPosix() ABSL_ATTRIBUTE_NOINLINE {
-    return PosixErrorToStatus(EINVAL, "");
+    return {FROM_HERE, PosixErrorToStatus(FROM_HERE, EINVAL, "")};
   }
 
   StatusOr<T*> StatusOrFactoryFailPosixString() ABSL_ATTRIBUTE_NOINLINE {
-    return PosixErrorToStatus(
-        EINVAL, "a big string of message junk that will never be read");
+    return {FROM_HERE, PosixErrorToStatus(FROM_HERE,
+        EINVAL, "a big string of message junk that will never be read")};
   }
 
  private:

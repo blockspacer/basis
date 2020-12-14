@@ -329,19 +329,25 @@ struct StatusOrHelper::Specialize<T*> {
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const base::Location& location)
-    : status_(location), value_() {}
+    /// \note Default status is unknown status because we can not use
+    /// `Status::OK` without custom `value_`
+    /// (`Status::OK` means that `value_` must be set).
+    : status_(basis::UnknownStatus(location)), value_() {}
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const ::basis::Status& status)
     : status_(status), value_() {
   if (status_.ok()) {
+    /// \note `Status::OK` means that `value_` must be set.
+    /// But constructor with `Status::OK` does not provide value (only default constructs it).
+    /// So we fallback to status with posix error (EINVAL).
     status_ = internal::StatusOrHelper::HandleInvalidStatusCtorArg();
   }
 }
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const base::Location& location, const T& value)
-    : status_(location), value_(value) {
+    : status_(basis::OkStatus(location)), value_(value) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value_)) {
     status_ = internal::StatusOrHelper::HandleNullObjectCtorArg();
   }
@@ -363,7 +369,7 @@ inline StatusOr<T>& StatusOr<T>::operator=(const StatusOr<U>& other) {
 #ifndef SWIG
 template <typename T>
 inline StatusOr<T>::StatusOr(const base::Location& location, T&& value)
-    : status_(location), value_(std::move(value)) {
+    : status_(basis::OkStatus(location)), value_(std::move(value)) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value_)) {
     status_ = internal::StatusOrHelper::HandleNullObjectCtorArg();
   }
@@ -438,6 +444,8 @@ inline void StatusOr<T>::EnsureOk() const {
 
 template <typename T>
 inline void StatusOr<T>::EnsureNotOk() {
+  /// \note Will crash only in debug builds,
+  /// but in release builds will fallback to status with posix error (EINVAL).
   if (ok()) ignore_result(internal::StatusOrHelper::HandleInvalidStatusCtorArg());
 }
 

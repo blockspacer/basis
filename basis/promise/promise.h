@@ -20,6 +20,7 @@
 
 namespace base {
 
+// Used by `ThenOn` and `ThenNestedPromiseOn`
 struct IsNestedPromise
 {
   operator bool() const { return isNested; }
@@ -27,6 +28,7 @@ struct IsNestedPromise
   bool isNested = false;
 };
 
+// Used by `ThenOn` and `ThenNestedPromiseOn`
 template <typename Type>
 struct DisallowNestedPromise
 {

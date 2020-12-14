@@ -1,15 +1,17 @@
-// Copyright 2017 PDFium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+#include "testsCommon.h"
 
-#include "core/fxcrt/unowned_ptr.h"
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
 
 #include <utility>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "basis/unowned_ptr.hpp"
 
-namespace fxcrt {
+namespace basis {
 namespace {
 
 class Clink {
@@ -139,4 +141,4 @@ TEST(UnownedPtr, OperatorLT) {
   EXPECT_FALSE(ptr2 < ptr1);
 }
 
-}  // namespace fxcrt
+}  // namespace basis

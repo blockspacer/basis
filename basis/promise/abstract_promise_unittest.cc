@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/promise/abstract_promise.h"
+#include "base/task/promise/abstract_promise.h"
 
 #include "base/task/post_task.h"
 #include "base/test/bind_test_util.h"
@@ -35,9 +35,9 @@
 using testing::ElementsAre;
 
 using ArgumentPassingType =
-    ::base::internal::PromiseExecutor::ArgumentPassingType;
+    base::internal::PromiseExecutor::ArgumentPassingType;
 
-using PrerequisitePolicy = ::base::internal::PromiseExecutor::PrerequisitePolicy;
+using PrerequisitePolicy = base::internal::PromiseExecutor::PrerequisitePolicy;
 
 namespace base {
 namespace internal {
@@ -65,7 +65,7 @@ class TestExecutor {
       bool can_resolve,
       bool can_reject,
 #endif
-      ::base::OnceCallback<void(AbstractPromise*)> callback)
+      base::OnceCallback<void(AbstractPromise*)> callback)
       : callback_(std::move(callback))
 #if DCHECK_IS_ON()
         ,
@@ -98,7 +98,7 @@ class TestExecutor {
   void Execute(AbstractPromise* p) { std::move(callback_).Run(p); }
 
  private:
-  ::base::OnceCallback<void(AbstractPromise*)> callback_;
+  base::OnceCallback<void(AbstractPromise*)> callback_;
 #if DCHECK_IS_ON()
   const ArgumentPassingType resolve_argument_passing_type_;
   const ArgumentPassingType reject_argument_passing_type_;
@@ -147,7 +147,7 @@ class AbstractPromiseTest : public testing::Test {
 
     RejectPolicy reject_policy = RejectPolicy::kMustCatchRejection;
 
-    ::base::OnceCallback<void(AbstractPromise*)> callback;
+    base::OnceCallback<void(AbstractPromise*)> callback;
 
     scoped_refptr<TaskRunner> task_runner = ThreadTaskRunnerHandle::Get();
   };
@@ -175,7 +175,7 @@ class AbstractPromiseTest : public testing::Test {
     }
 
     PromiseSettingsBuilder& With(
-        ::base::OnceCallback<void(AbstractPromise*)> callback) {
+        base::OnceCallback<void(AbstractPromise*)> callback) {
       settings.callback = std::move(callback);
       return *this;
     }
@@ -2420,8 +2420,8 @@ TEST_F(AbstractPromiseTest, SingleRejectPrerequisitePolicyALLModified) {
               p->emplace(Rejected<void>());
             }));
 
-    ::base::PostTask(FROM_HERE, {base::ThreadPool()},
-                   ::base::BindOnce(
+    base::PostTask(FROM_HERE, {base::ThreadPool()},
+                   base::BindOnce(
                        [](scoped_refptr<AbstractPromise> p2) {
                          p2->emplace(Rejected<void>());
                        },

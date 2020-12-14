@@ -4,8 +4,26 @@
 
 #include "basis/static_sequence/static_sequence.hpp"
 
-#include "base/test/task_environment.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "base/test/scoped_task_environment.h"
+#include "base/at_exit.h"
+#include "base/atomic_sequence_num.h"
+#include "base/atomicops.h"
+#include "base/barrier_closure.h"
+#include "base/bind.h"
+#include "base/lazy_instance.h"
+#include "base/system/sys_info.h"
+#include "base/threading/platform_thread.h"
+#include "base/threading/simple_thread.h"
+#include "base/time/time.h"
+#include "build/build_config.h"
+
+#include "testsCommon.h"
+
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
 
 namespace basis {
 namespace {
@@ -14,7 +32,7 @@ struct TestSequence : StaticSequence<TestSequence> {};
 
 struct CustomTraitsProvider {
   static constexpr ::base::TaskTraits GetTraits() {
-    return {base::TaskPriority::LOWEST, ::base::ThreadPolicy::PREFER_BACKGROUND,
+    return {base::TaskPriority::LOWEST, base::TaskShutdownBehavior::BLOCK_SHUTDOWN,
             ::base::MayBlock()};
   }
 };
@@ -76,7 +94,7 @@ TEST(StaticSequenceTest, StaticProperties) {
 }
 
 TEST(StaticSequenceTest, InvokeUnprotectedCallback) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool activated = false;
   TestSequence::PostTask(base::BindOnce(&DoSomething, &activated));
   EXPECT_FALSE(activated);
@@ -85,7 +103,7 @@ TEST(StaticSequenceTest, InvokeUnprotectedCallback) {
 }
 
 TEST(StaticSequenceTest, InvokeProtectedCallback) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool activated = false;
   TestSequence::PostTask(
       ::base::BindOnce(&DoSomethingWithRequiredSequence, &activated));
@@ -95,7 +113,7 @@ TEST(StaticSequenceTest, InvokeProtectedCallback) {
 }
 
 TEST(StaticSequenceTest, InvokeObjectUnprotectedMethod) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool activated = false;
   TestObject obj;
   TestSequence::PostTask(base::BindOnce(&TestObject::DoSomething,
@@ -106,7 +124,7 @@ TEST(StaticSequenceTest, InvokeObjectUnprotectedMethod) {
 }
 
 TEST(StaticSequenceTest, InvokeSequencedObjectUnprotectedMethod) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool activated = false;
   Sequenced<TestObject, TestSequence> obj;
   obj.Post(FROM_HERE, &TestObject::DoSomething, &activated);
@@ -116,7 +134,7 @@ TEST(StaticSequenceTest, InvokeSequencedObjectUnprotectedMethod) {
 }
 
 TEST(StaticSequenceTest, InvokeSequencedObjectProtectedMethod) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool activated = false;
   Sequenced<TestObject, TestSequence> obj;
   obj.Post(FROM_HERE, &TestObject::DoSomethingWithRequiredSequence, &activated);
@@ -126,7 +144,7 @@ TEST(StaticSequenceTest, InvokeSequencedObjectProtectedMethod) {
 }
 
 TEST(StaticSequenceTest, SequencedConstructorIncludesArguments) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   int r = 0;
   Sequenced<ParameterizedObject, TestSequence> obj(2);
   obj.Post(FROM_HERE, &ParameterizedObject::Increment, &r);
@@ -136,7 +154,7 @@ TEST(StaticSequenceTest, SequencedConstructorIncludesArguments) {
 }
 
 TEST(StaticSequenceTest, UseCustomTraits) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool r = false;
   Sequenced<TestObject, TestSequenceWithCustomTraits> obj;
   obj.Post(FROM_HERE, &TestObject::DoSomething, &r);
@@ -146,7 +164,7 @@ TEST(StaticSequenceTest, UseCustomTraits) {
 }
 
 TEST(StaticSequenceTest, ConstructsOnSequence) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   int r = 0;
   // The constructor for HasSideEffectsInConstructor will set |r| to the sum of
   // the first two arguments, but should only run on the sequence.
@@ -157,7 +175,7 @@ TEST(StaticSequenceTest, ConstructsOnSequence) {
 }
 
 TEST(StaticSequenceTest, DestructOnSequence) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   int r = 0;
   {
     // The destructor for HasSideEffectsInDestructor will set |r| to the sum of
@@ -172,7 +190,7 @@ TEST(StaticSequenceTest, DestructOnSequence) {
 }
 
 TEST(StaticSequenceTest, PostUnprotectedMemberFunction) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   TestObject x;
   bool r = false;
   TestSequence::Post(FROM_HERE, &TestObject::DoSomething, ::base::Unretained(&x),
@@ -183,7 +201,7 @@ TEST(StaticSequenceTest, PostUnprotectedMemberFunction) {
 }
 
 TEST(StaticSequenceTest, PostProtectedMemberFunction) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   TestObject x;
   bool r = false;
   TestSequence::Post(FROM_HERE, &TestObject::DoSomethingWithRequiredSequence,
@@ -194,7 +212,7 @@ TEST(StaticSequenceTest, PostProtectedMemberFunction) {
 }
 
 TEST(StaticSequenceTest, PostUnprotectedFreeFunction) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool r = false;
   TestSequence::Post(FROM_HERE, &DoSomething, &r);
   EXPECT_FALSE(r);
@@ -203,7 +221,7 @@ TEST(StaticSequenceTest, PostUnprotectedFreeFunction) {
 }
 
 TEST(StaticSequenceTest, PostProtectedFreeFunction) {
-  ::base::test::TaskEnvironment env;
+  ::base::test::ScopedTaskEnvironment env;
   bool r = false;
   TestSequence::Post(FROM_HERE, &DoSomethingWithRequiredSequence, &r);
   EXPECT_FALSE(r);

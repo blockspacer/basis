@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/time/system_time_change_notifier.h"
+#include "basis/time/system_time_change_notifier.hpp"
 
 #include "base/bind.h"
 #include "base/location.h"

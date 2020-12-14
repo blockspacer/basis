@@ -8,25 +8,41 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "basis/rate/rate_statistics.hpp"
+#include "testsCommon.h"
 
-#include "base/test/task_environment.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "basis/rate/fixed_rate_statistics.hpp"
+
+#include <random>
+#include <cmath>
 
 namespace basis {
 
-namespace basis_impl {
-
 namespace {
 
-RateStatistics<double> CreateStatsFilledWithIntsFrom1ToN(int n) {
+// Container-based version of the <algorithm> `std::shuffle()` function to
+// randomly shuffle elements within the container using a `gen()` uniform random
+// number generator.
+template <typename RandomAccessContainer, typename UniformRandomBitGenerator>
+void c_shuffle(RandomAccessContainer& c, UniformRandomBitGenerator&& gen) {
+  std::shuffle(std::begin(c),
+               std::end(c),
+               std::forward<UniformRandomBitGenerator>(gen));
+}
+
+FixedRateStatistics<double> CreateStatsFilledWithIntsFrom1ToN(int n) {
   std::vector<double> data;
   for (int i = 1; i <= n; i++) {
     data.push_back(i);
   }
-  absl::c_shuffle(data, std::mt19937(std::random_device()()));
+  c_shuffle(data, std::mt19937(std::random_device()()));
 
-  RateStatistics<double> stats;
+  FixedRateStatistics<double> stats;
   for (double v : data) {
     stats.AddSample(v);
   }
@@ -34,24 +50,24 @@ RateStatistics<double> CreateStatsFilledWithIntsFrom1ToN(int n) {
 }
 
 // Add n samples drawn from uniform distribution in [a;b].
-RateStatistics<double> CreateStatsFromUniformDistribution(int n,
+FixedRateStatistics<double> CreateStatsFromUniformDistribution(int n,
                                                              double a,
                                                              double b) {
   std::mt19937 gen{std::random_device()()};
   std::uniform_real_distribution<> dis(a, b);
 
-  RateStatistics<double> stats;
+  FixedRateStatistics<double> stats;
   for (int i = 1; i <= n; i++) {
     stats.AddSample(dis(gen));
   }
   return stats;
 }
 
-class RateStatisticsTest : public ::testing::TestWithParam<int> {};
+class FixedRateStatisticsTest : public ::testing::TestWithParam<int> {};
 
 constexpr int SIZE_FOR_MERGE = 5;
 
-TEST(RateStatistics, FullSimpleTest) {
+TEST(FixedRateStatistics, FullSimpleTest) {
   auto stats = CreateStatsFilledWithIntsFrom1ToN(100);
 
   EXPECT_DOUBLE_EQ(*stats.GetMin(), 1.0);
@@ -60,8 +76,8 @@ TEST(RateStatistics, FullSimpleTest) {
   ASSERT_NEAR(*stats.GetMean(), 50.5, 1e-10);
 }
 
-TEST(RateStatistics, VarianceAndDeviation) {
-  RateStatistics<int> stats;
+TEST(FixedRateStatistics, VarianceAndDeviation) {
+  FixedRateStatistics<int> stats;
   stats.AddSample(2);
   stats.AddSample(2);
   stats.AddSample(-1);
@@ -72,10 +88,10 @@ TEST(RateStatistics, VarianceAndDeviation) {
   EXPECT_DOUBLE_EQ(*stats.GetStandardDeviation(), sqrt(4.5));
 }
 
-TEST(RateStatistics, RemoveSample) {
+TEST(FixedRateStatistics, RemoveSample) {
   // We check that adding then removing sample is no-op,
   // or so (due to loss of precision).
-  RateStatistics<int> stats;
+  FixedRateStatistics<int> stats;
   stats.AddSample(2);
   stats.AddSample(2);
   stats.AddSample(-1);
@@ -92,10 +108,10 @@ TEST(RateStatistics, RemoveSample) {
   }
 }
 
-TEST(RateStatistics, RemoveSamplesSequence) {
+TEST(FixedRateStatistics, RemoveSamplesSequence) {
   // We check that adding then removing a sequence of samples is no-op,
   // or so (due to loss of precision).
-  RateStatistics<int> stats;
+  FixedRateStatistics<int> stats;
   stats.AddSample(2);
   stats.AddSample(2);
   stats.AddSample(-1);
@@ -114,7 +130,7 @@ TEST(RateStatistics, RemoveSamplesSequence) {
   EXPECT_NEAR(*stats.GetStandardDeviation(), sqrt(4.5), 1e-4);
 }
 
-TEST(RateStatistics, VarianceFromUniformDistribution) {
+TEST(FixedRateStatistics, VarianceFromUniformDistribution) {
   // Check variance converge to 1/12 for [0;1) uniform distribution.
   // Acts as a sanity check for NumericStabilityForVariance test.
   auto stats = CreateStatsFromUniformDistribution(1e6, 0, 1);
@@ -122,7 +138,7 @@ TEST(RateStatistics, VarianceFromUniformDistribution) {
   EXPECT_NEAR(*stats.GetVariance(), 1. / 12, 1e-3);
 }
 
-TEST(RateStatistics, NumericStabilityForVariance) {
+TEST(FixedRateStatistics, NumericStabilityForVariance) {
   // Same test as VarianceFromUniformDistribution,
   // except the range is shifted to [1e9;1e9+1).
   // Variance should also converge to 1/12.
@@ -134,27 +150,27 @@ TEST(RateStatistics, NumericStabilityForVariance) {
   EXPECT_NEAR(*stats.GetVariance(), 1. / 12, 1e-3);
 }
 
-TEST(RateStatistics, MinRemainsUnchangedAfterRemove) {
+TEST(FixedRateStatistics, MinRemainsUnchangedAfterRemove) {
   // We don't want to recompute min (that's RollingAccumulator's role),
   // check we get the overall min.
-  RateStatistics<int> stats;
+  FixedRateStatistics<int> stats;
   stats.AddSample(1);
   stats.AddSample(2);
   stats.RemoveSample(1);
   EXPECT_EQ(stats.GetMin(), 1);
 }
 
-TEST(RateStatistics, MaxRemainsUnchangedAfterRemove) {
+TEST(FixedRateStatistics, MaxRemainsUnchangedAfterRemove) {
   // We don't want to recompute max (that's RollingAccumulator's role),
   // check we get the overall max.
-  RateStatistics<int> stats;
+  FixedRateStatistics<int> stats;
   stats.AddSample(1);
   stats.AddSample(2);
   stats.RemoveSample(2);
   EXPECT_EQ(stats.GetMax(), 2);
 }
 
-TEST_P(RateStatisticsTest, MergeStatistics) {
+TEST_P(FixedRateStatisticsTest, MergeStatistics) {
   int data[SIZE_FOR_MERGE] = {2, 2, -1, 5, 10};
   // Split the data in different partitions.
   // We have 6 distinct tests:
@@ -165,7 +181,7 @@ TEST_P(RateStatisticsTest, MergeStatistics) {
   //   * Full merged with empty sequence.
   // All must lead to the same result.
   // I miss QuickCheck so much.
-  RateStatistics<int> stats0, stats1;
+  FixedRateStatistics<int> stats0, stats1;
   for (int i = 0; i < GetParam(); ++i) {
     stats0.AddSample(data[i]);
   }
@@ -182,11 +198,10 @@ TEST_P(RateStatisticsTest, MergeStatistics) {
   EXPECT_DOUBLE_EQ(*stats0.GetStandardDeviation(), sqrt(13.84));
 }
 
-INSTANTIATE_TEST_SUITE_P(RateStatisticsTests,
-                         RateStatisticsTest,
+INSTANTIATE_TEST_SUITE_P(FixedRateStatisticsTests,
+                         FixedRateStatisticsTest,
                          ::testing::Range(0, SIZE_FOR_MERGE + 1));
 
 }  // namespace
-}  // namespace basis_impl
 
 }  // namespace basis

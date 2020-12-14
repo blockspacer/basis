@@ -104,7 +104,7 @@ class GenericErrorSpace : public ErrorSpace {
       status = ::base::ToLowerASCII(
           error::CodeEnumToString(static_cast<error::Code>(code)));
     } else {
-      status = base::Substitute("$1", code);;
+      status = base::Substitute("$1", code);
     }
     return status;
   }
@@ -161,7 +161,7 @@ void Status::UnrefSlow(Rep* r) {
   // Fast path: if ref==1, there is no need for a RefCountDec (since
   // this is the only reference and therefore no other thread is
   // allowed to be mucking with r).
-  if (r->ref == 1 || --r->ref == 0) {
+  if (r->ref == 1 || --r->ref == 0) { /// \todo magic const 1???
     delete r->message_ptr;
     delete r;
   }
@@ -175,7 +175,7 @@ Status::Rep* Status::NewRep(const ::base::Location& location
 {
   DCHECK(space != nullptr);
   Rep* rep = new Rep;
-  rep->ref = 1;
+  rep->ref = 1; /// \todo magic const 1???
   rep->message_ptr = nullptr;
   rep->location = location;
   ResetRep(rep, location, space, code, msg, canonical_code);
@@ -190,7 +190,7 @@ void Status::ResetRep(Rep* rep
   , int canonical_code)
 {
   DCHECK(rep != nullptr);
-  DCHECK_EQ(rep->ref, 1);
+  DCHECK_EQ(rep->ref, 1); /// \todo magic const 1???
   DCHECK(space != canonical_space() || canonical_code == 0);
   rep->code = code;
   rep->space_ptr = space;
@@ -262,7 +262,7 @@ void Status::SetError(const ::base::Location& location
 
 void Status::PrepareToModify() {
   DCHECK(!ok());
-  if (rep_->ref != 1) {
+  if (rep_->ref != 1) { /// \todo magic const 1???
     Rep* old_rep = rep_;
     rep_ = NewRep(location(), error_space(), error_code(), error_message(),
                   old_rep->canonical_code);
@@ -277,10 +277,10 @@ void Status::InternalSet(const ::base::Location& location
   , int canonical_code)
 {
   DCHECK(space != nullptr);
-  if (code == 0) {
+  if (code == 0) { /// \todo magic const 0???
     // Construct an OK status
     Clear();
-  } else if (rep_->ref == 1) {
+  } else if (rep_->ref == 1) { /// \todo magic const 1???
     // Update in place
     ResetRep(rep_, location, space, code, msg, canonical_code);
   } else {

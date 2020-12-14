@@ -2,21 +2,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/time/system_time_change_notifier.h"
+#include "testsCommon.h"
+
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "basis/time/system_time_change_notifier.hpp"
 
 #include <memory>
 #include <utility>
 
+#include "base/test/scoped_task_environment.h"
 #include "base/bind.h"
 #include "base/location.h"
 #include "base/macros.h"
 #include "base/run_loop.h"
 #include "base/sequenced_task_runner.h"
 #include "base/single_thread_task_runner.h"
-#include "base/test/task_environment.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/time/time.h"
-#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 
@@ -84,7 +91,7 @@ class SystemTimeChangeNotifierTest : public testing::Test {
     run_loop.Run();
   }
 
-  ::base::test::SingleThreadTaskEnvironment task_environment_;
+  ::base::test::ScopedTaskEnvironment task_environment_;
   std::unique_ptr<SystemTimeChangeNotifierPeriodicMonitor> notifier_;
   std::unique_ptr<TimeChangeObserver> observer_;
 };

@@ -470,4 +470,24 @@ Status OkStatus(const ::base::Location& location);
 inline Status OkStatus(const ::base::Location& location) { return Status(location); }
 #endif  // SWIG
 
+// Returns an CANCELLED status, equivalent to a default constructed instance.
+Status CancelledStatus(const ::base::Location& location, const std::string& error_message = "");
+
+#ifndef SWIG
+inline Status CancelledStatus(const ::base::Location& location, const std::string& error_message) {
+  return Status(location, ::basis::Status::canonical_space(),
+                ::basis::Status::CANCELLED_CODE, error_message);
+}
+#endif  // SWIG
+
+// Returns an UNKNOWN status, equivalent to a default constructed instance.
+Status UnknownStatus(const ::base::Location& location, const std::string& error_message = "");
+
+#ifndef SWIG
+inline Status UnknownStatus(const ::base::Location& location, const std::string& error_message) {
+  return Status(location, ::basis::Status::canonical_space(),
+                ::basis::Status::UNKNOWN_CODE, error_message);
+}
+#endif  // SWIG
+
 }  // namespace basis

@@ -63,7 +63,7 @@ namespace internal {
 
 // Provides a TaskRunner and can persist after the message loop is destroyed,
 // which is useful if e.g. a StaticTaskRunnerHolder outlives a
-// ::base::test::TaskEnvironment in tests. Only usable by StaticSequence.
+// ::base::test::ScopedTaskEnvironment in tests. Only usable by StaticSequence.
 class StaticTaskRunnerHolder
     : public ::base::MessageLoopCurrent::DestructionObserver {
  public:
@@ -148,7 +148,7 @@ class StaticSequence {
   static const scoped_refptr<::base::SequencedTaskRunner>& TaskRunner() {
     // A StaticTaskRunnerHolder is able to regenerate a TaskRunner after the
     // global thread pool is destroyed and re-created (which can happen between
-    // unittests that use ::base::test::TaskEnvironment).
+    // unittests that use ::base::test::ScopedTaskEnvironment).
     static internal::StaticTaskRunnerHolder task_runner(
         TraitsProvider::GetTraits());
     return task_runner.Get();

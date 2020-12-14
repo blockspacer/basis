@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "basis/status/with_details.h"
+#include "testsCommon.h"
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "basis/status/with_details.hpp"
 
 namespace basis {
 namespace {

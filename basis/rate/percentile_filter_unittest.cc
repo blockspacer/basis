@@ -8,10 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "basis/rate/percentile_filter.hpp"
+#include "testsCommon.h"
 
-#include "base/test/task_environment.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "basis/rate/percentile_filter.hpp"
 
 #include <stdlib.h>
 
@@ -20,7 +25,19 @@
 #include <cstdint>
 #include <random>
 
-#include "absl/algorithm/container.h"
+namespace {
+
+// Container-based version of the <algorithm> `std::shuffle()` function to
+// randomly shuffle elements within the container using a `gen()` uniform random
+// number generator.
+template <typename RandomAccessContainer, typename UniformRandomBitGenerator>
+void c_shuffle(RandomAccessContainer& c, UniformRandomBitGenerator&& gen) {
+  std::shuffle(std::begin(c),
+               std::end(c),
+               std::forward<UniformRandomBitGenerator>(gen));
+}
+
+} // namespace
 
 namespace basis {
 
@@ -120,7 +137,7 @@ TEST_P(PercentileFilterTest, InsertAndEraseTenValuesInRandomOrder) {
 
   // Insert two sets of |zero_to_nine| in random order.
   for (int i = 0; i < 2; ++i) {
-    absl::c_shuffle(zero_to_nine, std::mt19937(std::random_device()()));
+    c_shuffle(zero_to_nine, std::mt19937(std::random_device()()));
     for (int64_t value : zero_to_nine)
       filter_.Insert(value);
     // After inserting a full set of |zero_to_nine|, the percentile should
@@ -130,11 +147,11 @@ TEST_P(PercentileFilterTest, InsertAndEraseTenValuesInRandomOrder) {
 
   // Insert and erase sets of |zero_to_nine| in random order a few times.
   for (int i = 0; i < 3; ++i) {
-    absl::c_shuffle(zero_to_nine, std::mt19937(std::random_device()()));
+    c_shuffle(zero_to_nine, std::mt19937(std::random_device()()));
     for (int64_t value : zero_to_nine)
       filter_.Erase(value);
     EXPECT_EQ(expected_value, filter_.GetPercentileValue());
-    absl::c_shuffle(zero_to_nine, std::mt19937(std::random_device()()));
+    c_shuffle(zero_to_nine, std::mt19937(std::random_device()()));
     for (int64_t value : zero_to_nine)
       filter_.Insert(value);
     EXPECT_EQ(expected_value, filter_.GetPercentileValue());

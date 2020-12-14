@@ -2,13 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/promise/post_task_executor.h"
+#include "testsCommon.h"
 
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "basis/promise/post_task_executor.h"
+#include "basis/promise/do_nothing_promise.h"
+
+#include "base/test/gtest_util.h"
+#include "base/test/bind_test_util.h"
 #include "base/bind.h"
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
 #include "base/task_runner.h"
-#include "testing/gtest/include/gtest/gtest.h"
 
 namespace base {
 namespace internal {

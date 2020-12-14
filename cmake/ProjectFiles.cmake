@@ -62,6 +62,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/core/sequence_bound_flag.cc
   ${BASIS_DIR}/core/sequence_bound_flag.hpp
   ${BASIS_DIR}/core/retrier.hpp
+  ${BASIS_DIR}/core/weak_handle.cc
+  ${BASIS_DIR}/core/weak_handle.hpp
   #
   ${BASIS_DIR}/task/periodic_prioritized_task_heap.hpp
   ${BASIS_DIR}/task/periodic_prioritized_task_heap.cc
@@ -146,6 +148,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/log/log_util.cc
   ${BASIS_DIR}/log/progress_logger.cc
   ${BASIS_DIR}/log/progress_logger.hpp
+  ${BASIS_DIR}/log/spacer.cc
+  ${BASIS_DIR}/log/spacer.hpp
   #
   ${BASIS_DIR}/task/task_util.cc
   ${BASIS_DIR}/task/task_util.hpp
@@ -202,21 +206,34 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/bind/callable_hook.cc
   ${BASIS_DIR}/bind/verify_nothing.hpp
   #
+  ${BASIS_DIR}/serialization/serializers.cc
+  ${BASIS_DIR}/serialization/serializers.hpp
+  #
+  ${BASIS_DIR}/static_sequence/static_sequence.cc
+  ${BASIS_DIR}/static_sequence/static_sequence.hpp
+  #
   ${BASIS_DIR}/strings/string_util.cc
   ${BASIS_DIR}/strings/string_util.hpp
   #
+  ${BASIS_DIR}/time/system_time_change_notifier.cc
+  ${BASIS_DIR}/time/system_time_change_notifier.hpp
+  #
   ${BASIS_DIR}/files/file_util.cc
   ${BASIS_DIR}/files/file_util.hpp
+  ${BASIS_DIR}/files/scoped_temp_file.cc
+  ${BASIS_DIR}/files/scoped_temp_file.hpp
   #
   ${BASIS_DIR}/rate/data_rate_limiter.cc
   ${BASIS_DIR}/rate/data_rate_limiter.hpp
   ${BASIS_DIR}/rate/rate_tracker.cc
   ${BASIS_DIR}/rate/rate_tracker.hpp
   ${BASIS_DIR}/rate/rate_tracker.cc
-  ${BASIS_DIR}/rate/rate_statistics.hpp
-  ${BASIS_DIR}/rate/rate_accumulator.hpp
+  ${BASIS_DIR}/rate/fixed_rate_statistics.hpp
+  ${BASIS_DIR}/rate/moving_rate_statistics.hpp
   ${BASIS_DIR}/rate/moving_average.cc
   ${BASIS_DIR}/rate/moving_average.hpp
+  ${BASIS_DIR}/rate/quality_threshold.cc
+  ${BASIS_DIR}/rate/quality_threshold.hpp
   #
   ${BASIS_DIR}/ECS/simulation_registry.cc
   ${BASIS_DIR}/ECS/simulation_registry.hpp

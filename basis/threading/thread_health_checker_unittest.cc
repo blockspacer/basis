@@ -1,14 +1,23 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+#include "testsCommon.h"
+
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
 
 #include "basis/threading/thread_health_checker.hpp"
 
 #include "base/bind.h"
 #include "base/memory/ref_counted.h"
 #include "base/synchronization/waitable_event.h"
+#include "base/test/bind_test_util.h"
+#include "base/test/mock_callback.h"
+#include "base/test/null_task_runner.h"
+#include "base/test/simple_test_tick_clock.h"
 #include "base/test/test_mock_time_task_runner.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "base/test/test_simple_task_runner.h"
+#include "base/test/trace_event_analyzer.h"
 
 namespace basis {
 

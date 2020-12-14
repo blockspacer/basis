@@ -110,6 +110,10 @@ macro(tests_add_executable target source_list TEST_ARGS TEST_LIB)
 ##    add_sanitizers( ${target} ) # https://github.com/arsenm/sanitizers-cmake#build-targets-with-sanitizer-support
   endif()
 
+  target_include_directories(${target} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
   target_link_libraries(${target} PRIVATE
     # 3dparty libs
     ${TESTS_3DPARTY_LIBS}
@@ -289,23 +293,103 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-pimpl
     "${pimpl_deps}" "${CATCH2_TEST_ARGS}" "${test_main_catch}")
 
-  set ( gmock_deps
-    gmock.test.cpp
-  )
   tests_add_executable(${ROOT_PROJECT_NAME}-gmock
-    "${gmock_deps}" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "gmock.test.cpp" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  set ( i18n_deps
-    i18n.test.cpp
-  )
   tests_add_executable(${ROOT_PROJECT_NAME}-i18n
-    "${i18n_deps}" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "i18n.test.cpp" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  set ( money_deps
-    money.test.cpp
-  )
   tests_add_executable(${ROOT_PROJECT_NAME}-money
-    "${money_deps}" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/money/money.test.cpp" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-data_rate_limiter
+    "${BASIS_DIR}/rate/data_rate_limiter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-fixed_rate_statistics
+    "${BASIS_DIR}/rate/fixed_rate_statistics_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-moving_average
+    "${BASIS_DIR}/rate/moving_average_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-moving_median_filter
+    "${BASIS_DIR}/rate/moving_median_filter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-moving_rate_statistics
+    "${BASIS_DIR}/rate/moving_rate_statistics_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-percentile_filter
+    "${BASIS_DIR}/rate/percentile_filter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-quality_threshold
+    "${BASIS_DIR}/rate/quality_threshold_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-rate_tracker
+    "${BASIS_DIR}/rate/rate_tracker_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-top_n_test
+    "${BASIS_DIR}/algorithm/top_n_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-bind_to_task_runner
+    "${BASIS_DIR}/bind/bind_to_task_runner_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-serializers
+    "${BASIS_DIR}/serialization/serializers_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-static_sequence
+    "${BASIS_DIR}/static_sequence/static_sequence_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-status
+    "${BASIS_DIR}/status/status_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-statusor_test
+    "${BASIS_DIR}/status/statusor_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-with_details
+    "${BASIS_DIR}/status/with_details_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-thread_health_checker
+    "${BASIS_DIR}/threading/thread_health_checker_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-system_time_change_notifier
+    "${BASIS_DIR}/time/system_time_change_notifier_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-observable
+    "${BASIS_DIR}/core/observable_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-weak_handle
+    "${BASIS_DIR}/core/weak_handle_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-spacer
+    "${BASIS_DIR}/log/spacer_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-unique_ptr_wrap
+    "${BASIS_DIR}/unique_ptr_wrap_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  # FIXME: run only under ASAN
+  #tests_add_executable(${ROOT_PROJECT_NAME}-unowned_ptr
+  #  "${BASIS_DIR}/unowned_ptr_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  # FIXME: use base::WrappedPromise
+  # Check failed: !promise_. The PassedPromise must be Cleared or passed onto a Wrapped Promise
+  #tests_add_executable(${ROOT_PROJECT_NAME}-abstract_promise
+  #  "${BASIS_DIR}/promise/abstract_promise_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-dependent_list
+    "${BASIS_DIR}/promise/dependent_list_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  # FIXME: use base::WrappedPromise
+  # Check failed: !promise_. The PassedPromise must be Cleared or passed onto a Wrapped Promise
+  #tests_add_executable(${ROOT_PROJECT_NAME}-helpers
+  #  "${BASIS_DIR}/promise/helpers_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-post_task_executor
+    "${BASIS_DIR}/promise/post_task_executor_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-promise
+    "${BASIS_DIR}/promise/promise_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-promise_value
+    "${BASIS_DIR}/promise/promise_value_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   set ( fakeit_deps
     fakeit.test.cpp

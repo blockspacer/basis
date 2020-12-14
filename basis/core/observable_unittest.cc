@@ -2,27 +2,33 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "testsCommon.h"
+
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
 #include <functional>
 #include <memory>
 
+#include "base/test/scoped_task_environment.h"
 #include "base/bind.h"
 #include "base/bind_helpers.h"
 #include "base/location.h"
 #include "base/macros.h"
 #include "base/run_loop.h"
 #include "base/synchronization/waitable_event.h"
-#include "base/test/task_environment.h"
 #include "base/threading/thread.h"
 
 #include "basis/core/observable.hpp"
-
-#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 
 class ObserverTest : public ::testing::Test {
  protected:
-  ::base::test::SingleThreadTaskEnvironment task_environment_;
+  ::base::test::ScopedTaskEnvironment task_environment_;
 };
 
 struct NoDefaultConstructor {

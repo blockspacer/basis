@@ -8,29 +8,34 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "basis/rate/moving_average.hpp"
+#include "testsCommon.h"
 
-#include "base/test/task_environment.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#if !defined(USE_GTEST_TEST)
+#warning "use USE_GTEST_TEST"
+// default
+#define USE_GTEST_TEST 1
+#endif // !defined(USE_GTEST_TEST)
+
+#include "basis/rate/moving_average.hpp"
 
 namespace basis {
 
 TEST(MovingAverageTest, EmptyAverage) {
-  rtc::MovingAverage moving_average(1);
+  basis::MovingAverage moving_average(1);
   EXPECT_EQ(0u, moving_average.Size());
   EXPECT_EQ(base::nullopt, moving_average.GetAverageRoundedDown());
 }
 
 // Test single value.
 TEST(MovingAverageTest, OneElement) {
-  rtc::MovingAverage moving_average(1);
+  basis::MovingAverage moving_average(1);
   moving_average.AddSample(3);
   EXPECT_EQ(1u, moving_average.Size());
   EXPECT_EQ(3, *moving_average.GetAverageRoundedDown());
 }
 
 TEST(MovingAverageTest, GetAverage) {
-  rtc::MovingAverage moving_average(1024);
+  basis::MovingAverage moving_average(1024);
   moving_average.AddSample(1);
   moving_average.AddSample(1);
   moving_average.AddSample(3);
@@ -40,7 +45,7 @@ TEST(MovingAverageTest, GetAverage) {
 }
 
 TEST(MovingAverageTest, GetAverageRoundedDownRounds) {
-  rtc::MovingAverage moving_average(1024);
+  basis::MovingAverage moving_average(1024);
   moving_average.AddSample(1);
   moving_average.AddSample(2);
   moving_average.AddSample(2);
@@ -49,7 +54,7 @@ TEST(MovingAverageTest, GetAverageRoundedDownRounds) {
 }
 
 TEST(MovingAverageTest, GetAverageRoundedToClosestRounds) {
-  rtc::MovingAverage moving_average(1024);
+  basis::MovingAverage moving_average(1024);
   moving_average.AddSample(1);
   moving_average.AddSample(2);
   moving_average.AddSample(2);
@@ -58,7 +63,7 @@ TEST(MovingAverageTest, GetAverageRoundedToClosestRounds) {
 }
 
 TEST(MovingAverageTest, Reset) {
-  rtc::MovingAverage moving_average(5);
+  basis::MovingAverage moving_average(5);
   moving_average.AddSample(1);
   EXPECT_EQ(1, *moving_average.GetAverageRoundedDown());
   EXPECT_EQ(1, *moving_average.GetAverageRoundedToClosest());
@@ -72,7 +77,7 @@ TEST(MovingAverageTest, Reset) {
 }
 
 TEST(MovingAverageTest, ManySamples) {
-  rtc::MovingAverage moving_average(10);
+  basis::MovingAverage moving_average(10);
   for (int i = 1; i < 11; i++) {
     moving_average.AddSample(i);
   }

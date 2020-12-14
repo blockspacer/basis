@@ -16,7 +16,7 @@
 #include <base/logging.h>
 
 namespace basis {
-namespace basis_impl {
+
 // Given two numbers |x| and |y| such that x >= y, computes the difference
 // x - y without causing undefined behavior due to signed overflow.
 template <typename T>
@@ -68,5 +68,4 @@ constexpr T minus_infinity_or_min() {
   return std::numeric_limits<T>::min();
 }
 
-}  // namespace basis_impl
 }  // namespace basis

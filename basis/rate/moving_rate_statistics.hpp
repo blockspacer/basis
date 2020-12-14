@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "basis/rate/rate_statistics.h"
+#include "basis/rate/fixed_rate_statistics.hpp"
 
 #include <base/logging.h>
 
@@ -22,12 +22,12 @@
 
 namespace basis {
 
-// RateAccumulator stores and reports statistics
+// MovingRateStatistics stores and reports statistics
 // over N most recent samples
 // i.e. removes oldest sample if reached max. for stored samples count.
 //
-// RateAccumulator is full-fledged moving window over N last samples
-// (unlike `RateStatistics`).
+// MovingRateStatistics is full-fledged moving window over N last samples
+// (unlike `FixedRateStatistics`).
 //
 // T is assumed to be an int, long, double or float.
 //
@@ -35,7 +35,7 @@ namespace basis {
 //
 // // max. 10 samples, but added 12
 //
-// RateAccumulator<int> accum(10);
+// MovingRateStatistics<int> accum(10);
 // for (int i = 0; i < 12; ++i) {
 //   accum.AddSample(i);
 // }
@@ -48,20 +48,20 @@ namespace basis {
 // EXPECT_EQ(11, accum.ComputeMax());
 //
 template <typename T>
-class RateAccumulator {
+class MovingRateStatistics {
  public:
-  explicit RateAccumulator(size_t max_count) : samples_(max_count) {
+  explicit MovingRateStatistics(size_t max_count) : samples_(max_count) {
     DCHECK(max_count > 0);
     Reset();
   }
-  ~RateAccumulator() {}
+  ~MovingRateStatistics() {}
 
   size_t max_count() const { return samples_.size(); }
 
   size_t count() const { return static_cast<size_t>(stats_.Size()); }
 
   void Reset() {
-    stats_ = webrtc::webrtc_impl::RunningStatistics<T>();
+    stats_ = basis::FixedRateStatistics<T>();
     next_index_ = 0U;
     max_ = T();
     max_stale_ = false;
@@ -150,7 +150,7 @@ class RateAccumulator {
   double ComputeVariance() const { return stats_.GetVariance().value_or(0); }
 
  private:
-  webrtc::webrtc_impl::RunningStatistics<T> stats_;
+  basis::FixedRateStatistics<T> stats_;
   size_t next_index_;
   mutable T max_;
   mutable bool max_stale_;
@@ -158,7 +158,7 @@ class RateAccumulator {
   mutable bool min_stale_;
   std::vector<T> samples_;
 
-  DISALLOW_COPY_AND_ASSIGN(RateAccumulator);
+  DISALLOW_COPY_AND_ASSIGN(MovingRateStatistics);
 };
 
 } // namespace basis

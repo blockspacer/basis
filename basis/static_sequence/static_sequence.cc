@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/static_sequence/static_sequence.hpp"
+#include "basis/static_sequence/static_sequence.hpp" // IWYU pragma: associated
 
 #include <base/task/thread_pool/thread_pool.h>
 

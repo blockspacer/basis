@@ -198,8 +198,10 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         # see use_test_support option in base
         self.requires("conan_gtest/release-1.10.0@conan/stable")
 
-        # TODO: support doctest
-        #self.requires("doctest/[>=2.3.8]")
+        no_doctest = (str(self.settings.build_type).lower() != "debug"
+          and str(self.settings.build_type).lower() != "relwithdebinfo")
+        if not no_doctest:
+          self.requires("doctest/[>=2.3.8]")
 
         #if self.settings.os == "Linux":
         #    self.requires("chromium_dynamic_annotations/master@conan/stable")
@@ -240,8 +242,11 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         no_doctest = (str(self.settings.build_type).lower() != "debug"
           and str(self.settings.build_type).lower() != "relwithdebinfo")
         if no_doctest:
-          cmake.definitions["DOCTEST_CONFIG_DISABLE"] = '1'
+          cmake.definitions["ENABLE_DOCTEST"] = 'OFF'
           self.output.info('Disabled DOCTEST')
+        else:
+          cmake.definitions["ENABLE_DOCTEST"] = 'ON'
+          self.output.info('Enabled DOCTEST')
 
         cmake.definitions["CONAN_AUTO_INSTALL"] = 'OFF'
         if self.options.shared:

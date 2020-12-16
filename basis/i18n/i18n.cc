@@ -1,4 +1,4 @@
-#include "basis/i18n/i18n.hpp"
+#include "basis/i18n/i18n.hpp" // IWYU pragma: associated
 
 #include <base/i18n/rtl.h>
 #include <base/i18n/icu_util.h>

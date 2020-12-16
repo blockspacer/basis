@@ -20,8 +20,6 @@
 #include <base/observer_list_threadsafe.h>
 #include <base/task/thread_pool/thread_pool.h>
 
-#include <basis/ECS/simulation_registry.hpp>
-
 #include <vector>
 
 namespace ECS {

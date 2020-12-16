@@ -5,7 +5,7 @@
 
 #include "basis/status/posix_error_space.hpp" // IWYU pragma: associated
 
-#include <stddef.h>
+#include <cstddef>
 #include <stdio.h>
 #include <string>
 #if defined(OS_POSIX) || defined(OS_FUCHSIA)

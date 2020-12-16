@@ -17,6 +17,21 @@
 
 namespace basis {
 namespace error {
+
+/// \note
+/// Choosing between FAILED_PRECONDITION, ABORTED, and UNAVAILABLE
+/// is subtle, especially with respect to the retry strategy
+/// the caller should use. Some guidelines that may help a service implementer:
+/// * Use UNAVAILABLE if the client can retry just the failing call.
+/// * Use ABORTED if the client should retry at a higher transaction level
+/// (such as when a client-specified test-and-set fails,
+/// indicating the client should restart a read-modify-write sequence).
+/// * Use FAILED_PRECONDITION if the client should not retry
+/// until the system state has been explicitly fixed.
+/// For example, if an “rmdir” fails because the directory is non-empty,
+/// FAILED_PRECONDITION should be returned since the client should not retry
+/// unless the files are deleted from the directory.
+//
 enum Code {
   /// Not an error; returned on success.
   OK = 0,
@@ -137,6 +152,27 @@ using logging::LogSeverity;
 class ErrorSpace;
 
 // Status represents an error state or the absence thereof.
+// Inspired by https://abseil.io/docs/cpp/guides/status
+//
+// A Status is designed to either return OK
+// or one of a number of different error codes,
+// corresponding to typical error conditions.
+// In almost all cases, when using Status
+// you should use the canonical error codes.
+// These canonical codes are understood across the codebase
+// and will be accepted across all API and RPC boundaries.
+// A function which has a return value of Status must be handled
+// (and is marked MUST_USE_RESULT).
+//
+/// \note The error message is not intended for end users;
+/// it may get logged somewhere for a developer or SRE
+/// to examine and find out what went wrong.
+//
+/// \note low-level routines such as a file Open() operation
+/// should typically not log status values themselves,
+/// but should pass them up to the caller
+/// who will have better context on how to handle any error.
+//
 class MUST_USE_RESULT Status final {
  public:
   // Creates a "successful" status.
@@ -187,6 +223,10 @@ class MUST_USE_RESULT Status final {
     , int code
     , const std::string& msg);
 
+  // Keeps track of the first non-ok status encountered in a sequence.
+  // Will overwrite an existing OK status,
+  // but will not overwrite an existing error code of another value.
+  //
   // If "ok()", stores "new_status" into *this.  If "!ok()", preserves
   // the current "error_code()/error_message()/error_space()",
   // but may augment with additional information about "new_status".
@@ -196,6 +236,17 @@ class MUST_USE_RESULT Status final {
   //   if (overall_status.ok()) overall_status = new_status
   // Use:
   //   overall_status.UpdateIfOk(new_status);
+  //
+  // Suppose you want to execute two operations
+  // (regardless of whether or not the first operation failed),
+  // but want to return an error if either of the operations failed.
+  // Instead of:
+  // Status s = Operation1();
+  // Status s2 = Operation2();
+  // if (s.ok()) s = s2;
+  // Use:
+  // Status s = Operation1();
+  // s.UpdateIfOk(Operation2());
   void UpdateIfOk(const Status& new_status);
 
   // Clear this status object to contain the OK code and no error message.

@@ -1,4 +1,4 @@
-#include "testsCommon.h"
+#include "tests_common.h"
 
 #include "Foo.h"
 

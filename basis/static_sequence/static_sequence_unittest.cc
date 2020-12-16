@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "tests_common.h"
+
 #include "basis/static_sequence/static_sequence.hpp"
 
 #include "base/test/scoped_task_environment.h"
@@ -16,14 +18,6 @@
 #include "base/threading/simple_thread.h"
 #include "base/time/time.h"
 #include "build/build_config.h"
-
-#include "testsCommon.h"
-
-#if !defined(USE_GTEST_TEST)
-#warning "use USE_GTEST_TEST"
-// default
-#define USE_GTEST_TEST 1
-#endif // !defined(USE_GTEST_TEST)
 
 namespace basis {
 namespace {

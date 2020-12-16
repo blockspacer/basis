@@ -5,13 +5,7 @@
 
 // Unit tests for StatusOr
 
-#include "testsCommon.h"
-
-#if !defined(USE_GTEST_TEST)
-#warning "use USE_GTEST_TEST"
-// default
-#define USE_GTEST_TEST 1
-#endif // !defined(USE_GTEST_TEST)
+#include "tests_common.h"
 
 #include "basis/status/statusor.hpp"
 #include "basis/status/posix_error_space.hpp"

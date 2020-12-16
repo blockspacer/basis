@@ -279,7 +279,7 @@ bool ScopedBaseEnvironment::init(
   // see https://developers.google.com/chart/interactive/docs/gallery/histogram
   // |InitLogOnShutdown| initializes logging histograms with --v=1.
   // Safe to call multiple times.
-  // Is called from ctor but for browser it seems that it is more useful to
+  // Is called from ctor but for it seems that it is more useful to
   // start logging after statistics recorder, so we need to init log-on-shutdown
   // later.
   // Usage examples:

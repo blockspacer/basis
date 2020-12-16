@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <string>
-#include <stdint.h>
+#include <cstdint>
 
 namespace basis {
 

@@ -3,8 +3,6 @@
 // DISABLE_DOCTEST: custom macro
 #if !defined(DISABLE_DOCTEST)
 
-#error "TODO: DOCTEST NOT SUPPORTED"
-
 /// \note define DOCTEST_* macro before `doctest.h`
 #include "basis/doctest_common.hpp"
 
@@ -14,9 +12,7 @@
 
 namespace basis {
 
-// create default doctest context (custom defaults)
-doctest::Context initDoctest(
-  int argc, const char* const* argv);
+void initDoctestOptions(doctest::Context& ctx);
 
 }  // namespace basis
 

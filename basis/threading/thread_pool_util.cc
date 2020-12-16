@@ -1,4 +1,4 @@
-#include "basis/threading/thread_pool_util.hpp"
+#include "basis/threading/thread_pool_util.hpp" // IWYU pragma: associated
 
 #include <base/logging.h>
 #include <base/path_service.h>

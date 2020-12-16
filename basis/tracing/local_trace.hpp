@@ -26,7 +26,7 @@
  **/
 
 #include <stdio.h>
-#include <base/logging.h> // for DCHECK_IS_ON
+#include <base/logging.h>
 
 //#define __FUNC__ __PRETTY_FUNCTION__
 #define __FUNC__ __func__

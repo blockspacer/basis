@@ -1,15 +1,38 @@
 #pragma once
 
 #include <chrono>
-#include <base/logging.h> // for DCHECK
+#include <base/logging.h>
 
 namespace basis {
 
-// Usage example:
-//  in main loop you want to update sub-systems with some interval,
-//  so you can pass elapsed frame time_dt to IntervalTimer::Update
-//  and use IntervalTimer::Passed to check if sub-systems update interval reached,
-//  then do not forget to call IntervalTimer::Reset()
+// Can be used in hot loop (think about update loop of game server).
+// Assumed to be updated with each loop iteration
+// based on elapsed time interval (time delta).
+//
+// Do not forget to call `Reset()` if `timer.Passed()`.
+//
+// EXAMPLE
+//
+// // timer will fire every 100 nanoseconds, but only if update loop frequent enough.
+// const std::chrono::nanoseconds& interval = 100ns;
+// ::basis::IntervalTimer timer(interval);
+//
+// while(...) {
+//   const std::chrono::nanoseconds& current_frame_elapsed_dt = ...;
+//
+//   timer.Update(current_frame_elapsed_dt);
+//
+//   if(timer.Passed()) {
+//     task.Run(current_frame_elapsed_dt, /*last_call_elapsed_dt*/ job.timer.GetCurrent());
+//     timer.Reset();
+//   }
+// }
+//
+// PERFORMANCE
+//
+// `IntervalTimer` must be optimized for performance-critical code.
+// We `inline` almost all functions due to performance reasons.
+//
 struct IntervalTimer
 {
  public:

@@ -1,4 +1,4 @@
-#include "testsCommon.h"
+#include "tests_common.h"
 
 #if !defined(USE_CATCH_TEST)
 #warning "use USE_CATCH_TEST"

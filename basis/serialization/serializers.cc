@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/serialization/serializers.hpp"
+#include "basis/serialization/serializers.hpp" // IWYU pragma: associated
 
 #include "base/json/json_file_value_serializer.h"
 #include "base/json/json_string_value_serializer.h"

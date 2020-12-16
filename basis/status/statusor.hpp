@@ -68,6 +68,28 @@
 
 namespace basis {
 
+// Similar to the C++ proposal for std::expected
+//
+// The StatusOr<T> will either contain an object of type T
+// (indicating a successful operation), or an error (of type Status)
+// explaining why such a value is not present.
+//
+/// \note StatusOr<T> cannot hold an OK status
+/// as that would imply a value should be present.
+//
+/// \note Checking the value of pointer in an StatusOr<T>
+/// generally requires a bit more care,
+/// to ensure both that a value is present and that value is not null:
+///
+/// StatusOr<std::unique_ptr<Foo>> result = FooFactory::MakeNewFoo(arg);
+/// if (!result.ok()) {
+///   LOG(ERROR) << result.status();
+/// } else if (*result == nullptr) {
+///   LOG(ERROR) << "Unexpected null pointer";
+/// } else {
+///   (*result)->DoSomethingCool();
+/// }
+//
 template <typename T>
 class MUST_USE_RESULT StatusOr {
   template <typename U>

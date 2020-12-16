@@ -2,13 +2,7 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "testsCommon.h"
-
-#if !defined(USE_GTEST_TEST)
-#warning "use USE_GTEST_TEST"
-// default
-#define USE_GTEST_TEST 1
-#endif // !defined(USE_GTEST_TEST)
+#include "tests_common.h"
 
 #include "basis/status/status.hpp"
 #include "basis/files/scoped_temp_file.hpp"

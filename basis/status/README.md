@@ -1,6 +1,8 @@
 # About
 
-Developer guide for error handling
+Developer guide for error handling.
+
+Inspired by https://abseil.io/docs/cpp/guides/status
 
 ## MUST SEE
 

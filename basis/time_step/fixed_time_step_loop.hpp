@@ -3,7 +3,7 @@
 #include "basis/time_step/fixed_time_step.hpp"
 #include <chrono>
 #include <functional>
-#include <base/logging.h> // for DCHECK
+#include <base/logging.h>
 
 namespace basis {
 

@@ -2,20 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <vector>
-
-#include "testsCommon.h"
-
-#if !defined(USE_GTEST_TEST)
-#warning "use USE_GTEST_TEST"
-// default
-#define USE_GTEST_TEST 1
-#endif // !defined(USE_GTEST_TEST)
+#include "tests_common.h"
 
 #include "base/files/file_util.h"
 #include "base/values.h"
 #include "basis/files/scoped_temp_file.hpp"
 #include "basis/serialization/serializers.hpp"
+
+#include <vector>
 
 namespace basis {
 namespace {

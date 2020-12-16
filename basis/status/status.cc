@@ -4,7 +4,7 @@
 
 #include "basis/status/status.hpp" // IWYU pragma: associated
 
-#include <stdint.h>
+#include <cstdint>
 #include <stdio.h>
 #include <functional>
 #include <string>

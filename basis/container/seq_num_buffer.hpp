@@ -21,14 +21,6 @@
 //
 namespace backend {
 
-//enum class PlayerLoadState {
-//  LOADING
-//  , LOADED
-//  , UNLOADING
-//  , UNLOADED
-//  , TOTAL
-//};
-
 /// \note uint64_t range 0 .. 18,446,744,073,709,551,615
 typedef std::uint64_t TickNumType;
 

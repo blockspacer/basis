@@ -16,9 +16,6 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/PluginManager.hpp
   ${BASIS_DIR}/PluginManager.cc
   #
-  ${BASIS_DIR}/boost_command_line.hpp
-  ${BASIS_DIR}/boost_command_line.cc
-  #
   ${BASIS_DIR}/doctest_util.hpp
   ${BASIS_DIR}/doctest_util.cc
   #
@@ -65,8 +62,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/core/weak_handle.cc
   ${BASIS_DIR}/core/weak_handle.hpp
   #
-  ${BASIS_DIR}/task/periodic_prioritized_task_heap.hpp
-  ${BASIS_DIR}/task/periodic_prioritized_task_heap.cc
+  ${BASIS_DIR}/task/prioritized_once_task_heap.hpp
+  ${BASIS_DIR}/task/prioritized_once_task_heap.cc
   #
   ${BASIS_DIR}/task/periodic_task_executor.hpp
   ${BASIS_DIR}/task/periodic_task_executor.cc
@@ -131,13 +128,20 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/promise/then_and_catch_executor.cc
   ${BASIS_DIR}/promise/then_and_catch_executor.h
   #
+  ${BASIS_DIR}/container/prioritized_list.hpp
+  ${BASIS_DIR}/container/seq_num_buffer.hpp
+  ${BASIS_DIR}/container/prioritized_job_dispatcher.hpp
+  ${BASIS_DIR}/container/prioritized_job_dispatcher.cc
+  ${BASIS_DIR}/container/prioritized_repeating_task_list.hpp
+  ${BASIS_DIR}/container/prioritized_repeating_task_list.cc
+  #
   ${BASIS_DIR}/time_step/fixed_time_step.hpp
   ${BASIS_DIR}/time_step/fixed_time_step.cc
   ${BASIS_DIR}/time_step/fixed_time_step_loop.hpp
   ${BASIS_DIR}/time_step/fixed_time_step_loop.cc
   #
-  ${BASIS_DIR}/timer/interval_timer.hpp
-  ${BASIS_DIR}/timer/interval_timer.cc
+  ${BASIS_DIR}/numerics/uint128.hpp
+  ${BASIS_DIR}/numerics/math_utils.hpp
   #
   ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.hpp
   ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.cc
@@ -153,14 +157,19 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/task/task_util.cc
   ${BASIS_DIR}/task/task_util.hpp
-  #
   ${BASIS_DIR}/task/periodic_check.cc
   ${BASIS_DIR}/task/periodic_check.hpp
-  #
   ${BASIS_DIR}/task/periodic_validate_until.cc
   ${BASIS_DIR}/task/periodic_validate_until.hpp
+  ${BASIS_DIR}/task/alarm_manager.hpp
+  ${BASIS_DIR}/task/alarm_manager.cc
   #
   ${BASIS_DIR}/state_machine/unsafe_state_machine.hpp
+  #
+  ${BASIS_DIR}/backoff_entry/backoff_entry_serializer.hpp
+  ${BASIS_DIR}/backoff_entry/backoff_entry_serializer.cc
+  ${BASIS_DIR}/backoff_entry/backoff_entry.hpp
+  ${BASIS_DIR}/backoff_entry/backoff_entry.cc
   #
   ${BASIS_DIR}/checks_and_guard_annotations.hpp
   ${BASIS_DIR}/checks_and_guard_annotations.cc
@@ -218,10 +227,18 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/time/system_time_change_notifier.cc
   ${BASIS_DIR}/time/system_time_change_notifier.hpp
   #
-  ${BASIS_DIR}/files/file_util.cc
-  ${BASIS_DIR}/files/file_util.hpp
+  ${BASIS_DIR}/time/interval_timer.hpp
+  ${BASIS_DIR}/time/interval_timer.cc
+  ${BASIS_DIR}/time/backoff_timer.hpp
+  ${BASIS_DIR}/time/backoff_timer.cc
+  #
+  ${BASIS_DIR}/files/file_path_util.cc
+  ${BASIS_DIR}/files/file_path_util.hpp
   ${BASIS_DIR}/files/scoped_temp_file.cc
   ${BASIS_DIR}/files/scoped_temp_file.hpp
+  #
+  ${BASIS_DIR}/interval/interval.hpp
+  ${BASIS_DIR}/interval/interval_set.hpp
   #
   ${BASIS_DIR}/rate/data_rate_limiter.cc
   ${BASIS_DIR}/rate/data_rate_limiter.hpp
@@ -234,9 +251,6 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/rate/moving_average.hpp
   ${BASIS_DIR}/rate/quality_threshold.cc
   ${BASIS_DIR}/rate/quality_threshold.hpp
-  #
-  ${BASIS_DIR}/ECS/simulation_registry.cc
-  ${BASIS_DIR}/ECS/simulation_registry.hpp
   #
   ${BASIS_DIR}/ECS/unsafe_context.cc
   ${BASIS_DIR}/ECS/unsafe_context.hpp

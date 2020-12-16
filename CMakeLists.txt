@@ -205,8 +205,6 @@ target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
   #BOOST_NO_TYPEID
   # TODO
   #BOOST_NO_EXCEPTIONS
-  # TODO: DISABLE_DOCTEST
-  DISABLE_DOCTEST=1
   BOOST_ASIO_STANDALONE=1
 )
 
@@ -214,10 +212,17 @@ target_link_libraries(${STATIC_LIB_NAME} PUBLIC
   ${USED_3DPARTY_LIBS}
 )
 
-# TODO: DISABLE_DOCTEST
-#target_link_libraries(${STATIC_LIB_NAME} PUBLIC
-#  CONAN_PKG::doctest
-#)
+if(ENABLE_DOCTEST)
+  message(STATUS "DOCTEST Enabled")
+  target_link_libraries(${STATIC_LIB_NAME} PUBLIC
+    CONAN_PKG::doctest
+  )
+else()
+  message(STATUS "DOCTEST Disabled")
+  target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
+    DISABLE_DOCTEST=1
+  )
+endif()
 
 # see https://doc.magnum.graphics/corrade/corrade-cmake.html#corrade-cmake-subproject
 find_package(Corrade REQUIRED PluginManager)

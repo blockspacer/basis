@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "basis/log/spacer.hpp"
+#include "basis/log/spacer.hpp" // IWYU pragma: associated
 
 #include <cstddef>
 #include <iostream>

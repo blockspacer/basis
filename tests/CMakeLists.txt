@@ -130,6 +130,16 @@ macro(tests_add_executable target source_list TEST_ARGS TEST_LIB)
     NAME ${target}
     COMMAND ${target} ${TEST_ARGS})
 
+  if(ENABLE_DOCTEST)
+    target_link_libraries(${target} PUBLIC
+      CONAN_PKG::doctest
+    )
+
+    target_compile_definitions( ${target} PUBLIC
+      USE_DOCTEST_TEST=1
+      BASIS_RUN_DOCTEST_TESTS=1 )
+  endif()
+
   add_test_command_targets( ${target} )
 
   if(ENABLE_VALGRIND)
@@ -198,13 +208,29 @@ macro(tests_add_executable target source_list TEST_ARGS TEST_LIB)
   endif()
 endmacro()
 
+# Use with files that contain
+# `int main(...) { ... }`
+macro(define_doctest_implementation_in_file source_list)
+  # DOCTEST_CONFIG_IMPLEMENT:
+  # If the client wants to supply the main() function
+  # (either to set an option with some value from the code
+  # or to integrate the framework into his existing project codebase)
+  # this identifier should be used.
+  # This should be defined only in the source file
+  # where the library is implemented.
+  set_property(
+    SOURCE ${source_list}
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS
+    DOCTEST_CONFIG_IMPLEMENT=1
+  )
+endmacro()
+
 set(test_main_catch "${ROOT_PROJECT_NAME}-test_main_catch")
 add_library( ${test_main_catch} OBJECT
-  main.cpp
-  #${${ROOT_PROJECT_NAME}_SRCS} # all source files  of root project without main.cpp
-  #${THIRDPARTY_SOURCES}
-  testsCommon.h # include in IDE
+  main_catch.cpp
   )
+define_doctest_implementation_in_file("main_catch.cpp")
 
 set_property(TARGET ${test_main_catch} PROPERTY CXX_STANDARD 17)
 
@@ -234,11 +260,9 @@ endif(ENABLE_VALGRIND)
 
 set(test_main_gtest "${ROOT_PROJECT_NAME}-test_main_gtest")
 add_library( ${test_main_gtest} OBJECT
-  main.cpp
-  #${${ROOT_PROJECT_NAME}_SRCS} # all source files  of root project without main.cpp
-  #${THIRDPARTY_SOURCES}
-  testsCommon.h # include in IDE
+  main_gtest.cpp
   )
+define_doctest_implementation_in_file("main_gtest.cpp")
 
 set_property(TARGET ${test_main_gtest} PROPERTY CXX_STANDARD 17)
 
@@ -265,6 +289,53 @@ if(ENABLE_VALGRIND)
   target_compile_definitions( ${test_main_gtest} PUBLIC
     GTEST_NO_SUITE=1) # TODO: valgrind may not support chromium base, FIXME. And remove GTEST_NO_SUITE
 endif(ENABLE_VALGRIND)
+
+if(ENABLE_DOCTEST)
+  # see https://github.com/onqtam/doctest/blob/master/doc/markdown/commandline.md
+  set( DOCTEST_TEST_ARGS --duration=1)
+
+  set(test_main_doctest "${ROOT_PROJECT_NAME}-test_main_doctest")
+  add_library( ${test_main_doctest} OBJECT
+    tests_common.h # include in IDE
+  )
+
+  set_property(TARGET ${test_main_doctest} PROPERTY CXX_STANDARD 17)
+
+  # ensure that dependencies build before <target> does.
+  add_dependencies(${test_main_doctest} ${ROOT_PROJECT_LIB})
+
+  set_test_compile_options( ${test_main_doctest} )
+
+  target_link_libraries(${test_main_doctest} PUBLIC
+    CONAN_PKG::doctest
+    # 3dparty libs
+    ${TESTS_3DPARTY_LIBS}
+    # system libs
+    ${USED_SYSTEM_LIBS}
+    # main project lib
+    ${ROOT_PROJECT_LIB}
+  )
+
+  target_compile_definitions( ${test_main_doctest} PUBLIC
+    USE_DOCTEST_TEST=1
+    BASIS_RUN_DOCTEST_TESTS=1 )
+
+  target_link_libraries(${test_main_gtest} PUBLIC
+    CONAN_PKG::doctest
+  )
+
+  target_compile_definitions( ${test_main_gtest} PUBLIC
+    USE_DOCTEST_TEST=1
+    BASIS_RUN_DOCTEST_TESTS=1 )
+
+  target_link_libraries(${test_main_catch} PUBLIC
+    CONAN_PKG::doctest
+  )
+
+  target_compile_definitions( ${test_main_catch} PUBLIC
+    USE_DOCTEST_TEST=1
+    BASIS_RUN_DOCTEST_TESTS=1 )
+endif()
 
 #target_link_libraries( test_main PUBLIC
 #  sol2::sol2_single Catch FakeIt boost_beast nlohmann_json microsoft_gsl boost_outcome better_enums )
@@ -353,6 +424,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-system_time_change_notifier
     "${BASIS_DIR}/time/system_time_change_notifier_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-backoff_timer
+    "${BASIS_DIR}/time/backoff_timer.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-observable
     "${BASIS_DIR}/core/observable_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -364,6 +438,15 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-unique_ptr_wrap
     "${BASIS_DIR}/unique_ptr_wrap_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-file_path_util
+    "${BASIS_DIR}/files/file_path_util_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  if(ENABLE_DOCTEST)
+    tests_add_executable(${ROOT_PROJECT_NAME}-doctest_test
+      "doctest_test.cc" "${DOCTEST_TEST_ARGS}" "${test_main_doctest}")
+    define_doctest_implementation_in_file("doctest_test.cc")
+  endif()
 
   # FIXME: run only under ASAN
   #tests_add_executable(${ROOT_PROJECT_NAME}-unowned_ptr
@@ -391,11 +474,41 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-promise_value
     "${BASIS_DIR}/promise/promise_value_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-backoff_entry_serializer
+    "${BASIS_DIR}/backoff_entry/backoff_entry_serializer_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-backoff_entry
+    "${BASIS_DIR}/backoff_entry/backoff_entry_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-interval
+    "${BASIS_DIR}/interval/interval_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-interval_set
+    "${BASIS_DIR}/interval/interval_set_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   set ( fakeit_deps
     fakeit.test.cpp
   )
   tests_add_executable(${ROOT_PROJECT_NAME}-fakeit
     "${fakeit_deps}" "${CATCH2_TEST_ARGS}" "${test_main_catch}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-alarm_manager
+    "${BASIS_DIR}/task/alarm_manager_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-prioritized_once_task_heap
+    "${BASIS_DIR}/task/prioritized_once_task_heap_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-prioritized_list
+    "${BASIS_DIR}/container/prioritized_list_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-prioritized_job_dispatcher
+    "${BASIS_DIR}/container/prioritized_job_dispatcher_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-prioritized_repeating_task_list
+    "${BASIS_DIR}/container/prioritized_repeating_task_list_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-uint128
+    "${BASIS_DIR}/numerics/uint128_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   #add_to_tests_list(utils)
   #add_to_tests_list(pimpl)

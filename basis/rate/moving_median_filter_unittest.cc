@@ -8,13 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testsCommon.h"
-
-#if !defined(USE_GTEST_TEST)
-#warning "use USE_GTEST_TEST"
-// default
-#define USE_GTEST_TEST 1
-#endif // !defined(USE_GTEST_TEST)
+#include "tests_common.h"
 
 #include "basis/rate/moving_median_filter.hpp"
 

@@ -8,9 +8,6 @@
 
 namespace basis {
 
-extern
-const char DEFAULT_EVENT_CATEGORIES[];
-
 // calls |base::CommandLine::Init|
 // and sets default command-line switches
 void initCommandLine(int argc, char* argv[]);

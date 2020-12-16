@@ -1,7 +1,7 @@
 #pragma once
 
 #include <chrono>
-#include <base/logging.h> // for DCHECK
+#include <base/logging.h>
 
 namespace basis {
 

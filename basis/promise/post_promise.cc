@@ -1,4 +1,4 @@
-#include "basis/promise/post_promise.h"  // IWYU pragma: associated
+#include "basis/promise/post_promise.h" // IWYU pragma: associated
 
 #include <utility>
 

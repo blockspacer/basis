@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/threading/thread_health_checker.hpp"
+#include "basis/threading/thread_health_checker.hpp" // IWYU pragma: associated
 
 #include <memory>
 #include <string>

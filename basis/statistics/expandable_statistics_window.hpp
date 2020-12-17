@@ -25,11 +25,18 @@ namespace basis {
 //        using Welford's method for variance. [1]
 //
 // This should be your go-to class if you ever need to compute
-// min, max, mean, variance and standard deviation.
+// min, max, mean, variance and standard deviation
+// and you do not need to remove samples from window.
+//
+/// \note `ExpandableStatisticsWindow` does not store added samples,
+/// only re-computes min, max, mean, variance and standard deviation.
+/// So you can use `ExpandableStatisticsWindow` to analize infinite data stream
+/// without need to worry about window size limit
+/// (unlike `MovingStatisticsWindow`).
 //
 /// \note RemoveSample() won't affect min and max.
 /// If you want a full-fledged moving window over N last samples,
-/// please use `MovingRateStatistics`.
+/// please use `MovingStatisticsWindow`.
 //
 // The measures return base::nullopt if no samples were fed (Size() == 0),
 // otherwise the returned optional is guaranteed to contain a value.
@@ -39,7 +46,7 @@ namespace basis {
 //
 // USAGE
 //
-// FixedRateStatistics<int> stats;
+// ExpandableStatisticsWindow<int> stats;
 // stats.AddSample(2);
 // stats.AddSample(2);
 // stats.AddSample(-1);
@@ -53,7 +60,7 @@ namespace basis {
 // Rationale: we often need greater precision for measures
 //            than for the samples themselves.
 template <typename T>
-class FixedRateStatistics {
+class ExpandableStatisticsWindow {
  public:
   // Update stats ////////////////////////////////////////////
 
@@ -69,6 +76,10 @@ class FixedRateStatistics {
     cumul_ += delta * delta2;
   }
 
+  /// \note It is safe to remove samples if you need to compute
+  /// mean, variance and standard deviation.
+  /// But min and max may become invalid after removal (not updated).
+  //
   // Remove a previously added value in O(1) time.
   // Nb: This doesn't affect min or max.
   // Calling RemoveSample when Size()==0 is incorrect.
@@ -88,7 +99,7 @@ class FixedRateStatistics {
   }
 
   // Merge other stats, as if samples were added one by one, but in O(1).
-  void MergeStatistics(const FixedRateStatistics<T>& other) {
+  void MergeStatistics(const ExpandableStatisticsWindow<T>& other) {
     if (other.size_ == 0) {
       return;
     }
@@ -100,7 +111,7 @@ class FixedRateStatistics {
     // Each cumulant must be corrected.
     //   * from: sum((x_i - mean_)?)
     //   * to:   sum((x_i - new_mean)?)
-    auto delta = [new_mean](const FixedRateStatistics<T>& stats) {
+    auto delta = [new_mean](const ExpandableStatisticsWindow<T>& stats) {
       return stats.size_ * (new_mean * (new_mean - 2 * stats.mean_) +
                             stats.mean_ * stats.mean_);
     };

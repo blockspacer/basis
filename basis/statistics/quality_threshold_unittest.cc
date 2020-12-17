@@ -10,7 +10,7 @@
 
 #include "tests_common.h"
 
-#include "basis/rate/quality_threshold.hpp"
+#include "basis/statistics/quality_threshold.hpp"
 
 namespace basis {
 

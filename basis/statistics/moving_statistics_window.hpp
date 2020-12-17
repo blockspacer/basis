@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "basis/rate/fixed_rate_statistics.hpp"
+#include "basis/statistics/expandable_statistics_window.hpp"
 
 #include <base/logging.h>
 
@@ -22,20 +22,24 @@
 
 namespace basis {
 
-// MovingRateStatistics stores and reports statistics
+// MovingStatisticsWindow stores and reports statistics
 // over N most recent samples
 // i.e. removes oldest sample if reached max. for stored samples count.
 //
-// MovingRateStatistics is full-fledged moving window over N last samples
-// (unlike `FixedRateStatistics`).
+// MovingStatisticsWindow is full-fledged moving window over N last samples
+// (unlike `ExpandableStatisticsWindow`).
 //
 // T is assumed to be an int, long, double or float.
+//
+/// \note `MovingStatisticsWindow` stores only last N added samples.
+/// So you can NOT use `MovingStatisticsWindow` to analize infinite data stream
+/// (unlike `ExpandableStatisticsWindow`).
 //
 // USAGE
 //
 // // max. 10 samples, but added 12
 //
-// MovingRateStatistics<int> accum(10);
+// MovingStatisticsWindow<int> accum(10);
 // for (int i = 0; i < 12; ++i) {
 //   accum.AddSample(i);
 // }
@@ -43,25 +47,25 @@ namespace basis {
 // EXPECT_EQ(10U, accum.count());
 // EXPECT_DOUBLE_EQ(6.5, accum.ComputeMean());
 // EXPECT_NEAR(10.0, accum.ComputeWeightedMean(kLearningRate), 0.01);
-// EXPECT_NEAR(9.0, accum.ComputeVariance(), 1.0);
+// EXPECT_NEAR(9.0, accum.EstimatedVariance(), 1.0);
 // EXPECT_EQ(2, accum.ComputeMin());
 // EXPECT_EQ(11, accum.ComputeMax());
 //
 template <typename T>
-class MovingRateStatistics {
+class MovingStatisticsWindow {
  public:
-  explicit MovingRateStatistics(size_t max_count) : samples_(max_count) {
+  explicit MovingStatisticsWindow(size_t max_count) : samples_(max_count) {
     DCHECK(max_count > 0);
     Reset();
   }
-  ~MovingRateStatistics() {}
+  ~MovingStatisticsWindow() {}
 
   size_t max_count() const { return samples_.size(); }
 
   size_t count() const { return static_cast<size_t>(stats_.Size()); }
 
   void Reset() {
-    stats_ = basis::FixedRateStatistics<T>();
+    stats_ = basis::ExpandableStatisticsWindow<T>();
     next_index_ = 0U;
     max_ = T();
     max_stale_ = false;
@@ -98,6 +102,8 @@ class MovingRateStatistics {
 
   double ComputeMean() const { return stats_.GetMean().value_or(0); }
 
+  /// \note loops over last N stored samples,
+  /// so take care of performance
   T ComputeMax() const {
     if (max_stale_) {
       DCHECK(count() > 0)
@@ -111,6 +117,8 @@ class MovingRateStatistics {
     return max_;
   }
 
+  /// \note loops over last N stored samples,
+  /// so take care of performance
   T ComputeMin() const {
     if (min_stale_) {
       DCHECK(count() > 0)
@@ -127,6 +135,9 @@ class MovingRateStatistics {
   // O(n) time complexity.
   // Weights nth sample with weight (learning_rate)^n. Learning_rate should be
   // between (0.0, 1.0], otherwise the non-weighted mean is returned.
+  //
+  /// \note loops over last N stored samples,
+  /// so take care of performance
   double ComputeWeightedMean(double learning_rate) const {
     if (count() < 1 || learning_rate <= 0.0 || learning_rate >= 1.0) {
       return ComputeMean();
@@ -145,12 +156,13 @@ class MovingRateStatistics {
     return weighted_mean / weight_sum;
   }
 
-  // Compute estimated variance.  Estimation is more accurate
+  // Compute estimated variance.
+  // Estimation is more accurate
   // as the number of samples grows.
-  double ComputeVariance() const { return stats_.GetVariance().value_or(0); }
+  double EstimatedVariance() const { return stats_.GetVariance().value_or(0); }
 
  private:
-  basis::FixedRateStatistics<T> stats_;
+  basis::ExpandableStatisticsWindow<T> stats_;
   size_t next_index_;
   mutable T max_;
   mutable bool max_stale_;
@@ -158,7 +170,7 @@ class MovingRateStatistics {
   mutable bool min_stale_;
   std::vector<T> samples_;
 
-  DISALLOW_COPY_AND_ASSIGN(MovingRateStatistics);
+  DISALLOW_COPY_AND_ASSIGN(MovingStatisticsWindow);
 };
 
 } // namespace basis

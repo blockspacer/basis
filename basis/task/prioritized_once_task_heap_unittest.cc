@@ -6,6 +6,7 @@
 #include <limits>
 #include <vector>
 
+#include "base/rvalue_cast.h"
 #include "base/bind_helpers.h"
 #include "base/location.h"
 #include "base/rand_util.h"
@@ -44,7 +45,7 @@ void runWithThreadCheck(scoped_refptr<base::TaskRunner> expected_task_runner,
                         base::OnceClosure callback)
 {
   EXPECT_TRUE(expected_task_runner->RunsTasksInCurrentSequence());
-  std::move(callback).Run();
+  ::base::rvalue_cast(callback).Run();
 }
 
 TEST_F(PrioritizedOnceTaskHeapTest, OnceCbOnThread) {
@@ -221,7 +222,7 @@ TEST_F(PrioritizedOnceTaskHeapTest, ExtractSubHeapOnThreads) {
   scoped_refptr<PrioritizedOnceTaskHeap> prioritized_task_heapB =
       base::MakeRefCounted<PrioritizedOnceTaskHeap>(
         true // with_thread_locking
-        , std::move(subHeapJobs)
+        , ::base::rvalue_cast(subHeapJobs)
       );
 
   {

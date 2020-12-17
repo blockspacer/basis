@@ -17,6 +17,7 @@
 #include <base/trace_event/trace_event.h>
 #include <base/compiler_specific.h>
 #include <base/guid.h>
+#include <base/rvalue_cast.h>
 
 #include <basis/ECS/sequence_local_context.hpp>
 #include <basis/promise/promise.h>
@@ -35,7 +36,7 @@ namespace basis {
 
 PeriodicTaskExecutor::PeriodicTaskExecutor(
   ::base::RepeatingClosure&& periodic_task)
-  : periodic_task_(std::move(periodic_task))
+  : periodic_task_(::base::rvalue_cast(periodic_task))
   , ALLOW_THIS_IN_INITIALIZER_LIST(weak_ptr_factory_(this))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_this_(weak_ptr_factory_.GetWeakPtr()))
@@ -156,7 +157,7 @@ void setPeriodicTaskExecutorOnSequence(
   ignore_result(sequenceLocalContext->set_once<PeriodicTaskExecutor>(
         from_here
         , "Timeout.PeriodicTaskExecutor." + from_here.ToString()
-        , std::move(updateCallback)
+        , ::base::rvalue_cast(updateCallback)
       ));
 }
 

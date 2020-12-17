@@ -6,6 +6,7 @@
 
 #include "base/bind_helpers.h"
 #include "base/macros.h"
+#include "base/rvalue_cast.h"
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
 
@@ -24,7 +25,7 @@ class PostTaskExecutor {
   using RejectStorage = Rejected<ReturnedPromiseRejectT>;
 
   explicit PostTaskExecutor(CallbackBase&& task) noexcept
-      : task_(std::move(task)) {}
+      : task_(::base::rvalue_cast(task)) {}
 
   explicit PostTaskExecutor(DoNothing task) noexcept
     : task_(task.Once()) {}

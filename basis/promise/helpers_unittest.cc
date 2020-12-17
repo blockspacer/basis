@@ -7,6 +7,7 @@
 #include "basis/promise/helpers.h"
 #include "basis/promise/do_nothing_promise.h"
 
+#include "base/rvalue_cast.h"
 #include "base/test/gtest_util.h"
 #include "base/test/bind_test_util.h"
 #include "base/bind.h"
@@ -192,7 +193,7 @@ TEST(EmplaceHelper, EmplacePromise) {
   PassedPromise curried = NoOpPromiseExecutor::Create(
       FROM_HERE, false, false, RejectPolicy::kCatchNotRequired);
   EmplaceHelper<Resolved<int>, Rejected<NoReject>>::Emplace(
-      promise.get(), Promise<int>(std::move(curried)));
+      promise.get(), Promise<int>(::base::rvalue_cast(curried)));
 
   EXPECT_TRUE(promise->IsResolvedWithPromise());
 }
@@ -303,7 +304,7 @@ TEST(PromiseCallbackHelper, GetResolveCallback) {
 
   OnceCallback<void(int)> resolve_cb = helper.GetResolveCallback(promise);
 
-  std::move(resolve_cb).Run(1234);
+  ::base::rvalue_cast(resolve_cb).Run(1234);
 
   EXPECT_EQ(promise->value().template Get<Resolved<int>>()->value, 1234);
 }
@@ -316,7 +317,7 @@ TEST(PromiseCallbackHelper, GetResolveReferenceCallback) {
 
   OnceCallback<void(int&)> resolve_cb = helper.GetResolveCallback(promise);
 
-  std::move(resolve_cb).Run(foo);
+  ::base::rvalue_cast(resolve_cb).Run(foo);
 
   EXPECT_EQ(&promise->value().template Get<Resolved<int&>>()->value, &foo);
 }
@@ -329,7 +330,7 @@ TEST(PromiseCallbackHelper, GetRejectCallback) {
 
   OnceCallback<void(int)> reject_cb = helper.GetRejectCallback(promise);
 
-  std::move(reject_cb).Run(1234);
+  ::base::rvalue_cast(reject_cb).Run(1234);
 
   EXPECT_EQ(promise->value().template Get<Rejected<int>>()->value, 1234);
 }
@@ -343,7 +344,7 @@ TEST(PromiseCallbackHelper, GetRejectReferenceCallback) {
 
   OnceCallback<void(int&)> reject_cb = helper.GetRejectCallback(promise);
 
-  std::move(reject_cb).Run(foo);
+  ::base::rvalue_cast(reject_cb).Run(foo);
 
   EXPECT_EQ(&promise->value().template Get<Rejected<int&>>()->value, &foo);
 }

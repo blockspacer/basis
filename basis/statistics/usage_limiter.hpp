@@ -15,15 +15,16 @@
 namespace basis {
 
 // Limits the rate of use to a certain maximum quantity per period of
-// time.  Use, for example, for simple bandwidth throttling.
+// time.
 //
-// It's implemented like a diet plan: You have so many calories per
-// day.  If you hit the limit, you can't eat any more until the next
-// day.
+// Use, for example, for simple bandwidth throttling.
 //
 // USAGE
 //
-// DataRateLimiter limiter = DataRateLimiter(2000, 1.0);
+// // Diet plan: You have so many calories per day.
+// // If you hit the limit, you can't eat any more until the next day.
+//
+// UsageLimiter limiter = UsageLimiter(2000, 1.0);
 //
 // double monday = 1.0;
 //
@@ -33,16 +34,16 @@ namespace basis {
 //
 // limiter.Use(1000, monday);
 //
-class DataRateLimiter {
+class UsageLimiter {
  public:
   // For example, 100kb per second.
-  DataRateLimiter(size_t max, double period)
+  UsageLimiter(size_t max, double period)
       : max_per_period_(max),
         period_length_(period),
         used_in_period_(0),
         period_start_(0.0),
         period_end_(period) {}
-  virtual ~DataRateLimiter() {}
+  virtual ~UsageLimiter() {}
 
   // Returns true if if the desired quantity is available in the
   // current period (< (max - used)).  Once the given time passes the

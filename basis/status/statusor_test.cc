@@ -15,6 +15,7 @@
 #include <vector>
 #include <algorithm>
 
+#include <base/rvalue_cast.h>
 #include <base/logging.h>
 
 namespace basis {
@@ -93,7 +94,7 @@ TEST(StatusOr, TestMoveOnlyVector) {
   std::vector<StatusOr<std::unique_ptr<int>>> vec;
   vec.push_back(ReturnUniquePtr());
   vec.push_back(StatusOr<std::unique_ptr<int>>{FROM_HERE});
-  auto another_vec = std::move(vec);
+  auto another_vec = ::base::rvalue_cast(vec);
   EXPECT_TRUE(another_vec[0].ok());
   EXPECT_EQ(0, *another_vec[0].ValueOrDie());
   EXPECT_EQ(::basis::UnknownStatus(FROM_HERE), another_vec[1].status());

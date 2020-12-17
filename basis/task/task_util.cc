@@ -4,6 +4,7 @@
 #include <base/callback.h>
 #include <base/synchronization/waitable_event.h>
 #include <base/bind.h>
+#include <base/rvalue_cast.h>
 
 namespace basis {
 
@@ -59,7 +60,7 @@ void PostTaskAndWait(const ::base::Location& from_here
   ::base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
     , ::base::WaitableEvent::InitialState::NOT_SIGNALED);
   {
-    bool ok = task_runner->PostTask(from_here, std::move(task));
+    bool ok = task_runner->PostTask(from_here, ::base::rvalue_cast(task));
     DCHECK(ok);
   }
   {
@@ -96,17 +97,17 @@ base::OnceClosure bindToTaskRunner(
     ){
       if(task_runner->RunsTasksInCurrentSequence())
       {
-        std::move(task).Run();
+        ::base::rvalue_cast(task).Run();
         return;
       }
 
       task_runner->PostDelayedTask(from_here,
-        std::move(task),
+        ::base::rvalue_cast(task),
         delay
       );
     }
     , from_here
-    , ::base::Passed(std::move(task))
+    , ::base::Passed(::base::rvalue_cast(task))
     , task_runner
     , delay
   );

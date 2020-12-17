@@ -125,6 +125,7 @@
 
 #include <base/logging.h>
 #include <base/macros.h>
+#include <base/rvalue_cast.h>
 #include <base/location.h>
 #include <base/compiler_specific.h>
 
@@ -162,15 +163,19 @@ bool IsMacroErrorLoggedByDefault();
 // Example:
 //   RETURN_IF_ERROR(DoThings(4));
 #define RETURN_AND_LOG_IF_ERROR(expr)                                                \
-  LOG_IF_ERROR(expr); \
-  RETURN_IF_ERROR(expr)
+  if(auto expr_result = expr; true) { \
+    LOG_IF_ERROR(expr_result); \
+    RETURN_IF_ERROR(expr_result) \
+  }
 
 /// \note logs even if `IsMacroErrorLoggedByDefault` disabled
 /// Use for important errors that must always be logged.
 //
 #define RETURN_AND_LOG_IF_ERROR_WITH_APPEND(expr)                                     \
-  LOG_IF_ERROR(expr); \
-  RETURN_IF_ERROR_WITH_APPEND(expr)
+  if(auto expr_result = expr; true) { \
+    LOG_IF_ERROR(expr_result); \
+    RETURN_IF_ERROR_WITH_APPEND(expr_result) \
+  }
 
 /// \note logs even if `IsMacroErrorLoggedByDefault` disabled
 /// Use for important errors that must always be logged.
@@ -353,6 +358,16 @@ class MakeErrorStream {
   // MakeErrorStream is neither copyable nor movable.
   MakeErrorStream(const MakeErrorStream&) = delete;
   MakeErrorStream& operator=(const MakeErrorStream&) = delete;
+
+  MakeErrorStream(MakeErrorStream&& other)
+    : impl_{base::rvalue_cast(other.impl_)}
+  {}
+
+  MakeErrorStream& operator=(MakeErrorStream&& other)
+  {
+    impl_ = ::base::rvalue_cast(other.impl_);
+    return *this;
+  }
 
  private:
   class Impl {
@@ -567,22 +582,91 @@ class UtilStatusConvertibleToBool {
 //
 // Args:
 //   expr: Command to run that returns a ::basis::Status.
-#define RETURN_IF_ERROR_WITH_APPEND(expr)                                     \
+#define RETURN_IF_ERROR_WITH_APPEND(expr)                                      \
+  /* Using _status below to avoid capture problems if expr is "status". */     \
+  /* We also need the error to be in the else clause, to avoid a dangling  */  \
+  /* else in the client code. (see test for example). */                       \
+  if (const ::basis::status_macros::internal::UtilStatusConvertibleToBool      \
+          _status = (expr); _status) {                                         \
+  } else                                                                       \
+    return                                                                     \
+      ([&]() -> ::basis::status_macros::MakeErrorStream&& {                    \
+        if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault())) { \
+          LOG(ERROR) << "Return error: " << #expr << " failed with "           \
+                        << _status.status();                                   \
+        }                                                                      \
+        return ::basis::status_macros::MakeErrorStream(_status.status(),       \
+                                                      FROM_HERE);              \
+      })().without_logging()
+
+#define RETURN_WITHOUT_LOG_IF_ERROR_CODE_WITH_APPEND(expr, expect_code)                                     \
   /* Using _status below to avoid capture problems if expr is "status". */    \
   /* We also need the error to be in the else clause, to avoid a dangling  */ \
   /* else in the client code. (see test for example). */                      \
   if (const ::basis::status_macros::internal::UtilStatusConvertibleToBool     \
-          _status = (expr); !_status) {                                       \
-    if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault()))      \
-      LOG(ERROR) << "Return error: " << #expr << " failed with "              \
-                    << _status.status();                                      \
-  }                                                                           \
-  if (const ::basis::status_macros::internal::UtilStatusConvertibleToBool     \
-          _status = (expr)) {                                                 \
-  } else                                                                      \
+          _status = (expr); !_status && expect_code == _status.error_code()) {                                                 \
     return ::basis::status_macros::MakeErrorStream(_status.status(),          \
                                                   FROM_HERE)                  \
-        .without_logging()
+        .without_logging();                                                   \
+  } else /* NOLINT */                                                         \
+    (void)(0)                                                                 \
+
+#define RETURN_WITHOUT_LOG_IF_ERROR_CODE(expr, expect_code)                  \
+  do {                                                                       \
+    /* Using _status below to avoid capture problems if expr is "status". */ \
+    const ::basis::Status _status = (expr);                                  \
+    if (UNLIKELY(!_status.ok() && expect_code == _status.error_code())) {    \
+      return _status;                                                        \
+    }                                                                        \
+  } while (0)
+
+/// \note performs extra logging using `LOG(ERROR)` only if `IsMacroErrorLoggedByDefault` enabled
+//
+// Run a command that returns a ::basis::Status.  If the called code returns an
+// error status, return that status up out of this method too.
+//
+// Example:
+//   RETURN_IF_ERROR_CODE(DoThings(4), ERR_CIRCULAR_DEPENDENCY);
+#define RETURN_IF_ERROR_CODE(expr, expect_code)                              \
+  do {                                                                       \
+    /* Using _status below to avoid capture problems if expr is "status". */ \
+    const ::basis::Status _status = (expr);                                  \
+    if (UNLIKELY(!_status.ok() && expect_code == _status.error_code())) {    \
+      if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault()))   \
+        LOG(ERROR) << "Return Error: " << #expr << " failed with " << _status; \
+      return _status;                                                        \
+    }                                                                        \
+  } while (0)
+
+/// \note performs extra logging using `LOG(ERROR)` only if `IsMacroErrorLoggedByDefault` enabled
+//
+// This is like RETURN_IF_ERROR, but instead of propagating the existing error
+// Status, it constructs a new Status and can append additional messages.
+//
+// This has slightly worse performance that RETURN_IF_ERROR in both OK and ERROR
+// case. (see status_macros_benchmark.cc for details)
+//
+// Example:
+//   RETURN_IF_ERROR_CODE_WITH_APPEND(DoThings(4), ERR_MY_ERROR_CODE) << "Things went wrong for " << 4;
+//
+// Args:
+//   expr: Command to run that returns a ::basis::Status.
+#define RETURN_IF_ERROR_CODE_WITH_APPEND(expr, expect_code)                    \
+  /* Using _status below to avoid capture problems if expr is "status". */     \
+  /* We also need the error to be in the else clause, to avoid a dangling  */  \
+  /* else in the client code. (see test for example). */                       \
+  if (const ::basis::status_macros::internal::UtilStatusConvertibleToBool      \
+          _status = (expr); _status) {                                         \
+  } else if(expect_code == _status.error_code())                               \
+    return                                                                     \
+      ([&]() -> ::basis::status_macros::MakeErrorStream&& {                    \
+        if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault())) { \
+          LOG(ERROR) << "Return error: " << #expr << " failed with "           \
+                        << _status.status();                                   \
+        }                                                                      \
+        return ::basis::status_macros::MakeErrorStream(_status.status(),       \
+                                                      FROM_HERE);               \
+      })().without_logging()
 
 // Internal helper for concatenating macro values.
 #define STATUS_MACROS_CONCAT_NAME_INNER(x, y) x##y

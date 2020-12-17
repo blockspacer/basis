@@ -6,6 +6,7 @@
 #include <base/task/thread_pool/thread_pool.h>
 #include <base/task/thread_pool/thread_pool_impl.h>
 #include <base/system/sys_info.h>
+#include <base/rvalue_cast.h>
 
 #include <memory>
 
@@ -54,7 +55,7 @@ void initThreadPool(
   std::unique_ptr<::base::ThreadPool> thread_pool_
     = std::make_unique<::base::internal::ThreadPoolImpl>("Test");
 
-  ::base::ThreadPool::SetInstance(std::move(thread_pool_));
+  ::base::ThreadPool::SetInstance(::base::rvalue_cast(thread_pool_));
   ::base::ThreadPool::GetInstance()->Start(
     ::base::internal::ThreadPoolImpl::InitParams{
       {backgroundMaxThreads, kSuggestedReclaimTime}

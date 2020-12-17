@@ -2,6 +2,7 @@
 
 #include <base/macros.h>
 #include <base/template_util.h>
+#include <base/rvalue_cast.h>
 
 #include <ostream>
 #include <utility>
@@ -114,7 +115,7 @@ public:
   //{}
   //
   //constexpr explicit StrongString(StrongString<Tag>&& v) NO_EXCEPTION
-  //  : value_(std::move(v.value()))
+  //  : value_(::base::rvalue_cast(v.value()))
   //{}
   //
   //// Assignment operator.
@@ -125,7 +126,7 @@ public:
   //
   //// Assignment operator.
   //StrongString& operator=(StrongString&& other) {
-  //  value_ = std::move(other.value());
+  //  value_ = ::base::rvalue_cast(other.value());
   //  return *this;
   //}
 
@@ -147,8 +148,8 @@ public:
 
   constexpr std::string& value() & { return value_; }
   constexpr const std::string& value() const& { return value_; }
-  constexpr std::string&& value() && { return std::move(value_); }
-  constexpr const std::string&& value() const&& { return std::move(value_); }
+  constexpr std::string&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr const std::string&& value() const&& { return COPY_OR_MOVE(value_); }
 
   // Shortcut for `.value`
   //

@@ -10,7 +10,7 @@
 
 #include "tests_common.h"
 
-#include "basis/rate/moving_median_filter.hpp"
+#include "basis/statistics/moving_median_filter.hpp"
 
 #include <cstdint>
 #include <algorithm>

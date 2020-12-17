@@ -11,38 +11,39 @@
 #include <basis/threading/thread_pool_util.hpp>
 #include <basis/tracing/tracing_util.hpp>
 
-#include <base/base_switches.h>
-#include <base/command_line.h>
-#include <base/process/memory.h>
-#include <base/base_paths.h>
-#include <base/bind.h>
-#include <base/callback_forward.h>
-#include <base/debug/stack_trace.h>
-#include <base/feature_list.h>
-#include <base/files/file.h>
-#include <base/files/file_util.h>
-#include <base/logging.h>
-#include <base/memory/ref_counted_memory.h>
-#include <base/memory/scoped_refptr.h>
-#include <base/message_loop/message_loop.h>
-#include <base/message_loop/message_loop_current.h>
-#include <base/metrics/statistics_recorder.h>
-#include <base/metrics/field_trial.h>
-#include <base/metrics/histogram.h>
-#include <base/path_service.h>
-#include <base/run_loop.h>
-#include <base/sampling_heap_profiler/sampling_heap_profiler.h>
-#include <base/single_thread_task_runner.h>
-#include <base/strings/string_piece.h>
-#include <base/strings/string_piece_forward.h>
-#include <base/strings/string_util.h>
-#include <base/system/sys_info.h>
-#include <base/task/thread_pool/thread_pool.h>
-#include <base/threading/platform_thread.h>
-#include <base/trace_event/memory_dump_manager.h>
-#include <base/trace_event/trace_buffer.h>
-#include <base/trace_event/trace_event.h>
-#include <base/trace_event/trace_log.h>
+#include "base/rvalue_cast.h"
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#include "base/process/memory.h"
+#include "base/base_paths.h"
+#include "base/bind.h"
+#include "base/callback_forward.h"
+#include "base/debug/stack_trace.h"
+#include "base/feature_list.h"
+#include "base/files/file.h"
+#include "base/files/file_util.h"
+#include "base/logging.h"
+#include "base/memory/ref_counted_memory.h"
+#include "base/memory/scoped_refptr.h"
+#include "base/message_loop/message_loop.h"
+#include "base/message_loop/message_loop_current.h"
+#include "base/metrics/statistics_recorder.h"
+#include "base/metrics/field_trial.h"
+#include "base/metrics/histogram.h"
+#include "base/path_service.h"
+#include "base/run_loop.h"
+#include "base/sampling_heap_profiler/sampling_heap_profiler.h"
+#include "base/single_thread_task_runner.h"
+#include "base/strings/string_piece.h"
+#include "base/strings/string_piece_forward.h"
+#include "base/strings/string_util.h"
+#include "base/system/sys_info.h"
+#include "base/task/thread_pool/thread_pool.h"
+#include "base/threading/platform_thread.h"
+#include "base/trace_event/memory_dump_manager.h"
+#include "base/trace_event/trace_buffer.h"
+#include "base/trace_event/trace_event.h"
+#include "base/trace_event/trace_log.h"
 
 #include <algorithm>
 #include <functional>
@@ -206,8 +207,7 @@ bool ScopedBaseEnvironment::init(
     /// );
   }
 
-  ::base::FeatureList::SetInstance(
-    std::move(feature_list));
+  ::base::FeatureList::SetInstance(::base::rvalue_cast(feature_list));
 
   ::basis::initLogging(
     "" // logFile

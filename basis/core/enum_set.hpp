@@ -6,7 +6,8 @@
 #include <string>
 #include <utility>
 
-#include <base/logging.h>
+#include "base/logging.h"
+#include "base/rvalue_cast.h"
 
 namespace basis {
 
@@ -139,7 +140,7 @@ class EnumSet {
       // index equal to kValueCount, which is equivalent to EnumSet.end().
       i_ = FindNext(i_ + 1);
 
-      return std::move(old);
+      return ::base::rvalue_cast(old);
     }
 
    private:

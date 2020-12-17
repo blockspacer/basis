@@ -240,17 +240,20 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/interval/interval.hpp
   ${BASIS_DIR}/interval/interval_set.hpp
   #
-  ${BASIS_DIR}/rate/data_rate_limiter.cc
-  ${BASIS_DIR}/rate/data_rate_limiter.hpp
-  ${BASIS_DIR}/rate/rate_tracker.cc
-  ${BASIS_DIR}/rate/rate_tracker.hpp
-  ${BASIS_DIR}/rate/rate_tracker.cc
-  ${BASIS_DIR}/rate/fixed_rate_statistics.hpp
-  ${BASIS_DIR}/rate/moving_rate_statistics.hpp
-  ${BASIS_DIR}/rate/moving_average.cc
-  ${BASIS_DIR}/rate/moving_average.hpp
-  ${BASIS_DIR}/rate/quality_threshold.cc
-  ${BASIS_DIR}/rate/quality_threshold.hpp
+  ${BASIS_DIR}/statistics/usage_limiter.cc
+  ${BASIS_DIR}/statistics/usage_limiter.hpp
+  ${BASIS_DIR}/statistics/rate_tracker.cc
+  ${BASIS_DIR}/statistics/rate_tracker.hpp
+  ${BASIS_DIR}/statistics/rate_tracker.cc
+  ${BASIS_DIR}/statistics/expandable_statistics_window.hpp
+  ${BASIS_DIR}/statistics/moving_statistics_window.hpp
+  ${BASIS_DIR}/statistics/moving_average.cc
+  ${BASIS_DIR}/statistics/moving_average.hpp
+  ${BASIS_DIR}/statistics/quality_threshold.cc
+  ${BASIS_DIR}/statistics/quality_threshold.hpp
+  #
+  ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.cc
+  ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.hpp
   #
   ${BASIS_DIR}/ECS/unsafe_context.cc
   ${BASIS_DIR}/ECS/unsafe_context.hpp

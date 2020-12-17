@@ -10,6 +10,7 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/time/tick_clock.h"
 #include "base/values.h"
+#include "base/rvalue_cast.h"
 
 namespace {
 // Increment this number when changing the serialization format, to avoid old
@@ -37,7 +38,7 @@ std::unique_ptr<base::Value> BackoffEntrySerializer::SerializeToValue(
   serialized->AppendString(
       base::Int64ToString(absolute_release_time.ToInternalValue()));
 
-  return std::move(serialized);
+  return ::base::rvalue_cast(serialized);
 }
 
 std::unique_ptr<BackoffEntry> BackoffEntrySerializer::DeserializeFromValue(

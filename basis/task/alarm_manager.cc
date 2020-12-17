@@ -6,12 +6,13 @@
 
 #include <utility>
 
-#include "base/bind.h"
-#include "base/logging.h"
-#include "base/single_thread_task_runner.h"
-#include "base/threading/thread_task_runner_handle.h"
-#include "base/time/clock.h"
-#include "base/time/default_clock.h"
+#include <base/bind.h>
+#include <base/logging.h>
+#include <base/single_thread_task_runner.h>
+#include <base/threading/thread_task_runner_handle.h>
+#include <base/time/clock.h>
+#include <base/time/default_clock.h>
+#include <base/rvalue_cast.h>
 
 #define MAKE_SURE_OWN_THREAD(callback, ...)                                    \
   if (!task_runner_->BelongsToCurrentThread()) {                               \
@@ -30,7 +31,7 @@ void VerifyHandleCallback(base::OnceClosure task,
   if (!handle.get()) {
     return;
   }
-  std::move(task).Run();
+  ::base::rvalue_cast(task).Run();
 }
 }  // namespace
 
@@ -38,22 +39,22 @@ AlarmManager::AlarmInfo::AlarmInfo(
     base::OnceClosure task,
     base::Time time,
     scoped_refptr<base::SingleThreadTaskRunner> task_runner)
-    : task_(std::move(task)),
+    : task_(::base::rvalue_cast(task)),
       time_(time),
-      task_runner_(std::move(task_runner)) {}
+      task_runner_(::base::rvalue_cast(task_runner)) {}
 
 AlarmManager::AlarmInfo::~AlarmInfo() {}
 
 void AlarmManager::AlarmInfo::PostTask() {
-  task_runner_->PostTask(FROM_HERE, std::move(task_));
+  task_runner_->PostTask(FROM_HERE, ::base::rvalue_cast(task_));
 }
 
 AlarmManager::AlarmManager(
     std::unique_ptr<base::Clock> clock,
     scoped_refptr<base::SingleThreadTaskRunner> task_runner
     , const base::TimeDelta& polling_frequency)
-    : clock_(std::move(clock)),
-      task_runner_(std::move(task_runner)),
+    : clock_(::base::rvalue_cast(clock)),
+      task_runner_(::base::rvalue_cast(task_runner)),
       weak_factory_(this) {
   DCHECK(clock_);
   DCHECK(task_runner_);
@@ -73,7 +74,7 @@ std::unique_ptr<AlarmHandle> AlarmManager::PostAlarmTask(base::OnceClosure task,
                                                          base::Time time) {
   DCHECK(task);
   std::unique_ptr<AlarmHandle> handle = std::make_unique<AlarmHandle>();
-  AddAlarm(base::BindOnce(&VerifyHandleCallback, std::move(task),
+  AddAlarm(base::BindOnce(&VerifyHandleCallback, ::base::rvalue_cast(task),
                           handle->AsWeakPtr()),
            time, base::ThreadTaskRunnerHandle::Get());
   return handle;
@@ -83,9 +84,9 @@ void AlarmManager::AddAlarm(
     base::OnceClosure task,
     base::Time time,
     scoped_refptr<base::SingleThreadTaskRunner> task_runner) {
-  MAKE_SURE_OWN_THREAD(AddAlarm, std::move(task), time, std::move(task_runner));
-  next_alarm_.push(std::make_unique<AlarmInfo>(std::move(task), time,
-                                               std::move(task_runner)));
+  MAKE_SURE_OWN_THREAD(AddAlarm, ::base::rvalue_cast(task), time, ::base::rvalue_cast(task_runner));
+  next_alarm_.push(std::make_unique<AlarmInfo>(::base::rvalue_cast(task), time,
+                                               ::base::rvalue_cast(task_runner)));
 }
 
 void AlarmManager::CheckAlarm() {

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "basis/rate/data_rate_limiter.hpp"
+#include "basis/statistics/usage_limiter.hpp"
 
 #include "tests_common.h"
 
@@ -16,7 +16,7 @@ namespace basis {
 
 TEST(RateLimiterTest, TestCanUse) {
   // Diet: Can eat 2,000 calories per day.
-  DataRateLimiter limiter = DataRateLimiter(2000, 1.0);
+  UsageLimiter limiter = UsageLimiter(2000, 1.0);
 
   double monday = 1.0;
   double tuesday = 2.0;

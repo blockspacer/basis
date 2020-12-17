@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "basis/rate/data_rate_limiter.hpp" // IWYU pragma: associated
+#include "basis/statistics/usage_limiter.hpp" // IWYU pragma: associated
 
 namespace basis {
 
-bool DataRateLimiter::CanUse(size_t desired, double time) {
+bool UsageLimiter::CanUse(size_t desired, double time) {
   return ((time > period_end_ && desired <= max_per_period_) ||
           (used_in_period_ + desired) <= max_per_period_);
 }
 
-void DataRateLimiter::Use(size_t used, double time) {
+void UsageLimiter::Use(size_t used, double time) {
   if (time > period_end_) {
     period_start_ = time;
     period_end_ = time + period_length_;

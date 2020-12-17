@@ -3,13 +3,14 @@
 // found in the LICENSE file.
 
 #include "basis/promise/dependent_list.h" // IWYU pragma: associated
+#include "basis/promise/abstract_promise.h"
 
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
 
 #include "base/logging.h"
-#include "basis/promise/abstract_promise.h"
+#include "base/rvalue_cast.h"
 
 namespace base {
 namespace internal {
@@ -38,7 +39,7 @@ void DependentList::DispatchAll(DependentList::Node* head,
       head->RetainSettledPrerequisite();
     // |visitor| might delete the node, so no access to node past this
     // call!
-    visitor->Visit(std::move(head->dependent_));
+    visitor->Visit(::base::rvalue_cast(head->dependent_));
     head = next;
   }
 }
@@ -50,14 +51,14 @@ DependentList::Node::Node() = default;
 DependentList::Node::Node(Node&& other) noexcept {
   prerequisite_ = other.prerequisite_.load(std::memory_order_relaxed);
   other.prerequisite_ = 0;
-  dependent_ = std::move(other.dependent_);
+  dependent_ = ::base::rvalue_cast(other.dependent_);
   DCHECK_EQ(other.next_, nullptr);
 }
 
 DependentList::Node::Node(AbstractPromise* prerequisite,
                           scoped_refptr<AbstractPromise> dependent)
     : prerequisite_(reinterpret_cast<intptr_t>(prerequisite)),
-      dependent_(std::move(dependent)) {}
+      dependent_(::base::rvalue_cast(dependent)) {}
 
 DependentList::Node::~Node() {
   ClearPrerequisite();
@@ -83,7 +84,7 @@ DependentList::~DependentList() = default;
 void DependentList::Node::Reset(AbstractPromise* prerequisite,
                                 scoped_refptr<AbstractPromise> dependent) {
   SetPrerequisite(prerequisite);
-  dependent_ = std::move(dependent);
+  dependent_ = ::base::rvalue_cast(dependent);
   next_ = nullptr;
 }
 

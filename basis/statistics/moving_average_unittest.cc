@@ -10,7 +10,7 @@
 
 #include "tests_common.h"
 
-#include "basis/rate/moving_average.hpp"
+#include "basis/statistics/moving_average.hpp"
 
 namespace basis {
 

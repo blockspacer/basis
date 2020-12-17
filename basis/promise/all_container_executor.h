@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_TASK_PROMISE_ALL_CONTAINER_EXECUTOR_H_
-#define BASE_TASK_PROMISE_ALL_CONTAINER_EXECUTOR_H_
+#pragma once
 
 #include <tuple>
+
+#include "base/rvalue_cast.h"
 
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
@@ -82,7 +83,7 @@ class AllContainerPromiseExecutor {
               Resolved<NonVoidResolveType>>::Get(node.prerequisite()));
     }
 
-    promise->emplace(std::move(result));
+    promise->emplace(::base::rvalue_cast(result));
   }
 };
 
@@ -115,9 +116,9 @@ struct AllContainerHelper<Container, Promise<ResolveType, RejectType>> {
     return PromiseType(AbstractPromise::Create(
         nullptr, from_here,
         std::make_unique<AbstractPromise::AdjacencyList>(
-            std::move(prerequisite_list)),
+            ::base::rvalue_cast(prerequisite_list)),
         RejectPolicy::kMustCatchRejection, DependentList::ConstructUnresolved(),
-        std::move(executor_data)));
+        ::base::rvalue_cast(executor_data)));
   }
 };
 
@@ -126,5 +127,3 @@ struct AllContainerHelper<Container, Promise<ResolveType, RejectType>> {
 
 }  // namespace internal
 }  // namespace base
-
-#endif  // BASE_TASK_PROMISE_ALL_CONTAINER_EXECUTOR_H_

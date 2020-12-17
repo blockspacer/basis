@@ -7,9 +7,11 @@
 #include "base/bind.h"
 #include "base/lazy_instance.h"
 #include "base/sequenced_task_runner.h"
+#include "base/rvalue_cast.h"
+#include "base/threading/sequenced_task_runner_handle.h"
+
 #include "basis/promise/dependent_list.h"
 #include "basis/promise/post_task_executor.h"
-#include "base/threading/sequenced_task_runner_handle.h"
 
 namespace base {
 namespace internal {
@@ -29,7 +31,7 @@ RepeatingClosure& GetPromiseApiErrorCallback() {
 void AbstractPromise::SetApiErrorObserverForTesting(
     RepeatingClosure on_api_error_callback) {
   CheckedAutoLock lock(GetCheckedLock());
-  GetPromiseApiErrorCallback() = std::move(on_api_error_callback);
+  GetPromiseApiErrorCallback() = ::base::rvalue_cast(on_api_error_callback);
 }
 
 // Like DCHECK except observable via
@@ -126,7 +128,7 @@ bool AbstractPromise::InsertDependentOnAnyThread(DependentList::Node* node) {
         node->SetPrerequisite(curried_promise);
         return curried_promise->InsertDependentOnAnyThread(node);
       } else {
-        dependent_to_release = std::move(dependent);
+        dependent_to_release = ::base::rvalue_cast(dependent);
         node->RetainSettledPrerequisite();
         dependent_to_release->OnPrerequisiteResolved(this);
       }
@@ -140,7 +142,7 @@ bool AbstractPromise::InsertDependentOnAnyThread(DependentList::Node* node) {
         node->SetPrerequisite(curried_promise);
         return curried_promise->InsertDependentOnAnyThread(node);
       } else {
-        dependent_to_release = std::move(dependent);
+        dependent_to_release = ::base::rvalue_cast(dependent);
         node->RetainSettledPrerequisite();
         dependent_to_release->OnPrerequisiteRejected(this);
       }
@@ -148,7 +150,7 @@ bool AbstractPromise::InsertDependentOnAnyThread(DependentList::Node* node) {
     }
 
     case DependentList::InsertResult::FAIL_PROMISE_CANCELED:
-      dependent_to_release = std::move(dependent);
+      dependent_to_release = ::base::rvalue_cast(dependent);
       return dependent_to_release->OnPrerequisiteCancelled(this);
   }
 
@@ -517,7 +519,7 @@ void AbstractPromise::DispatchPromise() {
     const bool postTaskOk = task_runner_->PostDelayedTask(
       from_here_
       , BindOnce([](WrappedPromise promise) { promise.Execute(); },
-               std::move(WrappedPromise(this))),
+               ::base::rvalue_cast(WrappedPromise(this))),
       /*delay*/ TimeDelta());
     /// \todo return false if Post(Delayed)Task failed
     DCHECK(postTaskOk);
@@ -638,7 +640,7 @@ AbstractPromise::AdjacencyList::AdjacencyList(AbstractPromise* prerequisite)
 
 AbstractPromise::AdjacencyList::AdjacencyList(
     std::vector<DependentList::Node> nodes)
-    : prerequisite_list_(std::move(nodes)),
+    : prerequisite_list_(::base::rvalue_cast(nodes)),
       action_prerequisite_count_(prerequisite_list_.size()) {}
 
 AbstractPromise::AdjacencyList::~AdjacencyList() = default;
@@ -694,7 +696,7 @@ BasePromise::BasePromise() = default;
 
 BasePromise::BasePromise(
     scoped_refptr<internal::AbstractPromise> abstract_promise)
-    : abstract_promise_(std::move(abstract_promise)) {}
+    : abstract_promise_(::base::rvalue_cast(abstract_promise)) {}
 
 BasePromise::BasePromise(const BasePromise& other) = default;
 BasePromise::BasePromise(BasePromise&& other) noexcept = default;
@@ -709,7 +711,7 @@ BasePromise::~BasePromise() = default;
 WrappedPromise::WrappedPromise() = default;
 
 WrappedPromise::WrappedPromise(scoped_refptr<internal::AbstractPromise> promise)
-    : promise_(std::move(promise)) {}
+    : promise_(::base::rvalue_cast(promise)) {}
 
 WrappedPromise::WrappedPromise(internal::PassedPromise&& passed_promise)
     : promise_(passed_promise.Release(), subtle::kAdoptRefTag) {
@@ -723,7 +725,7 @@ WrappedPromise::WrappedPromise(const Location& from_here, OnceClosure task)
           internal::DependentList::ConstructUnresolved(),
           internal::PromiseExecutor::Data(
               ::base::in_place_type_t<internal::PostTaskExecutor<void>>(),
-              std::move(task)))) {}
+              ::base::rvalue_cast(task)))) {}
 
 WrappedPromise::WrappedPromise(const WrappedPromise& other) = default;
 WrappedPromise::WrappedPromise(WrappedPromise&& other) noexcept = default;

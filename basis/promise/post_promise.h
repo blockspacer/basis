@@ -7,6 +7,7 @@
 #include "basis/promise/post_task_executor.h"
 #include "basis/promise/promise.h"
 
+#include "base/rvalue_cast.h"
 #include "base/synchronization/waitable_event.h"
 #include "base/base_export.h"
 #include "base/task/thread_pool/thread_pool.h"
@@ -112,7 +113,7 @@ auto PostDelayedPromise(const Location& from_here,
        in_place_type_t<
          internal::PostTaskExecutor<
            typename CallbackTraits::ReturnType>>(),
-       internal::ToCallbackBase(std::move(task))),
+       internal::ToCallbackBase(::base::rvalue_cast(task))),
      delay)
   );
 }
@@ -176,7 +177,7 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
        in_place_type_t<
          internal::PostTaskExecutor<
            typename CallbackTraits::ReturnType>>(),
-       internal::ToCallbackBase(std::move(task))))
+       internal::ToCallbackBase(::base::rvalue_cast(task))))
   );
 }
 
@@ -205,7 +206,7 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
       /// \note |doStartSessionAcceptor| callback
       /// must prolong lifetime of |executor|
       , COPIED(executor)
-      , std::move(doStartSessionAcceptor)
+      , ::base::rvalue_cast(doStartSessionAcceptor)
     ) // BindOnce
   ) // ThenHere
  **/
@@ -255,7 +256,7 @@ auto PostDelayedPromiseOnContext(const Location& from_here,
        in_place_type_t<
          internal::PostTaskExecutor<
            typename CallbackTraits::ReturnType>>(),
-       internal::ToCallbackBase(std::move(task))))
+       internal::ToCallbackBase(::base::rvalue_cast(task))))
   );
 }
 
@@ -322,7 +323,7 @@ scoped_refptr<::base::internal::AbstractPromise>
           ::base::in_place_type_t<
               ::base::internal::PostTaskExecutor<TaskReturnType>>(),
           ::base::internal::ToCallbackBase(
-            std::move(task)
+            ::base::rvalue_cast(task)
           )));
   return promise;
 }
@@ -432,9 +433,9 @@ bool PostTaskAndReplyWithPromise(TaskRunner* task_runner,
                  internal::PromiseExecutor::Data(
                      in_place_type_t<
                          internal::PostTaskExecutor<TaskReturnType>>(),
-                     internal::ToCallbackBase(std::move(task))),
+                     internal::ToCallbackBase(::base::rvalue_cast(task))),
                  TimeDelta()))
-      .ThenHere(from_here, std::move(reply));
+      .ThenHere(from_here, ::base::rvalue_cast(reply));
 }
 
 }  // namespace base

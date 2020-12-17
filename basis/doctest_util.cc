@@ -7,7 +7,7 @@
 
 #include "basis/doctest_util.hpp" // IWYU pragma: associated
 
-#include <utility> // std::move
+#include <utility>
 
 // see doctest configuration at
 // https://github.com/onqtam/doctest/blob/master/doc/markdown/configuration.md#doctest_config_disable

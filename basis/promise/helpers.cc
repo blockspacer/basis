@@ -3,10 +3,11 @@
 // found in the LICENSE file.
 
 #include "basis/promise/helpers.h" // IWYU pragma: associated
+#include "basis/promise/no_op_promise_executor.h"
 
 #include "base/bind_helpers.h"
-#include "basis/promise/no_op_promise_executor.h"
 #include "base/threading/sequenced_task_runner_handle.h"
+#include "base/rvalue_cast.h"
 
 namespace base {
 namespace internal {
@@ -24,7 +25,7 @@ PassedPromise ConstructAbstractPromiseWithSinglePrerequisite(
   // during shutdown.
   if (!prerequisite) {
     // Ensure the destructor for |executor_data| runs.
-    PromiseExecutor dummy_executor(std::move(executor_data));
+    PromiseExecutor dummy_executor(::base::rvalue_cast(executor_data));
     return PassedPromise();
   }
 
@@ -33,7 +34,7 @@ PassedPromise ConstructAbstractPromiseWithSinglePrerequisite(
       std::make_unique<AbstractPromise::AdjacencyList>(prerequisite),
       RejectPolicy::kMustCatchRejection,
       internal::DependentList::ConstructUnresolved(),
-      std::move(executor_data)));
+      ::base::rvalue_cast(executor_data)));
 }
 
 PassedPromise ConstructHereAbstractPromiseWithSinglePrerequisite(
@@ -42,7 +43,7 @@ PassedPromise ConstructHereAbstractPromiseWithSinglePrerequisite(
     internal::PromiseExecutor::Data&& executor_data) noexcept {
   return ConstructAbstractPromiseWithSinglePrerequisite(
       SequencedTaskRunnerHandle::Get(), from_here, prerequisite,
-      std::move(executor_data));
+      ::base::rvalue_cast(executor_data));
 }
 
 PassedPromise ConstructManualPromiseResolverPromise(const Location& from_here,

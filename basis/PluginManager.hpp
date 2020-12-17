@@ -7,12 +7,13 @@
 #include <Corrade/Utility/ConfigurationGroup.h>
 #include <Corrade/Utility/Directory.h>
 
-#include <base/files/file_path.h>
-#include <base/files/file_util.h>
-#include <base/logging.h>
-#include <base/trace_event/trace_event.h>
-#include <base/macros.h>
-#include <base/sequence_checker.h>
+#include "base/rvalue_cast.h"
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
+#include "base/logging.h"
+#include "base/trace_event/trace_event.h"
+#include "base/macros.h"
+#include "base/sequence_checker.h"
 
 #include <entt/signal/dispatcher.hpp>
 #include <entt/signal/sigh.hpp>
@@ -404,7 +405,7 @@ public:
 
       plugin->load();
 
-      loaded_plugins_.push_back(std::move(plugin));
+      loaded_plugins_.push_back(::base::rvalue_cast(plugin));
       VLOG(9)
         << "=== plugin loaded ==";
     }

@@ -6,6 +6,7 @@
 #include "base/atomicops.h"
 #include "base/bind.h"
 #include "base/callback.h"
+#include "base/rvalue_cast.h"
 #include "base/compiler_specific.h"
 #include "base/logging.h"
 #include "base/macros.h"
@@ -140,12 +141,12 @@ bool runOrPostTaskOn(const ::base::Location& location
 {
   if (AppRunners::CurrentlyOn(id))
   {
-    std::move(task).Run();
+    ::base::rvalue_cast(task).Run();
     return true;
   }
 
   return AppRunners::getTaskRunner(id)
-    ->PostTask(location, std::move(task));
+    ->PostTask(location, ::base::rvalue_cast(task));
 }
 
 }  // namespace application

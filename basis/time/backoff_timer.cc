@@ -4,6 +4,8 @@
 
 #include "basis/time/backoff_timer.hpp" // IWYU pragma: associated
 
+#include <base/rvalue_cast.h>
+
 #include <utility>
 
 namespace basis {
@@ -34,7 +36,7 @@ void BackoffTimer::Stop() {
 };
 
 void BackoffTimer::SetTimerForTest(std::unique_ptr<base::OneShotTimer> timer) {
-  timer_ = std::move(timer);
+  timer_ = ::base::rvalue_cast(timer);
 }
 
 void BackoffTimer::StartTimer() {

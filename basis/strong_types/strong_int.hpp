@@ -5,6 +5,7 @@
 #include <base/numerics/safe_conversions.h>
 #include <base/numerics/checked_math.h>
 #include <base/numerics/clamped_math.h>
+#include <base/rvalue_cast.h>
 
 #include <ostream>
 #include <utility>
@@ -149,7 +150,7 @@ public:
   //{}
   //
   //constexpr explicit StrongInt(StrongInt<Tag, NativeType>&& v) NO_EXCEPTION
-  //  : value_(std::move(v.value()))
+  //  : value_(::base::rvalue_cast(v.value()))
   //{}
   //
   //// Assignment operator.
@@ -177,8 +178,8 @@ public:
 
   constexpr int& value() & { return value_; }
   constexpr const int& value() const& { return value_; }
-  constexpr int&& value() && { return std::move(value_); }
-  constexpr const int&& value() const&& { return std::move(value_); }
+  constexpr int&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr const int&& value() const&& { return COPY_OR_MOVE(value_); }
 
   // Shortcut for `.value`
   //

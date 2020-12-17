@@ -4,6 +4,8 @@
 #include "basis/promise/helpers.h"
 #include "basis/promise/no_op_promise_executor.h"
 
+#include "base/rvalue_cast.h"
+
 namespace base {
 namespace internal {
 
@@ -97,9 +99,9 @@ struct RaceContainerHelper<Container, Promise<ResolveType, RejectType>> {
     return PromiseType(AbstractPromise::Create(
         nullptr, from_here,
         std::make_unique<AbstractPromise::AdjacencyList>(
-            std::move(prerequisite_list)),
+            ::base::rvalue_cast(prerequisite_list)),
         RejectPolicy::kMustCatchRejection, DependentList::ConstructUnresolved(),
-        std::move(executor_data)));
+        ::base::rvalue_cast(executor_data)));
   }
 };
 

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "basis/threading/thread_health_checker.hpp" // IWYU pragma: associated
+#include "basis/bind/bind_to_task_runner.h"
 
 #include <memory>
 #include <string>
@@ -13,7 +14,7 @@
 #include "base/task_runner.h"
 #include "base/threading/thread_checker.h"
 #include "base/timer/timer.h"
-#include "basis/bind/bind_to_task_runner.h"
+#include "base/rvalue_cast.h"
 
 namespace basis {
 
@@ -23,11 +24,11 @@ ThreadHealthChecker::Internal::Internal(
     ::base::TimeDelta interval,
     ::base::TimeDelta timeout,
     ::base::RepeatingClosure on_failure)
-    : patient_task_runner_(std::move(patient_task_runner)),
-      doctor_task_runner_(std::move(doctor_task_runner)),
+    : patient_task_runner_(::base::rvalue_cast(patient_task_runner)),
+      doctor_task_runner_(::base::rvalue_cast(doctor_task_runner)),
       interval_(interval),
       timeout_(timeout),
-      on_failure_(std::move(on_failure)) {
+      on_failure_(::base::rvalue_cast(on_failure)) {
   DCHECK(patient_task_runner_);
   DCHECK(doctor_task_runner_);
 }
@@ -92,7 +93,7 @@ ThreadHealthChecker::ThreadHealthChecker(
           doctor_task_runner,
           interval,
           timeout,
-          std::move(on_failure))) {
+          ::base::rvalue_cast(on_failure))) {
   doctor_task_runner_->PostTask(
       FROM_HERE,
       ::base::BindOnce(&ThreadHealthChecker::Internal::StartHealthCheck,

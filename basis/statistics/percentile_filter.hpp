@@ -33,6 +33,10 @@ namespace basis {
 // The 50th percentile is generally the median.
 // The 75th percentile is also called the third quartile.
 //
+// For example, the 90th percentile (abbreviated as p90)
+// indicates that 90% of the sample is below that value
+// and the rest of the values (that is, the other 10%) are above it.
+//
 // USAGE
 // // use case: you need to estimate time needed to decode frame in some video
 //

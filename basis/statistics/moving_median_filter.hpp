@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "basis/rate/percentile_filter.hpp"
+#include "basis/statistics/percentile_filter.hpp"
 
 #include <base/logging.h>
 

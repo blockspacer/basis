@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #pragma once
 
 // StatusOr<T> is the union of a Status object and a T
@@ -65,6 +64,7 @@
 #include <utility>
 
 #include <base/logging.h>
+#include <base/rvalue_cast.h>
 
 namespace basis {
 
@@ -152,7 +152,7 @@ class MUST_USE_RESULT StatusOr {
   // operator altogether, since we'd get the same functionality for free
   // from the implicit conversion constructor and ordinary assignment.
   // However, this could result in extra copy operations unless we use
-  // std::move to avoid them, and we can't use std::move because this code
+  // ::base::rvalue_cast to avoid them, and we can't use ::base::rvalue_cast because this code
   // needs to be portable to C++03.
   StatusOr(const base::Location& location, T&& value);  // NOLINT
   template <typename U>
@@ -192,7 +192,7 @@ class MUST_USE_RESULT StatusOr {
   const T& ValueOrDie() const;
 
   // Returns our current value, or CHECK-fails if !this->ok(). Use this if
-  // you would otherwise want to say std::move(s.ValueOrDie()), for example
+  // you would otherwise want to say ::base::rvalue_cast(s.ValueOrDie()), for example
   // if you need to initialize a T object from the stored value and you don't
   // need subsequent access to the stored value. It uses T's move constructor,
   // if it has one, so it will work with move-only types, and will often be
@@ -237,9 +237,9 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<std::invoke_result_t<F&&, T&&>> transform(F&& f) &&
   {
     if (ok())
-      return {std::forward<F>(f)(*std::move(value_))};
+      return {std::forward<F>(f)(*::base::rvalue_cast(value_))};
     else
-      return {std::move(status_)};
+      return {::base::rvalue_cast(status_)};
   }
 
   // This is the const rvalue overload.
@@ -247,9 +247,9 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<std::invoke_result_t<F&&, const T&&>> transform(F&& f) const&&
   {
     if (ok())
-      return {std::forward<F>(f)(*std::move(value_))};
+      return {std::forward<F>(f)(*::base::rvalue_cast(value_))};
     else
-      return {std::move(status_)};
+      return {COPY_OR_MOVE(status_)};
   }
 
   // `andThen`ing over success values invokes
@@ -295,9 +295,9 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<typename std::invoke_result_t<F&&, T&&>::value_type> andThen(F&& f) &&
   {
     if (ok())
-      return {std::forward<F>(f)(*std::move(value_))};
+      return {std::forward<F>(f)(*::base::rvalue_cast(value_))};
     else
-      return {std::move(status_)};
+      return {::base::rvalue_cast(status_)};
   }
 
   // This is the const rvalue overload.
@@ -305,9 +305,9 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<typename std::invoke_result_t<F&&, const T&&>::value_type> andThen(F&& f) const&&
   {
     if (ok())
-      return {std::forward<F>(f)(*std::move(value_))};
+      return {std::forward<F>(f)(*::base::rvalue_cast(value_))};
     else
-      return {std::move(status_)};
+      return {COPY_OR_MOVE(status_)};
   }
 
   void EnsureOk() const;
@@ -391,7 +391,7 @@ inline StatusOr<T>& StatusOr<T>::operator=(const StatusOr<U>& other) {
 #ifndef SWIG
 template <typename T>
 inline StatusOr<T>::StatusOr(const base::Location& location, T&& value)
-    : status_(basis::OkStatus(location)), value_(std::move(value)) {
+    : status_(basis::OkStatus(location)), value_(::base::rvalue_cast(value)) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value_)) {
     status_ = internal::StatusOrHelper::HandleNullObjectCtorArg();
   }
@@ -401,13 +401,13 @@ template <typename T>
 template <typename U>
 inline StatusOr<T>::StatusOr(StatusOr<U>&& other)  // NOLINT
     : status_(other.status_),
-      value_(std::move(other.value_)) {}
+      value_(::base::rvalue_cast(other.value_)) {}
 
 template <typename T>
 template <typename U>
 inline StatusOr<T>& StatusOr<T>::operator=(StatusOr<U>&& other) {
   status_ = other.status_;
-  value_ = std::move(other.value_);
+  value_ = ::base::rvalue_cast(other.value_);
   return *this;
 }
 
@@ -456,7 +456,7 @@ inline T StatusOr<T>::ConsumeValueOrDie() {
   if (!status_.ok()) {
     internal::StatusOrHelper::Crash(status_);
   }
-  return std::move(value_);
+  return ::base::rvalue_cast(value_);
 }
 
 template <typename T>

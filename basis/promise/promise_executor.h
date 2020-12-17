@@ -6,6 +6,7 @@
 
 #include "base/base_export.h"
 #include "base/logging.h"
+#include "base/rvalue_cast.h"
 #include "basis/promise/promise_value.h"
 
 namespace base {
@@ -69,10 +70,10 @@ class BASE_EXPORT PromiseExecutor {
   };
 
   // Caution it's an error to use |data| after this.
-  explicit PromiseExecutor(Data&& data) : data_(std::move(data)) {}
+  explicit PromiseExecutor(Data&& data) : data_(::base::rvalue_cast(data)) {}
 
   PromiseExecutor(PromiseExecutor&& other) noexcept
-      : data_(std::move(other.data_)) {
+      : data_(::base::rvalue_cast(other.data_)) {
     other.data_.vtable_ = nullptr;
   }
 

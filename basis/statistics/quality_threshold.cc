@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "basis/rate/quality_threshold.hpp" // IWYU pragma: associated
+#include "basis/statistics/quality_threshold.hpp" // IWYU pragma: associated
 
 #include <base/time/time.h>
 

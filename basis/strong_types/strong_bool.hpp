@@ -2,6 +2,7 @@
 
 #include <base/macros.h>
 #include <base/template_util.h>
+#include <base/rvalue_cast.h>
 
 #include <ostream>
 #include <utility>
@@ -89,7 +90,7 @@ public:
   //{}
   //
   //constexpr explicit StrongBool(StrongBool<Tag>&& v) NO_EXCEPTION
-  //  : value_(std::move(v.value()))
+  //  : value_(::base::rvalue_cast(v.value()))
   //{}
   //
   //// Assignment operator.
@@ -111,8 +112,8 @@ public:
 
   constexpr bool& value() & { return value_; }
   constexpr const bool& value() const& { return value_; }
-  constexpr bool&& value() && { return std::move(value_); }
-  constexpr const bool&& value() const&& { return std::move(value_); }
+  constexpr bool&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr const bool&& value() const&& { return COPY_OR_MOVE(value_); }
 
   // Shortcut for `.value`
   //

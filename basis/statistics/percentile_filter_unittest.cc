@@ -10,7 +10,7 @@
 
 #include "tests_common.h"
 
-#include "basis/rate/percentile_filter.hpp"
+#include "basis/statistics/percentile_filter.hpp"
 
 #include <stdlib.h>
 

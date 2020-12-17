@@ -10,7 +10,9 @@
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
 #include "base/no_destructor.h"
+#include "base/rvalue_cast.h"
 #include "base/task/common/checked_lock.h"
+
 #include "basis/promise/dependent_list.h"
 #include "basis/promise/promise_executor.h"
 #include "basis/promise/promise_value.h"
@@ -352,8 +354,8 @@ class BASE_EXPORT AbstractPromise
       ConstructType tag,
       PromiseExecutor::Data&& executor_data) noexcept {
     scoped_refptr<AbstractPromise> promise = subtle::AdoptRefIfNeeded(
-        new AbstractPromise(task_runner, from_here, std::move(prerequisites),
-                            reject_policy, tag, std::move(executor_data)),
+        new AbstractPromise(task_runner, from_here, ::base::rvalue_cast(prerequisites),
+                            reject_policy, tag, ::base::rvalue_cast(executor_data)),
         AbstractPromise::kRefCountPreference);
     // It's important this is called after |promise| has been initialized
     // because otherwise it could trigger a scoped_refptr destructor on another
@@ -371,7 +373,7 @@ class BASE_EXPORT AbstractPromise
     return subtle::AdoptRefIfNeeded(
         new internal::AbstractPromise(nullptr, from_here, nullptr,
                                       reject_policy, tag,
-                                      std::move(executor_data)),
+                                      ::base::rvalue_cast(executor_data)),
         AbstractPromise::kRefCountPreference);
   }
 
@@ -550,8 +552,8 @@ class BASE_EXPORT AbstractPromise
                   ConstructType tag,
                   PromiseExecutor::Data&& executor_data) noexcept
       : task_runner_(task_runner),
-        from_here_(std::move(from_here)),
-        value_(in_place_type_t<PromiseExecutor>(), std::move(executor_data)),
+        from_here_(from_here),
+        value_(in_place_type_t<PromiseExecutor>(), ::base::rvalue_cast(executor_data)),
 #if DCHECK_IS_ON()
         reject_policy_(reject_policy),
         resolve_argument_passing_type_(
@@ -562,7 +564,7 @@ class BASE_EXPORT AbstractPromise
         executor_can_reject_(GetExecutor()->CanReject()),
 #endif
         dependents_(tag),
-        prerequisites_(std::move(prerequisites)) {
+        prerequisites_(::base::rvalue_cast(prerequisites)) {
 #if DCHECK_IS_ON()
     {
       CheckedAutoLock lock(GetCheckedLock());
@@ -871,7 +873,7 @@ class BASE_EXPORT WrappedPromise {
   scoped_refptr<internal::AbstractPromise>& GetForTesting() { return promise_; }
 
   scoped_refptr<internal::AbstractPromise> TakeForTesting() {
-    return std::move(promise_);
+    return ::base::rvalue_cast(promise_);
   }
 
  private:

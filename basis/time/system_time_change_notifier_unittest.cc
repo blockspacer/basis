@@ -18,6 +18,7 @@
 #include "base/single_thread_task_runner.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/time/time.h"
+#include "base/rvalue_cast.h"
 
 namespace basis {
 
@@ -31,7 +32,7 @@ class SequencedTaskRunnerNoDelay : public ::base::SequencedTaskRunner {
   bool PostDelayedTask(const ::base::Location& from_here,
                        ::base::OnceClosure task,
                        ::base::TimeDelta delay) override {
-    ::base::ThreadTaskRunnerHandle::Get()->PostTask(from_here, std::move(task));
+    ::base::ThreadTaskRunnerHandle::Get()->PostTask(from_here, ::base::rvalue_cast(task));
     return true;
   }
 

@@ -10,7 +10,7 @@
 
 #include "tests_common.h"
 
-#include "basis/rate/fixed_rate_statistics.hpp"
+#include "basis/statistics/expandable_statistics_window.hpp"
 
 #include <random>
 #include <cmath>
@@ -29,14 +29,14 @@ void c_shuffle(RandomAccessContainer& c, UniformRandomBitGenerator&& gen) {
                std::forward<UniformRandomBitGenerator>(gen));
 }
 
-FixedRateStatistics<double> CreateStatsFilledWithIntsFrom1ToN(int n) {
+ExpandableStatisticsWindow<double> CreateStatsFilledWithIntsFrom1ToN(int n) {
   std::vector<double> data;
   for (int i = 1; i <= n; i++) {
     data.push_back(i);
   }
   c_shuffle(data, std::mt19937(std::random_device()()));
 
-  FixedRateStatistics<double> stats;
+  ExpandableStatisticsWindow<double> stats;
   for (double v : data) {
     stats.AddSample(v);
   }
@@ -44,24 +44,24 @@ FixedRateStatistics<double> CreateStatsFilledWithIntsFrom1ToN(int n) {
 }
 
 // Add n samples drawn from uniform distribution in [a;b].
-FixedRateStatistics<double> CreateStatsFromUniformDistribution(int n,
+ExpandableStatisticsWindow<double> CreateStatsFromUniformDistribution(int n,
                                                              double a,
                                                              double b) {
   std::mt19937 gen{std::random_device()()};
   std::uniform_real_distribution<> dis(a, b);
 
-  FixedRateStatistics<double> stats;
+  ExpandableStatisticsWindow<double> stats;
   for (int i = 1; i <= n; i++) {
     stats.AddSample(dis(gen));
   }
   return stats;
 }
 
-class FixedRateStatisticsTest : public ::testing::TestWithParam<int> {};
+class ExpandableStatisticsWindowTest : public ::testing::TestWithParam<int> {};
 
 constexpr int SIZE_FOR_MERGE = 5;
 
-TEST(FixedRateStatistics, FullSimpleTest) {
+TEST(ExpandableStatisticsWindow, FullSimpleTest) {
   auto stats = CreateStatsFilledWithIntsFrom1ToN(100);
 
   EXPECT_DOUBLE_EQ(*stats.GetMin(), 1.0);
@@ -70,8 +70,8 @@ TEST(FixedRateStatistics, FullSimpleTest) {
   ASSERT_NEAR(*stats.GetMean(), 50.5, 1e-10);
 }
 
-TEST(FixedRateStatistics, VarianceAndDeviation) {
-  FixedRateStatistics<int> stats;
+TEST(ExpandableStatisticsWindow, VarianceAndDeviation) {
+  ExpandableStatisticsWindow<int> stats;
   stats.AddSample(2);
   stats.AddSample(2);
   stats.AddSample(-1);
@@ -82,10 +82,10 @@ TEST(FixedRateStatistics, VarianceAndDeviation) {
   EXPECT_DOUBLE_EQ(*stats.GetStandardDeviation(), sqrt(4.5));
 }
 
-TEST(FixedRateStatistics, RemoveSample) {
+TEST(ExpandableStatisticsWindow, RemoveSample) {
   // We check that adding then removing sample is no-op,
   // or so (due to loss of precision).
-  FixedRateStatistics<int> stats;
+  ExpandableStatisticsWindow<int> stats;
   stats.AddSample(2);
   stats.AddSample(2);
   stats.AddSample(-1);
@@ -102,10 +102,10 @@ TEST(FixedRateStatistics, RemoveSample) {
   }
 }
 
-TEST(FixedRateStatistics, RemoveSamplesSequence) {
+TEST(ExpandableStatisticsWindow, RemoveSamplesSequence) {
   // We check that adding then removing a sequence of samples is no-op,
   // or so (due to loss of precision).
-  FixedRateStatistics<int> stats;
+  ExpandableStatisticsWindow<int> stats;
   stats.AddSample(2);
   stats.AddSample(2);
   stats.AddSample(-1);
@@ -124,7 +124,7 @@ TEST(FixedRateStatistics, RemoveSamplesSequence) {
   EXPECT_NEAR(*stats.GetStandardDeviation(), sqrt(4.5), 1e-4);
 }
 
-TEST(FixedRateStatistics, VarianceFromUniformDistribution) {
+TEST(ExpandableStatisticsWindow, VarianceFromUniformDistribution) {
   // Check variance converge to 1/12 for [0;1) uniform distribution.
   // Acts as a sanity check for NumericStabilityForVariance test.
   auto stats = CreateStatsFromUniformDistribution(1e6, 0, 1);
@@ -132,7 +132,7 @@ TEST(FixedRateStatistics, VarianceFromUniformDistribution) {
   EXPECT_NEAR(*stats.GetVariance(), 1. / 12, 1e-3);
 }
 
-TEST(FixedRateStatistics, NumericStabilityForVariance) {
+TEST(ExpandableStatisticsWindow, NumericStabilityForVariance) {
   // Same test as VarianceFromUniformDistribution,
   // except the range is shifted to [1e9;1e9+1).
   // Variance should also converge to 1/12.
@@ -144,27 +144,27 @@ TEST(FixedRateStatistics, NumericStabilityForVariance) {
   EXPECT_NEAR(*stats.GetVariance(), 1. / 12, 1e-3);
 }
 
-TEST(FixedRateStatistics, MinRemainsUnchangedAfterRemove) {
+TEST(ExpandableStatisticsWindow, MinRemainsUnchangedAfterRemove) {
   // We don't want to recompute min (that's RollingAccumulator's role),
   // check we get the overall min.
-  FixedRateStatistics<int> stats;
+  ExpandableStatisticsWindow<int> stats;
   stats.AddSample(1);
   stats.AddSample(2);
   stats.RemoveSample(1);
   EXPECT_EQ(stats.GetMin(), 1);
 }
 
-TEST(FixedRateStatistics, MaxRemainsUnchangedAfterRemove) {
+TEST(ExpandableStatisticsWindow, MaxRemainsUnchangedAfterRemove) {
   // We don't want to recompute max (that's RollingAccumulator's role),
   // check we get the overall max.
-  FixedRateStatistics<int> stats;
+  ExpandableStatisticsWindow<int> stats;
   stats.AddSample(1);
   stats.AddSample(2);
   stats.RemoveSample(2);
   EXPECT_EQ(stats.GetMax(), 2);
 }
 
-TEST_P(FixedRateStatisticsTest, MergeStatistics) {
+TEST_P(ExpandableStatisticsWindowTest, MergeStatistics) {
   int data[SIZE_FOR_MERGE] = {2, 2, -1, 5, 10};
   // Split the data in different partitions.
   // We have 6 distinct tests:
@@ -175,7 +175,7 @@ TEST_P(FixedRateStatisticsTest, MergeStatistics) {
   //   * Full merged with empty sequence.
   // All must lead to the same result.
   // I miss QuickCheck so much.
-  FixedRateStatistics<int> stats0, stats1;
+  ExpandableStatisticsWindow<int> stats0, stats1;
   for (int i = 0; i < GetParam(); ++i) {
     stats0.AddSample(data[i]);
   }
@@ -192,8 +192,8 @@ TEST_P(FixedRateStatisticsTest, MergeStatistics) {
   EXPECT_DOUBLE_EQ(*stats0.GetStandardDeviation(), sqrt(13.84));
 }
 
-INSTANTIATE_TEST_SUITE_P(FixedRateStatisticsTests,
-                         FixedRateStatisticsTest,
+INSTANTIATE_TEST_SUITE_P(ExpandableStatisticsWindowTests,
+                         ExpandableStatisticsWindowTest,
                          ::testing::Range(0, SIZE_FOR_MERGE + 1));
 
 }  // namespace

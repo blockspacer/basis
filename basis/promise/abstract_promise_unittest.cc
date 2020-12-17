@@ -5,7 +5,7 @@
 #include "tests_common.h"
 
 #include "base/task/promise/abstract_promise.h"
-
+#include "base/rvalue_cast.h"
 #include "base/task/post_task.h"
 #include "base/test/bind_test_util.h"
 #include "base/test/do_nothing_promise.h"
@@ -66,7 +66,7 @@ class TestExecutor {
       bool can_reject,
 #endif
       base::OnceCallback<void(AbstractPromise*)> callback)
-      : callback_(std::move(callback))
+      : callback_(::base::rvalue_cast(callback))
 #if DCHECK_IS_ON()
         ,
         resolve_argument_passing_type_(resolve_executor_type),
@@ -95,7 +95,7 @@ class TestExecutor {
 
   bool IsCancelled() const { return false; }
 
-  void Execute(AbstractPromise* p) { std::move(callback_).Run(p); }
+  void Execute(AbstractPromise* p) { ::base::rvalue_cast(callback_).Run(p); }
 
  private:
   base::OnceCallback<void(AbstractPromise*)> callback_;
@@ -113,7 +113,7 @@ class AbstractPromiseTest : public testing::Test {
   void SetApiErrorObserver(RepeatingClosure on_api_error_callback) {
 #if DCHECK_IS_ON()
     AbstractPromise::SetApiErrorObserverForTesting(
-        std::move(on_api_error_callback));
+        ::base::rvalue_cast(on_api_error_callback));
 #endif
   }
 
@@ -128,7 +128,7 @@ class AbstractPromiseTest : public testing::Test {
     PromiseSettings(
         Location from_here,
         std::unique_ptr<AbstractPromise::AdjacencyList> prerequisites)
-        : from_here(from_here), prerequisites(std::move(prerequisites)) {}
+        : from_here(from_here), prerequisites(::base::rvalue_cast(prerequisites)) {}
 
     Location from_here;
 
@@ -157,7 +157,7 @@ class AbstractPromiseTest : public testing::Test {
     PromiseSettingsBuilder(
         Location from_here,
         std::unique_ptr<AbstractPromise::AdjacencyList> prerequisites)
-        : settings(from_here, std::move(prerequisites)) {}
+        : settings(from_here, ::base::rvalue_cast(prerequisites)) {}
 
     PromiseSettingsBuilder& With(PrerequisitePolicy prerequisite_policy) {
       settings.prerequisite_policy = prerequisite_policy;
@@ -176,7 +176,7 @@ class AbstractPromiseTest : public testing::Test {
 
     PromiseSettingsBuilder& With(
         base::OnceCallback<void(AbstractPromise*)> callback) {
-      settings.callback = std::move(callback);
+      settings.callback = ::base::rvalue_cast(callback);
       return *this;
     }
 
@@ -236,14 +236,14 @@ class AbstractPromiseTest : public testing::Test {
           settings.resolve_executor_type, settings.reject_executor_type,
           settings.executor_can_resolve, settings.executor_can_reject,
 #endif
-          std::move(settings.callback));
+          ::base::rvalue_cast(settings.callback));
 
       return WrappedPromise(AbstractPromise::Create(
                                 settings.task_runner, settings.from_here,
-                                std::move(settings.prerequisites),
+                                ::base::rvalue_cast(settings.prerequisites),
                                 settings.reject_policy,
                                 DependentList::ConstructUnresolved(),
-                                std::move(executor_data)))
+                                ::base::rvalue_cast(executor_data)))
           .TakeForTesting();
     }
 
@@ -299,7 +299,7 @@ class AbstractPromiseTest : public testing::Test {
       std::vector<DependentList::Node> prerequisite_list) {
     PromiseSettingsBuilder builder(
         from_here, std::make_unique<AbstractPromise::AdjacencyList>(
-                       std::move(prerequisite_list)));
+                       ::base::rvalue_cast(prerequisite_list)));
     builder.With(PrerequisitePolicy::kAll)
         .With(BindOnce([](AbstractPromise* p) {
           AbstractPromise* first_settled = p->GetFirstSettledPrerequisite();
@@ -318,7 +318,7 @@ class AbstractPromiseTest : public testing::Test {
       std::vector<internal::DependentList::Node> prerequisite_list) {
     PromiseSettingsBuilder builder(
         from_here, std::make_unique<AbstractPromise::AdjacencyList>(
-                       std::move(prerequisite_list)));
+                       ::base::rvalue_cast(prerequisite_list)));
     builder.With(PrerequisitePolicy::kAny)
         .With(BindOnce([](AbstractPromise* p) {
           AbstractPromise* first_settled = p->GetFirstSettledPrerequisite();
@@ -695,7 +695,7 @@ TEST_F(AbstractPromiseTest, MultipleResolvedPrerequisitePolicyALL) {
   prerequisite_list[3].SetPrerequisite(p4.get());
 
   scoped_refptr<AbstractPromise> all_promise =
-      AllPromise(FROM_HERE, std::move(prerequisite_list));
+      AllPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   OnResolved(p1);
   OnResolved(p2);
@@ -728,7 +728,7 @@ TEST_F(AbstractPromiseTest,
   }
 
   scoped_refptr<AbstractPromise> all_promise =
-      AllPromise(FROM_HERE, std::move(prerequisite_list));
+      AllPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   RunLoop run_loop;
   scoped_refptr<AbstractPromise> p2 =
@@ -783,7 +783,7 @@ TEST_F(AbstractPromiseTest, SingleRejectPrerequisitePolicyALL) {
   prerequisite_list[3].SetPrerequisite(p4.get());
 
   scoped_refptr<AbstractPromise> all_promise =
-      AllPromise(FROM_HERE, std::move(prerequisite_list))
+      AllPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list))
           .With(CallbackResultType::kCanResolveOrReject)
           .With(BindLambdaForTesting([&](AbstractPromise* p) {
             EXPECT_TRUE(
@@ -821,7 +821,7 @@ TEST_F(AbstractPromiseTest, MultipleRejectPrerequisitePolicyALL) {
   prerequisite_list[3].SetPrerequisite(p4.get());
 
   scoped_refptr<AbstractPromise> all_promise =
-      AllPromise(FROM_HERE, std::move(prerequisite_list))
+      AllPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list))
           .With(CallbackResultType::kCanResolveOrReject)
           .With(BindLambdaForTesting([&](AbstractPromise* p) {
             AbstractPromise* settled = p->GetFirstSettledPrerequisite();
@@ -868,7 +868,7 @@ TEST_F(AbstractPromiseTest, SingleResolvedPrerequisitePolicyANY) {
   prerequisite_list[3].SetPrerequisite(p4.get());
 
   scoped_refptr<AbstractPromise> any_promise =
-      AnyPromise(FROM_HERE, std::move(prerequisite_list));
+      AnyPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   OnResolved(p2);
   RunLoop().RunUntilIdle();
@@ -892,7 +892,7 @@ TEST_F(AbstractPromiseTest, MultipleResolvedPrerequisitePolicyANY) {
   prerequisite_list[3].SetPrerequisite(p4.get());
 
   scoped_refptr<AbstractPromise> any_promise =
-      AnyPromise(FROM_HERE, std::move(prerequisite_list));
+      AnyPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   OnResolved(p1);
   OnResolved(p2);
@@ -921,7 +921,7 @@ TEST_F(AbstractPromiseTest, SingleRejectPrerequisitePolicyANY) {
   prerequisite_list[3].SetPrerequisite(p4.get());
 
   scoped_refptr<AbstractPromise> any_promise =
-      AnyPromise(FROM_HERE, std::move(prerequisite_list))
+      AnyPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list))
           .With(CallbackResultType::kCanResolveOrReject);
 
   scoped_refptr<AbstractPromise> p5 = CatchPromise(FROM_HERE, any_promise);
@@ -949,7 +949,7 @@ TEST_F(AbstractPromiseTest, SingleResolvePrerequisitePolicyANY) {
   prerequisite_list[3].SetPrerequisite(p4.get());
 
   scoped_refptr<AbstractPromise> any_promise =
-      AnyPromise(FROM_HERE, std::move(prerequisite_list));
+      AnyPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   scoped_refptr<AbstractPromise> p5 = CatchPromise(FROM_HERE, any_promise);
 
@@ -1053,7 +1053,7 @@ TEST_F(AbstractPromiseTest, CancelationPrerequisitePolicyALL) {
   prerequisite_list[2].SetPrerequisite(p3.get());
 
   scoped_refptr<AbstractPromise> all_promise =
-      AllPromise(FROM_HERE, std::move(prerequisite_list));
+      AllPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   OnCanceled(p2);
   EXPECT_TRUE(all_promise->IsCanceled());
@@ -1073,7 +1073,7 @@ TEST_F(AbstractPromiseTest, CancelationPrerequisitePolicyANY) {
   prerequisite_list[2].SetPrerequisite(p3.get());
 
   scoped_refptr<AbstractPromise> any_promise =
-      AnyPromise(FROM_HERE, std::move(prerequisite_list));
+      AnyPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   OnCanceled(p3);
   OnCanceled(p2);
@@ -1098,7 +1098,7 @@ TEST_F(AbstractPromiseTest, AlreadyCanceledPrerequisitePolicyALL) {
   OnCanceled(p2);
 
   scoped_refptr<AbstractPromise> all_promise =
-      AllPromise(FROM_HERE, std::move(prerequisite_list));
+      AllPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   EXPECT_TRUE(all_promise->IsCanceled());
 }
@@ -1118,7 +1118,7 @@ TEST_F(AbstractPromiseTest, SomeAlreadyCanceledPrerequisitePolicyANY) {
   OnCanceled(p2);
 
   scoped_refptr<AbstractPromise> any_promise =
-      AnyPromise(FROM_HERE, std::move(prerequisite_list));
+      AnyPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   EXPECT_FALSE(any_promise->IsCanceled());
 }
@@ -1140,7 +1140,7 @@ TEST_F(AbstractPromiseTest, AllAlreadyCanceledPrerequisitePolicyANY) {
   OnCanceled(p3);
 
   scoped_refptr<AbstractPromise> any_promise =
-      AnyPromise(FROM_HERE, std::move(prerequisite_list));
+      AnyPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list));
 
   EXPECT_TRUE(any_promise->IsCanceled());
 }
@@ -1154,7 +1154,7 @@ TEST_F(AbstractPromiseTest, CurriedResolvedPromiseAny) {
       ThenPromise(FROM_HERE, p0)
           .With(BindOnce(
               [](scoped_refptr<AbstractPromise> p2, AbstractPromise* p) {
-                p->emplace(std::move(p2));
+                p->emplace(::base::rvalue_cast(p2));
               },
               p2))
           .With(PrerequisitePolicy::kAny);
@@ -1181,7 +1181,7 @@ TEST_F(AbstractPromiseTest, CurriedRejectedPromiseAny) {
       ThenPromise(FROM_HERE, p0)
           .With(BindOnce(
               [](scoped_refptr<AbstractPromise> p2, AbstractPromise* p) {
-                p->emplace(std::move(p2));
+                p->emplace(::base::rvalue_cast(p2));
               },
               p2))
           .With(PrerequisitePolicy::kAny);
@@ -1491,9 +1491,9 @@ TEST_F(AbstractPromiseTest,
                 // Resolve with a promise that can and does reject.
                 ThreadTaskRunnerHandle::Get()->PostTask(
                     FROM_HERE, BindOnce(&AbstractPromise::Execute, p1));
-                p->emplace(std::move(p1));
+                p->emplace(::base::rvalue_cast(p1));
               },
-              std::move(p1)));
+              ::base::rvalue_cast(p1)));
 
   OnResolved(p0);
   RunLoop().RunUntilIdle();
@@ -1521,9 +1521,9 @@ TEST_F(AbstractPromiseTest,
                 // Resolve with a promise that can and does reject.
                 ThreadTaskRunnerHandle::Get()->PostTask(
                     FROM_HERE, BindOnce(&AbstractPromise::Execute, p1));
-                p->emplace(std::move(p1));
+                p->emplace(::base::rvalue_cast(p1));
               },
-              std::move(p1)));
+              ::base::rvalue_cast(p1)));
 
   scoped_refptr<AbstractPromise> p3 = ThenPromise(FROM_HERE, p2);
 
@@ -1554,9 +1554,9 @@ TEST_F(AbstractPromiseTest,
                 // Resolve with a promise that can and does reject.
                 ThreadTaskRunnerHandle::Get()->PostTask(
                     FROM_HERE, BindOnce(&AbstractPromise::Execute, p1));
-                p->emplace(std::move(p1));
+                p->emplace(::base::rvalue_cast(p1));
               },
-              std::move(p1)));
+              ::base::rvalue_cast(p1)));
 
   OnResolved(p0);
   RunLoop().RunUntilIdle();
@@ -1873,7 +1873,7 @@ TEST_F(AbstractPromiseTest, ResolvedCurriedPromise) {
             // Resolve with a promise.
             ThreadTaskRunnerHandle::Get()->PostTask(
                 FROM_HERE, BindOnce(&AbstractPromise::Execute, p2));
-            p->emplace(std::move(p2));
+            p->emplace(::base::rvalue_cast(p2));
 
             EXPECT_TRUE(p3->IsResolvedWithPromise());
           }));
@@ -2015,7 +2015,7 @@ TEST_F(AbstractPromiseTest, CurriedPromiseChain) {
             // Resolve with a promise.
             ThreadTaskRunnerHandle::Get()->PostTask(
                 FROM_HERE, BindOnce(&AbstractPromise::Execute, p2));
-            p->emplace(std::move(p2));
+            p->emplace(::base::rvalue_cast(p2));
           }));
 
   // Promise |p5| will be resolved with.
@@ -2026,7 +2026,7 @@ TEST_F(AbstractPromiseTest, CurriedPromiseChain) {
             // Resolve with a promise.
             ThreadTaskRunnerHandle::Get()->PostTask(
                 FROM_HERE, BindOnce(&AbstractPromise::Execute, p3));
-            p->emplace(std::move(p3));
+            p->emplace(::base::rvalue_cast(p3));
           }));
 
   scoped_refptr<AbstractPromise> p5 =
@@ -2036,7 +2036,7 @@ TEST_F(AbstractPromiseTest, CurriedPromiseChain) {
             // Resolve with a promise.
             ThreadTaskRunnerHandle::Get()->PostTask(
                 FROM_HERE, BindOnce(&AbstractPromise::Execute, p4));
-            p->emplace(std::move(p4));
+            p->emplace(::base::rvalue_cast(p4));
           }));
 
   scoped_refptr<AbstractPromise> p6 =
@@ -2074,7 +2074,7 @@ TEST_F(AbstractPromiseTest, RejectedCurriedPromiseChain) {
             // Resolve with a promise.
             ThreadTaskRunnerHandle::Get()->PostTask(
                 FROM_HERE, BindOnce(&AbstractPromise::Execute, p2));
-            p->emplace(std::move(p2));
+            p->emplace(::base::rvalue_cast(p2));
           }));
 
   // Promise |p5| will be resolved with.
@@ -2085,7 +2085,7 @@ TEST_F(AbstractPromiseTest, RejectedCurriedPromiseChain) {
             // Resolve with a promise.
             ThreadTaskRunnerHandle::Get()->PostTask(
                 FROM_HERE, BindOnce(&AbstractPromise::Execute, p3));
-            p->emplace(std::move(p3));
+            p->emplace(::base::rvalue_cast(p3));
           }));
 
   scoped_refptr<AbstractPromise> p5 =
@@ -2095,7 +2095,7 @@ TEST_F(AbstractPromiseTest, RejectedCurriedPromiseChain) {
             // Resolve with a promise.
             ThreadTaskRunnerHandle::Get()->PostTask(
                 FROM_HERE, BindOnce(&AbstractPromise::Execute, p4));
-            p->emplace(std::move(p4));
+            p->emplace(::base::rvalue_cast(p4));
           }));
 
   scoped_refptr<AbstractPromise> p6 =
@@ -2160,9 +2160,9 @@ TEST_F(AbstractPromiseTest, CurriedPromiseMoveArg) {
               [](scoped_refptr<AbstractPromise> p1, AbstractPromise* p) {
                 ThreadTaskRunnerHandle::Get()->PostTask(
                     FROM_HERE, BindOnce(&AbstractPromise::Execute, p1));
-                p->emplace(std::move(p1));
+                p->emplace(::base::rvalue_cast(p1));
               },
-              std::move(p1)))
+              ::base::rvalue_cast(p1)))
           .WithResolve(ArgumentPassingType::kMove);
 
   OnResolved(p0);
@@ -2187,9 +2187,9 @@ TEST_F(AbstractPromiseTest, CatchCurriedPromise) {
                 // Resolve with a promise that can and does reject.
                 ThreadTaskRunnerHandle::Get()->PostTask(
                     FROM_HERE, BindOnce(&AbstractPromise::Execute, p1));
-                p->emplace(std::move(p1));
+                p->emplace(::base::rvalue_cast(p1));
               },
-              std::move(p1)));
+              ::base::rvalue_cast(p1)));
 
   scoped_refptr<AbstractPromise> p3 = CatchPromise(FROM_HERE, p2);
 
@@ -2414,7 +2414,7 @@ TEST_F(AbstractPromiseTest, SingleRejectPrerequisitePolicyALLModified) {
     prerequisite_list[3].SetPrerequisite(p4.get());
 
     scoped_refptr<AbstractPromise> all_promise =
-        AllPromise(FROM_HERE, std::move(prerequisite_list))
+        AllPromise(FROM_HERE, ::base::rvalue_cast(prerequisite_list))
             .With(CallbackResultType::kCanResolveOrReject)
             .With(BindLambdaForTesting([&](AbstractPromise* p) {
               p->emplace(Rejected<void>());

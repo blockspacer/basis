@@ -18,6 +18,7 @@
 #include <base/task/task_traits.h>
 #include <base/trace_event/trace_event.h>
 #include <base/compiler_specific.h>
+#include <base/rvalue_cast.h>
 
 #include <basis/promise/post_promise.h>
 #include <basis/tracing/trace_event_util.hpp>
@@ -34,8 +35,8 @@ PeriodicCheckUntil::PeriodicCheckUntil(
   , CheckNotifyTask&& checkNotifyTask
   , CheckShutdownTask&& checkShutdownTask)
   : task_runner_(task_runner)
-  , checkNotifyTask_(std::move(checkNotifyTask))
-  , checkShutdownTask_(std::move(checkShutdownTask))
+  , checkNotifyTask_(::base::rvalue_cast(checkNotifyTask))
+  , checkShutdownTask_(::base::rvalue_cast(checkShutdownTask))
   , ALLOW_THIS_IN_INITIALIZER_LIST(weak_ptr_factory_(this))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_this_(weak_ptr_factory_.GetWeakPtr()))
@@ -51,8 +52,8 @@ PeriodicCheckUntil::PeriodicCheckUntil(
   , CheckShutdownTask&& checkShutdownTask
   , const CheckPeriod& checkPeriod)
   : PeriodicCheckUntil(task_runner
-      , std::move(checkNotifyTask)
-      , std::move(checkShutdownTask))
+      , ::base::rvalue_cast(checkNotifyTask)
+      , ::base::rvalue_cast(checkShutdownTask))
 {
   startPeriodicTimer(checkPeriod);
 }
@@ -304,7 +305,7 @@ void setPeriodicTimeoutCheckerOnSequence(
         from_here
         , "Timeout.PeriodicCheckUntilTime." + from_here.ToString()
         , task_runner
-        , std::move(errorCallback)
+        , ::base::rvalue_cast(errorCallback)
         , endingTimeout
         // timer update frequency
         , checkPeriod

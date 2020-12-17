@@ -15,6 +15,7 @@
 #include "base/callback.h"
 #include "base/logging.h"
 #include "base/threading/thread_checker.h"
+#include "base/rvalue_cast.h"
 
 #if !defined(NDEBUG)
 #include <unordered_set>
@@ -159,9 +160,9 @@ class PrioritizedList {
     unsigned id = next_id_;
     valid_ids_.insert(id);
     ++next_id_;
-    list.emplace_back(std::make_pair(id, std::move(value)));
+    list.emplace_back(std::make_pair(id, ::base::rvalue_cast(value)));
 #else
-    list.emplace_back(std::move(value));
+    list.emplace_back(::base::rvalue_cast(value));
 #endif
     return Pointer(priority, std::prev(list.end()));
   }
@@ -177,9 +178,9 @@ class PrioritizedList {
     unsigned id = next_id_;
     valid_ids_.insert(id);
     ++next_id_;
-    list.emplace_front(std::make_pair(id, std::move(value)));
+    list.emplace_front(std::make_pair(id, ::base::rvalue_cast(value)));
 #else
-    list.emplace_front(std::move(value));
+    list.emplace_front(::base::rvalue_cast(value));
 #endif
     return Pointer(priority, list.begin());
   }
@@ -194,9 +195,9 @@ class PrioritizedList {
 #if !defined(NDEBUG)
     DCHECK_EQ(1u, valid_ids_.erase(pointer.id_));
     DCHECK_EQ(pointer.iterator_->first, pointer.id_);
-    T erased = std::move(pointer.iterator_->second);
+    T erased = ::base::rvalue_cast(pointer.iterator_->second);
 #else
-    T erased = std::move(*pointer.iterator_);
+    T erased = ::base::rvalue_cast(*pointer.iterator_);
 #endif
 
     --size_;

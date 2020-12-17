@@ -19,6 +19,7 @@
 
 #include "base/macros.h"
 #include "base/logging.h"
+#include "base/rvalue_cast.h"
 
 namespace basis {
 
@@ -64,8 +65,8 @@ class ScopedCleanup final {
   ScopedCleanup(
     ScopedCleanup&& other)
   {
-    active_ = std::move(other.active_);
-    cleanup_ = std::move(other.cleanup_);
+    active_ = ::base::rvalue_cast(other.active_);
+    cleanup_ = ::base::rvalue_cast(other.cleanup_);
     DCHECK(cleanup_);
 
     /// \note can not run moved out |cleanup_|
@@ -75,8 +76,8 @@ class ScopedCleanup final {
   ScopedCleanup& operator=(
     ScopedCleanup&& other)
   {
-    active_ = std::move(other.active_);
-    cleanup_ = std::move(other.cleanup_);
+    active_ = ::base::rvalue_cast(other.active_);
+    cleanup_ = ::base::rvalue_cast(other.cleanup_);
     DCHECK(cleanup_);
 
     /// \note can not run moved out |cleanup_|

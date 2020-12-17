@@ -10,6 +10,7 @@
 #include "base/test/gtest_util.h"
 #include "base/test/bind_test_util.h"
 #include "base/bind.h"
+#include "base/rvalue_cast.h"
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
 #include "base/task_runner.h"
@@ -28,12 +29,12 @@ class PostTaskExecutorTest : public testing::Test {
     internal::PromiseExecutor::Data executor_data(
         in_place_type_t<
             internal::PostTaskExecutor<typename CallbackTraits::ReturnType>>(),
-        internal::ToCallbackBase(std::move(task)));
+        internal::ToCallbackBase(::base::rvalue_cast(task)));
 
     return WrappedPromise(AbstractPromise::CreateNoPrerequisitePromise(
         from_here, RejectPolicy::kMustCatchRejection,
         internal::DependentList::ConstructUnresolved(),
-        std::move(executor_data)));
+        ::base::rvalue_cast(executor_data)));
   }
 };
 

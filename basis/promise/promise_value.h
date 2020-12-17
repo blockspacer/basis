@@ -7,6 +7,7 @@
 #include "base/base_export.h"
 #include "base/memory/scoped_refptr.h"
 #include "base/parameter_pack.h"
+#include "base/rvalue_cast.h"
 
 namespace base {
 
@@ -272,7 +273,7 @@ struct PromiseValueInternal::
   static void Move(PromiseValueInternal* src, PromiseValueInternal* dest) {
     DCHECK_NE(src, dest);
     new (&dest->union_.inline_alloc.bytes)
-        T(std::move(src->union_.inline_alloc.value_as<T>()));
+        T(COPY_OR_MOVE(src->union_.inline_alloc.value_as<T>()));
   }
 };
 
@@ -394,7 +395,7 @@ class BASE_EXPORT PromiseValue {
             State state = PromiseValueInternal::TypeToStateHelper<VT>::state,
             std::enable_if_t<state != State::INVALID>* = nullptr>
   explicit PromiseValue(T&& value) noexcept {
-    Construct<VT>::Construct(&value_, std::move(value));
+    Construct<VT>::Construct(&value_, COPY_OR_MOVE(value));
     type_ops_.Set(&TypeOpsHelper<VT>::type_ops, state);
   }
 

@@ -9,6 +9,7 @@
 
 #include "base/callback_forward.h"
 #include "base/location.h"
+#include "base/rvalue_cast.h"
 #include "base/memory/scoped_refptr.h"
 #include "base/message_loop/message_loop_current.h"
 #include "base/task/task_traits.h"
@@ -189,22 +190,22 @@ class StaticSequence {
       CompatibleCallback cb,
       const ::base::Location& from_here = ::base::Location::Current()) {
     TaskRunner()->PostTask(from_here,
-                           ::base::BindOnce(std::move(cb), std::ref(key_)));
+                           ::base::BindOnce(::base::rvalue_cast(cb), std::ref(key_)));
   }
 
   // Takes any closure with no unbound arguments.
   static void PostTask(
       ::base::OnceClosure cb,
       const ::base::Location& from_here = ::base::Location::Current()) {
-    TaskRunner()->PostTask(from_here, std::move(cb));
+    TaskRunner()->PostTask(from_here, ::base::rvalue_cast(cb));
   }
 
   // The Run() overload set can only be invoked on the sequence, and accepts
   // callbacks that may or may not require a Key to the sequence.
   static void Run(CompatibleCallback cb, const Key& key) {
-    std::move(cb).Run(key);
+    ::base::rvalue_cast(cb).Run(key);
   }
-  static void Run(base::OnceClosure cb, const Key&) { std::move(cb).Run(); }
+  static void Run(base::OnceClosure cb, const Key&) { ::base::rvalue_cast(cb).Run(); }
   template <typename U, typename Expected = typename U::Sequence>
   static void Run(IncompatibleCallback<U> cb, const Key&) {
     using PostedTo = T;

@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <base/rvalue_cast.h>
+
 // MOTIVATION
 //
 // Comparing and hashing pointers using pointed-to values
@@ -32,7 +34,7 @@ struct ptr_element_equal_to
   Equal _eq;
 
   ptr_element_equal_to(Equal eq = Equal())
-    : _eq(std::move(eq))
+    : _eq(::base::rvalue_cast(eq))
   {}
 
   bool operator()(const Pointer& i1, const Pointer& i2) const
@@ -56,7 +58,7 @@ struct ptr_element_less
     Less _cmp;
 
     ptr_element_less(Less cmp = Less())
-      : _cmp(std::move(cmp))
+      : _cmp(::base::rvalue_cast(cmp))
     {}
 
     bool operator()(const Pointer& i1, const Pointer& i2) const
@@ -77,7 +79,7 @@ struct ptr_element_hash {
   Hash _h;
 
   ptr_element_hash(Hash h = Hash())
-    : _h(std::move(h))
+    : _h(::base::rvalue_cast(h))
   {}
 
   size_t operator()(const Pointer& p) const

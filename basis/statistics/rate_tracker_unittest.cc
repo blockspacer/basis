@@ -10,7 +10,7 @@
 
 #include "tests_common.h"
 
-#include "basis/rate/rate_tracker.hpp"
+#include "basis/statistics/rate_tracker.hpp"
 
 namespace basis {
 namespace {

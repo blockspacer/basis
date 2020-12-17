@@ -19,6 +19,7 @@
 #include <base/synchronization/waitable_event.h>
 #include <base/observer_list_threadsafe.h>
 #include <base/thread_annotations.h>
+#include <base/rvalue_cast.h>
 
 #include <vector>
 #include <optional>
@@ -144,7 +145,7 @@ class EndingTimeout {
   EndingTimeout(
     EndingTimeout&& other)
   {
-    endTime_ = std::move(other.endTime_);
+    endTime_ = ::base::rvalue_cast(other.endTime_);
     /// \note do not move |sequence_checker_|
     DETACH_FROM_SEQUENCE(sequence_checker_);
   }
@@ -152,7 +153,7 @@ class EndingTimeout {
   EndingTimeout& operator=(
     EndingTimeout&& other)
   {
-    endTime_ = std::move(other.endTime_);
+    endTime_ = ::base::rvalue_cast(other.endTime_);
     /// \note do not move |sequence_checker_|
     DETACH_FROM_SEQUENCE(sequence_checker_);
     return *this;

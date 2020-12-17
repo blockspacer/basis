@@ -4,12 +4,14 @@
 
 #include "basis/promise/finally_executor.h" // IWYU pragma: associated
 
+#include "base/rvalue_cast.h"
+
 namespace base {
 namespace internal {
 
 FinallyExecutorCommon::FinallyExecutorCommon(
     internal::CallbackBase&& callback) noexcept
-    : callback_(std::move(callback)) {}
+    : callback_(::base::rvalue_cast(callback)) {}
 
 FinallyExecutorCommon::~FinallyExecutorCommon() = default;
 

@@ -373,31 +373,31 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-money
     "${BASIS_DIR}/money/money.test.cpp" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  tests_add_executable(${ROOT_PROJECT_NAME}-data_rate_limiter
-    "${BASIS_DIR}/rate/data_rate_limiter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+  tests_add_executable(${ROOT_PROJECT_NAME}-usage_limiter
+    "${BASIS_DIR}/statistics/usage_limiter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  tests_add_executable(${ROOT_PROJECT_NAME}-fixed_rate_statistics
-    "${BASIS_DIR}/rate/fixed_rate_statistics_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+  tests_add_executable(${ROOT_PROJECT_NAME}-expandable_statistics_window
+    "${BASIS_DIR}/statistics/expandable_statistics_window_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-moving_average
-    "${BASIS_DIR}/rate/moving_average_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/statistics/moving_average_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-moving_median_filter
-    "${BASIS_DIR}/rate/moving_median_filter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/statistics/moving_median_filter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  tests_add_executable(${ROOT_PROJECT_NAME}-moving_rate_statistics
-    "${BASIS_DIR}/rate/moving_rate_statistics_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+  tests_add_executable(${ROOT_PROJECT_NAME}-moving_statistics_window
+    "${BASIS_DIR}/statistics/moving_statistics_window_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-percentile_filter
-    "${BASIS_DIR}/rate/percentile_filter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/statistics/percentile_filter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-quality_threshold
-    "${BASIS_DIR}/rate/quality_threshold_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/statistics/quality_threshold_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-rate_tracker
-    "${BASIS_DIR}/rate/rate_tracker_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/statistics/rate_tracker_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  tests_add_executable(${ROOT_PROJECT_NAME}-top_n_test
+  tests_add_executable(${ROOT_PROJECT_NAME}-top_n
     "${BASIS_DIR}/algorithm/top_n_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-bind_to_task_runner
@@ -412,7 +412,7 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-status
     "${BASIS_DIR}/status/status_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  tests_add_executable(${ROOT_PROJECT_NAME}-statusor_test
+  tests_add_executable(${ROOT_PROJECT_NAME}-statusor
     "${BASIS_DIR}/status/statusor_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-with_details
@@ -441,6 +441,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-file_path_util
     "${BASIS_DIR}/files/file_path_util_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-dependency_hierarchy
+    "${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   if(ENABLE_DOCTEST)
     tests_add_executable(${ROOT_PROJECT_NAME}-doctest_test

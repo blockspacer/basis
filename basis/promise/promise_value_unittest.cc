@@ -12,6 +12,7 @@
 #include "base/test/bind_test_util.h"
 #include "base/test/copy_only_int.h"
 #include "base/test/move_only_int.h"
+#include "base/rvalue_cast.h"
 
 namespace base {
 namespace internal {
@@ -180,7 +181,7 @@ TEST(PromiseValueTest, ConversionConstruction) {
 
   {
     MoveOnlyInt i{123};
-    PromiseValue o(Rejected<MoveOnlyInt>(std::move(i)));
+    PromiseValue o(Rejected<MoveOnlyInt>(::base::rvalue_cast(i)));
     EXPECT_EQ(123, o.Get<Rejected<MoveOnlyInt>>()->value.data());
   }
 }
@@ -202,7 +203,7 @@ TEST(PromiseValueTest, ConversionAssignment) {
   {
     MoveOnlyInt i{123};
     PromiseValue o;
-    o = Rejected<MoveOnlyInt>(std::move(i));
+    o = Rejected<MoveOnlyInt>(::base::rvalue_cast(i));
     EXPECT_EQ(123, o.Get<Rejected<MoveOnlyInt>>()->value.data());
   }
 }

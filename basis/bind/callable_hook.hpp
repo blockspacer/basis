@@ -1,16 +1,16 @@
 #pragma once
 
-#include <base/macros.h>
-#include <base/logging.h>
-#include <base/no_destructor.h>
-#include <base/threading/thread_collision_warner.h>
-#include <base/rvalue_cast.h>
+#include "base/macros.h"
+#include "base/logging.h"
+#include "base/no_destructor.h"
+#include "base/threading/thread_collision_warner.h"
+#include "base/rvalue_cast.h"
+#include "base/bind.h"
+#include "base/callback.h"
 
 #include <basis/core/polymorphic_downcast.hpp>
 #include <basis/unowned_ref.hpp>
 #include <basis/strong_types/strong_int.hpp>
-#include <base/bind.h>
-#include <base/callback.h>
 #include <basis/checks_and_guard_annotations.hpp>
 
 #include <map>
@@ -277,7 +277,7 @@ class CallableHookInvoker
  public:
   explicit CallableHookInvoker(std::string&& key)
     : instance_(DCHECK_PTR(GlobalCallableHooksRegistry::GetInstance()))
-    , key_(std::move(key))
+    , key_(::base::rvalue_cast(key))
     , callSlot_(DCHECK_PTR(instance_->getOrCreateSlot<Func>(key_)))
   {}
 

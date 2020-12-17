@@ -17,6 +17,7 @@
 #include "base/task/task_traits.h"
 #include "base/task/post_task.h"
 #include "base/sequenced_task_runner.h"
+#include "base/rvalue_cast.h"
 
 namespace base {
 
@@ -75,12 +76,12 @@ class Promise : public internal::BasePromise {
 
   explicit Promise(
       scoped_refptr<internal::AbstractPromise> abstract_promise) noexcept
-      : BasePromise(std::move(abstract_promise)) {}
+      : BasePromise(::base::rvalue_cast(abstract_promise)) {}
 
   // Every PostTask calls this constructor so we need to be careful to avoid
   // unnecessary binary bloat.
   explicit Promise(internal::PassedPromise passed_promise) noexcept
-      : BasePromise(std::move(passed_promise),
+      : BasePromise(::base::rvalue_cast(passed_promise),
                     BasePromise::InlineConstructor()) {}
 
   ~Promise() = default;
@@ -102,7 +103,7 @@ class Promise : public internal::BasePromise {
     }
     DCHECK(abstract_promise_->IsResolved())
         << "Can't take resolved value, promise wasn't resolved.";
-    return std::move(abstract_promise_->TakeValue()
+    return ::base::rvalue_cast(abstract_promise_->TakeValue()
                          .value()
                          .template Get<Resolved<T>>()
                          ->value);
@@ -124,7 +125,7 @@ class Promise : public internal::BasePromise {
     abstract_promise_->IgnoreUncaughtCatchForTesting();
     DCHECK(abstract_promise_->IsRejected())
         << "Can't take rejected value, promise wasn't rejected.";
-    return std::move(abstract_promise_->TakeValue()
+    return ::base::rvalue_cast(abstract_promise_->TakeValue()
                          .value()
                          .template Get<Rejected<T>>()
                          ->value);
@@ -194,7 +195,7 @@ class Promise : public internal::BasePromise {
                     Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
                 OnceClosure(),
-                internal::ToCallbackBase(std::move(on_reject)))));
+                internal::ToCallbackBase(::base::rvalue_cast(on_reject)))));
   }
 
   template <typename CatchCb>
@@ -244,7 +245,7 @@ class Promise : public internal::BasePromise {
                     Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
                 OnceClosure(),
-                internal::ToCallbackBase(std::move(on_reject)))));
+                internal::ToCallbackBase(::base::rvalue_cast(on_reject)))));
   }
 
   // A task to execute |on_resolve| is posted on |task_runner| as soon as this
@@ -315,7 +316,7 @@ class Promise : public internal::BasePromise {
                     OnceClosure, ResolveType, internal::NoCallback,
                     Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
-                internal::ToCallbackBase(std::move(on_resolve)),
+                internal::ToCallbackBase(::base::rvalue_cast(on_resolve)),
                 OnceClosure())));
   }
 
@@ -406,7 +407,7 @@ class Promise : public internal::BasePromise {
                     OnceClosure, ResolveType, internal::NoCallback,
                     Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
-                internal::ToCallbackBase(std::move(on_resolve)),
+                internal::ToCallbackBase(::base::rvalue_cast(on_resolve)),
                 OnceClosure())));
   }
 
@@ -497,8 +498,8 @@ class Promise : public internal::BasePromise {
                     OnceCallback<typename CatchCallbackTraits::SignatureType>,
                     ResolveType, RejectType, Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
-                internal::ToCallbackBase(std::move(on_resolve)),
-                internal::ToCallbackBase(std::move(on_reject)))));
+                internal::ToCallbackBase(::base::rvalue_cast(on_resolve)),
+                internal::ToCallbackBase(::base::rvalue_cast(on_reject)))));
   }
 
   template <typename ThenCb, typename CatchCb>
@@ -596,8 +597,8 @@ class Promise : public internal::BasePromise {
                     OnceCallback<typename CatchCallbackTraits::SignatureType>,
                     ResolveType, RejectType, Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
-                internal::ToCallbackBase(std::move(on_resolve)),
-                internal::ToCallbackBase(std::move(on_reject)))));
+                internal::ToCallbackBase(::base::rvalue_cast(on_resolve)),
+                internal::ToCallbackBase(::base::rvalue_cast(on_reject)))));
   }
 
   // Wraps passed promise into callback that returns it as nested promise.
@@ -640,7 +641,7 @@ class Promise : public internal::BasePromise {
                     OnceCallback<typename CallbackTraits::ReturnType()>,
                     Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
-                internal::ToCallbackBase(std::move(finally_callback)))));
+                internal::ToCallbackBase(::base::rvalue_cast(finally_callback)))));
   }
 
   template <typename FinallyCb>
@@ -648,7 +649,7 @@ class Promise : public internal::BasePromise {
                  const Location& from_here,
                  FinallyCb finally_callback) noexcept {
     return FinallyOn(CreateSequencedTaskRunnerWithTraits(traits), from_here,
-                     std::move(finally_callback));
+                     ::base::rvalue_cast(finally_callback));
   }
 
   template <typename FinallyCb>
@@ -671,7 +672,7 @@ class Promise : public internal::BasePromise {
                     OnceCallback<typename CallbackTraits::ReturnType()>,
                     Resolved<ReturnedPromiseResolveT>,
                     Rejected<ReturnedPromiseRejectT>>>(),
-                internal::ToCallbackBase(std::move(finally_callback)))));
+                internal::ToCallbackBase(::base::rvalue_cast(finally_callback)))));
   }
 
   template <typename... Args>
@@ -687,10 +688,10 @@ class Promise : public internal::BasePromise {
         internal::AbstractPromise::Create(
             nullptr, from_here, nullptr, RejectPolicy::kMustCatchRejection,
             internal::DependentList::ConstructResolved(),
-            std::move(executor_data)));
+            ::base::rvalue_cast(executor_data)));
     promise->emplace(in_place_type_t<Resolved<ResolveType>>(),
                      std::forward<Args>(args)...);
-    return Promise<ResolveType, RejectType>(std::move(promise));
+    return Promise<ResolveType, RejectType>(::base::rvalue_cast(promise));
   }
 
   template <typename... Args>
@@ -706,8 +707,8 @@ class Promise : public internal::BasePromise {
         internal::AbstractPromise::Create(
             nullptr, from_here, nullptr, RejectPolicy::kMustCatchRejection,
             internal::DependentList::ConstructResolved(),
-            std::move(executor_data)));
-    return Promise<ResolveType, RejectType>(std::move(promise));
+            ::base::rvalue_cast(executor_data)));
+    return Promise<ResolveType, RejectType>(::base::rvalue_cast(promise));
   }
 
   using ResolveT = ResolveType;
@@ -772,7 +773,7 @@ class ManualPromiseResolver {
   ~ManualPromiseResolver() = default;
 
   void Resolve(Promise<ResolveType, RejectType> promise) noexcept {
-    promise_.abstract_promise_->emplace(std::move(promise.abstract_promise_));
+    promise_.abstract_promise_->emplace(::base::rvalue_cast(promise.abstract_promise_));
     promise_.abstract_promise_->OnResolved();
   }
 
@@ -907,10 +908,10 @@ class Promises {
         internal::AbstractPromise::Create(
             nullptr, from_here,
             std::make_unique<internal::AbstractPromise::AdjacencyList>(
-                std::move(prerequisite_list)),
+                ::base::rvalue_cast(prerequisite_list)),
             RejectPolicy::kMustCatchRejection,
             internal::DependentList::ConstructUnresolved(),
-            std::move(executor_data)));
+            ::base::rvalue_cast(executor_data)));
   }
 
   // All for one Promise equals to that Promise
@@ -967,10 +968,10 @@ class Promises {
         internal::AbstractPromise::Create(
             nullptr, from_here,
             std::make_unique<internal::AbstractPromise::AdjacencyList>(
-                std::move(prerequisite_list)),
+                ::base::rvalue_cast(prerequisite_list)),
             RejectPolicy::kMustCatchRejection,
             internal::DependentList::ConstructUnresolved(),
-            std::move(executor_data)));
+            ::base::rvalue_cast(executor_data)));
   }
 
   // Race for one Promise equals to that Promise

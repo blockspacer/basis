@@ -66,6 +66,7 @@
 
 #include <base/macros.h>
 #include <base/template_util.h>
+#include <base/rvalue_cast.h>
 
 #include <functional>
 #include <initializer_list>
@@ -385,7 +386,7 @@ class StrongAlias
                            std::is_convertible<U&&, UnderlyingType>::value,
                        bool> = false>
   StrongAlias(StrongAlias<TagType,U>&& other)
-    : value_(std::move(other.value_)) {}
+    : value_(::base::rvalue_cast(other.value_)) {}
 
   template <
       typename U,
@@ -394,7 +395,7 @@ class StrongAlias
                            !std::is_convertible<U&&, UnderlyingType>::value,
                        bool> = false>
   explicit StrongAlias(StrongAlias<TagType,U>&& other)
-    : value_(std::move(other.value_)) {}
+    : value_(::base::rvalue_cast(other.value_)) {}
 
   template <class... Args>
   constexpr explicit StrongAlias(base::in_place_t, Args&&... args)
@@ -444,8 +445,8 @@ class StrongAlias
 
   constexpr UnderlyingType& value() & { return value_; }
   constexpr const UnderlyingType& value() const& { return value_; }
-  constexpr UnderlyingType&& value() && { return std::move(value_); }
-  constexpr const UnderlyingType&& value() const&& { return std::move(value_); }
+  constexpr UnderlyingType&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr const UnderlyingType&& value() const&& { return COPY_OR_MOVE(value_); }
 
   constexpr explicit operator UnderlyingType() const { return value_; }
 

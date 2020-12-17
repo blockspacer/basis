@@ -5,6 +5,8 @@
 #pragma once
 
 #include "base/callback.h"
+#include "base/rvalue_cast.h"
+
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
 
@@ -20,9 +22,9 @@ class BASE_EXPORT ThenAndCatchExecutorCommon {
   ThenAndCatchExecutorCommon(internal::CallbackBase&& then_callback,
                              internal::CallbackBase&& catch_callback) noexcept
       : then_callback_(
-            std::move(then_callback)),
+            ::base::rvalue_cast(then_callback)),
         catch_callback_(
-            std::move(catch_callback)) {
+            ::base::rvalue_cast(catch_callback)) {
     DCHECK(!then_callback_.is_null() || !catch_callback_.is_null());
   }
 
@@ -71,7 +73,7 @@ class ThenAndCatchExecutor {
 
   ThenAndCatchExecutor(CallbackBase&& resolve_callback,
                        CallbackBase&& catch_callback) noexcept
-      : common_(std::move(resolve_callback), std::move(catch_callback)) {}
+      : common_(::base::rvalue_cast(resolve_callback), ::base::rvalue_cast(catch_callback)) {}
 
   bool IsCancelled() const { return common_.IsCancelled(); }
 

@@ -6,7 +6,10 @@
 
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
+
 #include <base/memory/ref_counted.h>
+#include <base/rvalue_cast.h>
+
 #include <memory>
 
 namespace base {
@@ -33,7 +36,7 @@ class FinallyExecutor {
   using CallbackReturnT = typename CallbackTraits<CallbackT>::ReturnType;
 
   explicit FinallyExecutor(CallbackBase&& callback) noexcept
-      : common_(std::move(callback)) {}
+      : common_(::base::rvalue_cast(callback)) {}
 
   ~FinallyExecutor() = default;
 

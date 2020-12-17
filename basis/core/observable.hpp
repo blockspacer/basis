@@ -106,6 +106,7 @@
 #include <vector>
 
 #include "base/bind.h"
+#include "base/rvalue_cast.h"
 #include "base/callback.h"
 #include "base/location.h"
 #include "base/logging.h"
@@ -136,7 +137,7 @@ class Observer {
 
   /// \note you can NOT register multiple callbacks
   void SetOnUpdateCallback(base::RepeatingClosure callback) {
-    on_update_callback_ = std::move(callback);
+    on_update_callback_ = ::base::rvalue_cast(callback);
   }
 
   const T& GetValue() const {
@@ -162,6 +163,80 @@ class Observer {
   DISALLOW_ASSIGN(Observer);
 };
 
+// Think of an Observable as a container,
+// with one very important feature: the ability to register observers
+// that will be notified when the contents of the container change.
+// The contents of the container at a given time is the state of the Observable.
+// The Observable base class alone does not expose any state mutators,
+// but it provides ways to register events that will be invoked when state changes.
+//
+// All state transitions of an Observable is either an activation or a deactivation.
+// An activation refers to putting some data into the container,
+// and a deactivation represents removing some data from the container.
+// The data that is contained in an Observable is thus called activation data.
+//
+// To register events that should be invoked on these state transitions,
+// we subscribe observers.
+// An Observer works by opening a Scope when an activation occurs.
+// If a deactivation occurs, the Scope opened by the Observer will be closed.
+// The name scope comes from how its lifetime is the time
+// that the activation data exists within the Observable,
+// similar to how variables are in scope when using RAII.
+//
+// The one-to-one mapping of activations in an Observable
+// to opened Scopes for each subscribed Observer affords many useful properties.
+// Foremost among these is that the Scope can capture the data
+// it is associated with as an immutable variable:
+// the activation data is the same when
+// it is deactivated as when it was activated.
+// It also ensures that every deactivation requires an activation
+// to have occurred first (since you cannot close() an object
+// that hasn't been constructed).
+//
+// About state changes:
+// A state changes when you assign a new value to the variable.
+// If a variable can be one value at some points
+// and another value at other points,
+// that means there are two states that the variable can have.
+// Everything that interacts with that variable needs to work correctly
+// for each state the variable can be in.
+// For example, if an instance variable is null in a class's constructor,
+// and set to a value by some method in that class,
+// then every method that tries to call a method on that variable
+// needs to check whether the value of the variable is null before handling it,
+// because there is no guarantee which state the variable is in.
+// You will see a lot of code that looks like this
+// when using this pattern for representing state:
+// if (mFooPtr != nullptr) { mFooPtr->doSomething(); }
+// This is not bad in and of itself,
+// if the states are well-defined and it's easy to reason about the
+// set of possible states by looking at the code.
+// However, it very, very quickly becomes difficult to reason about states
+// when there are any of the following:
+// * Multiple methods that can mutate state.
+//   For example, a hypothetical Connection class that reads and writes data
+//   over a socket might disconnect on a socket error
+//   from any read() or write() call.
+//   That means that before any read() or write() call,
+//   the state must be checked.
+// * Methods that throw a runtime error
+//   or have undefined behavior when in a certain state.
+//   For example, a class with an initialize() method may have
+//   methods that should only be called after initialize(),
+//   but the compiler will not be able to check
+//   whether initialize() has been called.
+//   This includes every method that has an assert statement
+//   on a mutable instance variable.
+// * Multiple states that interact with each other.
+//   The number of states that independently-mutable variables
+//   can take is the product of the number of states of each of the variables.
+//   Often, variables are not strictly independent
+//   (e.g. the only method that mutates a certain variable also mutates another),
+//   so some states might be unreachable.
+//   However, it's not possible for the compiler to tell you which states
+//   are reachable when you're using mutable instance variables,
+//   so you have to figure that out yourself!
+//   This makes it hard to exhaustively come up with unittest cases.
 template <typename T>
 class Observable {
   static_assert(std::is_copy_constructible<T>::value,
@@ -221,7 +296,7 @@ class ObservableInternals
       ++it;
     }
     if (it == per_sequence_.end()) {
-      per_sequence_.emplace_back(std::move(task_runner), value_);
+      per_sequence_.emplace_back(::base::rvalue_cast(task_runner), value_);
       it = --per_sequence_.end();
     }
     it->AddObserver(observer);
@@ -309,7 +384,7 @@ class ObservableInternals
    public:
     PerSequenceInfo(scoped_refptr<::base::SequencedTaskRunner> task_runner,
                     const T& value)
-        : task_runner_(std::move(task_runner)),
+        : task_runner_(::base::rvalue_cast(task_runner)),
           owned_info_(std::make_unique<SequenceOwnedInfo>(value)) {}
 
     PerSequenceInfo(PerSequenceInfo&& other) = default;
@@ -327,7 +402,7 @@ class ObservableInternals
       // guarantee deletion.
       task_runner_->PostNonNestableTask(
           FROM_HERE,
-          ::base::BindOnce(&SequenceOwnedInfo::Destroy, std::move(owned_info_)));
+          ::base::BindOnce(&SequenceOwnedInfo::Destroy, ::base::rvalue_cast(owned_info_)));
     }
 
     const T& value() const { return owned_info_->value(); }
@@ -379,7 +454,7 @@ class ObservableInternals
 
 template <typename T>
 Observer<T>::Observer(scoped_refptr<subtle::ObservableInternals<T>> internals)
-    : internals_(std::move(internals)), value_(internals_->AddObserver(this)) {}
+    : internals_(::base::rvalue_cast(internals)), value_(internals_->AddObserver(this)) {}
 
 template <typename T>
 Observer<T>::Observer(const Observer& other) : Observer(other.internals_) {}

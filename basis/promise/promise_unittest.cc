@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 
+#include "base/rvalue_cast.h"
 #include "base/test/gtest_util.h"
 #include "base/test/bind_test_util.h"
 #include "base/bind.h"
@@ -247,7 +248,7 @@ TEST_F(PromiseTest, ManualPromiseResolverCallbackLifetimeCanOutliveParent) {
                          }));
   }
 
-  std::move(resolve_cb).Run(123);
+  ::base::rvalue_cast(resolve_cb).Run(123);
   run_loop.Run();
 }
 
@@ -1924,18 +1925,18 @@ TEST_F(MultiThreadedPromiseTest, CrossThreadThensOrdering) {
           // Post 500 thens.
           for (int i = 0; i < kNumThenTasks / 2; ++i) {
             promise_resolver.promise().ThenOn(
-                thread_c_->task_runner(), FROM_HERE, std::move(then_tasks[i]));
+                thread_c_->task_runner(), FROM_HERE, ::base::rvalue_cast(then_tasks[i]));
           }
 
           // Post a task onto |thread_b| to resolve |promise_resolver|.
           // This should run at an undefined time yet all the thens should run.
           thread_b_->task_runner()->PostTask(FROM_HERE,
-                                             std::move(resolve_callback));
+                                             ::base::rvalue_cast(resolve_callback));
 
           // Post another 500 thens.
           for (int i = kNumThenTasks / 2; i < kNumThenTasks; ++i) {
             promise_resolver.promise().ThenOn(
-                thread_c_->task_runner(), FROM_HERE, std::move(then_tasks[i]));
+                thread_c_->task_runner(), FROM_HERE, ::base::rvalue_cast(then_tasks[i]));
           }
         }));
 

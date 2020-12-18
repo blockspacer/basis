@@ -21,73 +21,6 @@ namespace basis {
 using namespace basis::dependency_error_space;
 using namespace basis::error;
 
-TEST(DependencyHierarchy, Flatten) {
-  std::map<scoped_refptr<Dependency>, std::string> dependencyNames;
-
-  // Given dependency hierarchy:
-  // A -> B -> D
-  //      B -> C -> D
-  //                D -> F
-  //      B -> E -> C
-  // flatten(A) = [A,B,E,C,D,F]
-  scoped_refptr<Dependency> dependencyA
-    = ::base::MakeRefCounted<Dependency>();
-  dependencyNames[dependencyA] = "A";
-
-  scoped_refptr<Dependency> dependencyB
-    = ::base::MakeRefCounted<Dependency>();
-  dependencyNames[dependencyB] = "B";
-
-  scoped_refptr<Dependency> dependencyC
-    = ::base::MakeRefCounted<Dependency>();
-  dependencyNames[dependencyC] = "C";
-
-  scoped_refptr<Dependency> dependencyD
-    = ::base::MakeRefCounted<Dependency>();
-  dependencyNames[dependencyD] = "D";
-
-  scoped_refptr<Dependency> dependencyE
-    = ::base::MakeRefCounted<Dependency>();
-  dependencyNames[dependencyE] = "E";
-
-  scoped_refptr<Dependency> dependencyF
-    = ::base::MakeRefCounted<Dependency>();
-  dependencyNames[dependencyF] = "F";
-
-  // A -> B -> D
-  EXPECT_OK(dependencyA->addDependency(dependencyB));
-  EXPECT_OK(dependencyB->addDependency(dependencyD));
-
-  // B -> C -> D
-  EXPECT_OK(dependencyB->addDependency(dependencyC));
-  EXPECT_OK(dependencyC->addDependency(dependencyD));
-
-  // B -> E -> C
-  EXPECT_OK(dependencyB->addDependency(dependencyE));
-  EXPECT_OK(dependencyE->addDependency(dependencyC));
-
-  // D -> F
-  EXPECT_OK(dependencyD->addDependency(dependencyF));
-
-  auto mapDependencyNames = [&](const std::vector<scoped_refptr<Dependency>>& vec) {
-    std::vector<std::string> result;
-    for(scoped_refptr<Dependency> dep: vec) {
-      result.push_back(dependencyNames[dep]);
-    }
-    return result;
-  };
-
-  // flatten(A) = [A,B,E,C,D,F]
-  EXPECT_EQ(mapDependencyNames(dependencyA->flatten()), mapDependencyNames(std::vector<scoped_refptr<Dependency>>{
-    dependencyA,
-    dependencyB,
-    dependencyE,
-    dependencyC,
-    dependencyD,
-    dependencyF,
-  }));
-}
-
 TEST(DependencyHierarchy, AddDependencyTwice) {
   scoped_refptr<Dependency> dependencyA
     = ::base::MakeRefCounted<Dependency>();
@@ -133,7 +66,7 @@ TEST(DependencyHierarchy, RemoveSelfDependency) {
   EXPECT_FALSE(dependencyA->hasNestedDependency(dependencyA));
   EXPECT_EQ(dependencyA->dependencies()->size(), 0u);
 
-  EXPECT_DEATH(dependencyA->removeDependency(dependencyA), "Can not remove self from dependencies");
+  EXPECT_DEATH(ignore_result(dependencyA->removeDependency(dependencyA)), "Can not remove self from dependencies");
   EXPECT_FALSE(dependencyA->hasNestedDependency(dependencyA));
   EXPECT_EQ(dependencyA->dependencies()->size(), 0u);
 }

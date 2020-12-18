@@ -10,9 +10,9 @@
 #include <base/memory/ref_counted.h>
 #include <base/memory/weak_ptr.h>
 #include <base/observer_list_threadsafe.h>
-#include <base/recursion_checker.h>
 
 #include <basis/status/status_macros.hpp>
+#include <basis/dependency_hierarchy/dependency_error_space.hpp>
 
 #include <set>
 #include <string>
@@ -36,52 +36,22 @@
 //
 namespace basis {
 
-namespace dependency_error_space {
-
-// The custom error space.
-enum ErrorCode {
-  // These are reserved errors.
-  ERR_SUCCESS = 0,  // Success (default value). Same as OK.
-  ERR_CANCELLED = 1,
-  ERR_UNKNOWN = 2,
-  ERR_PERMISSION_DENIED = 7,
-  ERR_FAILED_PRECONDITION = 9,
-  ERR_ABORTED = 10,
-  ERR_OUT_OF_RANGE = 11,
-  ERR_UNIMPLEMENTED = 12,
-  ERR_INTERNAL = 13,
-  ERR_DATA_LOSS = 15,
-  ERR_UNAUTHENTICATED = 16,
-
-  // The following errors start from 500,
-  // to make sure they are not conflicting with the
-  // canonical errors. DO NOT USE ANY VALUE BELOW 500 FOR THE ERRORS BEYOND
-  // THIS LINE.
-  ERR_CIRCULAR_DEPENDENCY = 500,
-  ERR_DEPENDENCY_NOT_FOUND = 501,            // Entry (e.g. flow) not found.
-};
-
-// returns the singleton instance to be used through out the code.
-const ::basis::ErrorSpace* ErrorSpace();
-
-}  // namespace dependency_error_space
-
-// Allow using status_macros. For example:
-// return MAKE_ERROR(ERR_UNKNOWN) << "test";
-namespace status_macros {
-
-template <>
-class ErrorCodeOptions<dependency_error_space::ErrorCode>
-    : public BaseErrorCodeOptions {
- public:
-  const ::basis::ErrorSpace* GetErrorSpace() {
-    return dependency_error_space::ErrorSpace();
-  }
-};
-
-}  // namespace status_macros
-
 class Dependency;
+class Dependencies;
+
+struct DependencyComparator {
+  bool operator()(const scoped_refptr<Dependency>& a,
+                  const scoped_refptr<Dependency>& b) const;
+};
+
+using DependencySet = std::set<scoped_refptr<Dependency>, DependencyComparator>;
+
+struct DependenciesComparator {
+  bool operator()(const scoped_refptr<Dependencies>& a,
+                  const scoped_refptr<Dependencies>& b) const;
+};
+
+using DependenciesSet = std::set<scoped_refptr<Dependencies>, DependenciesComparator>;
 
 // Use with functionality that can have dependencies,
 // but can not be used as dependency.
@@ -93,8 +63,6 @@ class Dependencies final
   : public base::RefCountedThreadSafe<Dependencies>
 {
  public:
-  using Storage = std::set<scoped_refptr<Dependency>>;
-
   Dependencies();
 
   MUST_USE_RETURN_VALUE
@@ -114,16 +82,9 @@ class Dependencies final
   MUST_USE_RETURN_VALUE
   bool hasNestedDependency(scoped_refptr<Dependency> dependency) const;
 
-  // Given dependency hierarchy:
-  // A -> B -> D
-  //      B -> C -> D
-  // flatten(A) = [A,B,C,D]
-  MUST_USE_RETURN_VALUE
-  std::vector<scoped_refptr<Dependency>> flatten() const;
-
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
-  const Storage& storage() const
+  const DependencySet& storage() const
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     return storage_;
@@ -146,7 +107,7 @@ class Dependencies final
   /// the object accidently while there are references to it.
   ~Dependencies();
 
-  Storage storage_;
+  DependencySet storage_;
 
   SEQUENCE_CHECKER(sequence_checker_);
 
@@ -265,8 +226,6 @@ class Dependency final
 
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-    DCHECK_FUNCTION_RECURSION(dependsOnRecursionLimit);
-
     DCHECK(dependency);
     if(!dependency || dependency == ::base::WrapRefCounted(this)) {
       return false;
@@ -274,22 +233,6 @@ class Dependency final
 
     DCHECK(dependencies_);
     return dependencies_->hasNestedDependency(dependency);
-  }
-
-  // Given dependency hierarchy:
-  // A -> B -> D
-  //      B -> C -> D
-  // flatten(A) = [A,B,C,D]
-  MUST_USE_RETURN_VALUE
-  std::vector<scoped_refptr<Dependency>> flatten() const
-  {
-    DCHECK(dependencies_);
-    std::vector<scoped_refptr<Dependency>> result{::base::WrapRefCounted(const_cast<Dependency*>(this))};
-    auto flattenedChildren = dependencies_->flatten();
-    // preallocate memory
-    result.reserve(result.size() + flattenedChildren.size());
-    result.insert(result.end(), flattenedChildren.begin(), flattenedChildren.end());
-    return result;
   }
 
   friend class ::base::RefCountedThreadSafe<Dependency>;
@@ -302,8 +245,6 @@ class Dependency final
   ~Dependency();
 
  private:
-  mutable FUNCTION_RECURSION_CHECKER_LIMIT_999(dependsOnRecursionLimit);
-
   scoped_refptr<Dependencies> dependencies_;
 
   SEQUENCE_CHECKER(sequence_checker_);

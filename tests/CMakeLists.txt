@@ -436,6 +436,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-spacer
     "${BASIS_DIR}/log/spacer_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-table_printer
+    "${BASIS_DIR}/log/table_printer_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-unique_ptr_wrap
     "${BASIS_DIR}/unique_ptr_wrap_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -444,6 +447,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-dependency_hierarchy
     "${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-dependency_util
+    "${BASIS_DIR}/dependency_hierarchy/dependency_util_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   if(ENABLE_DOCTEST)
     tests_add_executable(${ROOT_PROJECT_NAME}-doctest_test

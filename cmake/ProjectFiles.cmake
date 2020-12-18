@@ -45,8 +45,6 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
   #
-  ${BASIS_DIR}/log/scoped_log_run_time.hpp
-  ${BASIS_DIR}/log/scoped_log_run_time.cc
   ${BASIS_DIR}/core/immutable.hpp
   ${BASIS_DIR}/core/numeric_static_cast.hpp
   ${BASIS_DIR}/core/pimpl.hpp
@@ -154,6 +152,10 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/log/progress_logger.hpp
   ${BASIS_DIR}/log/spacer.cc
   ${BASIS_DIR}/log/spacer.hpp
+  ${BASIS_DIR}/log/scoped_log_run_time.hpp
+  ${BASIS_DIR}/log/scoped_log_run_time.cc
+  ${BASIS_DIR}/log/table_printer.hpp
+  ${BASIS_DIR}/log/table_printer.cc
   #
   ${BASIS_DIR}/task/task_util.cc
   ${BASIS_DIR}/task/task_util.hpp
@@ -254,6 +256,10 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.cc
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.hpp
+  ${BASIS_DIR}/dependency_hierarchy/dependency_error_space.cc
+  ${BASIS_DIR}/dependency_hierarchy/dependency_error_space.hpp
+  ${BASIS_DIR}/dependency_hierarchy/dependency_util.cc
+  ${BASIS_DIR}/dependency_hierarchy/dependency_util.hpp
   #
   ${BASIS_DIR}/ECS/unsafe_context.cc
   ${BASIS_DIR}/ECS/unsafe_context.hpp

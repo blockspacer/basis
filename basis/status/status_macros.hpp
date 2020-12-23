@@ -590,7 +590,7 @@ class UtilStatusConvertibleToBool {
           _status = (expr); _status) {                                         \
   } else                                                                       \
     return                                                                     \
-      ([&]() -> ::basis::status_macros::MakeErrorStream&& {                    \
+      ([&]() -> ::basis::status_macros::MakeErrorStream {                    \
         if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault())) { \
           LOG(ERROR) << "Return error: " << #expr << " failed with "           \
                         << _status.status();                                   \
@@ -659,7 +659,7 @@ class UtilStatusConvertibleToBool {
           _status = (expr); _status) {                                         \
   } else if(expect_code == _status.error_code())                               \
     return                                                                     \
-      ([&]() -> ::basis::status_macros::MakeErrorStream&& {                    \
+      ([&]() -> ::basis::status_macros::MakeErrorStream {                    \
         if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault())) { \
           LOG(ERROR) << "Return error: " << #expr << " failed with "           \
                         << _status.status();                                   \

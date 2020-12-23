@@ -2,7 +2,7 @@
 
 #include <base/logging.h>
 
-#include <basis/money/money.hpp>
+#include <basis/strong_types/money/money.hpp>
 #include <basis/status/statusor.hpp>
 #include <basis/status/status_macros.hpp>
 

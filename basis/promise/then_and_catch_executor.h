@@ -133,6 +133,7 @@ class ThenAndCatchExecutor {
                                   AbstractPromise* promise,
                                   CallbackBase* resolve_callback,
                                   std::true_type can_resolve) {
+    UNREFERENCED_PARAMETER(can_resolve);
     // Internally RunHelper uses const RepeatingCallback<>& to avoid the
     // binary size overhead of moving a scoped_refptr<> about.  We respect
     // the onceness of the callback and RunHelper will overwrite the callback
@@ -149,6 +150,10 @@ class ThenAndCatchExecutor {
                                   AbstractPromise* promise,
                                   CallbackBase* resolve_callback,
                                   std::false_type can_resolve) {
+    UNREFERENCED_PARAMETER(prerequisite);
+    UNREFERENCED_PARAMETER(promise);
+    UNREFERENCED_PARAMETER(resolve_callback);
+    UNREFERENCED_PARAMETER(can_resolve);
     // |prerequisite| can't resolve so don't generate dead code.
   }
 
@@ -156,6 +161,7 @@ class ThenAndCatchExecutor {
                                    AbstractPromise* promise,
                                    CallbackBase* catch_callback,
                                    std::true_type can_reject) {
+    UNREFERENCED_PARAMETER(can_reject);
     // Internally RunHelper uses const RepeatingCallback<>& to avoid the
     // binary size overhead of moving a scoped_refptr<> about.  We respect
     // the onceness of the callback and RunHelper will overwrite the callback
@@ -172,6 +178,10 @@ class ThenAndCatchExecutor {
                                    AbstractPromise* promise,
                                    CallbackBase* catch_callback,
                                    std::false_type can_reject) {
+    UNREFERENCED_PARAMETER(prerequisite);
+    UNREFERENCED_PARAMETER(promise);
+    UNREFERENCED_PARAMETER(catch_callback);
+    UNREFERENCED_PARAMETER(can_reject);
     // |prerequisite| can't reject so don't generate dead code.
   }
 

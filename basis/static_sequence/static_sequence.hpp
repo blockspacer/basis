@@ -342,4 +342,4 @@ class Sequenced {
   UniquePtr obj_;
 };
 
-}  // namespace util
+}  // namespace basis

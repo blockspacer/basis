@@ -52,6 +52,9 @@ void perSequenceClearTimeBeforeCallbackExecution();
 //       )
 //   );
 // }
+//
+/// \note See also `HangWatchScopeEnabled` in `base/threading/`
+//
 #define EXEC_TIME_LIMIT_CHECKER(PARAM) \
   ::base::bindExecTimeChecker(FROM_HERE, PARAM)
 
@@ -85,15 +88,12 @@ class ExecTimeChecker
   }
 
   // check call count on callback destruction
-  ~ExecTimeChecker()
-  {
-  }
+  ~ExecTimeChecker() {}
 
   ExecTimeChecker(ExecTimeChecker&& other)
     : limitExecTime_{base::rvalue_cast(other.limitExecTime_)}
     , location_{base::rvalue_cast(other.location_)}
-  {
-  }
+  {}
 
   ExecTimeChecker& operator=(
     ExecTimeChecker&& other)
@@ -161,12 +161,6 @@ class ExecTimeChecker
 
 ExecTimeChecker bindExecTimeChecker(
   const ::base::Location& location
-  , const ::base::TimeDelta& val)
-{
-  return ExecTimeChecker{
-    location
-    , val
-  };
-}
+  , const ::base::TimeDelta& val);
 
 } // namespace base

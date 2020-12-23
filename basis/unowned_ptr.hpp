@@ -33,6 +33,9 @@
 // The array indexing operation [] is not supported on an unowned ptr,
 // because an unowned ptr expresses a one to one relationship with some
 // other heap object.
+//
+// See as alternative CheckedPtr that maintains an internal ref-count
+// https://github.com/chromium/chromium/blob/de344db5d05696c4ec28f29749639cd9b9ad5549/base/memory/checked_ptr.md
 
 namespace basis {
 

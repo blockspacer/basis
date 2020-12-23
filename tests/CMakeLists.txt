@@ -370,9 +370,6 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-i18n
     "i18n.test.cpp" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
-  tests_add_executable(${ROOT_PROJECT_NAME}-money
-    "${BASIS_DIR}/money/money.test.cpp" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
-
   tests_add_executable(${ROOT_PROJECT_NAME}-usage_limiter
     "${BASIS_DIR}/statistics/usage_limiter_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -396,6 +393,12 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-rate_tracker
     "${BASIS_DIR}/statistics/rate_tracker_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-weighted_moving_linear_regression
+    "${BASIS_DIR}/statistics/weighted_moving_linear_regression_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-weighted_moving_average_unittest
+    "${BASIS_DIR}/statistics/weighted_moving_average.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-top_n
     "${BASIS_DIR}/algorithm/top_n_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
@@ -441,6 +444,21 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-unique_ptr_wrap
     "${BASIS_DIR}/unique_ptr_wrap_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-strong_alias
+    "${BASIS_DIR}/strong_types/strong_alias_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-strong_int
+    "${BASIS_DIR}/strong_types/strong_int_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-strong_bool
+    "${BASIS_DIR}/strong_types/strong_bool_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-strong_string
+    "${BASIS_DIR}/strong_types/strong_string_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-money
+    "${BASIS_DIR}/strong_types/money/money.test.cpp" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-file_path_util
     "${BASIS_DIR}/files/file_path_util_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")

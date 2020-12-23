@@ -10,8 +10,8 @@
 #include <vector>
 #include <algorithm>
 
-#include <basis/money/money.hpp>
-#include <basis/money/money_util.hpp>
+#include <basis/strong_types/money/money.hpp>
+#include <basis/strong_types/money/money_util.hpp>
 
 class MoneyUtilsTest : public ::testing::Test {};
 

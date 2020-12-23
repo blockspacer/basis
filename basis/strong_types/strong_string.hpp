@@ -7,7 +7,6 @@
 #include <ostream>
 #include <utility>
 #include <functional>
-#include <utility>
 #include <string>
 
 // default tag for strong type
@@ -29,9 +28,9 @@
   STRONG_STRING_TAG_CUSTOM(using_name,STRONG_STRING_TAG_NAME)
 
 #define STRONGLY_TYPED_STRING(NAME) \
-  using NAME = util::StrongString<class STRONG_STRING_TAG(NAME)>
+  using NAME = basis::StrongString<class STRONG_STRING_TAG(NAME)>
 
-namespace util {
+namespace basis {
 
 // Type-safe string
 //
@@ -52,23 +51,6 @@ namespace util {
 //
 // STRONGLY_TYPED_STRING(barStr);
 //
-// fooStr v1{"12345"}; // OK
-// // v1 = "12345"; // ERROR, no viable overloaded '='
-// barStr v2{"34233"}; // OK
-// // fooStr v3 = "12345"; // ERROR
-// // barStr v4 = "34233"; // ERROR
-// // std::string v6 = v1; // ERROR, no implicit cast
-// CHECK(v1[0] == '1');
-// CHECK(v2[2] == '2');
-// CHECK(v1 == "12345");
-// CHECK(v1.find('5') != fooStr::npos);
-// CHECK(v1.find('5') != std::string::npos);
-// CHECK(v1.find('9') == fooStr::npos);
-// CHECK(v1.find('9') == std::string::npos);
-// fooStr v5 = fooStr::kEmpty;
-// CHECK(v5 == fooStr::kEmpty);
-// CHECK(v5 == "");
-//
 template<
   typename Tag
 >
@@ -76,22 +58,22 @@ class StrongString
 {
   // Types:
 public:
-  typedef std::string::traits_type					traits_type;
-  typedef std::string::value_type		value_type;
-  typedef std::string::allocator_type				allocator_type;
-  typedef std::string::size_type		size_type;
-  typedef std::string::difference_type	difference_type;
-  typedef std::string::reference		reference;
-  typedef std::string::const_reference	const_reference;
-  typedef std::string::pointer	pointer;
-  typedef std::string::const_pointer	const_pointer;
+  typedef std::string::traits_type traits_type;
+  typedef std::string::value_type value_type;
+  typedef std::string::allocator_type allocator_type;
+  typedef std::string::size_type size_type;
+  typedef std::string::difference_type difference_type;
+  typedef std::string::reference reference;
+  typedef std::string::const_reference const_reference;
+  typedef std::string::pointer pointer;
+  typedef std::string::const_pointer const_pointer;
   typedef std::string::iterator iterator;
   typedef std::string::const_iterator const_iterator;
   typedef std::string::const_reverse_iterator const_reverse_iterator;
   typedef std::string::reverse_iterator reverse_iterator;
 
   ///  Value returned by various member functions when they fail.
-  static const size_type	npos = static_cast<size_type>(-1);
+  static constexpr size_type npos = static_cast<size_type>(-1);
 
 public:
   static const StrongString<Tag> kEmpty;
@@ -109,26 +91,6 @@ public:
   constexpr explicit StrongString(std::string&& v) NO_EXCEPTION
     : value_(v)
   {}
-
-  //constexpr explicit StrongString(const StrongString<Tag>& v) NO_EXCEPTION
-  //  : value_(v.get())
-  //{}
-  //
-  //constexpr explicit StrongString(StrongString<Tag>&& v) NO_EXCEPTION
-  //  : value_(::base::rvalue_cast(v.value()))
-  //{}
-  //
-  //// Assignment operator.
-  //StrongString& operator=(const StrongString& other) {
-  //  value_ = other.value();
-  //  return *this;
-  //}
-  //
-  //// Assignment operator.
-  //StrongString& operator=(StrongString&& other) {
-  //  value_ = ::base::rvalue_cast(other.value());
-  //  return *this;
-  //}
 
   /// Casts a StrongString object to an untyped \c string.
   explicit operator std::string() const NO_EXCEPTION
@@ -555,16 +517,16 @@ template<typename Tag>
 const StrongString<Tag>
   StrongString<Tag>::kEmpty { "" };
 
-}  // namespace util
+}  // namespace basis
 
 namespace std {
 
 // Allow StrongString to be used as a key to hashable containers.
 template<typename Tag>
-struct hash<util::StrongString<Tag> >
+struct hash<basis::StrongString<Tag> >
 {
   size_t operator()(
-      const util::StrongString<Tag> &idx) const
+      const basis::StrongString<Tag> &idx) const
   {
     return hash<std::string>()(idx.value());
   }

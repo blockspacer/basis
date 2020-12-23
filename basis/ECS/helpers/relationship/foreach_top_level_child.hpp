@@ -58,7 +58,6 @@ void foreachTopLevelChild(
   using ChildrenComponent = ECS::ChildSiblings<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
   using ChildrenSizeComponent = ECS::TopLevelChildrenCount<TagType, size_t>;
-  using ParentComponent = ECS::ParentEntity<TagType>;
 
   if(parentId == ECS::NULL_ENTITY)
   {

@@ -261,6 +261,8 @@ class UnsafeStateMachine {
   {
     LOG_CALL(DVLOG(99));
 
+    UNREFERENCED_PARAMETER(reason);
+
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     // Do not change states if the transition is invalid.

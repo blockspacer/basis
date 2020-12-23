@@ -16,7 +16,6 @@ class DummyChecker
   {
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(DummyChecker);
 
-    /// \note fold expression requires C++17
     ((void)(UNREFERENCED_PARAMETER(args)), ...);
   }
 
@@ -25,11 +24,14 @@ class DummyChecker
   {}
 
   DummyChecker(DummyChecker<Args...>&& other)
-  {}
+  {
+    UNREFERENCED_PARAMETER(other);
+  }
 
   DummyChecker& operator=(
     DummyChecker<Args...>&& other)
   {
+    UNREFERENCED_PARAMETER(other);
     return *this;
   }
 

@@ -698,6 +698,7 @@ class Promise : public internal::BasePromise {
   NOINLINE static Promise<ResolveType, RejectType> CreateRejected(
       const Location& from_here,
       Args&&... args) noexcept {
+    ((void)(UNREFERENCED_PARAMETER(args)), ...);
     internal::PromiseExecutor::Data executor_data(
         in_place_type_t<internal::NoOpPromiseExecutor>(),
         /* can_resolve */ false,

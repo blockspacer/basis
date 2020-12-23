@@ -298,10 +298,6 @@ scoped_refptr<::base::internal::AbstractPromise>
   // Initial PostTask is inlined which results in smaller code.
   using CallbackTraits =
       internal::CallbackTraits<CallbackType<TaskReturnType()>>;
-  using ReturnedPromiseResolveT = typename CallbackTraits::ResolveType;
-  using ReturnedPromiseRejectT = typename CallbackTraits::RejectType;
-  using ReturnedPromise =
-      Promise<ReturnedPromiseResolveT, ReturnedPromiseRejectT>;
 
   if(isNestedPromise) {
     DCHECK(

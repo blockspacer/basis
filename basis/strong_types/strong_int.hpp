@@ -10,7 +10,6 @@
 #include <ostream>
 #include <utility>
 #include <functional>
-#include <utility>
 #include <string>
 #include <type_traits>
 
@@ -33,12 +32,12 @@
   STRONG_INT_TAG_CUSTOM(using_name,STRONG_INT_TAG_NAME)
 
 #define DEFINE_STRONGLY_TYPED_INT(NAME, TYPE) \
-  using NAME = util::StrongInt<class STRONG_INT_TAG(NAME), TYPE>
+  using NAME = basis::StrongInt<class STRONG_INT_TAG(NAME), TYPE>
 
 #define STRONGLY_TYPED_INT(NAME) \
   DEFINE_STRONGLY_TYPED_INT(NAME, int)
 
-namespace util {
+namespace basis {
 
 /// \note If you want checked or clamped integer, than see:
 /// * <base/numerics/checked_math.h>
@@ -62,23 +61,6 @@ namespace util {
 // STRONGLY_TYPED_INT(foo);
 //
 // DEFINE_STRONGLY_TYPED_INT(bar, size_t);
-//
-// foo v1{45}; // OK
-// CHECK(v1);
-// CHECK(v1 == 45);
-// // v1 = 45; // ERROR, no viable overloaded '='
-// // bar v2 = foo{56}; // ERROR, no implicit cast
-// foo v4 = v1 || foo{0}; // OK
-// CHECK(v4);
-// bar v5 = bar{1} && bar(0); // OK
-// CHECK(!v5);
-// // int v6 = v5; // ERROR, no implicit cast
-//
-// bar baz = bar{421} + v5;
-// CHECK(baz == 421UL);
-// baz++;
-// CHECK(baz == 422);
-// // bar baz2(std::numeric_limits<size_t>::max()); // static_assert failed
 //
 template<
   typename Tag
@@ -144,20 +126,6 @@ public:
   {
     return std::numeric_limits<NativeType>::min();
   }
-
-  //constexpr explicit StrongInt(const StrongInt<Tag, NativeType>& v) NO_EXCEPTION
-  //  : value_(v.get())
-  //{}
-  //
-  //constexpr explicit StrongInt(StrongInt<Tag, NativeType>&& v) NO_EXCEPTION
-  //  : value_(::base::rvalue_cast(v.value()))
-  //{}
-  //
-  //// Assignment operator.
-  //StrongInt& operator=(StrongInt other) {
-  //  value_ = other.value();
-  //  return *this;
-  //}
 
   /// Casts a StrongInt object to an untyped \c int.
   constexpr explicit operator int() const NO_EXCEPTION
@@ -276,13 +244,12 @@ public:
     return x != y.value_;
   }
 
-
   // Increment and decrement operators.
   StrongInt& operator++() {  // ++x
     ++value_;
     return *this;
   }
-  const StrongInt operator++(int postfix_flag) {  // x++
+  const StrongInt operator++(int) {  // x++
     StrongInt temp(*this);
     ++value_;
     return temp;
@@ -291,7 +258,7 @@ public:
     --value_;
     return *this;
   }
-  const StrongInt operator--(int postfix_flag) {  // x--
+  const StrongInt operator--(int) {  // x--
     StrongInt temp(*this);
     --value_;
     return temp;
@@ -454,16 +421,16 @@ STRONG_INT_COMPARISON_OP(>);
 STRONG_INT_COMPARISON_OP(>=);
 #undef STRONG_INT_COMPARISON_OP
 
-}  // namespace util
+}  // namespace basis
 
 namespace std {
 
 // Allow StrongInt to be used as a key to hashable containers.
 template<typename Tag, typename NativeType>
-struct hash<util::StrongInt<Tag, NativeType> >
+struct hash<basis::StrongInt<Tag, NativeType> >
 {
   size_t operator()(
-      const util::StrongInt<Tag, NativeType> &idx) const
+      const basis::StrongInt<Tag, NativeType> &idx) const
   {
     return hash<NativeType>()(idx.value());
   }

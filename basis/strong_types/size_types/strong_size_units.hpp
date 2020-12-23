@@ -8,17 +8,28 @@
 #include <utility>
 #include <type_traits>
 
-namespace util {
+namespace base {
+namespace internal {
 
-DEFINE_STRONG_CHECKED_TYPE(CheckedBytes, uint64_t);
-DEFINE_STRONG_CHECKED_TYPE(CheckedKilobytes, uint64_t);
-DEFINE_STRONG_CHECKED_TYPE(CheckedMegabytes, uint64_t);
-DEFINE_STRONG_CHECKED_TYPE(CheckedGigabytes, uint64_t);
+DECLARE_STRONG_CHECKED_TYPE(CheckedBytes, uint64_t);
+DECLARE_STRONG_CHECKED_TYPE(CheckedKilobytes, uint64_t);
+DECLARE_STRONG_CHECKED_TYPE(CheckedMegabytes, uint64_t);
+DECLARE_STRONG_CHECKED_TYPE(CheckedGigabytes, uint64_t);
+
+} // namespace internal
+} // namespace base
+
+namespace basis {
+
+using CheckedBytes = ::base::internal::CheckedBytes;
+using CheckedKilobytes = ::base::internal::CheckedKilobytes;
+using CheckedMegabytes = ::base::internal::CheckedMegabytes;
+using CheckedGigabytes = ::base::internal::CheckedGigabytes;
 
 // USAGE
 //
-// util::CheckedBytes valBytes{2500000};
-// CHECK(util::bytesToMegabytes(valBytes).ValueOrDie() == 2);
+// basis::CheckedBytes valBytes{2500000};
+// CHECK(basis::bytesToMegabytes(valBytes).ValueOrDie() == 2);
 //
 inline CheckedMegabytes bytesToMegabytes(CheckedBytes bytes)
 {
@@ -30,8 +41,8 @@ inline CheckedMegabytes bytesToMegabytes(CheckedBytes bytes)
 
 // USAGE
 //
-// util::CheckedKilobytes valKb{5};
-// CHECK(util::kilobytesToBytes(valKb).ValueOrDie() == 5120);
+// basis::CheckedKilobytes valKb{5};
+// CHECK(basis::kilobytesToBytes(valKb).ValueOrDie() == 5120);
 //
 inline CheckedBytes kilobytesToBytes(CheckedKilobytes kilobytes)
 {
@@ -43,8 +54,8 @@ inline CheckedBytes kilobytesToBytes(CheckedKilobytes kilobytes)
 
 // USAGE
 //
-// util::CheckedMegabytes valMb{1};
-// CHECK(util::megabytesToBytes(valMb).ValueOrDie() == 1048576);
+// basis::CheckedMegabytes valMb{1};
+// CHECK(basis::megabytesToBytes(valMb).ValueOrDie() == 1048576);
 //
 inline CheckedBytes megabytesToBytes(CheckedMegabytes megabytes)
 {
@@ -56,8 +67,8 @@ inline CheckedBytes megabytesToBytes(CheckedMegabytes megabytes)
 
 // USAGE
 //
-// util::CheckedGigabytes valGb{1};
-// CHECK(util::gigabytesToBytes(valGb).ValueOrDie() == 1073741824);
+// basis::CheckedGigabytes valGb{1};
+// CHECK(basis::gigabytesToBytes(valGb).ValueOrDie() == 1073741824);
 //
 inline CheckedBytes gigabytesToBytes(CheckedGigabytes gigabytes)
 {
@@ -67,4 +78,4 @@ inline CheckedBytes gigabytesToBytes(CheckedGigabytes gigabytes)
   return result;
 }
 
-}  // namespace util
+}  // namespace basis

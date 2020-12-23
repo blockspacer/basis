@@ -29,15 +29,6 @@
 //
 // using Orange = ::basis::StrongAlias<class OrangeTag, int>;
 // STRONGLY_TYPED(int, Apple);
-// Apple apple(2);
-// Orange orange = apple;  // Does not compile.
-// Orange other_orange = orange;  // Compiles, types match.
-// Orange x = orange + apple;  // Does not compile.
-// Orange y = Orange(orange.value() + apple.value());  // Compiles.
-// if (orange > apple);  // Does not compile.
-// if (orange > other_orange);  // Compiles.
-// void foo(Orange);
-// void foo(Apple);  // Compiles into separate overload.
 //
 // StrongAlias is a zero-cost abstraction, it's compiled away.
 //
@@ -319,6 +310,8 @@ HAS_MEMBER_FUNCTION(ToString)
       // No need to use enums for boolean setters, since the meaning is clear.
       frame_->SetIsClosing(true);
  */
+/// \todo make configurable similar
+/// to strong_typedef_properties from https://github.com/anthonywilliams/strong_typedef
 template <typename TagType, typename UnderlyingType>
 class StrongAlias
 {
@@ -755,4 +748,4 @@ std::ostream& operator<<(std::ostream& stream,
   return stream << alias.value();
 }
 
-}  // namespace util
+}  // namespace basis

@@ -1,4 +1,4 @@
-#include <basis/money/money_util.hpp> // IWYU pragma: associated
+#include <basis/strong_types/money/money_util.hpp> // IWYU pragma: associated
 
 namespace basis {
 

@@ -144,12 +144,6 @@ class DelayTimeChecker
 
 DelayTimeChecker bindDelayTimeChecker(
   const ::base::Location& location
-  , const ::base::TimeDelta& val)
-{
-  return DelayTimeChecker{
-    location
-    , val
-  };
-}
+  , const ::base::TimeDelta& val);
 
 } // namespace base

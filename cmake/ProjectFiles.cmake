@@ -44,6 +44,15 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/tracing/stats_table.cc
   #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
+  ${BASIS_DIR}/strong_types/strong_int.hpp
+  ${BASIS_DIR}/strong_types/strong_string.hpp
+  ${BASIS_DIR}/strong_types/strong_bool.hpp
+  ${BASIS_DIR}/strong_types/metric_types/strong_metric_units.hpp
+  ${BASIS_DIR}/strong_types/size_types/strong_size_units.hpp
+  ${BASIS_DIR}/strong_types/time_types/strong_time_units.hpp
+  ${BASIS_DIR}/strong_types/money/money.hpp
+  ${BASIS_DIR}/strong_types/money/money_util.hpp
+  ${BASIS_DIR}/strong_types/money/money_util.cc
   #
   ${BASIS_DIR}/core/immutable.hpp
   ${BASIS_DIR}/core/numeric_static_cast.hpp
@@ -76,10 +85,6 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/status/posix_error_space.cc
   ${BASIS_DIR}/status/app_error_space.hpp
   ${BASIS_DIR}/status/app_error_space.cc
-  #
-  ${BASIS_DIR}/money/money.hpp
-  ${BASIS_DIR}/money/money_util.hpp
-  ${BASIS_DIR}/money/money_util.cc
   #
   ${BASIS_DIR}/application/application.hpp
   ${BASIS_DIR}/application/application.cc
@@ -211,11 +216,13 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/ECS/helpers/lifetime/populate_delayed_construction_components.hpp
   ${BASIS_DIR}/ECS/helpers/lifetime/populate_delayed_construction_components.cc
   #
+  ${BASIS_DIR}/bind/verify_nothing.hpp
   ${BASIS_DIR}/bind/exec_time_checker.hpp
   ${BASIS_DIR}/bind/exec_time_checker.cc
   ${BASIS_DIR}/bind/callable_hook.hpp
   ${BASIS_DIR}/bind/callable_hook.cc
-  ${BASIS_DIR}/bind/verify_nothing.hpp
+  ${BASIS_DIR}/bind/delay_time_checker.hpp
+  ${BASIS_DIR}/bind/delay_time_checker.cc
   #
   ${BASIS_DIR}/serialization/serializers.cc
   ${BASIS_DIR}/serialization/serializers.hpp
@@ -253,6 +260,12 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/statistics/moving_average.hpp
   ${BASIS_DIR}/statistics/quality_threshold.cc
   ${BASIS_DIR}/statistics/quality_threshold.hpp
+  ${BASIS_DIR}/statistics/weighted_mean.hpp
+  ${BASIS_DIR}/statistics/weighted_mean.cc
+  ${BASIS_DIR}/statistics/weighted_moving_average.hpp
+  ${BASIS_DIR}/statistics/weighted_moving_average.cc
+  ${BASIS_DIR}/statistics/weighted_moving_linear_regression.hpp
+  ${BASIS_DIR}/statistics/weighted_moving_linear_regression.cc
   #
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.cc
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.hpp

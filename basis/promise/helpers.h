@@ -400,10 +400,12 @@ class ArgMoveSemanticsHelper {
 
  private:
   static CbArg GetImpl(AbstractPromise* arg, std::true_type should_move) {
+    UNREFERENCED_PARAMETER(should_move);
     return ::base::rvalue_cast(arg->TakeValue().value().Get<ArgStorageType>()->value);
   }
 
   static CbArg GetImpl(AbstractPromise* arg, std::false_type should_move) {
+    UNREFERENCED_PARAMETER(should_move);
     return arg->value().Get<ArgStorageType>()->value;
   }
 };
@@ -493,6 +495,7 @@ struct RunHelper<RepeatingCallback<CbResult()>,
   static void Run(const Callback& executor,
                   AbstractPromise* arg,
                   AbstractPromise* result) {
+    UNREFERENCED_PARAMETER(arg);
     EmplaceHelper<ResolveStorage, RejectStorage>::Emplace(result,
                                                           executor.Run());
   }
@@ -537,10 +540,12 @@ struct TupleArgMoveSemanticsHelper {
 
  private:
   static CbArg GetImpl(Tuple& tuple, std::true_type should_move) {
+    UNREFERENCED_PARAMETER(should_move);
     return ::base::rvalue_cast(std::get<Index>(tuple));
   }
 
   static CbArg GetImpl(Tuple& tuple, std::false_type should_move) {
+    UNREFERENCED_PARAMETER(should_move);
     return std::get<Index>(tuple);
   }
 };
@@ -575,6 +580,8 @@ struct RunHelper<RepeatingCallback<CbResult(CbArgs...)>,
                           AbstractPromise* result,
                           std::false_type void_result,
                           std::index_sequence<Indices...>) {
+    UNREFERENCED_PARAMETER(result);
+    UNREFERENCED_PARAMETER(void_result);
     EmplaceHelper<ResolveStorage, RejectStorage>::Emplace(executor.Run(
         TupleArgMoveSemanticsHelper<Callback, std::tuple<CbArgs...>,
                                     Indices>::Get(tuple)...));
@@ -586,6 +593,7 @@ struct RunHelper<RepeatingCallback<CbResult(CbArgs...)>,
                           AbstractPromise* result,
                           std::true_type void_result,
                           std::index_sequence<Indices...>) {
+    UNREFERENCED_PARAMETER(void_result);
     executor.Run(TupleArgMoveSemanticsHelper<Callback, std::tuple<CbArgs...>,
                                              Indices>::Get(tuple)...);
     result->EmplaceResolvedVoid();
@@ -603,10 +611,10 @@ class PromiseCallbackHelper {
 
   static Callback GetResolveCallback(scoped_refptr<AbstractPromise>& promise) {
     return ::base::BindOnce(
-        [](scoped_refptr<AbstractPromise> promise, Args... args) {
-          promise->emplace(in_place_type_t<Resolved<T>>(),
+        [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
+          in_promise->emplace(in_place_type_t<Resolved<T>>(),
                            std::forward<Args>(args)...);
-          promise->OnResolved();
+          in_promise->OnResolved();
         },
         promise);
   }
@@ -614,20 +622,20 @@ class PromiseCallbackHelper {
   static RepeatingCallback GetRepeatingResolveCallback(
       scoped_refptr<AbstractPromise>& promise) {
     return ::base::BindRepeating(
-        [](scoped_refptr<AbstractPromise> promise, Args... args) {
-          promise->emplace(in_place_type_t<Resolved<T>>(),
+        [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
+          in_promise->emplace(in_place_type_t<Resolved<T>>(),
                            std::forward<Args>(args)...);
-          promise->OnResolved();
+          in_promise->OnResolved();
         },
         promise);
   }
 
   static Callback GetRejectCallback(scoped_refptr<AbstractPromise>& promise) {
     return ::base::BindOnce(
-        [](scoped_refptr<AbstractPromise> promise, Args... args) {
-          promise->emplace(in_place_type_t<Rejected<T>>(),
+        [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
+          in_promise->emplace(in_place_type_t<Rejected<T>>(),
                            std::forward<Args>(args)...);
-          promise->OnRejected();
+          in_promise->OnRejected();
         },
         promise);
   }
@@ -635,10 +643,10 @@ class PromiseCallbackHelper {
   static RepeatingCallback GetRepeatingRejectCallback(
       scoped_refptr<AbstractPromise>& promise) {
     return ::base::BindRepeating(
-        [](scoped_refptr<AbstractPromise> promise, Args... args) {
-          promise->emplace(in_place_type_t<Rejected<T>>(),
+        [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
+          in_promise->emplace(in_place_type_t<Rejected<T>>(),
                            std::forward<Args>(args)...);
-          promise->OnRejected();
+          in_promise->OnRejected();
         },
         promise);
   }

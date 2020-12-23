@@ -67,14 +67,6 @@ auto bindFrontOnceCallback(
   using CallbackT
     = ::base::OnceCallback<RetType(ArgsType...)>;
 
-  // Extract properties from |task| callback.
-  using CallbackTraits
-    = ::base::internal::CallbackTraits<std::decay_t<CallbackT>>;
-  using ReturnType
-    = typename CallbackTraits::ReturnType;
-  using ArgType
-    = typename CallbackTraits::ArgType;
-
   // Because `std::bind` arg(s) are passed by value as Lvalues
   // we need to use `bind_front_handler`.
   // There is no problem with `bind_front_handler`

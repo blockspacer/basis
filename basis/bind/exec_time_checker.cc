@@ -63,4 +63,14 @@ void perSequenceClearTimeBeforeCallbackExecution()
   );
 }
 
+ExecTimeChecker bindExecTimeChecker(
+  const ::base::Location& location
+  , const ::base::TimeDelta& val)
+{
+  return ExecTimeChecker{
+    location
+    , val
+  };
+}
+
 } // namespace base

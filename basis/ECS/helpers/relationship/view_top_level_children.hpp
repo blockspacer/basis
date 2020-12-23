@@ -101,9 +101,6 @@ auto viewTopLevelChildren(
   ECS::Registry& registry
   , ECS::Entity parentEntityId)
 {
-  using ChildrenComponent = ChildSiblings<TagType>;
-  using ParentComponent = ParentEntity<TagType>;
-  using FirstChildComponent = FirstChildInLinkedList<TagType>;
   /// \note we assume that size of all children can be stored in `size_t`
   using ChildrenSizeComponent = TopLevelChildrenCount<TagType, size_t>;
 

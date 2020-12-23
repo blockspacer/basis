@@ -7,7 +7,6 @@
 #include <ostream>
 #include <utility>
 #include <functional>
-#include <utility>
 #include <string>
 
 // default tag for strong type
@@ -29,9 +28,9 @@
   STRONG_BOOL_TAG_CUSTOM(using_name,STRONG_BOOL_TAG_NAME)
 
 #define STRONGLY_TYPED_BOOL(NAME) \
-  using NAME = util::StrongBool<class STRONG_BOOL_TAG(NAME)>
+  using NAME = basis::StrongBool<class STRONG_BOOL_TAG(NAME)>
 
-namespace util {
+namespace basis {
 
 // Type-safe boolean
 //
@@ -51,17 +50,6 @@ namespace util {
 // STRONGLY_TYPED_BOOL(foo);
 //
 // STRONGLY_TYPED_BOOL(bar);
-//
-// foo v1 = foo::kTrue; // OK
-// CHECK(v1 == true);
-// CHECK(v1 == foo::kTrue);
-// CHECK(v1 != foo::kFalse);
-// // v1 = true; // ERROR, no viable overloaded '='
-// // bar v2 = foo::kTrue; // ERROR, no implicit cast
-// foo v4 = v1 || foo::kFalse; // OK
-// bar v5 = bar::kTrue && bar(false); // OK
-// CHECK(!v5);
-// // bool v6 = v5; // ERROR, no implicit cast
 //
 template<
   typename Tag
@@ -252,16 +240,16 @@ const std::initializer_list<StrongBool<Tag>>
     StrongBool<Tag>::kTrue
   };
 
-}  // namespace util
+}  // namespace basis
 
 namespace std {
 
 // Allow StrongBool to be used as a key to hashable containers.
 template<typename Tag>
-struct hash<util::StrongBool<Tag> >
+struct hash<basis::StrongBool<Tag> >
 {
   size_t operator()(
-      const util::StrongBool<Tag> &idx) const
+      const basis::StrongBool<Tag> &idx) const
   {
     return hash<bool>()(idx.value());
   }

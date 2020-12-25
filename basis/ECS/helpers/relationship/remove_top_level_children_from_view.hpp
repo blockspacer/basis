@@ -32,7 +32,7 @@ CREATE_ECS_TAG(Internal_ChildrenToRemove);
 //
 // USAGE
 //
-// removeAllChildrenFromView<
+// removeTopLevelChildrenFromView<
 //   TagType
 // >(
 //   REFERENCED(registry)
@@ -51,7 +51,7 @@ template <
   , typename... Include
   , typename... Exclude
 >
-void removeAllChildrenFromView(
+void removeTopLevelChildrenFromView(
   ECS::Registry& registry
   , ECS::include_t<Include...> = {}
   , ECS::exclude_t<Exclude...> = {})

@@ -141,12 +141,12 @@ bool runOrPostTaskOn(const ::base::Location& location
 {
   if (AppRunners::CurrentlyOn(id))
   {
-    ::base::rvalue_cast(task).Run();
+    RVALUE_CAST(task).Run();
     return true;
   }
 
   return AppRunners::getTaskRunner(id)
-    ->PostTask(location, ::base::rvalue_cast(task));
+    ->PostTask(location, RVALUE_CAST(task));
 }
 
 }  // namespace application

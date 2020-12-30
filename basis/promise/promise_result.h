@@ -8,6 +8,8 @@
 
 #include "basis/promise/promise_value.h"
 
+#include <base/rvalue_cast.h>
+
 namespace base {
 
 // An optional return type from a promise callback, which allows the callback to
@@ -49,7 +51,7 @@ class PromiseResult {
   template <typename T>
   PromiseResult(T&& t)
       : PromiseResult(typename Analyze<std::decay_t<T>>::TagType(),
-                      std::forward<T>(t)) {}
+                      FORWARD(t)) {}
 
   PromiseResult(PromiseResult&& other) noexcept = default;
 
@@ -123,18 +125,18 @@ class PromiseResult {
   template <typename... Args>
   PromiseResult(IsResolved, Args&&... args)
       : value_(in_place_type_t<Resolved<ResolveType>>(),
-               std::forward<Args>(args)...) {}
+               FORWARD(args)...) {}
 
   template <typename... Args>
   PromiseResult(IsRejected, Args&&... args)
       : value_(in_place_type_t<Rejected<RejectType>>(),
-               std::forward<Args>(args)...) {}
+               FORWARD(args)...) {}
 
   PromiseResult(IsPromise, const Promise<ResolveType, RejectType>& promise)
       : value_(promise.abstract_promise_) {}
 
   template <typename T>
-  PromiseResult(IsWrapped, T&& t) : value_(std::forward<T>(t)) {}
+  PromiseResult(IsWrapped, T&& t) : value_(FORWARD(t)) {}
 
   internal::PromiseValue value_;
 };

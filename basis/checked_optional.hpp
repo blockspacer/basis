@@ -147,7 +147,7 @@ public:
     , Args&&... args)
     : verifier_callback_(verifierCb)
     , CheckedOptionalPermissions(permissions)
-    , value_(std::forward<Args>(args)...)
+    , value_(FORWARD(args)...)
   {
     DETACH_FROM_SEQUENCE(sequence_checker_);
 
@@ -275,7 +275,7 @@ public:
   {
     UNREFERENCED_PARAMETER(from_here);
     UNREFERENCED_PARAMETER(reason_why_using_unsafe);
-    ::base::rvalue_cast(check_unsafe_allowed).Run();
+    RVALUE_CAST(check_unsafe_allowed).Run();
     return value_;
   }
 
@@ -288,7 +288,7 @@ public:
   {
     UNREFERENCED_PARAMETER(from_here);
     UNREFERENCED_PARAMETER(reason_why_using_unsafe);
-    ::base::rvalue_cast(check_unsafe_allowed).Run();
+    RVALUE_CAST(check_unsafe_allowed).Run();
     return value_;
   }
 
@@ -355,7 +355,7 @@ public:
   {
     UNREFERENCED_PARAMETER(from_here);
     UNREFERENCED_PARAMETER(reason_why_using_unsafe);
-    ::base::rvalue_cast(check_unsafe_allowed).Run();
+    RVALUE_CAST(check_unsafe_allowed).Run();
 
     return value_.value();
   }
@@ -370,7 +370,7 @@ public:
   {
     UNREFERENCED_PARAMETER(from_here);
     UNREFERENCED_PARAMETER(reason_why_using_unsafe);
-    ::base::rvalue_cast(check_unsafe_allowed).Run();
+    RVALUE_CAST(check_unsafe_allowed).Run();
     return value_.value();
   }
 
@@ -514,7 +514,7 @@ public:
         << from_here.ToString();
     }
 
-    return value_.emplace(std::forward<Args>(args)...);
+    return value_.emplace(FORWARD(args)...);
   }
 
   // Similar to |emplace|, but without thread-safety checks
@@ -534,9 +534,9 @@ public:
 
     UNREFERENCED_PARAMETER(from_here);
     UNREFERENCED_PARAMETER(reason_why_using_unsafe);
-    ::base::rvalue_cast(check_unsafe_allowed).Run();
+    RVALUE_CAST(check_unsafe_allowed).Run();
 
-    return value_.emplace(std::forward<Args>(args)...);
+    return value_.emplace(FORWARD(args)...);
   }
 
   void reset(const ::base::Location& from_here)
@@ -573,7 +573,7 @@ public:
 
     UNREFERENCED_PARAMETER(from_here);
     UNREFERENCED_PARAMETER(reason_why_using_unsafe);
-    ::base::rvalue_cast(check_unsafe_allowed).Run();
+    RVALUE_CAST(check_unsafe_allowed).Run();
 
     value_.reset();
   }

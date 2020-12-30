@@ -140,7 +140,7 @@ class EnumSet {
       // index equal to kValueCount, which is equivalent to EnumSet.end().
       i_ = FindNext(i_ + 1);
 
-      return ::base::rvalue_cast(old);
+      return RVALUE_CAST(old);
     }
 
    private:

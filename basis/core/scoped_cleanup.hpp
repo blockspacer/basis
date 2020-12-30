@@ -65,8 +65,8 @@ class ScopedCleanup final {
   ScopedCleanup(
     ScopedCleanup&& other)
   {
-    active_ = ::base::rvalue_cast(other.active_);
-    cleanup_ = ::base::rvalue_cast(other.cleanup_);
+    active_ = RVALUE_CAST(other.active_);
+    cleanup_ = RVALUE_CAST(other.cleanup_);
     DCHECK(cleanup_);
 
     /// \note can not run moved out |cleanup_|
@@ -76,8 +76,8 @@ class ScopedCleanup final {
   ScopedCleanup& operator=(
     ScopedCleanup&& other)
   {
-    active_ = ::base::rvalue_cast(other.active_);
-    cleanup_ = ::base::rvalue_cast(other.cleanup_);
+    active_ = RVALUE_CAST(other.active_);
+    cleanup_ = RVALUE_CAST(other.cleanup_);
     DCHECK(cleanup_);
 
     /// \note can not run moved out |cleanup_|

@@ -41,7 +41,7 @@ PrioritizedOnceTaskHeap::Job::Job(
   TaskPriority priority,
   TaskId current_task_count)
   : from_here(from_here),
-    task(base::rvalue_cast(task)),
+    task(RVALUE_CAST(task)),
     priority(priority),
     task_id(current_task_count)
 {
@@ -58,7 +58,7 @@ PrioritizedOnceTaskHeap::Job&
 PrioritizedOnceTaskHeap::PrioritizedOnceTaskHeap(bool with_thread_locking
   , std::vector<Job> task_job_heap)
   : use_thread_locking_(with_thread_locking)
-  , task_job_heap_(base::rvalue_cast(task_job_heap))
+  , task_job_heap_(RVALUE_CAST(task_job_heap))
 {
   SEQUENCE_CHECKER(sequence_checker_);
 }
@@ -76,13 +76,13 @@ void PrioritizedOnceTaskHeap::ScheduleTask(
 
   Job job(
     from_here
-    , base::rvalue_cast(task)
+    , RVALUE_CAST(task)
     , priority
     , max_task_count_++);
 
   {
     AcquireLockIfNeeded();
-    task_job_heap_.push_back(base::rvalue_cast(job));
+    task_job_heap_.push_back(RVALUE_CAST(job));
     // Add element at the end of the heap.
     // If that is not its right position,
     // than it bubble up its way through the heap.
@@ -140,7 +140,7 @@ std::vector<PrioritizedOnceTaskHeap::Job>
           DCHECK(index < task_job_heap_.size());
           /// \note moves elements out from original heap,
           /// take care of data validity and test under ASAN.
-          return base::rvalue_cast(task_job_heap_[index]);
+          return RVALUE_CAST(task_job_heap_[index]);
         });
     ReleaseLockIfNeeded();
   }
@@ -184,13 +184,13 @@ void PrioritizedOnceTaskHeap::ScheduleTask(
 
   Job job(
     from_here
-    , base::rvalue_cast(task)
+    , RVALUE_CAST(task)
     , priority
     , max_task_count_++);
 
   {
     AcquireLockIfNeeded();
-    task_job_heap_.push_back(base::rvalue_cast(job));
+    task_job_heap_.push_back(RVALUE_CAST(job));
     // Add element at the end of the heap.
     // If that is not its right position,
     // than it bubble up its way through the heap.
@@ -237,7 +237,7 @@ void runOnceTask(PrioritizedOnceTaskHeap::OnceTask&& task
     << "Unexpected once task. Location: "
     << from_here.ToString();
 
-  base::rvalue_cast(task).Run();
+  RVALUE_CAST(task).Run();
 }
 
 } // namespace
@@ -279,7 +279,7 @@ void PrioritizedOnceTaskHeap::RunAndPopLargestTask()
         // we can move once task to avoid locking durung `task.run()`
         closureWithoutLock = base::BindOnce(
           &runOnceTask
-          , base::rvalue_cast(std::get<OnceTask>(job.task))
+          , RVALUE_CAST(std::get<OnceTask>(job.task))
           , job.from_here
         );
       }
@@ -301,7 +301,7 @@ void PrioritizedOnceTaskHeap::RunAndPopLargestTask()
   // Task may be heavy, so make sure it requires no locks.
   // Thats why we copy or move data from `task_job_heap_` .
   if(closureWithoutLock) {
-    base::rvalue_cast(closureWithoutLock).Run();
+    RVALUE_CAST(closureWithoutLock).Run();
   }
 }
 

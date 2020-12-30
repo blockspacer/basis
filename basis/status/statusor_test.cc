@@ -94,7 +94,7 @@ TEST(StatusOr, TestMoveOnlyVector) {
   std::vector<StatusOr<std::unique_ptr<int>>> vec;
   vec.push_back(ReturnUniquePtr());
   vec.push_back(StatusOr<std::unique_ptr<int>>{FROM_HERE});
-  auto another_vec = ::base::rvalue_cast(vec);
+  auto another_vec = RVALUE_CAST(vec);
   EXPECT_TRUE(another_vec[0].ok());
   EXPECT_EQ(0, *another_vec[0].ValueOrDie());
   EXPECT_EQ(::basis::UnknownStatus(FROM_HERE), another_vec[1].status());

@@ -76,9 +76,9 @@ class UnsafeTypeContext
     UnsafeTypeContext&& other)
     : UnsafeTypeContext()
     {
-      vars_ = ::base::rvalue_cast(other.vars_);
+      vars_ = RVALUE_CAST(other.vars_);
 
-      typeCounter_ = ::base::rvalue_cast(other.typeCounter_);
+      typeCounter_ = RVALUE_CAST(other.typeCounter_);
     }
 
   // Move assignment operator
@@ -91,9 +91,9 @@ class UnsafeTypeContext
   {
     if (this != &rhs)
     {
-      vars_ = ::base::rvalue_cast(rhs.vars_);
+      vars_ = RVALUE_CAST(rhs.vars_);
 
-      typeCounter_ = ::base::rvalue_cast(rhs.typeCounter_);
+      typeCounter_ = RVALUE_CAST(rhs.typeCounter_);
     }
 
     return *this;
@@ -129,7 +129,7 @@ class UnsafeTypeContext
       variable_data
       {
         typeIndex<Type>()
-        , { new Type{std::forward<Args>(args)...}
+        , { new Type{FORWARD(args)...}
             // custom deleter for `unique_ptr`
             , [](void *instance)
               {
@@ -242,7 +242,7 @@ class UnsafeTypeContext
     auto *value = try_ctx_var<Type>();
     return value
       ? *value
-      : set_var<Type>(std::forward<Args>(args)...);
+      : set_var<Type>(FORWARD(args)...);
   }
 
   /// \note works only if `Type` is `base::Optional<...>`
@@ -276,14 +276,14 @@ class UnsafeTypeContext
       = &ctx_or_set_var<Type>(
           debug_name
           , ::base::in_place
-          , std::forward<Args>(args)...);
+          , FORWARD(args)...);
 
     // If the value already exists it is overwritten
     if(useCache) {
       /// \note we do not call `set_var` for optimization purposes
       /// ( because `set_var` uses `remove_if` and `vars_.push_back`)
       /// i.e. use `base::Optional<...>` that uses placement new
-      channelCtx->emplace(std::forward<Args>(args)...);
+      channelCtx->emplace(FORWARD(args)...);
     }
 
     return *channelCtx;

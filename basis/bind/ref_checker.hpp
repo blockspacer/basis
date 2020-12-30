@@ -68,15 +68,15 @@ class RefChecker
   }
 
   RefChecker(RefChecker<RefType>&& other)
-    : ptr_{base::rvalue_cast(other.ptr_)}
-    , location_{base::rvalue_cast(other.location_)}
+    : ptr_{RVALUE_CAST(other.ptr_)}
+    , location_{RVALUE_CAST(other.location_)}
   {}
 
   RefChecker& operator=(
     RefChecker<RefType>&& other)
   {
-    ptr_ = ::base::rvalue_cast(other.ptr_);
-    location_ = ::base::rvalue_cast(other.location_);
+    ptr_ = RVALUE_CAST(other.ptr_);
+    location_ = RVALUE_CAST(other.location_);
     return *this;
   }
 

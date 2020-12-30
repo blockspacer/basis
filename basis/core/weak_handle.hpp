@@ -11,6 +11,7 @@
 #include <base/memory/ref_counted.h>
 #include <base/memory/weak_ptr.h>
 #include <base/sequenced_task_runner.h>
+#include <base/rvalue_cast.h>
 
 // Weak handles provides a way to refer to weak pointers from another sequence.
 // This is useful because it is not safe to reference a weak pointer from a
@@ -105,7 +106,7 @@ class WeakHandleCore : public WeakHandleCoreBase,
             Method method,
             Args&&... args) const {
     PostToOwnerThread(from_here,
-                      ::base::Bind(method, ptr_, std::forward<Args>(args)...));
+                      ::base::Bind(method, ptr_, FORWARD(args)...));
   }
 
  private:
@@ -167,7 +168,7 @@ class WeakHandle {
             Method method,
             Args&&... args) const {
     DCHECK(IsInitialized());
-    core_->Call(from_here, method, std::forward<Args>(args)...);
+    core_->Call(from_here, method, FORWARD(args)...);
   }
 
  private:

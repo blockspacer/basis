@@ -20,6 +20,7 @@
 #include <base/memory/weak_ptr.h>
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
+#include <base/rvalue_cast.h>
 
 #include <vector>
 #include <string>
@@ -138,7 +139,7 @@ class SequenceLocalContext
     DCHECK(!context_.try_ctx_var<Type>());
     return context_.set_var<Type>(
       debug_name
-      , std::forward<Args>(args)...);
+      , FORWARD(args)...);
   }
 
   template<typename Type>

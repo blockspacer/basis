@@ -43,7 +43,7 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
           &basis::setPeriodicTimeoutCheckerOnSequence
           , from_here
           , timeoutTaskRunner_
-          , ::base::Passed(base::rvalue_cast(debugEndingTimeout))
+          , ::base::Passed(RVALUE_CAST(debugEndingTimeout))
           // refresh period for (debug-only) execution time limiter
           , COPIED() checkPeriod
           , errorText))
@@ -66,7 +66,7 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
     , ::base::BindOnce(
         &PeriodicValidateUntil::promiseValidationDone
         , ::base::Unretained(this)
-        , ::base::Passed(base::rvalue_cast(validationTask))
+        , ::base::Passed(RVALUE_CAST(validationTask))
           // refresh period for periodic validation
         , COPIED() checkPeriod
       )

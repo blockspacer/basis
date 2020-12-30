@@ -31,7 +31,7 @@ RepeatingClosure& GetPromiseApiErrorCallback() {
 void AbstractPromise::SetApiErrorObserverForTesting(
     RepeatingClosure on_api_error_callback) {
   CheckedAutoLock lock(GetCheckedLock());
-  GetPromiseApiErrorCallback() = ::base::rvalue_cast(on_api_error_callback);
+  GetPromiseApiErrorCallback() = RVALUE_CAST(on_api_error_callback);
 }
 
 // Like DCHECK except observable via
@@ -128,7 +128,7 @@ bool AbstractPromise::InsertDependentOnAnyThread(DependentList::Node* node) {
         node->SetPrerequisite(curried_promise);
         return curried_promise->InsertDependentOnAnyThread(node);
       } else {
-        dependent_to_release = ::base::rvalue_cast(dependent);
+        dependent_to_release = RVALUE_CAST(dependent);
         node->RetainSettledPrerequisite();
         dependent_to_release->OnPrerequisiteResolved(this);
       }
@@ -142,7 +142,7 @@ bool AbstractPromise::InsertDependentOnAnyThread(DependentList::Node* node) {
         node->SetPrerequisite(curried_promise);
         return curried_promise->InsertDependentOnAnyThread(node);
       } else {
-        dependent_to_release = ::base::rvalue_cast(dependent);
+        dependent_to_release = RVALUE_CAST(dependent);
         node->RetainSettledPrerequisite();
         dependent_to_release->OnPrerequisiteRejected(this);
       }
@@ -150,7 +150,7 @@ bool AbstractPromise::InsertDependentOnAnyThread(DependentList::Node* node) {
     }
 
     case DependentList::InsertResult::FAIL_PROMISE_CANCELED:
-      dependent_to_release = ::base::rvalue_cast(dependent);
+      dependent_to_release = RVALUE_CAST(dependent);
       return dependent_to_release->OnPrerequisiteCancelled(this);
   }
 
@@ -519,7 +519,7 @@ void AbstractPromise::DispatchPromise() {
     const bool postTaskOk = task_runner_->PostDelayedTask(
       from_here_
       , BindOnce([](WrappedPromise promise) { promise.Execute(); },
-               ::base::rvalue_cast(WrappedPromise(this))),
+               RVALUE_CAST(WrappedPromise(this))),
       /*delay*/ TimeDelta());
     /// \todo return false if Post(Delayed)Task failed
     DCHECK(postTaskOk);
@@ -640,7 +640,7 @@ AbstractPromise::AdjacencyList::AdjacencyList(AbstractPromise* prerequisite)
 
 AbstractPromise::AdjacencyList::AdjacencyList(
     std::vector<DependentList::Node> nodes)
-    : prerequisite_list_(::base::rvalue_cast(nodes)),
+    : prerequisite_list_(RVALUE_CAST(nodes)),
       action_prerequisite_count_(prerequisite_list_.size()) {}
 
 AbstractPromise::AdjacencyList::~AdjacencyList() = default;
@@ -696,7 +696,7 @@ BasePromise::BasePromise() = default;
 
 BasePromise::BasePromise(
     scoped_refptr<internal::AbstractPromise> abstract_promise)
-    : abstract_promise_(::base::rvalue_cast(abstract_promise)) {}
+    : abstract_promise_(RVALUE_CAST(abstract_promise)) {}
 
 BasePromise::BasePromise(const BasePromise& other) = default;
 BasePromise::BasePromise(BasePromise&& other) noexcept = default;
@@ -711,7 +711,7 @@ BasePromise::~BasePromise() = default;
 WrappedPromise::WrappedPromise() = default;
 
 WrappedPromise::WrappedPromise(scoped_refptr<internal::AbstractPromise> promise)
-    : promise_(::base::rvalue_cast(promise)) {}
+    : promise_(RVALUE_CAST(promise)) {}
 
 WrappedPromise::WrappedPromise(internal::PassedPromise&& passed_promise)
     : promise_(passed_promise.Release(), subtle::kAdoptRefTag) {
@@ -725,7 +725,7 @@ WrappedPromise::WrappedPromise(const Location& from_here, OnceClosure task)
           internal::DependentList::ConstructUnresolved(),
           internal::PromiseExecutor::Data(
               ::base::in_place_type_t<internal::PostTaskExecutor<void>>(),
-              ::base::rvalue_cast(task)))) {}
+              RVALUE_CAST(task)))) {}
 
 WrappedPromise::WrappedPromise(const WrappedPromise& other) = default;
 WrappedPromise::WrappedPromise(WrappedPromise&& other) noexcept = default;

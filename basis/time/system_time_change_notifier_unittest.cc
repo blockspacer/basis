@@ -32,7 +32,7 @@ class SequencedTaskRunnerNoDelay : public ::base::SequencedTaskRunner {
   bool PostDelayedTask(const ::base::Location& from_here,
                        ::base::OnceClosure task,
                        ::base::TimeDelta delay) override {
-    ::base::ThreadTaskRunnerHandle::Get()->PostTask(from_here, ::base::rvalue_cast(task));
+    ::base::ThreadTaskRunnerHandle::Get()->PostTask(from_here, RVALUE_CAST(task));
     return true;
   }
 

@@ -34,7 +34,7 @@ struct ptr_element_equal_to
   Equal _eq;
 
   ptr_element_equal_to(Equal eq = Equal())
-    : _eq(::base::rvalue_cast(eq))
+    : _eq(RVALUE_CAST(eq))
   {}
 
   bool operator()(const Pointer& i1, const Pointer& i2) const
@@ -58,7 +58,7 @@ struct ptr_element_less
     Less _cmp;
 
     ptr_element_less(Less cmp = Less())
-      : _cmp(::base::rvalue_cast(cmp))
+      : _cmp(RVALUE_CAST(cmp))
     {}
 
     bool operator()(const Pointer& i1, const Pointer& i2) const
@@ -79,7 +79,7 @@ struct ptr_element_hash {
   Hash _h;
 
   ptr_element_hash(Hash h = Hash())
-    : _h(::base::rvalue_cast(h))
+    : _h(RVALUE_CAST(h))
   {}
 
   size_t operator()(const Pointer& p) const

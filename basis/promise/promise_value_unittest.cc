@@ -181,7 +181,7 @@ TEST(PromiseValueTest, ConversionConstruction) {
 
   {
     MoveOnlyInt i{123};
-    PromiseValue o(Rejected<MoveOnlyInt>(::base::rvalue_cast(i)));
+    PromiseValue o(Rejected<MoveOnlyInt>(RVALUE_CAST(i)));
     EXPECT_EQ(123, o.Get<Rejected<MoveOnlyInt>>()->value.data());
   }
 }
@@ -203,7 +203,7 @@ TEST(PromiseValueTest, ConversionAssignment) {
   {
     MoveOnlyInt i{123};
     PromiseValue o;
-    o = Rejected<MoveOnlyInt>(::base::rvalue_cast(i));
+    o = Rejected<MoveOnlyInt>(RVALUE_CAST(i));
     EXPECT_EQ(123, o.Get<Rejected<MoveOnlyInt>>()->value.data());
   }
 }

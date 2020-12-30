@@ -31,9 +31,9 @@ namespace basis {
       ::base::OnceClosure&& boundTask
     ) mutable {
       DCHECK(boundTask);
-      ::base::rvalue_cast(boundTask).Run();
+      RVALUE_CAST(boundTask).Run();
     }
-    , ::base::rvalue_cast(task)
+    , RVALUE_CAST(task)
   );
 }
 
@@ -60,7 +60,7 @@ void PostTaskAndWait(const ::base::Location& from_here
   ::base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL
     , ::base::WaitableEvent::InitialState::NOT_SIGNALED);
   {
-    bool ok = task_runner->PostTask(from_here, ::base::rvalue_cast(task));
+    bool ok = task_runner->PostTask(from_here, RVALUE_CAST(task));
     DCHECK(ok);
   }
   {
@@ -97,17 +97,17 @@ base::OnceClosure bindToTaskRunner(
     ){
       if(task_runner->RunsTasksInCurrentSequence())
       {
-        ::base::rvalue_cast(task).Run();
+        RVALUE_CAST(task).Run();
         return;
       }
 
       task_runner->PostDelayedTask(from_here,
-        ::base::rvalue_cast(task),
+        RVALUE_CAST(task),
         delay
       );
     }
     , from_here
-    , ::base::Passed(::base::rvalue_cast(task))
+    , ::base::Passed(RVALUE_CAST(task))
     , task_runner
     , delay
   );

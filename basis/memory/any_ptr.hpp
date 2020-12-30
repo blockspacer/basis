@@ -53,7 +53,7 @@ struct AnyPtr {
 
   /// \note Moves original `unique_ptr`, so becomes owner of `unique_ptr`.
   /// If you do not want to own `unique_ptr`, than use `unique_ptr::get()`.
-  AnyPtr(unique_ptr&& up) noexcept : ptr_(up.get()), variant_(base::rvalue_cast(up))
+  AnyPtr(unique_ptr&& up) noexcept : ptr_(up.get()), variant_(RVALUE_CAST(up))
   {
     DETACH_FROM_SEQUENCE(sequence_checker_);
     checkForLifetimeIssues();
@@ -63,12 +63,12 @@ struct AnyPtr {
 #if defined(__cplusplus) && __cplusplus >= 201709L
   requires std::derived_from<T, U>
 #endif
-  AnyPtr(unique_ptr<U>&& up) noexcept : AnyPtr(static_cast<unique_ptr>(base::rvalue_cast(up)))
+  AnyPtr(unique_ptr<U>&& up) noexcept : AnyPtr(static_cast<unique_ptr>(RVALUE_CAST(up)))
   {}
 
   /// \note Moves copy of original `shared_ptr`, so increases ref. count.
   /// If you do not want to increase ref. count of `shared_ptr`, than use `shared_ptr::get()`.
-  AnyPtr(shared_ptr sp) noexcept : ptr_(sp.get()), variant_(base::rvalue_cast(sp))
+  AnyPtr(shared_ptr sp) noexcept : ptr_(sp.get()), variant_(RVALUE_CAST(sp))
   {
     DETACH_FROM_SEQUENCE(sequence_checker_);
     checkForLifetimeIssues();
@@ -78,12 +78,12 @@ struct AnyPtr {
 #if defined(__cplusplus) && __cplusplus >= 201709L
   requires std::derived_from<T, U>
 #endif
-  AnyPtr(shared_ptr<U> sp) noexcept : AnyPtr(static_cast<shared_ptr>(base::rvalue_cast(sp)))
+  AnyPtr(shared_ptr<U> sp) noexcept : AnyPtr(static_cast<shared_ptr>(RVALUE_CAST(sp)))
   {}
 
   /// \note Moves copy of original `shared_refptr`, so increases ref. count.
   /// If you do not want to increase ref. count of `shared_refptr`, than use `shared_refptr::get()`.
-  AnyPtr(shared_refptr sp) noexcept : ptr_(sp.get()), variant_(base::rvalue_cast(sp))
+  AnyPtr(shared_refptr sp) noexcept : ptr_(sp.get()), variant_(RVALUE_CAST(sp))
   {
     DETACH_FROM_SEQUENCE(sequence_checker_);
     checkForLifetimeIssues();
@@ -93,7 +93,7 @@ struct AnyPtr {
 #if defined(__cplusplus) && __cplusplus >= 201709L
   requires std::derived_from<T, U>
 #endif
-  AnyPtr(shared_refptr<U> sp) noexcept : AnyPtr(static_cast<shared_refptr>(base::rvalue_cast(sp)))
+  AnyPtr(shared_refptr<U> sp) noexcept : AnyPtr(static_cast<shared_refptr>(RVALUE_CAST(sp)))
   {}
 
   AnyPtr(AnyPtr&&) = default;

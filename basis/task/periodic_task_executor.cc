@@ -36,7 +36,7 @@ namespace basis {
 
 PeriodicTaskExecutor::PeriodicTaskExecutor(
   ::base::RepeatingClosure&& periodic_task)
-  : periodic_task_(::base::rvalue_cast(periodic_task))
+  : periodic_task_(RVALUE_CAST(periodic_task))
   , ALLOW_THIS_IN_INITIALIZER_LIST(weak_ptr_factory_(this))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_this_(weak_ptr_factory_.GetWeakPtr()))
@@ -157,7 +157,7 @@ void setPeriodicTaskExecutorOnSequence(
   ignore_result(sequenceLocalContext->set_once<PeriodicTaskExecutor>(
         from_here
         , "Timeout.PeriodicTaskExecutor." + from_here.ToString()
-        , ::base::rvalue_cast(updateCallback)
+        , RVALUE_CAST(updateCallback)
       ));
 }
 

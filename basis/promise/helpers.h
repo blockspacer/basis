@@ -332,7 +332,7 @@ struct EmplaceInnerHelper {
   template <typename Resolve, typename Reject>
   static void Emplace(AbstractPromise* promise,
                       PromiseResult<Resolve, Reject>&& result) {
-    promise->emplace(::base::rvalue_cast(result.value()));
+    promise->emplace(RVALUE_CAST(result.value()));
   }
 };
 
@@ -350,7 +350,7 @@ struct EmplaceHelper {
     static_assert(std::is_same<typename RejectStorage::Type, Reject>::value ||
                       std::is_same<NoReject, Reject>::value,
                   "Reject should match RejectStorage");
-    EmplaceInnerHelper<RejectStorage>::Emplace(promise, ::base::rvalue_cast(result));
+    EmplaceInnerHelper<RejectStorage>::Emplace(promise, RVALUE_CAST(result));
   }
 
   template <typename Resolve, typename Reject>
@@ -362,7 +362,7 @@ struct EmplaceHelper {
     static_assert(std::is_same<typename RejectStorage::Type, Reject>::value ||
                       std::is_same<NoReject, Reject>::value,
                   "Reject should match RejectStorage");
-    promise->emplace(::base::rvalue_cast(result.abstract_promise_));
+    promise->emplace(RVALUE_CAST(result.abstract_promise_));
   }
 
   template <typename Result>
@@ -370,25 +370,25 @@ struct EmplaceHelper {
     static_assert(std::is_same<typename ResolveStorage::Type, Result>::value,
                   "Result should match ResolveStorage");
     promise->emplace(in_place_type_t<Resolved<Result>>(),
-                     std::forward<Result>(result));
+                     FORWARD(result));
   }
 
   template <typename Resolve>
   static void Emplace(AbstractPromise* promise, Resolved<Resolve>&& resolved) {
     static_assert(std::is_same<typename ResolveStorage::Type, Resolve>::value,
                   "Resolve should match ResolveStorage");
-    promise->emplace(::base::rvalue_cast(resolved));
+    promise->emplace(RVALUE_CAST(resolved));
   }
 
   template <typename Reject>
   static void Emplace(AbstractPromise* promise, Rejected<Reject>&& rejected) {
     static_assert(std::is_same<typename RejectStorage::Type, Reject>::value,
                   "Reject should match RejectStorage");
-    promise->emplace(::base::rvalue_cast(rejected));
+    promise->emplace(RVALUE_CAST(rejected));
   }
 };
 
-// Helper that decides whether or not to ::base::rvalue_cast arguments for a callback
+// Helper that decides whether or not to RVALUE_CAST arguments for a callback
 // based on the type the callback specifies (i.e. we don't need to move if the
 // callback requests a reference).
 template <typename CbArg, typename ArgStorageType>
@@ -401,7 +401,7 @@ class ArgMoveSemanticsHelper {
  private:
   static CbArg GetImpl(AbstractPromise* arg, std::true_type should_move) {
     UNREFERENCED_PARAMETER(should_move);
-    return ::base::rvalue_cast(arg->TakeValue().value().Get<ArgStorageType>()->value);
+    return RVALUE_CAST(arg->TakeValue().value().Get<ArgStorageType>()->value);
   }
 
   static CbArg GetImpl(AbstractPromise* arg, std::false_type should_move) {
@@ -541,7 +541,7 @@ struct TupleArgMoveSemanticsHelper {
  private:
   static CbArg GetImpl(Tuple& tuple, std::true_type should_move) {
     UNREFERENCED_PARAMETER(should_move);
-    return ::base::rvalue_cast(std::get<Index>(tuple));
+    return RVALUE_CAST(std::get<Index>(tuple));
   }
 
   static CbArg GetImpl(Tuple& tuple, std::false_type should_move) {
@@ -613,7 +613,7 @@ class PromiseCallbackHelper {
     return ::base::BindOnce(
         [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
           in_promise->emplace(in_place_type_t<Resolved<T>>(),
-                           std::forward<Args>(args)...);
+                           FORWARD(args)...);
           in_promise->OnResolved();
         },
         promise);
@@ -624,7 +624,7 @@ class PromiseCallbackHelper {
     return ::base::BindRepeating(
         [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
           in_promise->emplace(in_place_type_t<Resolved<T>>(),
-                           std::forward<Args>(args)...);
+                           FORWARD(args)...);
           in_promise->OnResolved();
         },
         promise);
@@ -634,7 +634,7 @@ class PromiseCallbackHelper {
     return ::base::BindOnce(
         [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
           in_promise->emplace(in_place_type_t<Rejected<T>>(),
-                           std::forward<Args>(args)...);
+                           FORWARD(args)...);
           in_promise->OnRejected();
         },
         promise);
@@ -645,7 +645,7 @@ class PromiseCallbackHelper {
     return ::base::BindRepeating(
         [](scoped_refptr<AbstractPromise> in_promise, Args... args) {
           in_promise->emplace(in_place_type_t<Rejected<T>>(),
-                           std::forward<Args>(args)...);
+                           FORWARD(args)...);
           in_promise->OnRejected();
         },
         promise);

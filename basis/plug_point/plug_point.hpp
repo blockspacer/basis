@@ -198,14 +198,14 @@ class PlugPointStorage
 
     DCHECK(callback_.value());
 
-    return callback_.value().Run(std::forward<Args>(args)...);
+    return callback_.value().Run(FORWARD(args)...);
   }
 
   template <typename... Args>
   MUST_USE_RETURN_VALUE
   RetType operator()(Args&&... args) const NO_EXCEPTION
   {
-    return Run(std::forward<Args>(args)...);
+    return Run(FORWARD(args)...);
   }
 
   MUST_USE_RETURN_VALUE
@@ -220,7 +220,7 @@ class PlugPointStorage
   std::unique_ptr<Subscription> setCallback(CallbackType&& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    callback_ = base::rvalue_cast(callback);
+    callback_ = RVALUE_CAST(callback);
     return std::make_unique<Subscription>(this);
   }
 
@@ -370,14 +370,14 @@ class StrongPlugPoint<Tag, RetType(ArgsType...)>
   MUST_USE_RETURN_VALUE
   RetType Run(Args&&... args) const NO_EXCEPTION
   {
-    return value_.Run(std::forward<Args>(args)...);
+    return value_.Run(FORWARD(args)...);
   }
 
   template <typename... Args>
   MUST_USE_RETURN_VALUE
   RetType operator()(Args&&... args) const NO_EXCEPTION
   {
-    return Run(std::forward<Args>(args)...);
+    return Run(FORWARD(args)...);
   }
 
   MUST_USE_RETURN_VALUE
@@ -395,7 +395,7 @@ class StrongPlugPoint<Tag, RetType(ArgsType...)>
   >
     setCallback(CallbackType&& callback) NO_EXCEPTION
   {
-    return value_.setCallback(base::rvalue_cast(callback));
+    return value_.setCallback(RVALUE_CAST(callback));
   }
 
   void resetCallback() NO_EXCEPTION
@@ -500,14 +500,14 @@ class PlugPointNotifierStorage
 
     for(size_t i = 0; i < callbacks_.size(); i++)
     {
-      callbacks_[i].Notify(std::forward<Args>(args)...);
+      callbacks_[i].Notify(FORWARD(args)...);
     }
   }
 
   template <typename... Args>
   void operator()(Args&&... args) NO_EXCEPTION
   {
-    Notify(std::forward<Args>(args)...);
+    Notify(FORWARD(args)...);
   }
 
   std::unique_ptr<
@@ -527,7 +527,7 @@ class PlugPointNotifierStorage
       , CallbackType&& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return callbacks_[static_cast<size_t>(priority)].Add(base::rvalue_cast(callback));
+    return callbacks_[static_cast<size_t>(priority)].Add(RVALUE_CAST(callback));
   }
 
  private:
@@ -687,13 +687,13 @@ class StrongPlugPointNotifier<Tag, RetType(ArgsType...)>
   template <typename... Args>
   void Notify(Args&&... args) NO_EXCEPTION
   {
-    value_.Notify(std::forward<Args>(args)...);
+    value_.Notify(FORWARD(args)...);
   }
 
   template <typename... Args>
   void operator()(Args&&... args) NO_EXCEPTION
   {
-    Notify(std::forward<Args>(args)...);
+    Notify(FORWARD(args)...);
   }
 
   std::unique_ptr<
@@ -711,7 +711,7 @@ class StrongPlugPointNotifier<Tag, RetType(ArgsType...)>
     addCallback(PlugPointPriority priority
       , CallbackType&& callback) NO_EXCEPTION
   {
-    return value_.addCallback(priority, base::rvalue_cast(callback));
+    return value_.addCallback(priority, RVALUE_CAST(callback));
   }
 
 private:
@@ -887,8 +887,8 @@ class CallbackListRunner<RetType(Args...)>
     auto it = this->GetIterator();
     CallbackType* cb;
     while ((cb = it.GetNext()) != nullptr) {
-      /// \note patched with std::forward
-      auto optReturn = cb->Run(std::forward<RunArgs>(args)...);
+      /// \note patched with FORWARD
+      auto optReturn = cb->Run(FORWARD(args)...);
       if(optReturn)
       {
         // returns if result of iterated callback not `base::nullopt`.
@@ -981,7 +981,7 @@ class PlugPointRunnerStorage
     for(size_t i = 0; i < callbacks_.size(); i++)
     {
       RetType result
-        = callbacks_[i].RunUntilHasValue(std::forward<Args>(args)...);
+        = callbacks_[i].RunUntilHasValue(FORWARD(args)...);
 
       if(result)
       {
@@ -997,7 +997,7 @@ class PlugPointRunnerStorage
   MUST_USE_RETURN_VALUE
   RetType operator()(Args&&... args) NO_EXCEPTION
   {
-    return RunUntilHasValue(std::forward<Args>(args)...);
+    return RunUntilHasValue(FORWARD(args)...);
   }
 
   std::unique_ptr<
@@ -1017,7 +1017,7 @@ class PlugPointRunnerStorage
       , CallbackType&& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return callbacks_[static_cast<size_t>(priority)].Add(base::rvalue_cast(callback));
+    return callbacks_[static_cast<size_t>(priority)].Add(RVALUE_CAST(callback));
   }
 
  private:
@@ -1182,14 +1182,14 @@ class StrongPlugPointRunner<Tag, RetType(ArgsType...)>
   MUST_USE_RETURN_VALUE
   RetType RunUntilHasValue(Args&&... args) NO_EXCEPTION
   {
-    return value_.RunUntilHasValue(std::forward<Args>(args)...);
+    return value_.RunUntilHasValue(FORWARD(args)...);
   }
 
   template <typename... Args>
   MUST_USE_RETURN_VALUE
   RetType operator()(Args&&... args) NO_EXCEPTION
   {
-    return RunUntilHasValue(std::forward<Args>(args)...);
+    return RunUntilHasValue(FORWARD(args)...);
   }
 
   std::unique_ptr<
@@ -1207,7 +1207,7 @@ class StrongPlugPointRunner<Tag, RetType(ArgsType...)>
     addCallback(PlugPointPriority priority
       , CallbackType&& callback) NO_EXCEPTION
   {
-    return value_.addCallback(priority, base::rvalue_cast(callback));
+    return value_.addCallback(priority, RVALUE_CAST(callback));
   }
 
 private:

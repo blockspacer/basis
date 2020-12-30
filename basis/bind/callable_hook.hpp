@@ -216,10 +216,10 @@ class CallableHookRegistrationData
     , std::string&& key
     , ::base::RepeatingCallback<Func>&& impl
     , CallableHookPriority priority = CallableHookPriority{0})
-    : funcStorage_(base::rvalue_cast(impl))
+    : funcStorage_(RVALUE_CAST(impl))
   {
     Init(location
-        , ::base::rvalue_cast(key)
+        , RVALUE_CAST(key)
         , REFERENCED(funcStorage_)
         , priority);
   }
@@ -232,7 +232,7 @@ class CallableHookRegistrationData
     : funcStorage_(COPIED(impl))
   {
     Init(location
-        , ::base::rvalue_cast(key)
+        , RVALUE_CAST(key)
         , REFERENCED(funcStorage_)
         , priority);
   }
@@ -277,7 +277,7 @@ class CallableHookInvoker
  public:
   explicit CallableHookInvoker(std::string&& key)
     : instance_(DCHECK_PTR(GlobalCallableHooksRegistry::GetInstance()))
-    , key_(::base::rvalue_cast(key))
+    , key_(RVALUE_CAST(key))
     , callSlot_(DCHECK_PTR(instance_->getOrCreateSlot<Func>(key_)))
   {}
 
@@ -285,7 +285,7 @@ class CallableHookInvoker
   decltype(auto) operator()(Args&&... args) const {
     // call function by pointer
     DCHECK(callSlot_->optFuncRef);
-    return callSlot_->optFuncRef.value()->Run(std::forward<Args>(args)...);
+    return callSlot_->optFuncRef.value()->Run(FORWARD(args)...);
   }
 
 private:

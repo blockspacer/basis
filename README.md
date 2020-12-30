@@ -1,6 +1,6 @@
 # About
 
-`basis` extends `base` library.
+`basis` extends `base` library from chromium https://github.com/chromium/chromium/tree/master/base
 
 Unlike `base`, `basis` can use third-party libs (`boost`, `beast`, `entt`, etc.)
 
@@ -268,3 +268,13 @@ Functions and behaviors not present in STL should only be added when they are re
 For STL-like constructs our policy is that they should use STL-like naming even when it may conflict with the style guide.
 
 So functions and class names should be lower case with underscores.
+
+## Disclaimer
+
+That open source project based on the Google Chromium project.
+
+This is not official Google product.
+
+Portions Copyright (c) Google Inc.
+
+See LICENSE files.

@@ -193,7 +193,7 @@ TEST(EmplaceHelper, EmplacePromise) {
   PassedPromise curried = NoOpPromiseExecutor::Create(
       FROM_HERE, false, false, RejectPolicy::kCatchNotRequired);
   EmplaceHelper<Resolved<int>, Rejected<NoReject>>::Emplace(
-      promise.get(), Promise<int>(::base::rvalue_cast(curried)));
+      promise.get(), Promise<int>(RVALUE_CAST(curried)));
 
   EXPECT_TRUE(promise->IsResolvedWithPromise());
 }
@@ -304,7 +304,7 @@ TEST(PromiseCallbackHelper, GetResolveCallback) {
 
   OnceCallback<void(int)> resolve_cb = helper.GetResolveCallback(promise);
 
-  ::base::rvalue_cast(resolve_cb).Run(1234);
+  RVALUE_CAST(resolve_cb).Run(1234);
 
   EXPECT_EQ(promise->value().template Get<Resolved<int>>()->value, 1234);
 }
@@ -317,7 +317,7 @@ TEST(PromiseCallbackHelper, GetResolveReferenceCallback) {
 
   OnceCallback<void(int&)> resolve_cb = helper.GetResolveCallback(promise);
 
-  ::base::rvalue_cast(resolve_cb).Run(foo);
+  RVALUE_CAST(resolve_cb).Run(foo);
 
   EXPECT_EQ(&promise->value().template Get<Resolved<int&>>()->value, &foo);
 }
@@ -330,7 +330,7 @@ TEST(PromiseCallbackHelper, GetRejectCallback) {
 
   OnceCallback<void(int)> reject_cb = helper.GetRejectCallback(promise);
 
-  ::base::rvalue_cast(reject_cb).Run(1234);
+  RVALUE_CAST(reject_cb).Run(1234);
 
   EXPECT_EQ(promise->value().template Get<Rejected<int>>()->value, 1234);
 }
@@ -344,7 +344,7 @@ TEST(PromiseCallbackHelper, GetRejectReferenceCallback) {
 
   OnceCallback<void(int&)> reject_cb = helper.GetRejectCallback(promise);
 
-  ::base::rvalue_cast(reject_cb).Run(foo);
+  RVALUE_CAST(reject_cb).Run(foo);
 
   EXPECT_EQ(&promise->value().template Get<Rejected<int&>>()->value, &foo);
 }

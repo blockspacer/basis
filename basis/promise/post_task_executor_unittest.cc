@@ -29,12 +29,12 @@ class PostTaskExecutorTest : public testing::Test {
     internal::PromiseExecutor::Data executor_data(
         in_place_type_t<
             internal::PostTaskExecutor<typename CallbackTraits::ReturnType>>(),
-        internal::ToCallbackBase(::base::rvalue_cast(task)));
+        internal::ToCallbackBase(RVALUE_CAST(task)));
 
     return WrappedPromise(AbstractPromise::CreateNoPrerequisitePromise(
         from_here, RejectPolicy::kMustCatchRejection,
         internal::DependentList::ConstructUnresolved(),
-        ::base::rvalue_cast(executor_data)));
+        RVALUE_CAST(executor_data)));
   }
 };
 

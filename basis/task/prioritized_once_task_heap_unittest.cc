@@ -45,7 +45,7 @@ void runWithThreadCheck(scoped_refptr<base::TaskRunner> expected_task_runner,
                         base::OnceClosure callback)
 {
   EXPECT_TRUE(expected_task_runner->RunsTasksInCurrentSequence());
-  ::base::rvalue_cast(callback).Run();
+  RVALUE_CAST(callback).Run();
 }
 
 TEST_F(PrioritizedOnceTaskHeapTest, OnceCbOnThread) {
@@ -222,7 +222,7 @@ TEST_F(PrioritizedOnceTaskHeapTest, ExtractSubHeapOnThreads) {
   scoped_refptr<PrioritizedOnceTaskHeap> prioritized_task_heapB =
       base::MakeRefCounted<PrioritizedOnceTaskHeap>(
         true // with_thread_locking
-        , ::base::rvalue_cast(subHeapJobs)
+        , RVALUE_CAST(subHeapJobs)
       );
 
   {

@@ -204,7 +204,7 @@ class UnsafeStateMachine {
     // than you may want to |std::move| it
     , TransitionTable&& table)
     : current_state_(initial_state)
-    , table_(base::rvalue_cast(table))
+    , table_(RVALUE_CAST(table))
   {
     DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
   }

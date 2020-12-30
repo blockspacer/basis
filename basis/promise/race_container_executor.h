@@ -99,9 +99,9 @@ struct RaceContainerHelper<Container, Promise<ResolveType, RejectType>> {
     return PromiseType(AbstractPromise::Create(
         nullptr, from_here,
         std::make_unique<AbstractPromise::AdjacencyList>(
-            ::base::rvalue_cast(prerequisite_list)),
+            RVALUE_CAST(prerequisite_list)),
         RejectPolicy::kMustCatchRejection, DependentList::ConstructUnresolved(),
-        ::base::rvalue_cast(executor_data)));
+        RVALUE_CAST(executor_data)));
   }
 };
 

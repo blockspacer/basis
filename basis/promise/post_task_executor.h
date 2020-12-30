@@ -25,7 +25,7 @@ class PostTaskExecutor {
   using RejectStorage = Rejected<ReturnedPromiseRejectT>;
 
   explicit PostTaskExecutor(CallbackBase&& task) noexcept
-      : task_(::base::rvalue_cast(task)) {}
+      : task_(RVALUE_CAST(task)) {}
 
   explicit PostTaskExecutor(DoNothing task) noexcept
     : task_(task.Once()) {}

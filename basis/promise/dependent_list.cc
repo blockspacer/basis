@@ -39,7 +39,7 @@ void DependentList::DispatchAll(DependentList::Node* head,
       head->RetainSettledPrerequisite();
     // |visitor| might delete the node, so no access to node past this
     // call!
-    visitor->Visit(::base::rvalue_cast(head->dependent_));
+    visitor->Visit(RVALUE_CAST(head->dependent_));
     head = next;
   }
 }
@@ -51,14 +51,14 @@ DependentList::Node::Node() = default;
 DependentList::Node::Node(Node&& other) noexcept {
   prerequisite_ = other.prerequisite_.load(std::memory_order_relaxed);
   other.prerequisite_ = 0;
-  dependent_ = ::base::rvalue_cast(other.dependent_);
+  dependent_ = RVALUE_CAST(other.dependent_);
   DCHECK_EQ(other.next_, nullptr);
 }
 
 DependentList::Node::Node(AbstractPromise* prerequisite,
                           scoped_refptr<AbstractPromise> dependent)
     : prerequisite_(reinterpret_cast<intptr_t>(prerequisite)),
-      dependent_(::base::rvalue_cast(dependent)) {}
+      dependent_(RVALUE_CAST(dependent)) {}
 
 DependentList::Node::~Node() {
   ClearPrerequisite();
@@ -84,7 +84,7 @@ DependentList::~DependentList() = default;
 void DependentList::Node::Reset(AbstractPromise* prerequisite,
                                 scoped_refptr<AbstractPromise> dependent) {
   SetPrerequisite(prerequisite);
-  dependent_ = ::base::rvalue_cast(dependent);
+  dependent_ = RVALUE_CAST(dependent);
   next_ = nullptr;
 }
 

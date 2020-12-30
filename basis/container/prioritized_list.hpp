@@ -160,9 +160,9 @@ class PrioritizedList {
     unsigned id = next_id_;
     valid_ids_.insert(id);
     ++next_id_;
-    list.emplace_back(std::make_pair(id, ::base::rvalue_cast(value)));
+    list.emplace_back(std::make_pair(id, RVALUE_CAST(value)));
 #else
-    list.emplace_back(::base::rvalue_cast(value));
+    list.emplace_back(RVALUE_CAST(value));
 #endif
     return Pointer(priority, std::prev(list.end()));
   }
@@ -178,9 +178,9 @@ class PrioritizedList {
     unsigned id = next_id_;
     valid_ids_.insert(id);
     ++next_id_;
-    list.emplace_front(std::make_pair(id, ::base::rvalue_cast(value)));
+    list.emplace_front(std::make_pair(id, RVALUE_CAST(value)));
 #else
-    list.emplace_front(::base::rvalue_cast(value));
+    list.emplace_front(RVALUE_CAST(value));
 #endif
     return Pointer(priority, list.begin());
   }
@@ -195,9 +195,9 @@ class PrioritizedList {
 #if !defined(NDEBUG)
     DCHECK_EQ(1u, valid_ids_.erase(pointer.id_));
     DCHECK_EQ(pointer.iterator_->first, pointer.id_);
-    T erased = ::base::rvalue_cast(pointer.iterator_->second);
+    T erased = RVALUE_CAST(pointer.iterator_->second);
 #else
-    T erased = ::base::rvalue_cast(*pointer.iterator_);
+    T erased = RVALUE_CAST(*pointer.iterator_);
 #endif
 
     --size_;

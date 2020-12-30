@@ -145,7 +145,7 @@ class EndingTimeout {
   EndingTimeout(
     EndingTimeout&& other)
   {
-    endTime_ = ::base::rvalue_cast(other.endTime_);
+    endTime_ = RVALUE_CAST(other.endTime_);
     /// \note do not move |sequence_checker_|
     DETACH_FROM_SEQUENCE(sequence_checker_);
   }
@@ -153,7 +153,7 @@ class EndingTimeout {
   EndingTimeout& operator=(
     EndingTimeout&& other)
   {
-    endTime_ = ::base::rvalue_cast(other.endTime_);
+    endTime_ = RVALUE_CAST(other.endTime_);
     /// \note do not move |sequence_checker_|
     DETACH_FROM_SEQUENCE(sequence_checker_);
     return *this;

@@ -35,8 +35,8 @@ PeriodicCheckUntil::PeriodicCheckUntil(
   , CheckNotifyTask&& checkNotifyTask
   , CheckShutdownTask&& checkShutdownTask)
   : task_runner_(task_runner)
-  , checkNotifyTask_(::base::rvalue_cast(checkNotifyTask))
-  , checkShutdownTask_(::base::rvalue_cast(checkShutdownTask))
+  , checkNotifyTask_(RVALUE_CAST(checkNotifyTask))
+  , checkShutdownTask_(RVALUE_CAST(checkShutdownTask))
   , ALLOW_THIS_IN_INITIALIZER_LIST(weak_ptr_factory_(this))
   , ALLOW_THIS_IN_INITIALIZER_LIST(
       weak_this_(weak_ptr_factory_.GetWeakPtr()))
@@ -52,8 +52,8 @@ PeriodicCheckUntil::PeriodicCheckUntil(
   , CheckShutdownTask&& checkShutdownTask
   , const CheckPeriod& checkPeriod)
   : PeriodicCheckUntil(task_runner
-      , ::base::rvalue_cast(checkNotifyTask)
-      , ::base::rvalue_cast(checkShutdownTask))
+      , RVALUE_CAST(checkNotifyTask)
+      , RVALUE_CAST(checkShutdownTask))
 {
   startPeriodicTimer(checkPeriod);
 }
@@ -305,7 +305,7 @@ void setPeriodicTimeoutCheckerOnSequence(
         from_here
         , "Timeout.PeriodicCheckUntilTime." + from_here.ToString()
         , task_runner
-        , ::base::rvalue_cast(errorCallback)
+        , RVALUE_CAST(errorCallback)
         , endingTimeout
         // timer update frequency
         , checkPeriod

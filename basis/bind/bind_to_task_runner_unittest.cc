@@ -58,28 +58,28 @@ class BindToTaskRunnerTest : public ::testing::Test {
 TEST_F(BindToTaskRunnerTest, OnceClosure) {
   ::base::OnceClosure callback = BindToCurrentThread(
       ::base::BindOnce(&Callbacks::VoidCallback, ::base::Unretained(&callbacks_)));
-  ::base::rvalue_cast(callback).Run();
+  RVALUE_CAST(callback).Run();
   EXPECT_CALL(callbacks_, VoidCallback());
 }
 
 TEST_F(BindToTaskRunnerTest, OnceCallbackWithBoundValue) {
   ::base::OnceCallback<void()> callback = BindToCurrentThread(base::BindOnce(
       &Callbacks::ValueCallback, ::base::Unretained(&callbacks_), kValue));
-  ::base::rvalue_cast(callback).Run();
+  RVALUE_CAST(callback).Run();
   EXPECT_CALL(callbacks_, ValueCallback(kValue));
 }
 
 TEST_F(BindToTaskRunnerTest, OnceCallbackWithUnboundValue) {
   ::base::OnceCallback<void(Type)> callback = BindToCurrentThread(
       ::base::BindOnce(&Callbacks::ValueCallback, ::base::Unretained(&callbacks_)));
-  ::base::rvalue_cast(callback).Run(kValue);
+  RVALUE_CAST(callback).Run(kValue);
   EXPECT_CALL(callbacks_, ValueCallback(kValue));
 }
 
 TEST_F(BindToTaskRunnerTest, OnceCallbackWithBoundConstRef) {
   ::base::OnceCallback<void()> callback = BindToCurrentThread(base::BindOnce(
       &Callbacks::ConstRefCallback, ::base::Unretained(&callbacks_), kValue));
-  ::base::rvalue_cast(callback).Run();
+  RVALUE_CAST(callback).Run();
   EXPECT_CALL(callbacks_, ConstRefCallback(kValue));
 }
 
@@ -87,7 +87,7 @@ TEST_F(BindToTaskRunnerTest, OnceCallbackWithUnboundConstRef) {
   ::base::OnceCallback<void(const Type&)> callback =
       BindToCurrentThread(base::BindOnce(&Callbacks::ConstRefCallback,
                                          ::base::Unretained(&callbacks_)));
-  ::base::rvalue_cast(callback).Run(kValue);
+  RVALUE_CAST(callback).Run(kValue);
   EXPECT_CALL(callbacks_, ConstRefCallback(kValue));
 }
 
@@ -95,7 +95,7 @@ TEST_F(BindToTaskRunnerTest, OnceCallbackWithBoundMoveOnly) {
   ::base::OnceCallback<void()> callback = BindToCurrentThread(base::BindOnce(
       &Callbacks::MoveOnlyCallback, ::base::Unretained(&callbacks_),
       std::make_unique<Type>(kValue)));
-  ::base::rvalue_cast(callback).Run();
+  RVALUE_CAST(callback).Run();
   EXPECT_CALL(callbacks_, DoMoveOnlyCallback(Pointee(kValue)));
 }
 
@@ -103,7 +103,7 @@ TEST_F(BindToTaskRunnerTest, OnceCallbackWithUnboundMoveOnly) {
   ::base::OnceCallback<void(std::unique_ptr<Type>)> callback =
       BindToCurrentThread(base::BindOnce(&Callbacks::MoveOnlyCallback,
                                          ::base::Unretained(&callbacks_)));
-  ::base::rvalue_cast(callback).Run(std::make_unique<Type>(kValue));
+  RVALUE_CAST(callback).Run(std::make_unique<Type>(kValue));
   EXPECT_CALL(callbacks_, DoMoveOnlyCallback(Pointee(kValue)));
 }
 

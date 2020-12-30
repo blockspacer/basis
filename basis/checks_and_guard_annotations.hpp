@@ -60,7 +60,7 @@ struct LOCKABLE AnnotateLockable
   template <class... Args>
   AnnotateLockable(
     Args&&... args)
-    : data(std::forward<Args>(args)...)
+    : data(FORWARD(args)...)
   {}
 
   constexpr const Type& operator*() const
@@ -421,7 +421,7 @@ class LOCKABLE
 
   FakeLockWithCheck(
     ::base::RepeatingCallback<RunType>&& callback)
-    : callback_(base::rvalue_cast(callback)) {}
+    : callback_(RVALUE_CAST(callback)) {}
 
   MUST_USE_RETURN_VALUE
   bool Acquire() const NO_EXCEPTION EXCLUSIVE_LOCK_FUNCTION()

@@ -405,7 +405,7 @@ public:
 
       plugin->load();
 
-      loaded_plugins_.push_back(::base::rvalue_cast(plugin));
+      loaded_plugins_.push_back(RVALUE_CAST(plugin));
       VLOG(9)
         << "=== plugin loaded ==";
     }

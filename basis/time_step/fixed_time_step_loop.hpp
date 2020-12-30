@@ -1,9 +1,12 @@
 #pragma once
 
 #include "basis/time_step/fixed_time_step.hpp"
+
 #include <chrono>
 #include <functional>
+
 #include <base/logging.h>
+#include <base/rvalue_cast.h>
 
 namespace basis {
 
@@ -28,20 +31,20 @@ template <class T, typename... Args>
 inline /* `inline` to eleminate function call overhead */
 auto spareCycleBeforeUpdateCallback(Args... args)
   -> decltype(T::spareCycleBeforeUpdateCallback(
-       std::forward<Args>(args)...))
+       FORWARD(args)...))
 {
   ///\note checks return type
   static_assert(
     std::is_same<
       decltype(T::spareCycleBeforeUpdateCallback(
-        std::forward<Args>(args)...))
+        FORWARD(args)...))
       , void>::value,
     "'T::spareCycleBeforeUpdateCallback() const' "
     "must return void.");
 
   // calls method `T::spareCycleBeforeUpdateCallback()`
   return T::spareCycleBeforeUpdateCallback(
-    std::forward<Args>(args)...);
+    FORWARD(args)...);
 }
 
 // calls method `T::updateCallback()`
@@ -66,20 +69,20 @@ template <class T, typename... Args>
 inline /* `inline` to eleminate function call overhead */
 auto updateCallback(Args... args)
     -> decltype(T::updateCallback(
-      std::forward<Args>(args)...))
+      FORWARD(args)...))
 {
   ///\note checks return type
   static_assert(
     std::is_same<
       decltype(T::updateCallback(
-        std::forward<Args>(args)...))
+        FORWARD(args)...))
       , void>::value,
     "'T::updateCallback() const' "
     "must return void.");
 
   // calls method `T::updateCallback()`
   return T::updateCallback(
-    std::forward<Args>(args)...);
+    FORWARD(args)...);
 }
 
 // calls method `T::spareCycleAfterUpdateCallback()`
@@ -104,20 +107,20 @@ template <class T, typename... Args>
 inline /* `inline` to eleminate function call overhead */
 auto spareCycleAfterUpdateCallback(Args... args)
     -> decltype(T::spareCycleAfterUpdateCallback(
-      std::forward<Args>(args)...))
+      FORWARD(args)...))
 {
   ///\note checks return type
   static_assert(
     std::is_same<
       decltype(T::spareCycleAfterUpdateCallback(
-        std::forward<Args>(args)...))
+        FORWARD(args)...))
       , void>::value,
     "'T::spareCycleAfterUpdateCallback() const' "
     "must return void.");
 
   // calls method `T::spareCycleAfterUpdateCallback()`
   return T::spareCycleAfterUpdateCallback(
-    std::forward<Args>(args)...);
+    FORWARD(args)...);
 }
 
 /// \brief Fixed Time Step based on code from

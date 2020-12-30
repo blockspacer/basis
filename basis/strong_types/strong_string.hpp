@@ -110,7 +110,7 @@ public:
 
   constexpr std::string& value() & { return value_; }
   constexpr const std::string& value() const& { return value_; }
-  constexpr std::string&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr std::string&& value() && { return RVALUE_CAST(value_); }
   constexpr const std::string&& value() const&& { return COPY_OR_MOVE(value_); }
 
   // Shortcut for `.value`
@@ -189,7 +189,7 @@ public:
   >
   auto at(Args&&... args)
   {
-    return value_.at(std::forward<Args>(args)...);
+    return value_.at(FORWARD(args)...);
   }
 
   template<
@@ -197,7 +197,7 @@ public:
   >
   auto assign(Args&&... args)
   {
-    return value_.assign(std::forward<Args>(args)...);
+    return value_.assign(FORWARD(args)...);
   }
 
   auto get_allocator()
@@ -290,7 +290,7 @@ public:
   >
   auto reserve(Args&&... args)
   {
-    return value_.reserve(std::forward<Args>(args)...);
+    return value_.reserve(FORWARD(args)...);
   }
 
   auto capacity()
@@ -313,7 +313,7 @@ public:
   >
   auto insert(Args&&... args)
   {
-    return value_.insert(std::forward<Args>(args)...);
+    return value_.insert(FORWARD(args)...);
   }
 
   template<
@@ -321,7 +321,7 @@ public:
   >
   auto erase(Args&&... args)
   {
-    return value_.erase(std::forward<Args>(args)...);
+    return value_.erase(FORWARD(args)...);
   }
 
   template<
@@ -329,7 +329,7 @@ public:
   >
   auto push_back(Args&&... args)
   {
-    return value_.push_back(std::forward<Args>(args)...);
+    return value_.push_back(FORWARD(args)...);
   }
 
   template<
@@ -337,7 +337,7 @@ public:
   >
   auto pop_back(Args&&... args)
   {
-    return value_.pop_back(std::forward<Args>(args)...);
+    return value_.pop_back(FORWARD(args)...);
   }
 
   template<
@@ -345,7 +345,7 @@ public:
   >
   auto append(Args&&... args)
   {
-    return value_.append(std::forward<Args>(args)...);
+    return value_.append(FORWARD(args)...);
   }
 
   template<
@@ -353,7 +353,7 @@ public:
   >
   auto compare(Args&&... args)
   {
-    return value_.compare(std::forward<Args>(args)...);
+    return value_.compare(FORWARD(args)...);
   }
 
 #if __cplusplus > 201703L
@@ -362,7 +362,7 @@ public:
   >
   auto starts_with(Args&&... args)
   {
-    return value_.starts_with(std::forward<Args>(args)...);
+    return value_.starts_with(FORWARD(args)...);
   }
 
   template<
@@ -370,7 +370,7 @@ public:
   >
   auto ends_with(Args&&... args)
   {
-    return value_.ends_with(std::forward<Args>(args)...);
+    return value_.ends_with(FORWARD(args)...);
   }
 #endif // C++20
 
@@ -379,7 +379,7 @@ public:
   >
   auto replace(Args&&... args)
   {
-    return value_.replace(std::forward<Args>(args)...);
+    return value_.replace(FORWARD(args)...);
   }
 
   template<
@@ -387,7 +387,7 @@ public:
   >
   auto substr(Args&&... args)
   {
-    return value_.substr(std::forward<Args>(args)...);
+    return value_.substr(FORWARD(args)...);
   }
 
   template<
@@ -395,7 +395,7 @@ public:
   >
   auto copy(Args&&... args)
   {
-    return value_.copy(std::forward<Args>(args)...);
+    return value_.copy(FORWARD(args)...);
   }
 
   template<
@@ -403,7 +403,7 @@ public:
   >
   auto resize(Args&&... args)
   {
-    return value_.resize(std::forward<Args>(args)...);
+    return value_.resize(FORWARD(args)...);
   }
 
   template<
@@ -411,7 +411,7 @@ public:
   >
   auto swap(Args&&... args)
   {
-    return value_.swap(std::forward<Args>(args)...);
+    return value_.swap(FORWARD(args)...);
   }
 
   template<
@@ -419,7 +419,7 @@ public:
   >
   auto find(Args&&... args)
   {
-    return value_.find(std::forward<Args>(args)...);
+    return value_.find(FORWARD(args)...);
   }
 
   template<
@@ -427,7 +427,7 @@ public:
   >
   auto rfind(Args&&... args)
   {
-    return value_.rfind(std::forward<Args>(args)...);
+    return value_.rfind(FORWARD(args)...);
   }
 
   template<
@@ -435,7 +435,7 @@ public:
   >
   auto find_first_of(Args&&... args)
   {
-    return value_.find_first_of(std::forward<Args>(args)...);
+    return value_.find_first_of(FORWARD(args)...);
   }
 
   template<
@@ -443,7 +443,7 @@ public:
   >
   auto find_first_not_of(Args&&... args)
   {
-    return value_.find_first_not_of(std::forward<Args>(args)...);
+    return value_.find_first_not_of(FORWARD(args)...);
   }
 
   template<
@@ -451,7 +451,7 @@ public:
   >
   auto find_last_of(Args&&... args)
   {
-    return value_.find_last_of(std::forward<Args>(args)...);
+    return value_.find_last_of(FORWARD(args)...);
   }
 
   template<
@@ -459,7 +459,7 @@ public:
   >
   auto find_last_not_of(Args&&... args)
   {
-    return value_.find_last_not_of(std::forward<Args>(args)...);
+    return value_.find_last_not_of(FORWARD(args)...);
   }
 
   template<
@@ -476,7 +476,7 @@ public:
   >
   auto operator[](Args&&... args)
   {
-    return value_.operator[](std::forward<Args>(args)...);
+    return value_.operator[](FORWARD(args)...);
   }
 
   friend bool operator==(

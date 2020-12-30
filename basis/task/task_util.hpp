@@ -83,12 +83,12 @@ auto bindFrontOnceCallback(
       , auto... passedArgs
     ) mutable {
       DCHECK(boundTask);
-      ::base::rvalue_cast(boundTask).Run(
-        std::forward<ArgsType>(passedArgs)...
+      RVALUE_CAST(boundTask).Run(
+        FORWARD(passedArgs)...
       );
     }
-    , ::base::rvalue_cast(task)
-    , std::forward<Args>(args)...
+    , RVALUE_CAST(task)
+    , FORWARD(args)...
   );
 }
 

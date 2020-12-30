@@ -240,7 +240,7 @@ struct LockFreeProducerConsumerQueue {
       nextRecord = 0;
     }
     if (nextRecord != readIndex_.load(std::memory_order_acquire)) {
-      new (&records_[currentWrite]) T(std::forward<Args>(recordArgs)...);
+      new (&records_[currentWrite]) T(std::forward(recordArgs)...);
       writeIndex_.store(nextRecord, std::memory_order_release);
       return true;
     }

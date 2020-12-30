@@ -207,7 +207,7 @@ bool ScopedBaseEnvironment::init(
     /// );
   }
 
-  ::base::FeatureList::SetInstance(::base::rvalue_cast(feature_list));
+  ::base::FeatureList::SetInstance(RVALUE_CAST(feature_list));
 
   ::basis::initLogging(
     "" // logFile

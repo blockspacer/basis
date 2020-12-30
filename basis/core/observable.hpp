@@ -137,7 +137,7 @@ class Observer {
 
   /// \note you can NOT register multiple callbacks
   void SetOnUpdateCallback(base::RepeatingClosure callback) {
-    on_update_callback_ = ::base::rvalue_cast(callback);
+    on_update_callback_ = RVALUE_CAST(callback);
   }
 
   const T& GetValue() const {
@@ -296,7 +296,7 @@ class ObservableInternals
       ++it;
     }
     if (it == per_sequence_.end()) {
-      per_sequence_.emplace_back(::base::rvalue_cast(task_runner), value_);
+      per_sequence_.emplace_back(RVALUE_CAST(task_runner), value_);
       it = --per_sequence_.end();
     }
     it->AddObserver(observer);
@@ -384,7 +384,7 @@ class ObservableInternals
    public:
     PerSequenceInfo(scoped_refptr<::base::SequencedTaskRunner> task_runner,
                     const T& value)
-        : task_runner_(::base::rvalue_cast(task_runner)),
+        : task_runner_(RVALUE_CAST(task_runner)),
           owned_info_(std::make_unique<SequenceOwnedInfo>(value)) {}
 
     PerSequenceInfo(PerSequenceInfo&& other) = default;
@@ -402,7 +402,7 @@ class ObservableInternals
       // guarantee deletion.
       task_runner_->PostNonNestableTask(
           FROM_HERE,
-          ::base::BindOnce(&SequenceOwnedInfo::Destroy, ::base::rvalue_cast(owned_info_)));
+          ::base::BindOnce(&SequenceOwnedInfo::Destroy, RVALUE_CAST(owned_info_)));
     }
 
     const T& value() const { return owned_info_->value(); }
@@ -454,7 +454,7 @@ class ObservableInternals
 
 template <typename T>
 Observer<T>::Observer(scoped_refptr<subtle::ObservableInternals<T>> internals)
-    : internals_(::base::rvalue_cast(internals)), value_(internals_->AddObserver(this)) {}
+    : internals_(RVALUE_CAST(internals)), value_(internals_->AddObserver(this)) {}
 
 template <typename T>
 Observer<T>::Observer(const Observer& other) : Observer(other.internals_) {}

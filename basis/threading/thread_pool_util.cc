@@ -55,7 +55,7 @@ void initThreadPool(
   std::unique_ptr<::base::ThreadPool> thread_pool_
     = std::make_unique<::base::internal::ThreadPoolImpl>("Test");
 
-  ::base::ThreadPool::SetInstance(::base::rvalue_cast(thread_pool_));
+  ::base::ThreadPool::SetInstance(RVALUE_CAST(thread_pool_));
   ::base::ThreadPool::GetInstance()->Start(
     ::base::internal::ThreadPoolImpl::InitParams{
       {backgroundMaxThreads, kSuggestedReclaimTime}

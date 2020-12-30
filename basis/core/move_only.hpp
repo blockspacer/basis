@@ -10,8 +10,8 @@
 #include <type_traits>
 
 /// \note Avoid `MoveOnly` if you can.
-/// You can use `base::rvalue_cast` to guarantee that value will be moved
-/// (remember that `::base::rvalue_cast` may copy const value without moving!).
+/// You can use `RVALUE_CAST` to guarantee that value will be moved
+/// (remember that `RVALUE_CAST` may copy const value without moving!).
 //
 /// \note Sometimes `MoveOnly<T>` is better than `optional<T>` because `optional<T>`
 /// has not obvious behavior after you move out stored value
@@ -45,7 +45,7 @@
 //
 //     MyObj(MyObj&& a) {
 //         std::cout << "move constructor" << std::endl;
-//         val = ::base::rvalue_cast(a.val);
+//         val = RVALUE_CAST(a.val);
 //     }
 //
 //     MyObj& operator=(const MyObj& a) {
@@ -56,7 +56,7 @@
 //
 //     MyObj& operator=(MyObj&& a) {
 //         std::cout << "move assignment" << std::endl;
-//         val = ::base::rvalue_cast(a.val);
+//         val = RVALUE_CAST(a.val);
 //         return *this;
 //     }
 //
@@ -84,7 +84,7 @@
 // {
 //     std::optional<MyObj> myObj(std::in_place, "HI!");
 //
-//     MyObj movedOut = ::base::rvalue_cast(myObj.value());
+//     MyObj movedOut = RVALUE_CAST(myObj.value());
 //
 //     /// \note no CRASH!!!
 //     std::cout << "myObj says " << myObj.value().val << std::endl;
@@ -114,7 +114,7 @@
 // {
 //     MyObj obj("HI!");
 //
-//     basis::MoveOnly<MyObj> myObj = basis::MoveOnly<MyObj>::moveFrom(::base::rvalue_cast(obj));
+//     basis::MoveOnly<MyObj> myObj = basis::MoveOnly<MyObj>::moveFrom(RVALUE_CAST(obj));
 //
 //     basis::MoveOnly<MyObj> movedOut = basis::MoveOnly<MyObj>::moveFrom(myObj.Take());
 //
@@ -164,7 +164,7 @@ private:
   // Use |moveFrom| instead.
   explicit MoveOnly(T&& scoper)
     : is_valid_(true)
-    , scoper_(::base::rvalue_cast(scoper))
+    , scoper_(RVALUE_CAST(scoper))
   {
   }
 
@@ -173,19 +173,19 @@ public:
   static MoveOnly copyFrom(COPIED(const T & scoper))
   {
     T tmp = scoper;
-    return MoveOnly(::base::rvalue_cast(tmp));
+    return MoveOnly(RVALUE_CAST(tmp));
   }
 
   // We want to explicitly document that `move` operation will happen
   static MoveOnly moveFrom(T&& scoper)
   {
-    return MoveOnly(::base::rvalue_cast(scoper));
+    return MoveOnly(RVALUE_CAST(scoper));
   }
 
   /// \note |MoveOnly| must be movable but NOT copiable
   MoveOnly(MoveOnly&& other)
     : is_valid_(other.is_valid_)
-    , scoper_(::base::rvalue_cast(other.scoper_))
+    , scoper_(RVALUE_CAST(other.scoper_))
   {
   }
 
@@ -196,7 +196,7 @@ public:
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     CHECK(is_valid_);
     is_valid_ = false;
-    return ::base::rvalue_cast(scoper_);
+    return RVALUE_CAST(scoper_);
   }
 
   MoveOnly(MoveOnly const&) = delete;
@@ -234,7 +234,7 @@ private:
   // Use |moveFrom| instead.
   explicit MoveOnly(T&& scoper)
     : is_valid_(true)
-    , scoper_(::base::rvalue_cast(scoper))
+    , scoper_(RVALUE_CAST(scoper))
   {
   }
 
@@ -243,19 +243,19 @@ public:
   static MoveOnly copyFrom(COPIED(const T & scoper))
   {
     T tmp = scoper;
-    return MoveOnly(::base::rvalue_cast(tmp));
+    return MoveOnly(RVALUE_CAST(tmp));
   }
 
   // We want to explicitly document that `move` operation will happen
   static MoveOnly moveFrom(T&& scoper)
   {
-    return MoveOnly(::base::rvalue_cast(scoper));
+    return MoveOnly(RVALUE_CAST(scoper));
   }
 
   /// \note |MoveOnly| must be movable but NOT copiable
   MoveOnly(MoveOnly&& other)
     : is_valid_(other.is_valid_)
-    , scoper_(::base::rvalue_cast(other.scoper_))
+    , scoper_(RVALUE_CAST(other.scoper_))
   {
   }
 
@@ -266,7 +266,7 @@ public:
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     CHECK(is_valid_);
     is_valid_ = false;
-    return ::base::rvalue_cast(scoper_);
+    return RVALUE_CAST(scoper_);
   }
 
   MoveOnly(MoveOnly const&) = delete;

@@ -72,7 +72,7 @@ namespace basis {
 //   , ::basis::PeriodicCheckUntil::CheckPeriod{
 //       ::base::TimeDelta::FromSeconds(1)}
 //   , "destruction of allocated connections hanged" // debug-only error
-//   , ::base::rvalue_cast(validationTask)
+//   , RVALUE_CAST(validationTask)
 // )
 // .ThenHere(
 //   FROM_HERE

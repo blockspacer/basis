@@ -360,12 +360,12 @@ class MakeErrorStream {
   MakeErrorStream& operator=(const MakeErrorStream&) = delete;
 
   MakeErrorStream(MakeErrorStream&& other)
-    : impl_{base::rvalue_cast(other.impl_)}
+    : impl_{RVALUE_CAST(other.impl_)}
   {}
 
   MakeErrorStream& operator=(MakeErrorStream&& other)
   {
-    impl_ = ::base::rvalue_cast(other.impl_);
+    impl_ = RVALUE_CAST(other.impl_);
     return *this;
   }
 

@@ -188,7 +188,7 @@ class FailPointStorage
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
     DCHECK_EQ(data.type(), ::base::Value::Type::DICTIONARY);
-    data_ = base::rvalue_cast(data);
+    data_ = RVALUE_CAST(data);
   }
 
   void clearData() NO_EXCEPTION
@@ -312,7 +312,7 @@ class StrongFailPoint
 
   void setData(::base::Value&& data) NO_EXCEPTION
   {
-    return value_.setData(base::rvalue_cast(data));
+    return value_.setData(RVALUE_CAST(data));
   }
 
   void clearData() NO_EXCEPTION

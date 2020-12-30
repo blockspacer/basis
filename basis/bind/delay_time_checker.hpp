@@ -80,18 +80,18 @@ class DelayTimeChecker
   }
 
   DelayTimeChecker(DelayTimeChecker&& other)
-    : startDelayTime_{base::rvalue_cast(other.startDelayTime_)}
-    , limitDelayTime_{base::rvalue_cast(other.limitDelayTime_)}
-    , location_{base::rvalue_cast(other.location_)}
+    : startDelayTime_{RVALUE_CAST(other.startDelayTime_)}
+    , limitDelayTime_{RVALUE_CAST(other.limitDelayTime_)}
+    , location_{RVALUE_CAST(other.location_)}
   {
   }
 
   DelayTimeChecker& operator=(
     DelayTimeChecker&& other)
   {
-    startDelayTime_ = ::base::rvalue_cast(other.startDelayTime_);
-    limitDelayTime_ = ::base::rvalue_cast(other.limitDelayTime_);
-    location_ = ::base::rvalue_cast(other.location_);
+    startDelayTime_ = RVALUE_CAST(other.startDelayTime_);
+    limitDelayTime_ = RVALUE_CAST(other.limitDelayTime_);
+    location_ = RVALUE_CAST(other.location_);
     return *this;
   }
 

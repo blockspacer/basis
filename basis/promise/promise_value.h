@@ -45,7 +45,7 @@ struct Resolved {
       typename... Args,
       std::enable_if_t<!all_of(
           {std::is_same<Resolved, std::decay_t<Args>>::value...})>* = nullptr>
-  Resolved(Args&&... args) noexcept : value(std::forward<Args>(args)...) {}
+  Resolved(Args&&... args) noexcept : value(FORWARD(args)...) {}
 
   T value;
 };
@@ -77,7 +77,7 @@ struct Rejected {
       typename... Args,
       std::enable_if_t<!all_of(
           {std::is_same<Rejected, std::decay_t<Args>>::value...})>* = nullptr>
-  Rejected(Args&&... args) noexcept : value(std::forward<Args>(args)...) {
+  Rejected(Args&&... args) noexcept : value(FORWARD(args)...) {
     static_assert(!std::is_same<T, NoReject>::value,
                   "Can't have Rejected<NoReject>");
   }
@@ -233,7 +233,7 @@ template <typename T>
 struct PromiseValueInternal::ConstructHelper<T, /* UseInlineStorage */ true> {
   template <typename... Args>
   static void Construct(PromiseValueInternal* dest, Args&&... args) noexcept {
-    new (&dest->union_.inline_alloc.bytes) T(std::forward<Args>(args)...);
+    new (&dest->union_.inline_alloc.bytes) T(FORWARD(args)...);
   }
 };
 
@@ -241,7 +241,7 @@ template <typename T>
 struct PromiseValueInternal::ConstructHelper<T, /* UseInlineStorage */ false> {
   template <typename... Args>
   static void Construct(PromiseValueInternal* dest, Args&&... args) noexcept {
-    dest->union_.outline_alloc.value = new T(std::forward<Args>(args)...);
+    dest->union_.outline_alloc.value = new T(FORWARD(args)...);
   }
 };
 
@@ -400,14 +400,14 @@ class BASE_EXPORT PromiseValue {
   }
 
   // Constructs a PromiseValue containing an object of type T which is
-  // initialized by std::forward<Args>(args). E.g.
+  // initialized by FORWARD(args). E.g.
   // ::base::unique_any a(base::in_place_type_t<Resolved<int>>(), 123);
   template <typename T,
             typename... Args,
             State state = PromiseValueInternal::TypeToStateHelper<T>::state,
             std::enable_if_t<state != State::INVALID>* = nullptr>
   explicit PromiseValue(in_place_type_t<T> /*tag*/, Args&&... args) noexcept {
-    Construct<T>::Construct(&value_, std::forward<Args>(args)...);
+    Construct<T>::Construct(&value_, FORWARD(args)...);
     type_ops_.Set(&TypeOpsHelper<T>::type_ops, state);
   }
 
@@ -431,7 +431,7 @@ class BASE_EXPORT PromiseValue {
   }
 
   // Clears the existing value and constructs a an object of type T which is
-  // initialized by std::forward<Args>(args).
+  // initialized by FORWARD(args).
   template <typename T,
             typename... Args,
             typename VT = std::decay_t<T>,
@@ -439,7 +439,7 @@ class BASE_EXPORT PromiseValue {
             std::enable_if_t<state != State::INVALID>* = nullptr>
   void emplace(in_place_type_t<T> /*tag*/, Args&&... args) noexcept {
     type_ops_->delete_fn_ptr(&value_);
-    Construct<VT>::Construct(&value_, std::forward<Args>(args)...);
+    Construct<VT>::Construct(&value_, FORWARD(args)...);
     type_ops_.Set(&TypeOpsHelper<VT>::type_ops, state);
   }
 
@@ -450,7 +450,7 @@ class BASE_EXPORT PromiseValue {
             std::enable_if_t<state != State::INVALID>* = nullptr>
   void operator=(T&& t) noexcept {
     type_ops_->delete_fn_ptr(&value_);
-    Construct<VT>::Construct(&value_, std::forward<T>(t));
+    Construct<VT>::Construct(&value_, FORWARD(t));
     type_ops_.Set(&TypeOpsHelper<VT>::type_ops, state);
   }
 

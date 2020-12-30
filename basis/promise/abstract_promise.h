@@ -354,8 +354,8 @@ class BASE_EXPORT AbstractPromise
       ConstructType tag,
       PromiseExecutor::Data&& executor_data) noexcept {
     scoped_refptr<AbstractPromise> promise = subtle::AdoptRefIfNeeded(
-        new AbstractPromise(task_runner, from_here, ::base::rvalue_cast(prerequisites),
-                            reject_policy, tag, ::base::rvalue_cast(executor_data)),
+        new AbstractPromise(task_runner, from_here, RVALUE_CAST(prerequisites),
+                            reject_policy, tag, RVALUE_CAST(executor_data)),
         AbstractPromise::kRefCountPreference);
     // It's important this is called after |promise| has been initialized
     // because otherwise it could trigger a scoped_refptr destructor on another
@@ -373,7 +373,7 @@ class BASE_EXPORT AbstractPromise
     return subtle::AdoptRefIfNeeded(
         new internal::AbstractPromise(nullptr, from_here, nullptr,
                                       reject_policy, tag,
-                                      ::base::rvalue_cast(executor_data)),
+                                      RVALUE_CAST(executor_data)),
         AbstractPromise::kRefCountPreference);
   }
 
@@ -432,7 +432,7 @@ class BASE_EXPORT AbstractPromise
   template <typename T>
   void emplace(T&& t) {
     DCHECK(GetExecutor() != nullptr) << "Only valid to emplace once";
-    value_ = std::forward<T>(t);
+    value_ = FORWARD(t);
     static_assert(!std::is_same<std::decay_t<T>, AbstractPromise*>::value,
                   "Use scoped_refptr<AbstractPromise> instead");
   }
@@ -440,7 +440,7 @@ class BASE_EXPORT AbstractPromise
   template <typename T, typename... Args>
   void emplace(in_place_type_t<T> tag, Args&&... args) {
     DCHECK(GetExecutor() != nullptr) << "Only valid to emplace once";
-    value_.emplace(tag, std::forward<Args>(args)...);
+    value_.emplace(tag, FORWARD(args)...);
     static_assert(!std::is_same<std::decay_t<T>, AbstractPromise*>::value,
                   "Use scoped_refptr<AbstractPromise> instead");
   }
@@ -553,7 +553,7 @@ class BASE_EXPORT AbstractPromise
                   PromiseExecutor::Data&& executor_data) noexcept
       : task_runner_(task_runner),
         from_here_(from_here),
-        value_(in_place_type_t<PromiseExecutor>(), ::base::rvalue_cast(executor_data)),
+        value_(in_place_type_t<PromiseExecutor>(), RVALUE_CAST(executor_data)),
 #if DCHECK_IS_ON()
         reject_policy_(reject_policy),
         resolve_argument_passing_type_(
@@ -564,7 +564,7 @@ class BASE_EXPORT AbstractPromise
         executor_can_reject_(GetExecutor()->CanReject()),
 #endif
         dependents_(tag),
-        prerequisites_(::base::rvalue_cast(prerequisites)) {
+        prerequisites_(RVALUE_CAST(prerequisites)) {
 #if DCHECK_IS_ON()
     {
       CheckedAutoLock lock(GetCheckedLock());
@@ -873,7 +873,7 @@ class BASE_EXPORT WrappedPromise {
   scoped_refptr<internal::AbstractPromise>& GetForTesting() { return promise_; }
 
   scoped_refptr<internal::AbstractPromise> TakeForTesting() {
-    return ::base::rvalue_cast(promise_);
+    return RVALUE_CAST(promise_);
   }
 
  private:

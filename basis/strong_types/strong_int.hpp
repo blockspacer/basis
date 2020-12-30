@@ -146,7 +146,7 @@ public:
 
   constexpr int& value() & { return value_; }
   constexpr const int& value() const& { return value_; }
-  constexpr int&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr int&& value() && { return RVALUE_CAST(value_); }
   constexpr const int&& value() const&& { return COPY_OR_MOVE(value_); }
 
   // Shortcut for `.value`

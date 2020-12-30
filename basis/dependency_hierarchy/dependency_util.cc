@@ -65,7 +65,7 @@ std::vector<
 
     if(!dependenciesAtLevel.empty())
     {
-      levels.push_back(base::rvalue_cast(dependenciesAtLevel));
+      levels.push_back(RVALUE_CAST(dependenciesAtLevel));
     }
 
     // reset dependencies to dependencies from nested hierarchy levels

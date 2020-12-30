@@ -213,8 +213,8 @@ class CallCountChecker
   }
 
   CallCountChecker(CallCountChecker<CounterType, CheckPolicy>&& other)
-    : expectedCallCount_{base::rvalue_cast(other.expectedCallCount_)}
-    , location_{base::rvalue_cast(other.location_)}
+    : expectedCallCount_{RVALUE_CAST(other.expectedCallCount_)}
+    , location_{RVALUE_CAST(other.location_)}
   {
     other.is_moved_out_.store(true);
 
@@ -225,8 +225,8 @@ class CallCountChecker
     CallCountChecker<CounterType, CheckPolicy>&& other)
   {
     callCount_.store(other.callCount_.load());
-    expectedCallCount_ = ::base::rvalue_cast(other.expectedCallCount_);
-    location_ = ::base::rvalue_cast(other.location_);
+    expectedCallCount_ = RVALUE_CAST(other.expectedCallCount_);
+    location_ = RVALUE_CAST(other.location_);
     other.is_moved_out_.store(true);
     return *this;
   }

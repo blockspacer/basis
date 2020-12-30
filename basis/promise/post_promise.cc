@@ -17,7 +17,7 @@ base::OnceClosure ClosureExecutePromise(base::WrappedPromise task) {
     [](base::WrappedPromise task) {
       task.Execute();
     }
-    , ::base::rvalue_cast(task));
+    , RVALUE_CAST(task));
 }
 
 bool PostPromiseHelperInternal(TaskRunner* task_runner
@@ -39,7 +39,7 @@ bool PostPromiseHelperInternal(const boost::asio::executor& executor
       ](
         ::base::OnceClosure&& boundTask
       ){
-        ::base::rvalue_cast(boundTask).Run();
+        RVALUE_CAST(boundTask).Run();
       }
       , ClosureExecutePromise(WrappedPromise(promise))
     )
@@ -59,7 +59,7 @@ bool PostPromiseHelperInternal(boost::asio::io_context& context
       ](
         ::base::OnceClosure&& boundTask
       ){
-        ::base::rvalue_cast(boundTask).Run();
+        RVALUE_CAST(boundTask).Run();
       }
       , ClosureExecutePromise(WrappedPromise(promise))
     )
@@ -79,7 +79,7 @@ PassedPromise PostPromiseInternal(
     AbstractPromise::CreateNoPrerequisitePromise(
       from_here, RejectPolicy::kMustCatchRejection,
       internal::DependentList::ConstructUnresolved(),
-      ::base::rvalue_cast(executor_data));
+      RVALUE_CAST(executor_data));
 
   if (!internal::PostPromiseHelperInternal(
         executor, from_here, promise))
@@ -89,7 +89,7 @@ PassedPromise PostPromiseInternal(
     return PassedPromise();
   }
 
-  return PassedPromise(::base::rvalue_cast(promise));
+  return PassedPromise(RVALUE_CAST(promise));
 }
 
 // To keep PostTask related binary size down we want to do this out of line.
@@ -102,7 +102,7 @@ PassedPromise PostPromiseInternal(
     AbstractPromise::CreateNoPrerequisitePromise(
       from_here, RejectPolicy::kMustCatchRejection,
       internal::DependentList::ConstructUnresolved(),
-      ::base::rvalue_cast(executor_data));
+      RVALUE_CAST(executor_data));
 
   if (!internal::PostPromiseHelperInternal(
         context, from_here, promise))
@@ -112,7 +112,7 @@ PassedPromise PostPromiseInternal(
     return PassedPromise();
   }
 
-  return PassedPromise(::base::rvalue_cast(promise));
+  return PassedPromise(RVALUE_CAST(promise));
 }
 
 // To keep PostTask related binary size down we want to do this out of line.
@@ -126,7 +126,7 @@ PassedPromise PostPromiseInternal(
     AbstractPromise::CreateNoPrerequisitePromise(
       from_here, RejectPolicy::kMustCatchRejection,
       internal::DependentList::ConstructUnresolved(),
-      ::base::rvalue_cast(executor_data));
+      RVALUE_CAST(executor_data));
 
   if (!internal::PostPromiseHelperInternal(
         task_runner, from_here, promise, delay))
@@ -136,7 +136,7 @@ PassedPromise PostPromiseInternal(
     return PassedPromise();
   }
 
-  return PassedPromise(::base::rvalue_cast(promise));
+  return PassedPromise(RVALUE_CAST(promise));
 }
 
 }  // namespace internal

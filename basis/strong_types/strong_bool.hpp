@@ -78,7 +78,7 @@ public:
   //{}
   //
   //constexpr explicit StrongBool(StrongBool<Tag>&& v) NO_EXCEPTION
-  //  : value_(::base::rvalue_cast(v.value()))
+  //  : value_(RVALUE_CAST(v.value()))
   //{}
   //
   //// Assignment operator.
@@ -100,7 +100,7 @@ public:
 
   constexpr bool& value() & { return value_; }
   constexpr const bool& value() const& { return value_; }
-  constexpr bool&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr bool&& value() && { return RVALUE_CAST(value_); }
   constexpr const bool&& value() const&& { return COPY_OR_MOVE(value_); }
 
   // Shortcut for `.value`

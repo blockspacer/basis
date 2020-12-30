@@ -22,9 +22,9 @@ class BASE_EXPORT ThenAndCatchExecutorCommon {
   ThenAndCatchExecutorCommon(internal::CallbackBase&& then_callback,
                              internal::CallbackBase&& catch_callback) noexcept
       : then_callback_(
-            ::base::rvalue_cast(then_callback)),
+            RVALUE_CAST(then_callback)),
         catch_callback_(
-            ::base::rvalue_cast(catch_callback)) {
+            RVALUE_CAST(catch_callback)) {
     DCHECK(!then_callback_.is_null() || !catch_callback_.is_null());
   }
 
@@ -73,7 +73,7 @@ class ThenAndCatchExecutor {
 
   ThenAndCatchExecutor(CallbackBase&& resolve_callback,
                        CallbackBase&& catch_callback) noexcept
-      : common_(::base::rvalue_cast(resolve_callback), ::base::rvalue_cast(catch_callback)) {}
+      : common_(RVALUE_CAST(resolve_callback), RVALUE_CAST(catch_callback)) {}
 
   bool IsCancelled() const { return common_.IsCancelled(); }
 

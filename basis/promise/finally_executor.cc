@@ -11,7 +11,7 @@ namespace internal {
 
 FinallyExecutorCommon::FinallyExecutorCommon(
     internal::CallbackBase&& callback) noexcept
-    : callback_(::base::rvalue_cast(callback)) {}
+    : callback_(RVALUE_CAST(callback)) {}
 
 FinallyExecutorCommon::~FinallyExecutorCommon() = default;
 

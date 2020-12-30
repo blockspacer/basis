@@ -24,11 +24,11 @@ ThreadHealthChecker::Internal::Internal(
     ::base::TimeDelta interval,
     ::base::TimeDelta timeout,
     ::base::RepeatingClosure on_failure)
-    : patient_task_runner_(::base::rvalue_cast(patient_task_runner)),
-      doctor_task_runner_(::base::rvalue_cast(doctor_task_runner)),
+    : patient_task_runner_(RVALUE_CAST(patient_task_runner)),
+      doctor_task_runner_(RVALUE_CAST(doctor_task_runner)),
       interval_(interval),
       timeout_(timeout),
-      on_failure_(::base::rvalue_cast(on_failure)) {
+      on_failure_(RVALUE_CAST(on_failure)) {
   DCHECK(patient_task_runner_);
   DCHECK(doctor_task_runner_);
 }
@@ -93,7 +93,7 @@ ThreadHealthChecker::ThreadHealthChecker(
           doctor_task_runner,
           interval,
           timeout,
-          ::base::rvalue_cast(on_failure))) {
+          RVALUE_CAST(on_failure))) {
   doctor_task_runner_->PostTask(
       FROM_HERE,
       ::base::BindOnce(&ThreadHealthChecker::Internal::StartHealthCheck,

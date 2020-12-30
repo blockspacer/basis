@@ -25,7 +25,7 @@ PassedPromise ConstructAbstractPromiseWithSinglePrerequisite(
   // during shutdown.
   if (!prerequisite) {
     // Ensure the destructor for |executor_data| runs.
-    PromiseExecutor dummy_executor(::base::rvalue_cast(executor_data));
+    PromiseExecutor dummy_executor(RVALUE_CAST(executor_data));
     return PassedPromise();
   }
 
@@ -34,7 +34,7 @@ PassedPromise ConstructAbstractPromiseWithSinglePrerequisite(
       std::make_unique<AbstractPromise::AdjacencyList>(prerequisite),
       RejectPolicy::kMustCatchRejection,
       internal::DependentList::ConstructUnresolved(),
-      ::base::rvalue_cast(executor_data)));
+      RVALUE_CAST(executor_data)));
 }
 
 PassedPromise ConstructHereAbstractPromiseWithSinglePrerequisite(
@@ -43,7 +43,7 @@ PassedPromise ConstructHereAbstractPromiseWithSinglePrerequisite(
     internal::PromiseExecutor::Data&& executor_data) noexcept {
   return ConstructAbstractPromiseWithSinglePrerequisite(
       SequencedTaskRunnerHandle::Get(), from_here, prerequisite,
-      ::base::rvalue_cast(executor_data));
+      RVALUE_CAST(executor_data));
 }
 
 PassedPromise ConstructManualPromiseResolverPromise(const Location& from_here,

@@ -89,7 +89,7 @@ public:
         ? registry_.get<::base::Optional<typename Type::value_type>>(tcp_entity_id)
         : registry_.emplace<::base::Optional<typename Type::value_type>>(tcp_entity_id
             , ::base::in_place
-            , std::forward<Args>(args)...);
+            , FORWARD(args)...);
 
     // If the value already exists it is overwritten
     if(useCache)
@@ -98,7 +98,7 @@ public:
       /// \note we do not call `emplace` for optimization purposes
       /// ( because `emplace` uses `erase` and `instances.push_back`)
       /// i.e. use `base::Optional<...>` that uses placement new
-      result.emplace(std::forward<Args>(args)...);
+      result.emplace(FORWARD(args)...);
     }
 
     return result;

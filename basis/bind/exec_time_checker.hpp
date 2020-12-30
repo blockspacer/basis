@@ -91,15 +91,15 @@ class ExecTimeChecker
   ~ExecTimeChecker() {}
 
   ExecTimeChecker(ExecTimeChecker&& other)
-    : limitExecTime_{base::rvalue_cast(other.limitExecTime_)}
-    , location_{base::rvalue_cast(other.location_)}
+    : limitExecTime_{RVALUE_CAST(other.limitExecTime_)}
+    , location_{RVALUE_CAST(other.location_)}
   {}
 
   ExecTimeChecker& operator=(
     ExecTimeChecker&& other)
   {
-    limitExecTime_ = ::base::rvalue_cast(other.limitExecTime_);
-    location_ = ::base::rvalue_cast(other.location_);
+    limitExecTime_ = RVALUE_CAST(other.limitExecTime_);
+    location_ = RVALUE_CAST(other.location_);
     return *this;
   }
 

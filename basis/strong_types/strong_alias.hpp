@@ -379,7 +379,7 @@ class StrongAlias
                            std::is_convertible<U&&, UnderlyingType>::value,
                        bool> = false>
   StrongAlias(StrongAlias<TagType,U>&& other)
-    : value_(::base::rvalue_cast(other.value_)) {}
+    : value_(RVALUE_CAST(other.value_)) {}
 
   template <
       typename U,
@@ -388,11 +388,11 @@ class StrongAlias
                            !std::is_convertible<U&&, UnderlyingType>::value,
                        bool> = false>
   explicit StrongAlias(StrongAlias<TagType,U>&& other)
-    : value_(::base::rvalue_cast(other.value_)) {}
+    : value_(RVALUE_CAST(other.value_)) {}
 
   template <class... Args>
   constexpr explicit StrongAlias(base::in_place_t, Args&&... args)
-    : value_(std::forward<Args>(args)...) {}
+    : value_(FORWARD(args)...) {}
 
   // USAGE
   //
@@ -410,7 +410,7 @@ class StrongAlias
   constexpr explicit StrongAlias(base::in_place_t,
                               std::initializer_list<U> il,
                               Args&&... args)
-    : value_(il, std::forward<Args>(args)...) {}
+    : value_(il, FORWARD(args)...) {}
 
   // Forward value constructor. Similar to converting constructors,
   // conditionally explicit.
@@ -423,7 +423,7 @@ class StrongAlias
               std::is_convertible<U&&, UnderlyingType>::value,
           bool> = false>
   constexpr StrongAlias(U&& value)
-    : value_(std::forward<U>(value)) {}
+    : value_(FORWARD(value)) {}
 
   template <
       typename U = UnderlyingType,
@@ -434,11 +434,11 @@ class StrongAlias
               !std::is_convertible<U&&, UnderlyingType>::value,
           bool> = false>
   constexpr explicit StrongAlias(U&& value)
-    : value_(std::forward<U>(value)) {}
+    : value_(FORWARD(value)) {}
 
   constexpr UnderlyingType& value() & { return value_; }
   constexpr const UnderlyingType& value() const& { return value_; }
-  constexpr UnderlyingType&& value() && { return ::base::rvalue_cast(value_); }
+  constexpr UnderlyingType&& value() && { return RVALUE_CAST(value_); }
   constexpr const UnderlyingType&& value() const&& { return COPY_OR_MOVE(value_); }
 
   constexpr explicit operator UnderlyingType() const { return value_; }

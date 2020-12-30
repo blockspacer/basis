@@ -190,22 +190,22 @@ class StaticSequence {
       CompatibleCallback cb,
       const ::base::Location& from_here = ::base::Location::Current()) {
     TaskRunner()->PostTask(from_here,
-                           ::base::BindOnce(::base::rvalue_cast(cb), std::ref(key_)));
+                           ::base::BindOnce(RVALUE_CAST(cb), std::ref(key_)));
   }
 
   // Takes any closure with no unbound arguments.
   static void PostTask(
       ::base::OnceClosure cb,
       const ::base::Location& from_here = ::base::Location::Current()) {
-    TaskRunner()->PostTask(from_here, ::base::rvalue_cast(cb));
+    TaskRunner()->PostTask(from_here, RVALUE_CAST(cb));
   }
 
   // The Run() overload set can only be invoked on the sequence, and accepts
   // callbacks that may or may not require a Key to the sequence.
   static void Run(CompatibleCallback cb, const Key& key) {
-    ::base::rvalue_cast(cb).Run(key);
+    RVALUE_CAST(cb).Run(key);
   }
-  static void Run(base::OnceClosure cb, const Key&) { ::base::rvalue_cast(cb).Run(); }
+  static void Run(base::OnceClosure cb, const Key&) { RVALUE_CAST(cb).Run(); }
   template <typename U, typename Expected = typename U::Sequence>
   static void Run(IncompatibleCallback<U> cb, const Key&) {
     using PostedTo = T;
@@ -227,7 +227,7 @@ class StaticSequence {
   static void Post(const ::base::Location& from_here, F&& f, Args&&... args) {
     TaskRunner()->PostTask(
         from_here, BindHelper<needs_key<F>, F, Args...>::Bind(
-                       std::forward<F>(f), std::forward<Args>(args)...));
+                       FORWARD(f), FORWARD(args)...));
   }
 
  private:
@@ -274,14 +274,14 @@ class StaticSequence {
   template <typename... Args>
   struct BindHelper<false, Args...> {
     static ::base::OnceClosure Bind(Args... args) {
-      return ::base::BindOnce(std::forward<Args>(args)...);
+      return ::base::BindOnce(FORWARD(args)...);
     }
   };
 
   template <typename... Args>
   struct BindHelper<true, Args...> {
     static ::base::OnceClosure Bind(Args... args) {
-      return ::base::BindOnce(std::forward<Args>(args)..., std::ref(key_));
+      return ::base::BindOnce(FORWARD(args)..., std::ref(key_));
     }
   };
 
@@ -302,7 +302,7 @@ class Sequenced {
   template <typename... Args>
   explicit Sequenced(Args&&... args) : obj_(Uninitialized()) {
     Sequence::Post(FROM_HERE, &Sequenced::Construct<Args...>,
-                   ::base::Unretained(this), std::forward<Args>(args)...);
+                   ::base::Unretained(this), FORWARD(args)...);
   }
 
   template <typename... Args, typename... Bound>
@@ -311,14 +311,14 @@ class Sequenced {
             Bound&&... args) {
     Sequence::Post(from_here, &Sequenced::Call<decltype(method), Bound...>,
                    ::base::Unretained(this), method,
-                   std::forward<Bound>(args)...);
+                   FORWARD(args)...);
   }
 
  private:
   using UniquePtr = std::unique_ptr<T, ::base::OnTaskRunnerDeleter>;
   template <typename... Args>
   void Construct(Args&&... args, const typename Sequence::Key& key) {
-    obj_ = MakeUnique<Args...>(std::forward<Args>(args)..., key);
+    obj_ = MakeUnique<Args...>(FORWARD(args)..., key);
   }
 
   static UniquePtr Uninitialized() {
@@ -328,14 +328,14 @@ class Sequenced {
 
   template <typename... Args>
   UniquePtr MakeUnique(Args&&... args, const typename Sequence::Key&) {
-    return UniquePtr(new T(std::forward<Args>(args)...),
+    return UniquePtr(new T(FORWARD(args)...),
                      ::base::OnTaskRunnerDeleter(Sequence::TaskRunner()));
   }
 
   template <typename Method, typename... Bound>
   void Call(Method method, Bound&&... args, const typename Sequence::Key& key) {
     Sequence::Run(base::BindOnce(method, ::base::Unretained(obj_.get()),
-                                 std::forward<Bound>(args)...),
+                                 FORWARD(args)...),
                   key);
   }
 

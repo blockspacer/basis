@@ -36,7 +36,7 @@ void BackoffTimer::Stop() {
 };
 
 void BackoffTimer::SetTimerForTest(std::unique_ptr<base::OneShotTimer> timer) {
-  timer_ = ::base::rvalue_cast(timer);
+  timer_ = RVALUE_CAST(timer);
 }
 
 void BackoffTimer::StartTimer() {

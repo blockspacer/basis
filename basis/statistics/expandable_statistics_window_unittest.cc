@@ -12,6 +12,8 @@
 
 #include "basis/statistics/expandable_statistics_window.hpp"
 
+#include "base/rvalue_cast.h"
+
 #include <random>
 #include <cmath>
 
@@ -26,7 +28,7 @@ template <typename RandomAccessContainer, typename UniformRandomBitGenerator>
 void c_shuffle(RandomAccessContainer& c, UniformRandomBitGenerator&& gen) {
   std::shuffle(std::begin(c),
                std::end(c),
-               std::forward<UniformRandomBitGenerator>(gen));
+               FORWARD(gen));
 }
 
 ExpandableStatisticsWindow<double> CreateStatsFilledWithIntsFrom1ToN(int n) {

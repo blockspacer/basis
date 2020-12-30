@@ -360,7 +360,7 @@ public:
     {
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
-      Construct(std::forward<Args>(args)...);
+      Construct(std::forward(args)...);
 
 #if PIMPL_DEBUG_VALUE_MEMBER
       SetValue();
@@ -484,7 +484,7 @@ private:
       PIMPL_VALIDATE(sizeof(T), alignof(T));
 
       // uses placement new to save data into |aligned_storage_t|
-      new (&storage_) T(std::forward<Args>(args)...);
+      new (&storage_) T(std::forward(args)...);
     }
 
     inline /* use `inline` to eleminate function call overhead */

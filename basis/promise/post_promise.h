@@ -113,7 +113,7 @@ auto PostDelayedPromise(const Location& from_here,
        in_place_type_t<
          internal::PostTaskExecutor<
            typename CallbackTraits::ReturnType>>(),
-       internal::ToCallbackBase(::base::rvalue_cast(task))),
+       internal::ToCallbackBase(RVALUE_CAST(task))),
      delay)
   );
 }
@@ -138,7 +138,7 @@ auto PostPromise(const Location& from_here
 {
   DCHECK(task_runner);
   return PostDelayedPromise(
-    from_here, task_runner, std::forward<CallbackT>(task), delay, isNestedPromise);
+    from_here, task_runner, FORWARD(task), delay, isNestedPromise);
 }
 
 template <typename CallbackT>
@@ -177,7 +177,7 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
        in_place_type_t<
          internal::PostTaskExecutor<
            typename CallbackTraits::ReturnType>>(),
-       internal::ToCallbackBase(::base::rvalue_cast(task))))
+       internal::ToCallbackBase(RVALUE_CAST(task))))
   );
 }
 
@@ -206,7 +206,7 @@ auto PostDelayedPromiseOnExecutor(const Location& from_here,
       /// \note |doStartSessionAcceptor| callback
       /// must prolong lifetime of |executor|
       , COPIED(executor)
-      , ::base::rvalue_cast(doStartSessionAcceptor)
+      , RVALUE_CAST(doStartSessionAcceptor)
     ) // BindOnce
   ) // ThenHere
  **/
@@ -222,7 +222,7 @@ auto PostPromiseOnAsioExecutor(const Location& from_here
   , IsNestedPromise isNestedPromise = IsNestedPromise())
 {
   return PostDelayedPromiseOnExecutor(
-    from_here, executor, std::forward<CallbackT>(task), isNestedPromise);
+    from_here, executor, FORWARD(task), isNestedPromise);
 }
 
 template <typename CallbackT>
@@ -256,7 +256,7 @@ auto PostDelayedPromiseOnContext(const Location& from_here,
        in_place_type_t<
          internal::PostTaskExecutor<
            typename CallbackTraits::ReturnType>>(),
-       internal::ToCallbackBase(::base::rvalue_cast(task))))
+       internal::ToCallbackBase(RVALUE_CAST(task))))
   );
 }
 
@@ -272,7 +272,7 @@ auto PostPromiseOnAsioContext(const Location& from_here
   , IsNestedPromise isNestedPromise = IsNestedPromise())
 {
   return PostDelayedPromiseOnContext(
-    from_here, context, std::forward<CallbackT>(task), isNestedPromise);
+    from_here, context, FORWARD(task), isNestedPromise);
 }
 
 // Wraps synchronous task into promise
@@ -319,7 +319,7 @@ scoped_refptr<::base::internal::AbstractPromise>
           ::base::in_place_type_t<
               ::base::internal::PostTaskExecutor<TaskReturnType>>(),
           ::base::internal::ToCallbackBase(
-            ::base::rvalue_cast(task)
+            RVALUE_CAST(task)
           )));
   return promise;
 }
@@ -429,9 +429,9 @@ bool PostTaskAndReplyWithPromise(TaskRunner* task_runner,
                  internal::PromiseExecutor::Data(
                      in_place_type_t<
                          internal::PostTaskExecutor<TaskReturnType>>(),
-                     internal::ToCallbackBase(::base::rvalue_cast(task))),
+                     internal::ToCallbackBase(RVALUE_CAST(task))),
                  TimeDelta()))
-      .ThenHere(from_here, ::base::rvalue_cast(reply));
+      .ThenHere(from_here, RVALUE_CAST(reply));
 }
 
 }  // namespace base

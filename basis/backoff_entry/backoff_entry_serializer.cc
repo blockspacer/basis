@@ -38,7 +38,7 @@ std::unique_ptr<base::Value> BackoffEntrySerializer::SerializeToValue(
   serialized->AppendString(
       base::Int64ToString(absolute_release_time.ToInternalValue()));
 
-  return ::base::rvalue_cast(serialized);
+  return RVALUE_CAST(serialized);
 }
 
 std::unique_ptr<BackoffEntry> BackoffEntrySerializer::DeserializeFromValue(

@@ -46,7 +46,7 @@ struct BindToTaskRunnerTrampoline<void(Args...)> {
                   Args... args) {
     task_runner->PostTask(
         FROM_HERE,
-        ::base::BindOnce(::base::rvalue_cast(callback), std::forward<Args>(args)...));
+        ::base::BindOnce(RVALUE_CAST(callback), FORWARD(args)...));
   }
 };
 
@@ -57,8 +57,8 @@ base::OnceCallback<T> BindToTaskRunner(
     scoped_refptr<::base::TaskRunner> task_runner,
     ::base::OnceCallback<T> callback) {
   return ::base::BindOnce(&bind_helpers::BindToTaskRunnerTrampoline<T>::Run,
-                        ::base::RetainedRef(::base::rvalue_cast(task_runner)),
-                        ::base::rvalue_cast(callback));
+                        ::base::RetainedRef(RVALUE_CAST(task_runner)),
+                        RVALUE_CAST(callback));
 }
 
 template <typename T>
@@ -66,34 +66,34 @@ base::RepeatingCallback<T> BindToTaskRunner(
     scoped_refptr<::base::TaskRunner> task_runner,
     ::base::RepeatingCallback<T> callback) {
   return ::base::BindRepeating(&bind_helpers::BindToTaskRunnerTrampoline<T>::Run,
-                             ::base::RetainedRef(::base::rvalue_cast(task_runner)),
-                             ::base::rvalue_cast(callback));
+                             ::base::RetainedRef(RVALUE_CAST(task_runner)),
+                             RVALUE_CAST(callback));
 }
 
 template <typename T>
 base::OnceCallback<T> BindToCurrentThread(base::OnceCallback<T> callback) {
   return BindToTaskRunner(base::ThreadTaskRunnerHandle::Get(),
-                          ::base::rvalue_cast(callback));
+                          RVALUE_CAST(callback));
 }
 
 template <typename T>
 base::RepeatingCallback<T> BindToCurrentThread(
     ::base::RepeatingCallback<T> callback) {
   return BindToTaskRunner(base::ThreadTaskRunnerHandle::Get(),
-                          ::base::rvalue_cast(callback));
+                          RVALUE_CAST(callback));
 }
 
 template <typename T>
 base::OnceCallback<T> BindToCurrentSequence(base::OnceCallback<T> callback) {
   return BindToTaskRunner(base::SequencedTaskRunnerHandle::Get(),
-                          ::base::rvalue_cast(callback));
+                          RVALUE_CAST(callback));
 }
 
 template <typename T>
 base::RepeatingCallback<T> BindToCurrentSequence(
     ::base::RepeatingCallback<T> callback) {
   return BindToTaskRunner(base::SequencedTaskRunnerHandle::Get(),
-                          ::base::rvalue_cast(callback));
+                          RVALUE_CAST(callback));
 }
 
 }  // namespace basis

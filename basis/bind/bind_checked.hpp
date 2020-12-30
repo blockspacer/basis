@@ -81,7 +81,7 @@
 //         return 4;
 //       }
 //     );
-// DCHECK(base::rvalue_cast(test1).Run("hi", 2) == 4);
+// DCHECK(RVALUE_CAST(test1).Run("hi", 2) == 4);
 //
 // DCHECK(base::ThreadPool::GetInstance());
 // scoped_refptr<::base::SequencedTaskRunner> task_runner =
@@ -170,19 +170,19 @@ struct BindChecks final
 {
   template <typename... ForwardBoundArgs>
   explicit BindChecks(ForwardBoundArgs&&... bound_args)
-    : bound_checks_(std::forward<ForwardBoundArgs>(bound_args)...)
+    : bound_checks_(FORWARD(bound_args)...)
   {}
 
   template <typename... ForwardBoundArgs>
   BindChecks(BindChecks<ForwardBoundArgs...>&& other)
-    : bound_checks_{base::rvalue_cast(other.bound_checks_)}
+    : bound_checks_{RVALUE_CAST(other.bound_checks_)}
   {}
 
   template <typename... ForwardBoundArgs>
   BindChecks& operator=(
     BindChecks<ForwardBoundArgs...>&& other)
   {
-    bound_checks_ = ::base::rvalue_cast(other.bound_checks_);
+    bound_checks_ = RVALUE_CAST(other.bound_checks_);
     return *this;
   }
 
@@ -218,7 +218,7 @@ BindChecks<ForwardBoundArgs...> buildBindChecks(
   ForwardBoundArgs&&... bound_args)
 {
   return BindChecks<ForwardBoundArgs...>{
-    std::forward<ForwardBoundArgs>(bound_args)...
+    FORWARD(bound_args)...
   };
 }
 
@@ -251,9 +251,9 @@ struct CheckedBindState final : BindStateBase {
     // CallbackCancellationTraits<>::IsCancelled returns always false.
     // Otherwise, it's std::true_type.
     return new CheckedBindState(IsCancellable{}, invoke_func,
-                         ::base::rvalue_cast(checker),
-                         std::forward<ForwardFunctor>(functor),
-                         std::forward<ForwardBoundArgs>(bound_args)...);
+                         RVALUE_CAST(checker),
+                         FORWARD(functor),
+                         FORWARD(bound_args)...);
   }
 
   CheckerType checker_;
@@ -274,9 +274,9 @@ struct CheckedBindState final : BindStateBase {
       : BindStateBase(invoke_func,
                       &Destroy,
                       &QueryCancellationTraits<CheckedBindState>),
-        checker_{base::rvalue_cast(checker)},
-        functor_(std::forward<ForwardFunctor>(functor)),
-        bound_args_(std::forward<ForwardBoundArgs>(bound_args)...)
+        checker_{RVALUE_CAST(checker)},
+        functor_(FORWARD(functor)),
+        bound_args_(FORWARD(bound_args)...)
   {
     DCHECK(!IsNull(functor_));
   }
@@ -292,9 +292,9 @@ struct CheckedBindState final : BindStateBase {
                      ForwardFunctor&& functor,
                      ForwardBoundArgs&&... bound_args)
       : BindStateBase(invoke_func, &Destroy),
-        checker_{base::rvalue_cast(checker)},
-        functor_(std::forward<ForwardFunctor>(functor)),
-        bound_args_(std::forward<ForwardBoundArgs>(bound_args)...)
+        checker_{RVALUE_CAST(checker)},
+        functor_(FORWARD(functor)),
+        bound_args_(FORWARD(bound_args)...)
   {
     DCHECK(!IsNull(functor_));
   }
@@ -404,7 +404,7 @@ struct InvokerWithChecks<StorageType, R(UnboundArgs...)>
     {
       WrappedInvoker::RunOnce(
             base
-            , std::forward<UnboundArgs>(unbound_args)...);
+            , FORWARD(unbound_args)...);
 
       runBindCheckersAfterInvoker(
         storage->checker_.bound_checks_
@@ -415,7 +415,7 @@ struct InvokerWithChecks<StorageType, R(UnboundArgs...)>
       R result
         = WrappedInvoker::RunOnce(
             base
-            , std::forward<UnboundArgs>(unbound_args)...);
+            , FORWARD(unbound_args)...);
 
       runBindCheckersAfterInvoker(
         storage->checker_.bound_checks_
@@ -440,7 +440,7 @@ struct InvokerWithChecks<StorageType, R(UnboundArgs...)>
     {
       WrappedInvoker::RunOnce(
             base
-            , std::forward<UnboundArgs>(unbound_args)...);
+            , FORWARD(unbound_args)...);
 
       runBindCheckersAfterInvoker(
         storage->checker_.bound_checks_
@@ -451,7 +451,7 @@ struct InvokerWithChecks<StorageType, R(UnboundArgs...)>
       R result
         = WrappedInvoker::RunOnce(
             base
-            , std::forward<UnboundArgs>(unbound_args)...);
+            , FORWARD(unbound_args)...);
 
       runBindCheckersAfterInvoker(
         storage->checker_.bound_checks_
@@ -476,7 +476,7 @@ struct InvokerWithChecks<StorageType, R(UnboundArgs...)>
   {
     using DecayedArgsTuple = std::decay_t<BoundChecksTuple>;
 
-    runBindCheckerBeforeInvoker(std::get<indices>(std::forward<DecayedArgsTuple>(bound))...);
+    runBindCheckerBeforeInvoker(std::get<indices>(FORWARD(bound))...);
   }
 
   template<typename... Args>
@@ -493,7 +493,7 @@ struct InvokerWithChecks<StorageType, R(UnboundArgs...)>
   {
     using DecayedArgsTuple = std::decay_t<BoundChecksTuple>;
 
-    runBindCheckerAfterInvoker(std::get<indices>(std::forward<DecayedArgsTuple>(bound))...);
+    runBindCheckerAfterInvoker(std::get<indices>(FORWARD(bound))...);
   }
 };
 
@@ -543,8 +543,8 @@ bindCheckedOnce(CheckerType&& checker
   using InvokeFuncStorage = internal::BindStateBase::InvokeFuncStorage;
   CallbackType result = CallbackType(CheckedBindState::Create(
       reinterpret_cast<InvokeFuncStorage>(invoke_func),
-      ::base::rvalue_cast(checker),
-      std::forward<Functor>(functor), std::forward<Args>(args)...));
+      RVALUE_CAST(checker),
+      FORWARD(functor), FORWARD(args)...));
 
   return result;
 }
@@ -594,8 +594,8 @@ bindCheckedRepeating(CheckerType&& checker, Functor&& functor, Args&&... args) {
   using InvokeFuncStorage = internal::BindStateBase::InvokeFuncStorage;
   return CallbackType(CheckedBindState::Create(
       reinterpret_cast<InvokeFuncStorage>(invoke_func),
-      ::base::rvalue_cast(checker),
-      std::forward<Functor>(functor), std::forward<Args>(args)...));
+      RVALUE_CAST(checker),
+      FORWARD(functor), FORWARD(args)...));
 }
 
 template <typename Signature>

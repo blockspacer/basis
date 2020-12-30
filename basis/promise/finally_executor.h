@@ -36,7 +36,7 @@ class FinallyExecutor {
   using CallbackReturnT = typename CallbackTraits<CallbackT>::ReturnType;
 
   explicit FinallyExecutor(CallbackBase&& callback) noexcept
-      : common_(::base::rvalue_cast(callback)) {}
+      : common_(RVALUE_CAST(callback)) {}
 
   ~FinallyExecutor() = default;
 

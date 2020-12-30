@@ -46,7 +46,7 @@ class BASE_EXPORT PromiseExecutor {
           sizeof(PromiseExecutor) <= sizeof(PromiseValueInternal::InlineAlloc),
           "Executor is too big");
       vtable_ = &VTableHelper<Derived>::vtable_;
-      new (storage_.array) Derived(std::forward<Args>(args)...);
+      new (storage_.array) Derived(FORWARD(args)...);
     }
 
     Data(Data&& other) noexcept
@@ -70,10 +70,10 @@ class BASE_EXPORT PromiseExecutor {
   };
 
   // Caution it's an error to use |data| after this.
-  explicit PromiseExecutor(Data&& data) : data_(::base::rvalue_cast(data)) {}
+  explicit PromiseExecutor(Data&& data) : data_(RVALUE_CAST(data)) {}
 
   PromiseExecutor(PromiseExecutor&& other) noexcept
-      : data_(::base::rvalue_cast(other.data_)) {
+      : data_(RVALUE_CAST(other.data_)) {
     other.data_.vtable_ = nullptr;
   }
 

@@ -29,6 +29,14 @@
 // We use `scoped_refptr` because same dependencies may be shared between
 // different sets of long-lived functionality.
 //
+// Graph must be DAG (which means `Directed Acyclic Graph`)
+// for being eligible for topological sorting.
+// To understand terminology see:
+// * boost.org/doc/libs/1_66_0/libs/graph/doc/file_dependency_example.html
+// * algorithms.tutorialhorizon.com/topological-sort/
+// * prodevelopertutorial.com/sorting-algorithm-13-topological-sort/
+// * iq.opengenus.org/topological-sorting-dfs/
+//
 // PERFORMANCE
 //
 // Large, long-lived set of functionality is not expected to be created often,

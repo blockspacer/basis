@@ -81,7 +81,7 @@ class Money
   // The 3-letter currency code defined in ISO 4217.
   void set_currency_code(std::string&& in_currency_code) NO_EXCEPTION
   {
-    currency_code_ = base::rvalue_cast(in_currency_code);
+    currency_code_ = RVALUE_CAST(in_currency_code);
   }
 
   // The 3-letter currency code defined in ISO 4217.

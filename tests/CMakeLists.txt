@@ -403,6 +403,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-top_n
     "${BASIS_DIR}/algorithm/top_n_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-jsonb
+    "${BASIS_DIR}/jsonb/jsonb_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-bind_to_task_runner
     "${BASIS_DIR}/bind/bind_to_task_runner_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 

@@ -37,11 +37,12 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/tracing/tracing_util.hpp
   ${BASIS_DIR}/tracing/tracing_util.cc
-  #
   ${BASIS_DIR}/tracing/local_trace.hpp
-  #
   ${BASIS_DIR}/tracing/stats_table.hpp
   ${BASIS_DIR}/tracing/stats_table.cc
+  #
+  ${BASIS_DIR}/jsonb/jsonb.cc
+  ${BASIS_DIR}/jsonb/jsonb.hpp
   #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
   ${BASIS_DIR}/strong_types/strong_int.hpp

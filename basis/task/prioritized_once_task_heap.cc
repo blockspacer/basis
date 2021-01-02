@@ -37,7 +37,7 @@ bool PrioritizedOnceTaskHeap::CalledOnValidSequenceOrUsesLocks() const {
 
 PrioritizedOnceTaskHeap::Job::Job(
   const ::base::Location& from_here,
-  TaskVariant task,
+  OnceTask&& task,
   TaskPriority priority,
   TaskId current_task_count)
   : from_here(from_here),
@@ -74,11 +74,18 @@ void PrioritizedOnceTaskHeap::ScheduleTask(
     << "Unexpected repeating task. Location: "
     << from_here.ToString();
 
+  // RepeatingCallback should be convertible to OnceCallback.
+  OnceTask onceTask = task;
+
   Job job(
     from_here
-    , RVALUE_CAST(task)
+    , RVALUE_CAST(onceTask)
     , priority
     , max_task_count_++);
+
+  DCHECK(job.task)
+    << "Unexpected once task. Location: "
+    << from_here.ToString();
 
   {
     AcquireLockIfNeeded();
@@ -89,63 +96,6 @@ void PrioritizedOnceTaskHeap::ScheduleTask(
     std::push_heap(task_job_heap_.begin(), task_job_heap_.end(), JobComparer());
     ReleaseLockIfNeeded();
   }
-}
-
-std::vector<PrioritizedOnceTaskHeap::Job>
-  PrioritizedOnceTaskHeap::extractSubHeap(size_t subRootIndex)
-{
-  DCHECK(CalledOnValidSequenceOrUsesLocks());
-
-  std::vector<size_t> subHeapIndices;
-
-  /// \todo refactor without using queue
-  std::queue<size_t> currentIndices;
-
-  currentIndices.push(subRootIndex);
-  subHeapIndices.push_back(subRootIndex);
-
-  std::vector<Job> subHeap;
-
-  {
-    AcquireLockIfNeeded();
-
-    /// \note runs under lock to make sure that `task_job_heap_.size()`
-    /// does not change until we fill `subHeap`.
-    while (!currentIndices.empty())
-    {
-      size_t index = currentIndices.front();
-      size_t left_child_index = leftChildIndex(index);
-      if (left_child_index < task_job_heap_.size())
-      {
-        currentIndices.push(left_child_index);
-        subHeapIndices.push_back(left_child_index);
-      }
-      size_t right_child_index = rightChildIndex(index);
-      if (right_child_index < task_job_heap_.size())
-      {
-        currentIndices.push(right_child_index);
-        subHeapIndices.push_back(right_child_index);
-      }
-      currentIndices.pop();
-    }
-
-    std::transform(subHeapIndices.begin()
-      , subHeapIndices.end()
-      , std::back_inserter(subHeap)
-      , [
-          this
-        ](
-          size_t index
-        ) -> Job&& {
-          DCHECK(index < task_job_heap_.size());
-          /// \note moves elements out from original heap,
-          /// take care of data validity and test under ASAN.
-          return RVALUE_CAST(task_job_heap_[index]);
-        });
-    ReleaseLockIfNeeded();
-  }
-
-  return subHeap;
 }
 
 void PrioritizedOnceTaskHeap::AcquireLockIfNeeded() noexcept
@@ -218,30 +168,6 @@ void PrioritizedOnceTaskHeap::RunAllTasks()
   DCHECK_EQ(size(), 0u);
 }
 
-namespace {
-
-void runRepeatingTask(PrioritizedOnceTaskHeap::RepeatingTask task
-  , const base::Location& from_here)
-{
-  DCHECK(task)
-    << "Unexpected repeating task. Location: "
-    << from_here.ToString();
-
-  task.Run();
-}
-
-void runOnceTask(PrioritizedOnceTaskHeap::OnceTask&& task
-  , const base::Location& from_here)
-{
-  DCHECK(task)
-    << "Unexpected once task. Location: "
-    << from_here.ToString();
-
-  RVALUE_CAST(task).Run();
-}
-
-} // namespace
-
 void PrioritizedOnceTaskHeap::RunAndPopLargestTask()
 {
   DCHECK(CalledOnValidSequenceOrUsesLocks());
@@ -258,31 +184,16 @@ void PrioritizedOnceTaskHeap::RunAndPopLargestTask()
     // and rearranges the other elements into a heap.
     std::pop_heap(task_job_heap_.begin(), task_job_heap_.end(), JobComparer());
 
-    Job& job = task_job_heap_.back();
+    // take care of data validity because Job can be moved out
+    {
+      Job& job = task_job_heap_.back();
 
-    const bool is_repeating_task{std::holds_alternative<RepeatingTask>(job.task)};
+      DCHECK(job.task)
+        << "Unexpected once task. Location: "
+        << FROM_HERE.ToString();
 
-    if(is_repeating_task) {
-      // take care of data validity because Job can be moved out
-      if (std::get<RepeatingTask>(job.task)) {
-        // we can copy repeating task to avoid locking durung `task.run()`
-        closureWithoutLock = base::BindOnce(
-          &runRepeatingTask
-          , std::get<RepeatingTask>(job.task)
-          , job.from_here
-        );
-      }
-    } else {
-      DCHECK(std::holds_alternative<OnceTask>(job.task));
-      // take care of data validity because Job can be moved out
-      if (std::get<OnceTask>(job.task)) {
-        // we can move once task to avoid locking durung `task.run()`
-        closureWithoutLock = base::BindOnce(
-          &runOnceTask
-          , RVALUE_CAST(std::get<OnceTask>(job.task))
-          , job.from_here
-        );
-      }
+      // we can move once task to avoid locking durung `task.run()`
+      closureWithoutLock = RVALUE_CAST(job.task);
     }
 
     // removes the largest element (previous root)

@@ -34,14 +34,13 @@ TEST(StrongIntTest, Simple) {
   EXPECT_EQ(orange, 3UL);
 
   Orange other_orange = orange;
+  EXPECT_EQ(orange, other_orange);
 
   // Orange x = orange + apple; // Does not compile.
 
   Orange y = Orange(orange.value() + apple.value());
 
   // if (orange > apple);  // Does not compile.
-
-  EXPECT_GT(orange, other_orange);
 }
 
 }  // namespace base

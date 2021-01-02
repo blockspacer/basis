@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <memory>
 
 namespace basis {
 

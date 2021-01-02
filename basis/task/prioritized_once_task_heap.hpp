@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <vector>
 #include <chrono>
-#include <variant>
 
 #include <base/bind.h>
 #include <base/callback.h>
@@ -69,14 +68,12 @@ class PrioritizedOnceTaskHeap
 
   using OnceTask = ::base::OnceClosure;
 
-  using TaskVariant = std::variant<RepeatingTask, OnceTask>;
-
   // Highest priority will run before other priority values.
   static constexpr TaskPriority kHighestPriority = 0;
 
   struct Job {
     Job(const ::base::Location& from_here,
-        TaskVariant task,
+        OnceTask&& task,
         TaskPriority priority,
         TaskId current_task_count);
     Job();
@@ -86,7 +83,7 @@ class PrioritizedOnceTaskHeap
     Job& operator=(Job&& other);
 
     ::base::Location from_here;
-    TaskVariant task;
+    OnceTask task;
     TaskPriority priority = 0;
     // task id based on `max_task_count_` at the moment of construction
     TaskId task_id = 0;
@@ -113,6 +110,7 @@ class PrioritizedOnceTaskHeap
   // order of posting.
   void ScheduleTask(
     const ::base::Location& from_here
+    /// \note RepeatingTask will be converted to OnceTask
     , RepeatingTask task
     , TaskPriority priority);
 
@@ -126,22 +124,6 @@ class PrioritizedOnceTaskHeap
   void RunAllTasks();
 
   size_t size() noexcept;
-
-  /// \note moves elements out from original heap,
-  /// take care of data validity and test under ASAN.
-  //
-  // Consider the example when you have events coming in with a priority,
-  // and you want to process those events according to their priority,
-  // and not their order of arrival.
-  // Imagine that you have several processors of events at the same time
-  // and you want to chunk up the batch of events coming in
-  // and send it off to several processors.
-  // You can extract a sub-heap (that is also a heap by construction)
-  // and send it off to a processor.
-  // And extract a second heap and send that one off to a second processor.
-  // See for details "What Heaps Can Do That Priority Queues Don’t"
-  // at fluentcpp.com/2018/03/23/3428/
-  std::vector<Job> extractSubHeap(size_t subRootIndex);
 
  private:
   friend class ::base::RefCountedThreadSafe<PrioritizedOnceTaskHeap>;

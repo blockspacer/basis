@@ -16,7 +16,9 @@
 
 #pragma once
 
-#include "basis/core/compile_config.hpp"
+#include <base/logging.h>
+#include <base/base_export.h>
+#include <base/compiler_specific.h>
 
 // This header file defines portable macros for performance optimization.
 //
@@ -165,8 +167,7 @@
 // branch in a codebase is likely counterproductive; however, annotating
 // specific branches that are both hot and consistently mispredicted is likely
 // to yield performance improvements.
-#if BASIS_HAVE_BUILTIN(__builtin_expect) || \
-    (defined(__GNUC__) && !defined(__clang__))
+#if defined(COMPILER_GCC) || defined(__clang__)
 #define BASIS_PREDICT_FALSE(x) (__builtin_expect(x, 0))
 #define BASIS_PREDICT_TRUE(x) (__builtin_expect(false || (x), true))
 #else

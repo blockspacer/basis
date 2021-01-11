@@ -164,7 +164,7 @@ class GlobalCallableHooksRegistry {
     , CallableHookPriority priority)
   {
     RepeatingCallbackSlot<Func>* RepeatingCallbackSlot = getOrCreateSlot<Func>(key);
-    DCHECK_PTR(RepeatingCallbackSlot);
+    DCHECK_VALID_PTR_OR(RepeatingCallbackSlot);
 
     if (priority < RepeatingCallbackSlot->priority)
     {
@@ -245,7 +245,7 @@ class CallableHookRegistrationData
   {
     GlobalCallableHooksRegistry* instance
       = GlobalCallableHooksRegistry::GetInstance();
-    DCHECK_PTR(instance);
+    DCHECK_VALID_PTR_OR(instance);
     bool result
       = instance->setSlot<Func>(key, REFERENCED(impl), priority);
     DVLOG(99)
@@ -276,9 +276,9 @@ class CallableHookInvoker
 {
  public:
   explicit CallableHookInvoker(std::string&& key)
-    : instance_(DCHECK_PTR(GlobalCallableHooksRegistry::GetInstance()))
+    : instance_(DCHECK_VALID_PTR_OR(GlobalCallableHooksRegistry::GetInstance()))
     , key_(RVALUE_CAST(key))
-    , callSlot_(DCHECK_PTR(instance_->getOrCreateSlot<Func>(key_)))
+    , callSlot_(DCHECK_VALID_PTR_OR(instance_->getOrCreateSlot<Func>(key_)))
   {}
 
   template <typename... Args>

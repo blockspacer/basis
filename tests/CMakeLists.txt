@@ -23,6 +23,13 @@ set( GTEST_TEST_ARGS --gtest_shuffle)
 
 # Run ALL tests with verbose output
 # Usage: cmake --build build --target run_all_tests
+# NOTE: you can run single test manually like so:
+# BASE_GDBINIT_SOURCED=1 gdb -ex r -ex bt -ex q \
+#   --args $HOME/basis/build/Debug/tests/basis-tests/basis-varint \
+#   --single-process-tests \
+#   --gtest_filter=* \
+#   --test-data-dir="$HOME/chromium_base_conan/tests/data/" \
+#   --enable-features=print_status_macro_error
 add_custom_target(${ROOT_PROJECT_NAME}_run_all_tests
     DEPENDS ${ROOT_PROJECT_LIB}
 )
@@ -97,6 +104,36 @@ macro(set_test_compile_options target)
     CMAKE_CXX_STANDARD_REQUIRED ON
     CMAKE_CXX_FLAGS "-fno-rtti /std:c++latest"
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${ROOT_PROJECT_NAME}-tests )
+endmacro()
+
+macro(tests_add_demoapp target source_list TEST_ARGS TEST_LIB)
+  add_executable(${target} ${source_list})
+
+  target_include_directories(${target} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
+  target_link_libraries(${target} PRIVATE
+    # 3dparty libs
+    ${TESTS_3DPARTY_LIBS}
+    # system libs
+    ${USED_SYSTEM_LIBS}
+    # main project lib
+    ${ROOT_PROJECT_LIB}
+    ${TEST_LIB}
+  )
+
+  set_test_compile_options( ${target} )
+
+  if(ENABLE_DOCTEST)
+    target_link_libraries(${target} PUBLIC
+      CONAN_PKG::doctest
+    )
+
+    target_compile_definitions( ${target} PUBLIC
+      USE_DOCTEST_TEST=1
+      BASIS_RUN_DOCTEST_TESTS=1 )
+  endif()
 endmacro()
 
 macro(tests_add_executable target source_list TEST_ARGS TEST_LIB)
@@ -398,13 +435,35 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
     "${BASIS_DIR}/statistics/weighted_moving_linear_regression_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-weighted_moving_average_unittest
-    "${BASIS_DIR}/statistics/weighted_moving_average.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/statistics/weighted_moving_average_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-hdr_histogram_unittest
+    "${BASIS_DIR}/statistics/hdr_histogram_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-top_n
     "${BASIS_DIR}/algorithm/top_n_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-jsonb
     "${BASIS_DIR}/jsonb/jsonb_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-concurrent_int64
+    "${BASIS_DIR}/concurrency/concurrent_int64_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-metrics_unittest
+    "${BASIS_DIR}/metrics/metrics_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  # NOTE: not test, just example app
+  tests_add_demoapp(${ROOT_PROJECT_NAME}-metrics_demotest
+    "${BASIS_DIR}/metrics/metrics_demotest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-varint
+    "${BASIS_DIR}/varint/varint_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-fast_varint
+    "${BASIS_DIR}/varint/fast_varint_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-memcmpable_varint
+    "${BASIS_DIR}/varint/memcmpable_varint_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-bind_to_task_runner
     "${BASIS_DIR}/bind/bind_to_task_runner_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")

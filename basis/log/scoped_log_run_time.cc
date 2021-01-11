@@ -4,15 +4,18 @@
 
 namespace basis {
 
-ScopedLogRunTime::ScopedLogRunTime()
+ScopedLogRunTime::ScopedLogRunTime(std::ostream* out, const std::string& prefix)
   : timer_(std::make_unique<::base::ElapsedTimer>())
+  , stream_(out)
+  , prefix_(prefix)
 {}
 
 basis::ScopedLogRunTime::~ScopedLogRunTime()
 {
   ::base::TimeDelta elapsed_delta = timer_->Elapsed();
 
-  LOG(INFO)
+  *stream_
+    << prefix_
     << "Done in : "
     << elapsed_delta.InMilliseconds() << " milliseconds"
     <<" (" << elapsed_delta.InNanoseconds() << " nanoseconds)";

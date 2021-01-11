@@ -35,6 +35,13 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/threading/thread_health_checker.hpp
   ${BASIS_DIR}/threading/thread_health_checker.cc
   #
+  ${BASIS_DIR}/varint/varint.hpp
+  ${BASIS_DIR}/varint/varint.cc
+  ${BASIS_DIR}/varint/fast_varint.hpp
+  ${BASIS_DIR}/varint/fast_varint.cc
+  ${BASIS_DIR}/varint/memcmpable_varint.hpp
+  ${BASIS_DIR}/varint/memcmpable_varint.cc
+  #
   ${BASIS_DIR}/tracing/tracing_util.hpp
   ${BASIS_DIR}/tracing/tracing_util.cc
   ${BASIS_DIR}/tracing/local_trace.hpp
@@ -43,6 +50,9 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/jsonb/jsonb.cc
   ${BASIS_DIR}/jsonb/jsonb.hpp
+  #
+  ${BASIS_DIR}/metrics/metrics.cc
+  ${BASIS_DIR}/metrics/metrics.hpp
   #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
   ${BASIS_DIR}/strong_types/strong_int.hpp
@@ -149,6 +159,8 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.hpp
   ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.cc
+  ${BASIS_DIR}/concurrency/concurrent_int64.hpp
+  ${BASIS_DIR}/concurrency/concurrent_int64.cc
   #
   ${BASIS_DIR}/log/logger.cc
   ${BASIS_DIR}/log/logger.hpp
@@ -267,6 +279,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/statistics/weighted_moving_average.cc
   ${BASIS_DIR}/statistics/weighted_moving_linear_regression.hpp
   ${BASIS_DIR}/statistics/weighted_moving_linear_regression.cc
+  ${BASIS_DIR}/statistics/hdr_histogram.hpp
+  ${BASIS_DIR}/statistics/hdr_histogram.cc
   #
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.cc
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.hpp

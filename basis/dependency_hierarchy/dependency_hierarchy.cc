@@ -63,10 +63,8 @@ basis::Status Dependencies::addDependency(scoped_refptr<Dependency> dependency)
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   DCHECK(dependency);
-  if(!dependency) {
-    RETURN_ERROR(INVALID_ARGUMENT)
-      << "null can not be dependency";
-  }
+  RETURN_ERROR_IF(!dependency, INVALID_ARGUMENT)
+    << "null can not be dependency";
 
   storage_.emplace(dependency);
 
@@ -81,16 +79,12 @@ basis::Status Dependencies::removeDependency(scoped_refptr<Dependency> dependenc
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   DCHECK(dependency);
-  if(!dependency) {
-    RETURN_ERROR(INVALID_ARGUMENT)
-      << "null can not be dependency";
-  }
+  RETURN_ERROR_IF(!dependency, INVALID_ARGUMENT)
+    << "null can not be dependency";
 
   auto found = std::find(storage_.begin(), storage_.end(), dependency);
-  if (found == storage_.end()) {
-    RETURN_ERROR(ERR_DEPENDENCY_NOT_FOUND).without_logging()
-      << "Can not remove dependency that was not added before";
-  }
+  RETURN_ERROR_IF(found == storage_.end(), ERR_DEPENDENCY_NOT_FOUND).without_logging()
+    << "Can not remove dependency that was not added before";
 
   storage_.erase(found);
 
@@ -105,16 +99,14 @@ basis::Status Dependencies::addDependencies(scoped_refptr<Dependencies> other)
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   DCHECK(other);
-  if(!other) {
-    RETURN_ERROR(INVALID_ARGUMENT)
-      << "null can not be dependency";
-  }
+  RETURN_ERROR_IF(!other, INVALID_ARGUMENT)
+    << "null can not be dependency";
 
   for (scoped_refptr<Dependency> dependency: other->storage()) {
     DCHECK(dependency);
     basis::Status result = addDependency(dependency);
     /// \note skips minor errors (`INVALID_ARGUMENT`, etc.)
-    RETURN_IF_ERROR_CODE(result, ERR_CIRCULAR_DEPENDENCY);
+    RETURN_IF_ERROR_CODE_EQUALS(result, ERR_CIRCULAR_DEPENDENCY);
   }
 
   RETURN_OK();
@@ -127,16 +119,14 @@ basis::Status Dependencies::removeDependencies(scoped_refptr<Dependencies> other
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   DCHECK(other);
-  if(!other) {
-    RETURN_ERROR(INVALID_ARGUMENT)
-      << "null can not be dependency";
-  }
+  RETURN_ERROR_IF(!other, INVALID_ARGUMENT)
+    << "null can not be dependency";
 
   basis::Status result(FROM_HERE);
 
   for (scoped_refptr<Dependency> dependency: other->storage()) {
     DCHECK(dependency);
-    APPEND_STATUS_IF_ERROR(result, removeDependency(dependency));
+    APPEND_STATUS_IF_NOT_OK(result, removeDependency(dependency));
   }
 
   return result;

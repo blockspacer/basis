@@ -274,7 +274,7 @@ class UnsafeStateMachine {
 
     // Perform exit actions for the current state.
     for (const auto& exit_action : exit_actions_[current_state_.load()]) {
-      RETURN_IF_ERROR_WITH_APPEND(
+      RETURN_AND_MODIFY_IF_NOT_OK(
         exit_action.Run(event, next_state, recovery_event)) <<
         "Failed to perform exit action of state " << current_state_.load() <<
         " in transition to " << next_state << ".";
@@ -282,7 +282,7 @@ class UnsafeStateMachine {
 
     // Perform entry actions for the next state.
     for (const auto& entry_action : entry_actions_[next_state]) {
-      RETURN_IF_ERROR_WITH_APPEND(
+      RETURN_AND_MODIFY_IF_NOT_OK(
         entry_action.Run(event, next_state, recovery_event)) <<
         "Failed to perform entry action of state " << next_state <<
         " in transition from " << current_state_.load() << ".";

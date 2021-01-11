@@ -217,11 +217,10 @@ Status Jsonb::FromString(const std::string& json) {
   // Parse the json document.
   base::JSONReader reader;
   base::Optional<base::Value> root(reader.ReadToValue(json));
-  if(reader.error_code() != base::JSONReader::JSON_NO_ERROR || !root) {
-    RETURN_ERROR(INTERNAL)
-      << "JSON text is corrupt: "
-      << reader.GetErrorMessage();
-  }
+  RETURN_ERROR_IF(reader.error_code() != base::JSONReader::JSON_NO_ERROR || !root
+                  , INTERNAL)
+    << "JSON text is corrupt: "
+    << reader.GetErrorMessage();
 
   return FromJson(root.value());
 }
@@ -291,7 +290,7 @@ basis::Status Jsonb::ToJsonbProcessObject(const base::Value& document,
   // Append the values to the buffer.
   for (const auto& entry : kv_pairs) {
     const base::Value& value = entry.second;
-    RETURN_IF_ERROR(ProcessJsonValueAndMetadata(value, data_begin_offset, jsonb, &metadata_offset));
+    RETURN_IF_NOT_OK(ProcessJsonValueAndMetadata(value, data_begin_offset, jsonb, &metadata_offset));
   }
 
   // The metadata slice should now be empty.
@@ -325,7 +324,7 @@ basis::Status Jsonb::ToJsonbProcessArray(const base::Value& document,
   const size_t data_begin_offset = jsonb->size();
   // Append the array members to the buffer.
   for (const base::Value& value : json_array) {
-    RETURN_IF_ERROR(ProcessJsonValueAndMetadata(value, data_begin_offset, jsonb, &metadata_offset));
+    RETURN_IF_NOT_OK(ProcessJsonValueAndMetadata(value, data_begin_offset, jsonb, &metadata_offset));
   }
 
   // The metadata base::span<const char> should now be empty.
@@ -375,11 +374,11 @@ basis::Status Jsonb::ProcessJsonValueAndMetadata(const base::Value& value,
       break;
     case base::Value::Type::LIST:
       jentry |= kJEIsArray;
-      RETURN_IF_ERROR(ToJsonbInternal(value, jsonb));
+      RETURN_IF_NOT_OK(ToJsonbInternal(value, jsonb));
       break;
     case base::Value::Type::DICTIONARY:
       jentry |= kJEIsObject;
-      RETURN_IF_ERROR(ToJsonbInternal(value, jsonb));
+      RETURN_IF_NOT_OK(ToJsonbInternal(value, jsonb));
       break;
     case base::Value::Type::DOUBLE:
       jentry |= kJEIsDouble;
@@ -431,7 +430,7 @@ Status Jsonb::FromJsonbInternal(const base::span<const char>& jsonb, base::Value
     return FromJsonbProcessObject(jsonb, jsonb_header, document);
   } else if ((jsonb_header & kJBArray) == kJBArray) {
     std::unique_ptr<base::ListValue> array_doc = std::make_unique<base::ListValue>();
-    RETURN_IF_ERROR(FromJsonbProcessArray(jsonb, jsonb_header, (array_doc.get())));
+    RETURN_IF_NOT_OK(FromJsonbProcessArray(jsonb, jsonb_header, (array_doc.get())));
 
     if ((jsonb_header & kJBScalar) && array_doc->is_list() && array_doc->GetList().size() == 1) {
       // This is actually a scalar, since jsonb stores scalars as arrays with one element.
@@ -467,14 +466,14 @@ const char kLinuxLineEnds[] = "\n";
 
 StatusOr<base::Value> Jsonb::ToJson() const {
   base::Value document;
-  RETURN_IF_ERROR(FromJsonbInternal(serialized_jsonb_, &document));
+  RETURN_IF_NOT_OK(FromJsonbInternal(serialized_jsonb_, &document));
 
   return {FROM_HERE, std::move(document)};
 }
 
 StatusOr<std::string> Jsonb::ToJsonString() const {
   base::Value document;
-  RETURN_IF_ERROR(FromJsonbInternal(serialized_jsonb_, &document));
+  RETURN_IF_NOT_OK(FromJsonbInternal(serialized_jsonb_, &document));
 
   std::string serialized_json;
   JSONStringValueSerializer str_serializer(&serialized_json);
@@ -506,10 +505,10 @@ Status Jsonb::FromJsonbProcessObject(const base::span<const char>& jsonb,
 
   for (int i = 0; i < nelems; i++) {
     base::span<const char> key;
-    RETURN_IF_ERROR(GetObjectKey(i, jsonb, metadata_begin_offset, data_begin_offset, &key));
+    RETURN_IF_NOT_OK(GetObjectKey(i, jsonb, metadata_begin_offset, data_begin_offset, &key));
     base::span<const char> json_value;
     JEntry value_metadata;
-    RETURN_IF_ERROR(GetObjectValue(i, jsonb, metadata_begin_offset, data_begin_offset, nelems,
+    RETURN_IF_NOT_OK(GetObjectValue(i, jsonb, metadata_begin_offset, data_begin_offset, nelems,
                                  &json_value, &value_metadata));
     base::StringPiece json_key(key.data(), key.size());
     switch (GetJEType(value_metadata)) {
@@ -586,14 +585,14 @@ Status Jsonb::FromJsonbProcessObject(const base::span<const char>& jsonb,
       }
       case kJEIsObject: {
         base::Value nested_container(base::Value::Type::DICTIONARY);
-        RETURN_IF_ERROR(FromJsonbInternal(json_value, &nested_container));
+        RETURN_IF_NOT_OK(FromJsonbInternal(json_value, &nested_container));
         document->SetKey(json_key,
                             std::move(nested_container));
         break;
       }
       case kJEIsArray: {
         base::Value nested_container(base::Value::Type::LIST);
-        RETURN_IF_ERROR(FromJsonbInternal(json_value, &nested_container));
+        RETURN_IF_NOT_OK(FromJsonbInternal(json_value, &nested_container));
         document->SetKey(json_key,
                             std::move(nested_container));
         break;
@@ -617,7 +616,7 @@ Status Jsonb::FromJsonbProcessArray(const base::span<const char>& jsonb,
   for (int i = 0; i < nelems; i++) {
     base::span<const char> result;
     JEntry element_metadata;
-    RETURN_IF_ERROR(GetArrayElement(i, jsonb, metadata_begin_offset, data_begin_offset, &result,
+    RETURN_IF_NOT_OK(GetArrayElement(i, jsonb, metadata_begin_offset, data_begin_offset, &result,
                                   &element_metadata));
     switch (GetJEType(element_metadata)) {
       case kJEIsString: {
@@ -686,13 +685,13 @@ Status Jsonb::FromJsonbProcessArray(const base::span<const char>& jsonb,
       }
       case kJEIsObject: {
         auto nested_container = std::make_unique<base::Value>(base::Value::Type::DICTIONARY);
-        RETURN_IF_ERROR(FromJsonbInternal(result, nested_container.get()));
+        RETURN_IF_NOT_OK(FromJsonbInternal(result, nested_container.get()));
         list->Append(std::move(nested_container));
         break;
       }
       case kJEIsArray: {
         auto nested_container = std::make_unique<base::Value>(base::Value::Type::LIST);
-        RETURN_IF_ERROR(FromJsonbInternal(result, nested_container.get()));
+        RETURN_IF_NOT_OK(FromJsonbInternal(result, nested_container.get()));
         list->Append(std::move(nested_container));
         break;
       }
@@ -845,7 +844,7 @@ Status Jsonb::ToJsonString(std::string* json) const {
 
 Status Jsonb::ToJsonStringInternal(const base::span<const char>& jsonb, std::string* json) {
   rapidjson::Document document;
-  RETURN_IF_ERROR(FromJsonbInternal(jsonb, &document));
+  RETURN_IF_NOT_OK(FromJsonbInternal(jsonb, &document));
   *DCHECK_NOTNULL(json) = WriteRapidJsonToString(document);
   RETURN_OK();
 }
@@ -919,15 +918,17 @@ Status Jsonb::ApplyJsonbOperatorToArray(const base::span<const char>& jsonb, con
 
   // Retrieve the array index and verify.
   VarInt varint;
-  RETURN_IF_ERROR(varint.DecodeFromComparable(json_op.operand().value().varint_value()));
-  int64_t array_index = VERIFY_RESULT(varint.ToInt64());
+  RETURN_IF_NOT_OK(varint.DecodeFromComparable(json_op.operand().value().varint_value()));
+  auto statusor = varint.ToInt64();
+  DCHECK_OK(statusor);
+  int64_t array_index = RVALUE_CAST(statusor.ConsumeValueOrDie());
 
   if (array_index < 0 || array_index >= num_array_entries) {
-    return STATUS_SUBSTITUTE(NotFound, "Array index: $0 out of bounds [0, $1)",
+    return STATUS_SUBSTITUTE(NotFound, "Array index: $1 out of bounds [0, $1)",
                              array_index, num_array_entries);
   }
 
-  RETURN_IF_ERROR(GetArrayElement(array_index, jsonb, sizeof(jsonb_header),
+  RETURN_IF_NOT_OK(GetArrayElement(array_index, jsonb, sizeof(jsonb_header),
                                 ComputeDataOffset(num_array_entries, kJBArray), result,
                                 element_metadata));
   RETURN_OK();
@@ -952,10 +953,10 @@ Status Jsonb::ApplyJsonbOperatorToObject(const base::span<const char>& jsonb, co
   while (low <= high) {
     size_t mid = low + (high - low)/2;
     base::span<const char> mid_key;
-    RETURN_IF_ERROR(GetObjectKey(mid, jsonb, metadata_begin_offset, data_begin_offset, &mid_key));
+    RETURN_IF_NOT_OK(GetObjectKey(mid, jsonb, metadata_begin_offset, data_begin_offset, &mid_key));
 
     if (mid_key == search_key_slice) {
-      RETURN_IF_ERROR(GetObjectValue(mid, jsonb, sizeof(jsonb_header),
+      RETURN_IF_NOT_OK(GetObjectValue(mid, jsonb, sizeof(jsonb_header),
                                    ComputeDataOffset(num_kv_pairs, kJBObject), num_kv_pairs,
                                    result, element_metadata));
       RETURN_OK();
@@ -965,7 +966,7 @@ Status Jsonb::ApplyJsonbOperatorToObject(const base::span<const char>& jsonb, co
       low = mid + 1;
     }
   }
-  return STATUS_SUBSTITUTE(NotFound, "Couldn't find key $0 in json document", search_key);
+  return STATUS_SUBSTITUTE(NotFound, "Couldn't find key $1 in json document", search_key);
 }
 
 Status Jsonb::ApplyJsonbOperators(const QLJsonColumnOperationsPB& json_ops, QLValue* result) const {
@@ -983,7 +984,7 @@ Status Jsonb::ApplyJsonbOperators(const QLJsonColumnOperationsPB& json_ops, QLVa
       result->SetNull();
       RETURN_OK();
     }
-    RETURN_IF_ERROR(s);
+    RETURN_IF_NOT_OK(s);
 
     if (IsScalar(element_metadata) && i != num_ops - 1) {
       // We have to apply another operation after this, but we received a scalar intermediate
@@ -998,11 +999,11 @@ Status Jsonb::ApplyJsonbOperators(const QLJsonColumnOperationsPB& json_ops, QLVa
   if (num_ops > 0 &&
       json_ops.json_operations().Get(num_ops - 1).json_operator() == JsonOperatorPB::JSON_TEXT) {
     if (IsScalar(element_metadata)) {
-      RETURN_IF_ERROR(ScalarToString(element_metadata, jsonop_result,
+      RETURN_IF_NOT_OK(ScalarToString(element_metadata, jsonop_result,
                                    result->mutable_string_value()));
     } else {
       string str_result;
-      RETURN_IF_ERROR(ToJsonStringInternal(jsonop_result, &str_result));
+      RETURN_IF_NOT_OK(ToJsonStringInternal(jsonop_result, &str_result));
       result->set_string_value(std::move(str_result));
     }
     RETURN_OK();
@@ -1011,7 +1012,7 @@ Status Jsonb::ApplyJsonbOperators(const QLJsonColumnOperationsPB& json_ops, QLVa
   string jsonb_result = jsonop_result.ToBuffer();
   if (IsScalar(element_metadata)) {
     // In case of a scalar that is received from an operation, convert it to a jsonb scalar.
-    RETURN_IF_ERROR(CreateScalar(jsonop_result,
+    RETURN_IF_NOT_OK(CreateScalar(jsonop_result,
                                element_metadata,
                                &jsonb_result));
   }

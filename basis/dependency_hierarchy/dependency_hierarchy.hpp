@@ -146,22 +146,18 @@ class Dependency final
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
     DCHECK(dependency);
-    if(!dependency) {
-      RETURN_ERROR(INVALID_ARGUMENT)
-        << "null can not be dependency";
-    }
+    RETURN_ERROR_IF(!dependency, INVALID_ARGUMENT)
+      << "null can not be dependency";
 
     // A -> A
-    if(dependency == ::base::WrapRefCounted(this)) {
-      RETURN_ERROR(ERR_CIRCULAR_DEPENDENCY)
-        << "Detected circular dependency on self";
-    }
+    RETURN_ERROR_IF(dependency == ::base::WrapRefCounted(this)
+                    , ERR_CIRCULAR_DEPENDENCY)
+      << "Detected circular dependency on self";
 
     // A -> B -> C -> A
-    if(dependency->hasNestedDependency(::base::WrapRefCounted(this))) {
-      RETURN_ERROR(ERR_CIRCULAR_DEPENDENCY)
-        << "Circular dependency detected";
-    }
+    RETURN_ERROR_IF(dependency->hasNestedDependency(::base::WrapRefCounted(this))
+                    , ERR_CIRCULAR_DEPENDENCY)
+      << "Circular dependency detected";
 
     DCHECK(dependencies_);
     return dependencies_->addDependency(dependency);
@@ -176,10 +172,8 @@ class Dependency final
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
     DCHECK(dependency);
-    if(!dependency) {
-      RETURN_ERROR(INVALID_ARGUMENT)
-        << "null can not be dependency";
-    }
+    RETURN_ERROR_IF(!dependency, INVALID_ARGUMENT)
+      << "null can not be dependency";
 
     if(dependency == ::base::WrapRefCounted(this)) {
       LOG(FATAL) << "Can not remove self from dependencies";

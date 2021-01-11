@@ -9,14 +9,32 @@
 
 namespace basis {
 
-template<std::size_t N>
-bool IsNullTerminated(const char(&str)[N]) {
+// USAGE
+//
+// const std::string& input = ....;
+// DCHECK(IsNullTerminatedStr(input.size(), input.c_str()));
+//
+/// \note strlen does not work for "string" without null terminator.
+/// Calling strlen with anything but string is undefined behavior
+/// const char* input = ....;
+/// DCHECK(IsNullTerminatedStr(strlen(input), input)); // WRONG!!!
+//
+inline bool IsNullTerminatedStr(std::size_t N, const char* str) {
   for (size_t i = 0; i < N; ++i) {
     if (str[i] == '\0') {
       return true;
     }
   }
   return false;
+}
+
+// USAGE
+//
+// DCHECK(IsNullTerminatedStr("SOME_STR"));
+//
+template<std::size_t N>
+bool IsNullTerminated(const char(&str)[N]) {
+  return IsNullTerminatedStr(N, str);
 }
 
 // Elide the given string `str` with '...' in the middle if the length

@@ -132,8 +132,7 @@ MakeErrorStream::Impl::Impl(
       is_done_(false),
       should_log_(is_logged_by_default),
       log_severity_(::logging::LOG_ERROR),
-      should_log_stack_trace_(base::FeatureList::IsEnabled(kFeaturePrintStatusStackTrace)),
-      make_error_stream_with_output_wrapper_(error_stream) {}
+      should_log_stack_trace_(base::FeatureList::IsEnabled(kFeaturePrintStatusStackTrace)) {}
 
 MakeErrorStream::Impl::Impl(const ::basis::Status& status
   , const ::base::Location& location
@@ -149,8 +148,7 @@ MakeErrorStream::Impl::Impl(const ::basis::Status& status
       // IsLoggedByDefault.
       should_log_(IsMacroErrorLoggedByDefault()),
       log_severity_(::logging::LOG_ERROR),
-      should_log_stack_trace_(base::FeatureList::IsEnabled(kFeaturePrintStatusStackTrace)),
-      make_error_stream_with_output_wrapper_(error_stream) {
+      should_log_stack_trace_(base::FeatureList::IsEnabled(kFeaturePrintStatusStackTrace)) {
   DCHECK(!status.ok()) << "Attempted to append error text to status OK";
 }
 

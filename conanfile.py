@@ -61,6 +61,8 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         "chromium_base:use_alloc_shim=True",
         # chromium_tcmalloc
         "chromium_tcmalloc:use_alloc_shim=True",
+        # openssl
+        "openssl:shared=True",
     )
 
     # Custom attributes for Bincrafters recipe conventions
@@ -131,6 +133,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_libxml"].enable_ubsan = True
             self.options["boost"].enable_ubsan = True
             self.options["corrade"].enable_ubsan = True
+            self.options["openssl"].enable_ubsan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_ubsan = True
 
@@ -139,6 +142,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_libxml"].enable_asan = True
             self.options["boost"].enable_asan = True
             self.options["corrade"].enable_asan = True
+            self.options["openssl"].enable_asan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_asan = True
 
@@ -147,6 +151,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_libxml"].enable_msan = True
             self.options["boost"].enable_msan = True
             self.options["corrade"].enable_msan = True
+            self.options["openssl"].enable_msan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_msan = True
 
@@ -155,6 +160,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["chromium_libxml"].enable_tsan = True
             self.options["boost"].enable_tsan = True
             self.options["corrade"].enable_tsan = True
+            self.options["openssl"].enable_tsan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_tsan = True
 
@@ -212,6 +218,8 @@ class basis_conan_project(conan_build_helper.CMakePackage):
 
         #self.requires("flatc_conan/v1.11.0@conan/stable")
 
+        # must match openssl version used in webrtc
+        self.requires("openssl/OpenSSL_1_1_1-stable@conan/stable")
     def _configure_cmake(self):
         cmake = CMake(self)
         cmake.parallel = True

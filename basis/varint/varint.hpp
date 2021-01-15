@@ -51,6 +51,7 @@ class CoveringInt {
   typedef typename std::conditional<std::is_signed<CleanedT>::value, int64_t, uint64_t>::type type;
 };
 
+/// \todo use separate BigNum class similar to CBigNum from Bitcoin instead of <openssl/bn.h>
 class VarInt {
  public:
   VarInt();

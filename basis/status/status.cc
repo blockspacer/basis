@@ -151,16 +151,21 @@ struct Status::Pod {
 };
 
 Status::Rep Status::global_reps[3] = {
+  /// \note OK Status does not store message, so can be used globally
   {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, 0, nullptr, nullptr},
+  // CANCELLED Status without message or custom error space
   {ATOMIC_VAR_INIT(kGlobalRef), CANCELLED_CODE, 0, nullptr, nullptr},
+  // UNKNOWN Status without message or custom error space
   {ATOMIC_VAR_INIT(kGlobalRef), UNKNOWN_CODE, 0, nullptr, nullptr}
 };
 
-const Status& Status::OK = *reinterpret_cast<const Status*>(&globals[0]);
-const Status& Status::CANCELLED = *reinterpret_cast<const Status*>(&globals[1]);
-const Status& Status::UNKNOWN = *reinterpret_cast<const Status*>(&globals[2]);
+const Status& Status::OK
+  = *reinterpret_cast<const Status*>(&globals[::basis::error::OK]);
+const Status& Status::CANCELLED
+  = *reinterpret_cast<const Status*>(&globals[::basis::error::CANCELLED]);
+const Status& Status::UNKNOWN
+  = *reinterpret_cast<const Status*>(&globals[::basis::error::UNKNOWN]);
 
-/// \todo map globals per each error code.
 static_assert(::basis::error::OK == 0, "Wrong code for ::basis::error::OK.");
 static_assert(::basis::error::CANCELLED == 1, "Wrong code for ::basis::error::CANCELLED.");
 static_assert(::basis::error::UNKNOWN == 2, "Wrong code for ::basis::error::UNKNOWN.");
@@ -185,9 +190,22 @@ Status::Rep* Status::NewRep(const ErrorSpace* space
   , int canonical_code)
 {
   DCHECK(space != nullptr);
+
+  /// \note OK Status does not store message, so can be used globally
   DCHECK_NE(code, ::basis::error::OK) << "Use Status::OK instead";
-  DCHECK_NE(code, ::basis::error::CANCELLED) << "Use Status::CANCELLED instead";
-  DCHECK_NE(code, ::basis::error::UNKNOWN) << "Use Status::UNKNOWN instead";
+
+  /// \todo Create global shared rep. per each error code.
+  // Do not re-create global_reps
+  // OK status does not need custom data at all.
+  // Any not-ok status may have custom data so we need
+  // to check if `msg.empty()` etc.
+  if (msg.empty() && space == Status::canonical_space()) {
+    if(code == ::basis::error::CANCELLED)
+      return &global_reps[::basis::error::CANCELLED];
+    else if(code == ::basis::error::UNKNOWN)
+      return &global_reps[::basis::error::UNKNOWN];
+  }
+
   Rep* rep = new Rep;
   rep->ref = 1; /// \todo magic const 1???
   rep->message_ptr = nullptr;
@@ -203,7 +221,8 @@ void Status::ResetRep(Rep* rep
 {
   DCHECK(rep != nullptr);
   DCHECK_EQ(rep->ref, 1); /// \todo magic const 1???
-  DCHECK(space != canonical_space() || canonical_code == 0);
+  DCHECK(space != canonical_space() || canonical_code == ::basis::error::OK);
+
   rep->code = code;
   rep->space_ptr = space;
   rep->canonical_code = canonical_code;
@@ -221,19 +240,21 @@ Status::Status(const ::base::Location& location
   , const std::string& msg)
 {
   /// \todo Create global shared rep. per each error code.
-  /// For now we use global shared rep. only for most frequent error codes.
-  /// \todo Do we need it? Make benchmark and measure.
+  // We can use global shared rep. with Status-es without custom data
+  // (without error message, in canonical error space etc.).
+  // OK status does not need custom data at all.
+  // Any not-ok status may have custom data so we need
+  // to check if `msg.empty()` etc.
   if (code == ::basis::error::OK) {
     // Construct an OK status
-    rep_ = &global_reps[0];
-  }
-  else if (code == ::basis::error::CANCELLED) {
+    rep_ = &global_reps[::basis::error::OK];
+  } else if (msg.empty() && code == ::basis::error::CANCELLED) {
     // Construct an CANCELLED status
-    rep_ = &global_reps[1];
+    rep_ = &global_reps[::basis::error::CANCELLED];
   }
-  else if (code == ::basis::error::UNKNOWN) {
+  else if (msg.empty() && code == ::basis::error::UNKNOWN) {
     // Construct an UNKNOWN status
-    rep_ = &global_reps[2];
+    rep_ = &global_reps[::basis::error::UNKNOWN];
   } else {
     rep_ = NewRep(canonical_space(), code, msg, ::basis::error::OK);
   }
@@ -250,7 +271,7 @@ Status::Status(const ::base::Location& location
 
   if (code == ::basis::error::OK) {
     // Construct an OK status
-    rep_ = &global_reps[0];
+    rep_ = &global_reps[::basis::error::OK];
   } else {
     rep_ = NewRep(space, code, msg, ::basis::error::OK);
   }
@@ -286,7 +307,8 @@ Status Status::ToCanonical() const {
 
 void Status::Clear() {
   Unref(rep_);
-  rep_ = &global_reps[0];
+  // resets Status to OK even if it had error
+  rep_ = &global_reps[::basis::error::OK];
 }
 
 void Status::SetError(const ::base::Location& location
@@ -299,11 +321,11 @@ void Status::SetError(const ::base::Location& location
 
 void Status::PrepareToModify() {
   DCHECK(!ok());
+  DCHECK(error_space() != Status::canonical_space()); // otherwise handle global_reps
   if (rep_->ref != 1) { /// \todo magic const 1???
     Rep* old_rep = rep_;
     rep_ = NewRep(error_space(), error_code(), error_message(),
                   old_rep->canonical_code);
-    location_ = location(); /// \todo self assign???
     Unref(old_rep);
   }
 }
@@ -315,11 +337,20 @@ void Status::InternalSet(const ::base::Location& location
   , int canonical_code)
 {
   DCHECK(space != nullptr);
+
   // If "code == 0",
   // (space,msg) are ignored and a Status object identical to Status::OK
-  if (code == 0) {
+  if (code == ::basis::error::OK) {
     // Construct an OK status
     Clear();
+  /// \todo Create global shared rep. per each error code.
+  } else if ((!space || space == canonical_space()) && msg.empty() && code == ::basis::error::CANCELLED) {
+    location_ = location;
+    rep_ = &global_reps[::basis::error::CANCELLED];
+  }
+  else if ((!space || space == canonical_space()) && msg.empty() && code == ::basis::error::UNKNOWN) {
+    location_ = location;
+    rep_ = &global_reps[::basis::error::UNKNOWN];
   } else if (rep_->ref == 1) { /// \todo magic const 1???
     // Update in place
     ResetRep(rep_, space, code, msg, canonical_code);
@@ -349,7 +380,7 @@ bool Status::EqualsSlow(const ::basis::Status& a, const ::basis::Status& b) {
 std::string Status::ToString() const {
   std::string status;
   const int code = error_code();
-  if (code == 0) {
+  if (code == ::basis::error::OK) {
     status = base::Substitute(
       "OK ($1)"
       , location());

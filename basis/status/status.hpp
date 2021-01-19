@@ -536,6 +536,10 @@ Status CancelledStatus(const ::base::Location& location, const std::string& erro
 
 #ifndef SWIG
 inline Status CancelledStatus(const ::base::Location& location, const std::string& error_message) {
+  if (error_message.empty()) {
+    static_assert(::basis::error::CANCELLED == 1, "Wrong code for ::basis::error::CANCELLED.");
+    return Status::CANCELLED;
+  }
   return Status(location, ::basis::Status::canonical_space(),
                 ::basis::Status::CANCELLED_CODE, error_message);
 }
@@ -546,6 +550,10 @@ Status UnknownStatus(const ::base::Location& location, const std::string& error_
 
 #ifndef SWIG
 inline Status UnknownStatus(const ::base::Location& location, const std::string& error_message) {
+  if (error_message.empty()) {
+    static_assert(::basis::error::UNKNOWN == 2, "Wrong code for ::basis::error::UNKNOWN.");
+    return Status::UNKNOWN;
+  }
   return Status(location, ::basis::Status::canonical_space(),
                 ::basis::Status::UNKNOWN_CODE, error_message);
 }

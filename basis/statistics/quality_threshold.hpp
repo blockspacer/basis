@@ -34,7 +34,7 @@ namespace basis {
 //  bool prev_fps_bad = !fps_threshold.IsHigh().value_or(true);
 //  if(prev_fps_bad) { VLOG(9) << "Bad prev. fps"; }
 //
-//  double fps = render_fps_tracker.ComputeRateForInterval(now - last_sample_time_);
+//  double fps = render_fps_tracker.ComputeRateForIntervalNow(now - last_sample_time_);
 //  fps_threshold.AddMeasurement(static_cast<int>(fps));
 //
 //  base::Optional<double> fps_variance_opt = fps_threshold.CalculateVariance();

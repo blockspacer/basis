@@ -32,12 +32,12 @@ RateTracker::~RateTracker() {
   delete[] sample_buckets_;
 }
 
-double RateTracker::ComputeRateForInterval(
-    int64_t interval_milliseconds) const {
+double RateTracker::ComputeRateForIntervalWithTs(
+    int64_t interval_milliseconds
+    , int64_t current_time) const {
   if (bucket_start_time_milliseconds_ == kTimeUnset) {
     return 0.0;
   }
-  int64_t current_time = Time();
   // Calculate which buckets to sum up given the current time.  If the time
   // has passed to a new bucket then we have to skip some of the oldest buckets.
   int64_t available_interval_milliseconds =
@@ -89,11 +89,15 @@ double RateTracker::ComputeRateForInterval(
          static_cast<double>(available_interval_milliseconds);
 }
 
-double RateTracker::ComputeTotalRate() const {
+double RateTracker::ComputeRateForIntervalNow(
+    int64_t interval_milliseconds) const {
+  return ComputeRateForIntervalWithTs(interval_milliseconds, Time());
+}
+
+double RateTracker::ComputeTotalRateWithTs(int64_t current_time) const {
   if (bucket_start_time_milliseconds_ == kTimeUnset) {
     return 0.0;
   }
-  int64_t current_time = Time();
   if (current_time <= initialization_time_milliseconds_) {
     return 0.0;
   }
@@ -102,14 +106,31 @@ double RateTracker::ComputeTotalRate() const {
              current_time - initialization_time_milliseconds_);
 }
 
+double RateTracker::ComputeTotalRateNow() const {
+  return ComputeTotalRateWithTs(Time());
+}
+
 int64_t RateTracker::TotalSampleCount() const {
   return total_sample_count_;
 }
 
-void RateTracker::AddSamples(int64_t sample_count) {
+int64_t RateTracker::ElapsedTime() const
+{
+  return ElapsedTimeWithTs(Time());
+}
+
+// for tests
+int64_t RateTracker::ElapsedTimeWithTs(int64_t current_time) const
+{
+  if (current_time <= initialization_time_milliseconds_) {
+    return 0.0;
+  }
+  return current_time - initialization_time_milliseconds_;
+}
+
+void RateTracker::AddSamplesWithTs(int64_t sample_count, int64_t current_time) {
   DCHECK_LE(0, sample_count);
-  EnsureInitialized();
-  int64_t current_time = Time();
+  EnsureInitializedWithTs(current_time);
   // Advance the current bucket as needed for the current time, and reset
   // bucket counts as we advance.
   for (size_t i = 0;
@@ -130,18 +151,25 @@ void RateTracker::AddSamples(int64_t sample_count) {
   total_sample_count_ += sample_count;
 }
 
+void RateTracker::AddSamplesNow(int64_t sample_count) {
+  return AddSamplesWithTs(sample_count, Time());
+}
+
 int64_t RateTracker::Time() const {
   return base::Time::Now().ToDeltaSinceWindowsEpoch().InMilliseconds();
 }
 
-void RateTracker::EnsureInitialized() {
+void RateTracker::EnsureInitializedWithTs(int64_t current_time) {
   if (bucket_start_time_milliseconds_ == kTimeUnset) {
-    initialization_time_milliseconds_ = Time();
+    initialization_time_milliseconds_ = current_time;
     bucket_start_time_milliseconds_ = initialization_time_milliseconds_;
     current_bucket_ = 0;
     // We only need to initialize the first bucket because we reset buckets when
     // current_bucket_ increments.
     sample_buckets_[current_bucket_] = 0;
+  } else {
+    // time must increase
+    DCHECK_GE(current_time, bucket_start_time_milliseconds_);
   }
 }
 

@@ -86,7 +86,7 @@
 #elif defined(__ARM_ARCH_7A__)
 #define BASIS_CACHELINE_SIZE 64
 #endif
-#endif
+#endif // __GNUC__
 
 #ifndef BASIS_CACHELINE_SIZE
 // A reasonable default guess.  Note that overestimates tend to waste more

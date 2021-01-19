@@ -89,6 +89,7 @@ class Cell {
 //
 // See: http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/jsr166e/Striped64.java?view=co
 // See: http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/jsr166e/LongAdder.java?view=co
+// See: https://docs.microsoft.com/ru-ru/dotnet/api/java.util.concurrent.atomic.striped64?view=xamarin-android-sdk-9
 //
 // The Concurrent64 (aka Striped64) and LongAdder implementations here are simplified versions of what's present in
 // JSR166e. However, the core ideas remain the same.
@@ -123,6 +124,7 @@ class Cell {
 // We also do not lazily allocate each Cell, instead allocating the entire array at once.
 // This means we waste some additional memory in low contention scenarios, and initial allocation
 // will also be slower. Some of the micro-optimizations were also elided for readability.
+// See http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/jsr166e/LongAdder.java
 class Concurrent64 {
  public:
   Concurrent64();
@@ -183,6 +185,8 @@ class Concurrent64 {
 
 // A 64-bit number optimized for high-volume concurrent updates.
 // See Concurrent64 for a longer explanation of the inner workings.
+// See: http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/jsr166e/LongAdder.java?view=co
+// See: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/atomic/LongAdder.html
 class Concurrent64LongAdder : Concurrent64 {
  public:
   Concurrent64LongAdder() {}

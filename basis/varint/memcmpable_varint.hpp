@@ -45,7 +45,6 @@
 
 namespace basis {
 
-
 namespace memcmpable_varint_detail {
 
 inline uint8_t* to_uchar_ptr(char *ptr) {
@@ -54,7 +53,7 @@ inline uint8_t* to_uchar_ptr(char *ptr) {
   // The reinterpret_cast<> between the pointers are used to simplify data loading.
   static_assert(std::is_same<uint8_t, char>::value ||
                 std::is_same<uint8_t, unsigned char>::value,
-                "unexpected uint8_t type");
+                "unexpected uint8_t type size");
   return reinterpret_cast<uint8_t *>(ptr);
 }
 
@@ -64,7 +63,7 @@ inline const uint8_t* to_uchar_ptr(const char *ptr) {
   // The reinterpret_cast<> between the pointers are used to simplify data loading.
   static_assert(std::is_same<uint8_t, char>::value ||
                 std::is_same<uint8_t, unsigned char>::value,
-                "unexpected uint8_t type");
+                "unexpected uint8_t type size");
   return reinterpret_cast<const uint8_t *>(ptr);
 }
 
@@ -74,7 +73,7 @@ inline char* to_char_ptr(uint8_t *ptr) {
   // The reinterpret_cast<> between the pointers are used to simplify data loading.
   static_assert(std::is_same<uint8_t, char>::value ||
                 std::is_same<uint8_t, unsigned char>::value,
-                "unexpected uint8_t type");
+                "unexpected uint8_t type size");
   return reinterpret_cast<char *>(ptr);
 }
 
@@ -84,7 +83,7 @@ inline const char* to_char_ptr(const uint8_t *ptr) {
   // The reinterpret_cast<> between the pointers are used to simplify data loading.
   static_assert(std::is_same<uint8_t, char>::value ||
                 std::is_same<uint8_t, unsigned char>::value,
-                "unexpected uint8_t type");
+                "unexpected uint8_t type size");
   return reinterpret_cast<const char *>(ptr);
 }
 

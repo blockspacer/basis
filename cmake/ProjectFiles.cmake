@@ -42,6 +42,13 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/varint/memcmpable_varint.hpp
   ${BASIS_DIR}/varint/memcmpable_varint.cc
   #
+  ${BASIS_DIR}/bloom_filter/filter_policy.hpp
+  ${BASIS_DIR}/bloom_filter/filter_policy.cc
+  ${BASIS_DIR}/bloom_filter/bloom.hpp
+  ${BASIS_DIR}/bloom_filter/bloom.cc
+  ${BASIS_DIR}/bloom_filter/double_hashing_bloom.hpp
+  ${BASIS_DIR}/bloom_filter/double_hashing_bloom.cc
+  #
   ${BASIS_DIR}/tracing/tracing_util.hpp
   ${BASIS_DIR}/tracing/tracing_util.cc
   ${BASIS_DIR}/tracing/local_trace.hpp

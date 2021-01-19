@@ -19,6 +19,8 @@
 #include <base/location.h>
 #include <base/numerics/safe_conversions.h>
 
+#include <unordered_map>
+
 // Creates enum class with string conversion functions and provides helpers
 // (enum as bit set (bit flags), enum iteration, enum size, etc.)
 //

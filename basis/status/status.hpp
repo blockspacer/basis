@@ -211,6 +211,11 @@ class MUST_USE_RESULT Status final {
     UNKNOWN_CODE = 2,    // For unknown spaces/codes
   };
 
+  // Some pre-defined Status objects
+  static const Status& OK;  // Identical to 0-arg constructor
+  static const Status& CANCELLED;
+  static const Status& UNKNOWN;
+
   // Return the canonical error space.
   static const ErrorSpace* canonical_space();
 
@@ -313,6 +318,10 @@ class MUST_USE_RESULT Status final {
     Rep* t = this->rep_;
     this->rep_ = that->rep_;
     that->rep_ = t;
+
+    auto loc = this->location_;
+    this->location_ = that->location_;
+    that->location_ = loc;
   }
 
   // Returns a copy of the status object with error message stripped off.
@@ -326,17 +335,15 @@ class MUST_USE_RESULT Status final {
   // Reference-counted representation
   static const unsigned int kGlobalRef = 0;
 
-  /// \todo remove shared representation
-  /// and check how `StatusOr` behaves during moves and copies.
   struct Rep {
     std::atomic<unsigned int> ref;  // reference count.
     int code;                       // code >= 0
     int canonical_code;             // 0 means use space to calculate
     const ErrorSpace* space_ptr;    // NULL means canonical_space()
     std::string* message_ptr;       // NULL means empty
-    ::base::Location location;
   };
   Rep* rep_;  // Never NULL.
+  ::base::Location location_;
 
   static void UnrefSlow(Rep*);
   inline static void Ref(Rep* r) {
@@ -364,13 +371,11 @@ class MUST_USE_RESULT Status final {
   void PrepareToModify();
 
   MUST_USE_RETURN_VALUE
-  static Rep* NewRep(const ::base::Location& location
-    , const ErrorSpace*
+  static Rep* NewRep(const ErrorSpace*
     , int code
     , const std::string&
     , int canonical_code);
   static void ResetRep(Rep* rep
-    , const ::base::Location& location
     , const ErrorSpace*
     , int code
     , const std::string&
@@ -456,11 +461,15 @@ class ErrorSpace {
 // Implementation details follow
 
 inline Status::Status(const ::base::Location& location)
-{
-  rep_ = NewRep(location, canonical_space(), OK_CODE, "", ::basis::error::OK);
-}
+  : rep_(&global_reps[0])
+  , location_(location)
+{}
 
-inline Status::Status(const Status& x) : rep_(x.rep_) { Ref(rep_); }
+inline Status::Status(const Status& x)
+  : rep_(x.rep_), location_(x.location_)
+{
+  Ref(rep_);
+}
 
 inline Status& Status::operator=(const Status& x) {
   Rep* old_rep = rep_;
@@ -469,6 +478,7 @@ inline Status& Status::operator=(const Status& x) {
     rep_ = x.rep_;
     Unref(old_rep);
   }
+  location_ = x.location_;
   return *this;
 }
 
@@ -485,7 +495,7 @@ inline bool Status::ok() const { return rep_->code == 0; }
 inline int Status::error_code() const { return rep_->code; }
 
 inline const ::base::Location& Status::location() const {
-  return rep_->location;
+  return location_;
 }
 
 inline const std::string& Status::error_message() const {

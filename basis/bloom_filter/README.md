@@ -42,6 +42,7 @@ See:
 * https://github.com/chromium/chromium/blob/99314be8152e688bafbbf9a615536bdbb289ea87/third_party/blink/renderer/platform/wtf/bloom_filter.h
 * https://github.com/yugabyte/yugabyte-db/blob/7568877236ce8a3b72b7fd0f9083a31731018ea9/src/yb/rocksdb/util/dynamic_bloom.h
 * https://github.com/yugabyte/yugabyte-db/blob/7568877236ce8a3b72b7fd0f9083a31731018ea9/src/yb/rocksdb/util/bloom.cc
+* https://github.com/yugabyte/yugabyte-db/blob/7568877236ce8a3b72b7fd0f9083a31731018ea9/src/yb/util/bitmap.h
 * book: C++ Data Structures and Algorithm Design https://github.com/TrainingByPackt/CPP-Data-Structures-and-Algorithm-Design-Principles/blob/04f2f9e5a31e3d95c5b71665a67169335725c97f/Lesson3/Exercise17/Exercise17.cpp#L4
 
 ## Here is a very nice visualization of how it works.

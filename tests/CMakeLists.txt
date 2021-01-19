@@ -24,7 +24,7 @@ set( GTEST_TEST_ARGS --gtest_shuffle)
 # Run ALL tests with verbose output
 # Usage: cmake --build build --target run_all_tests
 # NOTE: you can run single test manually like so:
-# BASE_GDBINIT_SOURCED=1 gdb -ex r -ex bt -ex q \
+# HEAPCHECK=draconian BASE_GDBINIT_SOURCED=1 gdb -ex r -ex bt -ex q \
 #   --args $HOME/basis/build/Debug/tests/basis-tests/basis-varint \
 #   --single-process-tests \
 #   --gtest_filter=* \
@@ -575,6 +575,12 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-interval_set
     "${BASIS_DIR}/interval/interval_set_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-bloom_unittest
+    "${BASIS_DIR}/bloom_filter/bloom_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-double_hashing_bloom_unittest
+    "${BASIS_DIR}/bloom_filter/double_hashing_bloom_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   set ( fakeit_deps
     fakeit.test.cpp
   )
@@ -598,6 +604,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-uint128
     "${BASIS_DIR}/numerics/uint128_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-pack_numbers
+    "${BASIS_DIR}/numerics/pack_numbers_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   #add_to_tests_list(utils)
   #add_to_tests_list(pimpl)

@@ -46,9 +46,9 @@
 //   See `PRIVATE_METHOD_RUN_ON(&sequence_checker_)`,
 //  `PUBLIC_METHOD_RUN_ON(&perConnectionStrand_)` etc.
 // * Document that you must take care of thread-safety while using some data or method
-//   See `CREATE_METHOD_GUARD`, `GUARD_MEMBER_OF_UNKNOWN_THREAD`,
+//   See `CREATE_METHOD_GUARD`, `GUARD_NOT_THREAD_BOUND`,
 //   `GUARD_METHOD_ON_UNKNOWN_THREAD`, `DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD`,
-//   `DCHECK_MEMBER_OF_UNKNOWN_THREAD` etc.
+//   `DCHECK_NOT_THREAD_BOUND` etc.
 
 namespace basis {
 
@@ -808,10 +808,12 @@ class SCOPED_LOCKABLE
 #define DCHECK_MEMBER_GUARD(Name) \
   DCHECK_THREAD_GUARD_SCOPE_ENTER(MEMBER_GUARD(Name))
 
-// Documents that class (or struct, etc.)
-// member is not thread-bound
-// i.e. can be used by multiple threads.
-#define DCHECK_MEMBER_OF_UNKNOWN_THREAD(Name) \
+// Document that you must take care of thread-safety while using some data.
+//
+// NOTE: Do not mark each not thread-bound data member with it.
+// For example, do not use it with `std::atomic<>` because it is
+// obvious that you can use `std::atomic<>` safely in multiple threads.
+#define DCHECK_NOT_THREAD_BOUND(Name) \
   DCHECK_MEMBER_GUARD(Name)
 
 // Documents that class (or struct, etc.)
@@ -821,7 +823,7 @@ class SCOPED_LOCKABLE
 // For example, it MAY be safe to read value from any thread
 // if its storage expected to be not modified
 // (if properly initialized)
-#define GUARD_MEMBER_OF_UNKNOWN_THREAD(Name) \
+#define GUARD_NOT_THREAD_BOUND(Name) \
   GUARD_WITH_FAKE_LOCK(MEMBER_GUARD(Name))
 
 // Documents that class (or struct, etc.)

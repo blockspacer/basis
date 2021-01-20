@@ -266,6 +266,10 @@ See:
 * https://prometheus.io/docs/concepts/data_model/
 * https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format
 
+## The Prometheus Data Model
+
+https://training.robustperception.io/courses/data-model/lectures/3157135
+
 ## Production in Kubernetes
 
 You can deploy Prometheus and Grafana using Kubernetes.

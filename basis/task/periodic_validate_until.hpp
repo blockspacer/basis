@@ -104,14 +104,14 @@ class PeriodicValidateUntil {
 
   bool RunsVerifierInCurrentSequence() const NO_EXCEPTION
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
+    DCHECK_NOT_THREAD_BOUND(periodicVerifyRunner_);
 
     return periodicVerifyRunner_->RunsTasksInCurrentSequence();
   }
 
   scoped_refptr<::base::SequencedTaskRunner> taskRunner()
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
+    DCHECK_NOT_THREAD_BOUND(periodicVerifyRunner_);
 
     return periodicVerifyRunner_;
   }
@@ -123,10 +123,10 @@ class PeriodicValidateUntil {
 
  private:
   scoped_refptr<::base::SequencedTaskRunner> periodicVerifyRunner_
-    GUARD_MEMBER_OF_UNKNOWN_THREAD(periodicVerifyRunner_);
+    GUARD_NOT_THREAD_BOUND(periodicVerifyRunner_);
 
   scoped_refptr<::base::SequencedTaskRunner> timeoutTaskRunner_
-    GUARD_MEMBER_OF_UNKNOWN_THREAD(timeoutTaskRunner_);
+    GUARD_NOT_THREAD_BOUND(timeoutTaskRunner_);
 
   SEQUENCE_CHECKER(sequence_checker_);
 

@@ -150,16 +150,16 @@ void Concurrent64::RetryUpdate(int64_t x, Rehash contention) {
         }
 
 #if defined(COMPILER_MSVC)
-        cell_buffer_ = _aligned_malloc(sizeof(Cell)*n, BASIS_CACHELINE_SIZE);
+        cell_buffer_ = _aligned_malloc(sizeof(Cell)*n, BASE_CACHELINE_SIZE);
 // Android technically supports posix_memalign(), but does not expose it in
 // the current version of the library headers used by Chrome.  Luckily,
 // memalign() on Android returns pointers which can safely be used with
 // free(), so we can use it instead.  Issue filed to document this:
 // http://code.google.com/p/android/issues/detail?id=35391
 #elif defined(OS_ANDROID)
-        cell_buffer_ = memalign(BASIS_CACHELINE_SIZE, sizeof(Cell)*n);
+        cell_buffer_ = memalign(BASE_CACHELINE_SIZE, sizeof(Cell)*n);
 #else
-        if (int ret = posix_memalign(&cell_buffer_, BASIS_CACHELINE_SIZE, sizeof(Cell)*n)) {
+        if (int ret = posix_memalign(&cell_buffer_, BASE_CACHELINE_SIZE, sizeof(Cell)*n)) {
           DLOG(ERROR) << "posix_memalign() returned with error " << ret;
           cell_buffer_ = nullptr;
         }

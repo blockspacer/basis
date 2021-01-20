@@ -31,13 +31,12 @@
 //
 #pragma once
 
-#include "basis/core/optimization_macros.hpp"
-
-#include "base/logging.h"
-#include "base/atomicops.h"
-#include "base/threading/thread_local.h"
-#include "base/threading/platform_thread.h"
-#include "base/lazy_instance.h"
+#include <base/logging.h>
+#include <base/atomicops.h>
+#include <base/threading/thread_local.h>
+#include <base/threading/platform_thread.h>
+#include <base/lazy_instance.h>
+#include <base/compiler_specific.h>
 
 #include <atomic>
 #include <map>
@@ -74,11 +73,11 @@ class Cell {
   // Padding advice from Herb Sutter:
   // http://www.drdobbs.com/parallel/eliminate-false-sharing/217500206?pgno=4
   base::subtle::Atomic64 value_;
-  char pad[BASIS_CACHELINE_SIZE > ATOMIC_INT_SIZE ?
-           BASIS_CACHELINE_SIZE - ATOMIC_INT_SIZE : 1];
+  char pad[BASE_CACHELINE_SIZE > ATOMIC_INT_SIZE ?
+           BASE_CACHELINE_SIZE - ATOMIC_INT_SIZE : 1];
 
   DISALLOW_COPY_AND_ASSIGN(Cell);
-} BASIS_CACHELINE_ALIGNED;
+} BASE_CACHELINE_ALIGNED;
 #undef ATOMIC_INT_SIZE
 
 } // namespace internal

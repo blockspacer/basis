@@ -39,12 +39,12 @@ inline void AddHash(uint32_t h, char* data, uint32_t num_lines, uint32_t total_b
   DCHECK_EQ(num_lines % 2, 1);
 
   const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
-  uint32_t b = (h % num_lines) * (BASIS_CACHELINE_SIZE * 8);
+  uint32_t b = (h % num_lines) * (BASE_CACHELINE_SIZE * 8);
 
   for (uint32_t i = 0; i < num_probes; ++i) {
-    // Since BASIS_CACHELINE_SIZE is defined as 2^n, this line will be optimized
+    // Since BASE_CACHELINE_SIZE is defined as 2^n, this line will be optimized
     // to a simple operation by compiler.
-    const uint32_t bitpos = b + (h % (BASIS_CACHELINE_SIZE * 8));
+    const uint32_t bitpos = b + (h % (BASE_CACHELINE_SIZE * 8));
     DCHECK(bitpos < total_bits);
     data[bitpos / 8] |= (1 << (bitpos % 8));
 
@@ -83,14 +83,14 @@ base::StringPiece FullFilterBitsBuilder::Finish(std::unique_ptr<const char[]>* b
 }
 
 uint32_t FullFilterBitsBuilder::GetTotalBitsForLocality(uint32_t total_bits) {
-  uint32_t num_lines = ceil_div(total_bits, (uint32_t)BASIS_CACHELINE_SIZE * 8u);
+  uint32_t num_lines = ceil_div(total_bits, (uint32_t)BASE_CACHELINE_SIZE * 8u);
 
   // Make num_lines an odd number to make sure more bits are involved
   // when determining which block.
   if (num_lines % 2 == 0) {
     num_lines++;
   }
-  return num_lines * (BASIS_CACHELINE_SIZE * 8);
+  return num_lines * (BASE_CACHELINE_SIZE * 8);
 }
 
 char* FullFilterBitsBuilder::ReserveSpace(const int num_entry,
@@ -101,7 +101,7 @@ char* FullFilterBitsBuilder::ReserveSpace(const int num_entry,
     uint32_t total_bits_tmp = num_entry * static_cast<uint32_t>(bits_per_key_);
 
     *total_bits = GetTotalBitsForLocality(total_bits_tmp);
-    *num_lines = *total_bits / (BASIS_CACHELINE_SIZE * 8);
+    *num_lines = *total_bits / (BASE_CACHELINE_SIZE * 8);
     DCHECK(*total_bits > 0 && *total_bits % 8 == 0);
   } else {
     // filter is empty, just leave space for metadata
@@ -127,7 +127,7 @@ FullFilterBitsReader::FullFilterBitsReader(const base::StringPiece& contents, st
   DCHECK(data_);
   GetFilterMeta(contents, &num_probes_, &num_lines_);
   // Sanitize broken parameters
-  if (num_lines_ != 0 && data_len_ != num_lines_ * BASIS_CACHELINE_SIZE +
+  if (num_lines_ != 0 && data_len_ != num_lines_ * BASE_CACHELINE_SIZE +
       FullFilterBitsBuilder::kMetaDataSize) {
 
 #if !DCHECK_IS_ON()
@@ -174,7 +174,7 @@ inline bool FullFilterBitsReader::HashMayMatch(const uint32_t hash, const base::
   DCHECK(num_probes != 0);
   DCHECK(num_lines != 0 &&
       (len - FullFilterBitsBuilder::kMetaDataSize) % num_lines == 0);
-  // cacheline_size is calculated here based on filter metadata instead of using BASIS_CACHELINE_SIZE.
+  // cacheline_size is calculated here based on filter metadata instead of using BASE_CACHELINE_SIZE.
   // The reason may be to support deserialization of filters which are already persisted in case we
   // change cacheline_size or if machine architecture is changed.
   uint32_t cacheline_size = (len - FullFilterBitsBuilder::kMetaDataSize) / num_lines;
@@ -185,7 +185,7 @@ inline bool FullFilterBitsReader::HashMayMatch(const uint32_t hash, const base::
   uint32_t b = (h % num_lines) * (cacheline_size * 8);
 
   for (uint32_t i = 0; i < num_probes; ++i) {
-    // Since BASIS_CACHELINE_SIZE is defined as 2^n, this line will be optimized
+    // Since BASE_CACHELINE_SIZE is defined as 2^n, this line will be optimized
     //  to a simple and operation by compiler.
     const uint32_t bitpos = b + (h % (cacheline_size * 8));
     if (((data[bitpos / 8]) & (1 << (bitpos % 8))) == 0) {
@@ -289,19 +289,19 @@ FixedSizeFilterBitsBuilder::FixedSizeFilterBitsBuilder(uint32_t total_bits, doub
     : error_rate_(error_rate) {
   DCHECK_GT(error_rate, 0);
   DCHECK_GT(total_bits, 0);
-  num_lines_ = ceil_div(total_bits, (uint32_t)BASIS_CACHELINE_SIZE * 8u);
+  num_lines_ = ceil_div(total_bits, (uint32_t)BASE_CACHELINE_SIZE * 8u);
   // AddHash implementation gives much higher false positive rate when num_lines_ is even, so
   // make sure it is odd.
   if (num_lines_ % 2 == 0) {
     // For small filter blocks - add one line, so we can have enough keys in block.
     // For bigger filter block - remove one line, so filter block will fit desired size.
-    if (num_lines_ * BASIS_CACHELINE_SIZE < 4096) {
+    if (num_lines_ * BASE_CACHELINE_SIZE < 4096) {
       num_lines_++;
     } else {
       num_lines_--;
     }
   }
-  total_bits_ = num_lines_ * BASIS_CACHELINE_SIZE * 8;
+  total_bits_ = num_lines_ * BASE_CACHELINE_SIZE * 8;
 
   const double minus_log_error_rate = -std::log(error_rate_);
   DCHECK_GT(minus_log_error_rate, 0);

@@ -27,7 +27,6 @@
 
 #include "basis/bloom_filter/filter_policy.hpp"
 #include "basis/numerics/pack_numbers.hpp"
-#include "basis/core/optimization_macros.hpp"
 
 #include <string>
 #include <memory>
@@ -39,6 +38,7 @@
 #include <base/bind.h>
 #include <base/strings/string_piece.h>
 #include <base/hash/hash.h>
+#include <base/compiler_specific.h>
 
 namespace basis {
 
@@ -57,9 +57,9 @@ class FullFilterBitsBuilder : public FilterBitsBuilder {
 
   // Create a filter that for hashes [0, n-1], the filter is allocated here
   // When creating filter, it is ensured that
-  // total_bits = num_lines * BASIS_CACHELINE_SIZE * 8
+  // total_bits = num_lines * BASE_CACHELINE_SIZE * 8
   // dst len is >= kMetaDataSize (5), 1 for num_probes, 4 for num_lines
-  // Then total_bits = (len - kMetaDataSize) * 8, and BASIS_CACHELINE_SIZE could be calculated
+  // Then total_bits = (len - kMetaDataSize) * 8, and BASE_CACHELINE_SIZE could be calculated
   // +----------------------------------------------------------------+
   // |              filter data with length total_bits / 8            |
   // +----------------------------------------------------------------+

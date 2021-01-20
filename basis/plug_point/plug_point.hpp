@@ -30,20 +30,33 @@
 
 // USAGE
 //
-// GET_PLUG_POINT(plugPoint, FailPoint_FP1);
+// STRONG_PLUG_POINT(PP_AcceptedConnectionAborted);
+// // class member var.
+// PP_AcceptedConnectionAborted* pp_AcceptedConnectionAborted_ = nullptr;
+// // in class constructor
+// pp_AcceptedConnectionAborted_ = PLUG_POINT_INSTANCE(PP_AcceptedConnectionAborted);
+//
+#define PLUG_POINT_INSTANCE(...) \
+  __VA_ARGS__::GetInstance(FROM_HERE, \
+      ::basis::PlugPointName{STRINGIFY_VA_ARG(__VA_ARGS__)})
+
+/// \note Avoid `ASSIGN_PLUG_POINT`,
+/// prefer to cache pointer using `PLUG_POINT_INSTANCE`
+//
+// USAGE
+//
+// ASSIGN_PLUG_POINT(plugPoint, FailPoint_FP1);
 // const base::Optional<bool> pluggedReturn = plugPoint->Run(int{1}, double{3.0});
 // if(UNLIKELY(pluggedReturn))
 // {
 //   return pluggedReturn.value();
 // }
-#define GET_PLUG_POINT(VAR, ...) \
-  __VA_ARGS__* VAR = \
-    __VA_ARGS__::GetInstance(FROM_HERE, \
-      ::basis::PlugPointName{STRINGIFY_VA_ARG(__VA_ARGS__)})
+#define ASSIGN_PLUG_POINT(VAR, ...) \
+  __VA_ARGS__* VAR = PLUG_POINT_INSTANCE(__VA_ARGS__)
 
 // USAGE
 //
-// GET_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
+// ASSIGN_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
 // RETURN_IF_PLUG_POINT_HAS_VALUE(plugPointPtr, REFERENCED(message));
 #define RETURN_IF_PLUG_POINT_HAS_VALUE(plugPoint, ...) \
   do {                                                 \
@@ -57,7 +70,7 @@
 
 // USAGE
 //
-// GET_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
+// ASSIGN_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
 // RETURN_IF_PLUG_POINT_WITH_VALUE(plugPointPtr, REFERENCED(message));
 #define RETURN_IF_PLUG_POINT_WITH_VALUE(plugPoint, ...) \
   do {                                                  \
@@ -340,7 +353,8 @@ class StrongPlugPoint<Tag, RetType(ArgsType...)>
     /// and constructed on first access
     static ::base::NoDestructor<StrongPlugPoint>
       instance(location, name);
-    DCHECK_EQ(instance.get()->getName(), name);
+    DCHECK_EQ(instance.get()->getName(), name)
+      << "debug name must match real name";
     return instance.get();
   }
 

@@ -27,19 +27,32 @@
 
 // USAGE
 //
-// GET_FAIL_POINT(failPoint, FailPoint_FP1);
+// STRONG_FAIL_POINT(FP_AcceptedConnectionAborted);
+// // class member var.
+// FP_AcceptedConnectionAborted* fp_AcceptedConnectionAborted_ = nullptr;
+// // in class constructor
+// fp_AcceptedConnectionAborted_ = FAIL_POINT_INSTANCE(FP_AcceptedConnectionAborted);
+//
+#define FAIL_POINT_INSTANCE(...) \
+    __VA_ARGS__::GetInstance(FROM_HERE, \
+      ::basis::FailPointName{STRINGIFY_VA_ARG(__VA_ARGS__)})
+
+/// \note Avoid `ASSIGN_FAIL_POINT`,
+/// prefer to cache pointer using `FAIL_POINT_INSTANCE`
+//
+// USAGE
+//
+// ASSIGN_FAIL_POINT(failPoint, FailPoint_FP1);
 // if(UNLIKELY(failPoint->checkFail()))
 // {
 //   DCHECK_EQ(failPoint->data().FindIntPath("int_key").value(), 1234);
 // }
-#define GET_FAIL_POINT(VAR, ...) \
-  __VA_ARGS__* VAR = \
-    __VA_ARGS__::GetInstance(FROM_HERE, \
-      ::basis::FailPointName{STRINGIFY_VA_ARG(__VA_ARGS__)})
+#define ASSIGN_FAIL_POINT(VAR, ...) \
+  __VA_ARGS__* VAR = FAIL_POINT_INSTANCE(__VA_ARGS__)
 
 // USAGE
 //
-// GET_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
+// ASSIGN_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
 // RETURN_IF_FAIL_POINT_FAIL(failPointPtr, REFERENCED(message));
 #define RETURN_IF_FAIL_POINT(failPoint, ...) \
   do {                                       \
@@ -51,7 +64,7 @@
 
 // USAGE
 //
-// GET_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
+// ASSIGN_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
 // SET_IF_FAIL_POINT(failPointPtr, forceClosing = true);
 #define SET_IF_FAIL_POINT(failPoint, ...) \
   do {                                    \
@@ -263,7 +276,8 @@ class StrongFailPoint
     /// and constructed on first access
     static ::base::NoDestructor<StrongFailPoint<Tag>>
       instance(location, name);
-    DCHECK_EQ(instance.get()->getName(), name);
+    DCHECK_EQ(instance.get()->getName(), name)
+      << "debug name must match real name";
     return instance.get();
   }
 

@@ -67,8 +67,8 @@ public:
     , Args &&... args)
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(registry_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(registry_);
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(taskRunner_.get());
 
@@ -110,7 +110,7 @@ public:
   const ECS::Registry& registry() const NO_EXCEPTION
     GUARD_METHOD_ON_UNKNOWN_THREAD(registryUnsafe)
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(registry_);
+    DCHECK_NOT_THREAD_BOUND(registry_);
 
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(registryUnsafe);
 
@@ -125,7 +125,7 @@ public:
   {
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(registryUnsafe);
 
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(registry_);
+    DCHECK_NOT_THREAD_BOUND(registry_);
 
     return registry_;
   }
@@ -134,7 +134,7 @@ public:
   bool RunsTasksInCurrentSequence() const NO_EXCEPTION
     GUARD_METHOD_ON_UNKNOWN_THREAD(RunsTasksInCurrentSequence)
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(RunsTasksInCurrentSequence);
 
@@ -145,7 +145,7 @@ public:
   TaskRunnerType& taskRunner()
     GUARD_METHOD_ON_UNKNOWN_THREAD(taskRunner)
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(taskRunner);
 
@@ -156,7 +156,7 @@ public:
   const TaskRunnerType& taskRunner() const
     GUARD_METHOD_ON_UNKNOWN_THREAD(taskRunner)
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(taskRunner);
 
@@ -174,7 +174,7 @@ public:
   operator ECS::Registry&() NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     /// \note we assume that purpose of
     /// calling `operator*` is to change registry,
@@ -194,7 +194,7 @@ public:
   const ECS::Registry& operator*() const NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     /// \note we assume that purpose of
     /// calling `operator*` is to change registry,
@@ -207,7 +207,7 @@ public:
   ECS::Registry& operator*() NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     /// \note we assume that purpose of
     /// calling `operator*` is to change registry,
@@ -227,7 +227,7 @@ public:
   const ECS::Registry* operator->() const
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     /// \note we assume that purpose of
     /// calling `operator->` is to change registry,
@@ -240,7 +240,7 @@ public:
   ECS::Registry* operator->()
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
     /// \note we assume that purpose of
     /// calling `operator->` is to change registry,
@@ -263,12 +263,12 @@ private:
   /// \note do not destruct |Listener| while |taskRunner_|
   /// has scheduled or executing tasks
   TaskRunnerType taskRunner_
-    GUARD_MEMBER_OF_UNKNOWN_THREAD(taskRunner_);
+    GUARD_NOT_THREAD_BOUND(taskRunner_);
 
   // Registry stores entities and arranges pools of components
   /// \note entt API is not thread-safe
   ECS::Registry registry_
-    GUARD_MEMBER_OF_UNKNOWN_THREAD(registry_);
+    GUARD_NOT_THREAD_BOUND(registry_);
 
   SET_WEAK_POINTERS(SafeRegistry);
 

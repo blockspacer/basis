@@ -104,7 +104,8 @@ std::vector<
 
 ```cpp
 STRONG_PLUG_POINT(PlugPoint_RecievedData, base::Optional<bool>(const std::string&));
-GET_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
+// NOTE: Avoid `ASSIGN_PLUG_POINT`, prefer to cache pointer using `PLUG_POINT_INSTANCE`
+ASSIGN_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
 RETURN_IF_PLUG_POINT_WITH_VALUE(plugPointPtr, REFERENCED(message));
 ```
 

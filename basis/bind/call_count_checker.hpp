@@ -167,14 +167,14 @@ class CallCountChecker
  public:
   static constexpr CounterType kZeroCallCount = 0;
 
-  GUARD_METHOD_ON_UNKNOWN_THREAD(CallCountChecker)
+  GUARD_NOT_THREAD_BOUND_METHOD(CallCountChecker)
   CallCountChecker(
     const ::base::Location& location
     , const CounterType& expectedCallCount)
     : expectedCallCount_(expectedCallCount)
     , location_(location)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(CallCountChecker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(CallCountChecker);
 
     DCHECK_GE(expectedCallCount_, kZeroCallCount)
       << location_.ToString()
@@ -233,9 +233,9 @@ class CallCountChecker
 
   // inc call count on callback invocation
   void runCheckBeforeInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckBeforeInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckBeforeInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
 
     DCHECK(!is_moved_out_.load());
 
@@ -247,9 +247,9 @@ class CallCountChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckAfterInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckAfterInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
   }
 
  private:

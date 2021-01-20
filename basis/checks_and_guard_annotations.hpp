@@ -47,7 +47,7 @@
 //  `PUBLIC_METHOD_RUN_ON(&perConnectionStrand_)` etc.
 // * Document that you must take care of thread-safety while using some data or method
 //   See `CREATE_METHOD_GUARD`, `GUARD_NOT_THREAD_BOUND`,
-//   `GUARD_METHOD_ON_UNKNOWN_THREAD`, `DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD`,
+//   `GUARD_NOT_THREAD_BOUND_METHOD`, `DCHECK_NOT_THREAD_BOUND_METHOD`,
 //   `DCHECK_NOT_THREAD_BOUND` etc.
 
 namespace basis {
@@ -717,7 +717,7 @@ class SCOPED_LOCKABLE
 
 /// \note Prefer instead `RUN_ON_ANY_THREAD_LOCKS_EXCLUDED`
 // `RUN_ON_ANY_THREAD` can be used to force API users
-// to use `DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD` on each call to some function because
+// to use `DCHECK_NOT_THREAD_BOUND_METHOD` on each call to some function because
 // function is NOT thread-safe and must be avoided
 // i.e. it makes API ugly intentionally
 /// \note Alternatively you can combine it with multiple `mutexes`
@@ -735,7 +735,7 @@ class SCOPED_LOCKABLE
 //   // ...
 //
 //   {
-//     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(logFailure); // documents about thread-safety
+//     DCHECK_NOT_THREAD_BOUND_METHOD(logFailure); // documents about thread-safety
 //     logFailure(ec, "open");
 //   }
 //
@@ -745,7 +745,7 @@ class SCOPED_LOCKABLE
 //   MUST_USE_RETURN_VALUE
 //   ALWAYS_INLINE
 //   ECS::Registry& registry() NO_EXCEPTION
-//     /// \note force API users to use `DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD`
+//     /// \note force API users to use `DCHECK_NOT_THREAD_BOUND_METHOD`
 //     /// on each call to `registry()` because
 //     /// function is NOT thread-safe and must be avoided
 //     /// in preference to `operator*()` or `operator->()`
@@ -770,7 +770,7 @@ class SCOPED_LOCKABLE
 //   void logFailure(const ErrorCode& ec, char const* what)
 //    RUN_ON_ANY_THREAD_LOCKS_EXCLUDED(logFailure) // documents about thread-safety
 //  {
-//    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(logFailure); // documents about thread-safety
+//    DCHECK_NOT_THREAD_BOUND_METHOD(logFailure); // documents about thread-safety
 //
 //    // ...
 //  }
@@ -799,10 +799,10 @@ class SCOPED_LOCKABLE
 //   ~MySharedClass()
 //   {
 //     // documents that destructor called from any thread
-//     DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(MySharedClassDestructor);
+//     DCHECK_NOT_THREAD_BOUND_METHOD(MySharedClassDestructor);
 //   }
 // };
-#define DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(Name) \
+#define DCHECK_NOT_THREAD_BOUND_METHOD(Name) \
   DCHECK_THREAD_GUARD_SCOPE_ENTER(FUNC_GUARD(Name))
 
 #define DCHECK_MEMBER_GUARD(Name) \
@@ -829,7 +829,7 @@ class SCOPED_LOCKABLE
 // Documents that class (or struct, etc.)
 // `public:` member fuction is not thread-bound
 // i.e. can be used by multiple threads.
-#define GUARD_METHOD_ON_UNKNOWN_THREAD(Name) \
+#define GUARD_NOT_THREAD_BOUND_METHOD(Name) \
   THREAD_ANNOTATION_ATTRIBUTE__RUN_ON_ANY_THREAD_LOCKS_EXCLUDED(FUNC_GUARD(Name))
 
 #define CREATE_METHOD_GUARD(Name) \

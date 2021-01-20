@@ -46,7 +46,7 @@ class RefChecker
 {
  public:
   template <typename U>
-  GUARD_METHOD_ON_UNKNOWN_THREAD(RefChecker)
+  GUARD_NOT_THREAD_BOUND_METHOD(RefChecker)
   explicit
   RefChecker(
     const ::base::Location& location
@@ -54,7 +54,7 @@ class RefChecker
     : ptr_(&ref)
     , location_(location)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(RefChecker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(RefChecker);
 
     /// \note disallows nullptr
     CHECK(ptr_)
@@ -81,9 +81,9 @@ class RefChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckBeforeInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckBeforeInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
 
     /// \note disallows nullptr
     CHECK(ptr_)
@@ -92,9 +92,9 @@ class RefChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckAfterInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckAfterInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
   }
 
  private:

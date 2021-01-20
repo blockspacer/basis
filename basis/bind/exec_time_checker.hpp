@@ -73,14 +73,14 @@ class ExecTimeChecker
 
   static constexpr ::base::TimeDelta kMaxExecTime = ::base::TimeDelta::Max();
 
-  GUARD_METHOD_ON_UNKNOWN_THREAD(ExecTimeChecker)
+  GUARD_NOT_THREAD_BOUND_METHOD(ExecTimeChecker)
   ExecTimeChecker(
     const ::base::Location& location
     , const ::base::TimeDelta& limitExecTime)
     : limitExecTime_(limitExecTime)
     , location_(location)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(ExecTimeChecker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(ExecTimeChecker);
 
     DCHECK_GE(limitExecTime_, kMinExecTime)
       << location_.ToString()
@@ -104,17 +104,17 @@ class ExecTimeChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckBeforeInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckBeforeInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
 
     perSequenceStoreTimeBeforeCallbackExecution();
   }
 
   void runCheckAfterInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckAfterInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckAfterInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
 
     ::base::Time startExecTime
       = perSequenceGetTimeBeforeCallbackExecution();

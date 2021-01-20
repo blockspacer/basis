@@ -46,7 +46,7 @@ class PtrChecker
 {
  public:
   template <typename U>
-  GUARD_METHOD_ON_UNKNOWN_THREAD(PtrChecker)
+  GUARD_NOT_THREAD_BOUND_METHOD(PtrChecker)
   explicit
   PtrChecker(
     const ::base::Location& location
@@ -54,7 +54,7 @@ class PtrChecker
     : ptr_(ptr)
     , location_(location)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(PtrChecker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(PtrChecker);
 
     /// \note disallows nullptr
     CHECK(ptr_)
@@ -81,9 +81,9 @@ class PtrChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckBeforeInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckBeforeInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
 
     /// \note disallows nullptr
     CHECK(ptr_)
@@ -92,9 +92,9 @@ class PtrChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckAfterInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckAfterInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
   }
 
  private:

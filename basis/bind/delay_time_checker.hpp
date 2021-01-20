@@ -59,7 +59,7 @@ class DelayTimeChecker
 
   static constexpr ::base::TimeDelta kMaxDelayTime = ::base::TimeDelta::Max();
 
-  GUARD_METHOD_ON_UNKNOWN_THREAD(DelayTimeChecker)
+  GUARD_NOT_THREAD_BOUND_METHOD(DelayTimeChecker)
   DelayTimeChecker(
     const ::base::Location& location
     , const ::base::TimeDelta& limitDelayTime)
@@ -67,7 +67,7 @@ class DelayTimeChecker
     , limitDelayTime_(limitDelayTime)
     , location_(location)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(DelayTimeChecker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(DelayTimeChecker);
 
     DCHECK_GE(limitDelayTime_, kMinDelayTime)
       << location_.ToString()
@@ -96,9 +96,9 @@ class DelayTimeChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckBeforeInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckBeforeInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
 
     ::base::TimeDelta elapsedTime
       = ::base::TimeDelta(base::Time::Now() - startDelayTime_);
@@ -118,9 +118,9 @@ class DelayTimeChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckAfterInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckAfterInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
   }
 
  private:

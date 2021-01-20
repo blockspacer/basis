@@ -108,11 +108,11 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   const ECS::Registry& registry() const NO_EXCEPTION
-    GUARD_METHOD_ON_UNKNOWN_THREAD(registryUnsafe)
+    GUARD_NOT_THREAD_BOUND_METHOD(registryUnsafe)
   {
     DCHECK_NOT_THREAD_BOUND(registry_);
 
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(registryUnsafe);
+    DCHECK_NOT_THREAD_BOUND_METHOD(registryUnsafe);
 
     return registry_;
   }
@@ -121,9 +121,9 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   ECS::Registry& registryUnsafe() NO_EXCEPTION
-    GUARD_METHOD_ON_UNKNOWN_THREAD(registryUnsafe)
+    GUARD_NOT_THREAD_BOUND_METHOD(registryUnsafe)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(registryUnsafe);
+    DCHECK_NOT_THREAD_BOUND_METHOD(registryUnsafe);
 
     DCHECK_NOT_THREAD_BOUND(registry_);
 
@@ -132,33 +132,33 @@ public:
 
   ALWAYS_INLINE
   bool RunsTasksInCurrentSequence() const NO_EXCEPTION
-    GUARD_METHOD_ON_UNKNOWN_THREAD(RunsTasksInCurrentSequence)
+    GUARD_NOT_THREAD_BOUND_METHOD(RunsTasksInCurrentSequence)
   {
     DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(RunsTasksInCurrentSequence);
+    DCHECK_NOT_THREAD_BOUND_METHOD(RunsTasksInCurrentSequence);
 
     return taskRunner_->RunsTasksInCurrentSequence();
   }
 
   ALWAYS_INLINE
   TaskRunnerType& taskRunner()
-    GUARD_METHOD_ON_UNKNOWN_THREAD(taskRunner)
+    GUARD_NOT_THREAD_BOUND_METHOD(taskRunner)
   {
     DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(taskRunner);
+    DCHECK_NOT_THREAD_BOUND_METHOD(taskRunner);
 
     return taskRunner_;
   }
 
   ALWAYS_INLINE
   const TaskRunnerType& taskRunner() const
-    GUARD_METHOD_ON_UNKNOWN_THREAD(taskRunner)
+    GUARD_NOT_THREAD_BOUND_METHOD(taskRunner)
   {
     DCHECK_NOT_THREAD_BOUND(taskRunner_);
 
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(taskRunner);
+    DCHECK_NOT_THREAD_BOUND_METHOD(taskRunner);
 
     return taskRunner_;
   }

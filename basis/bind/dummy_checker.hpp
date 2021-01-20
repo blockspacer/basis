@@ -11,10 +11,10 @@ template <typename... Args>
 class DummyChecker
 {
  public:
-  GUARD_METHOD_ON_UNKNOWN_THREAD(DummyChecker)
+  GUARD_NOT_THREAD_BOUND_METHOD(DummyChecker)
   DummyChecker(Args&&... args)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(DummyChecker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(DummyChecker);
 
     ((void)(UNREFERENCED_PARAMETER(args)), ...);
   }
@@ -36,15 +36,15 @@ class DummyChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckBeforeInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckBeforeInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
   }
 
   void runCheckAfterInvoker()
-  GUARD_METHOD_ON_UNKNOWN_THREAD(runCheckAfterInvoker)
+  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
   {
-    DCHECK_METHOD_RUN_ON_UNKNOWN_THREAD(runCheckAfterInvoker);
+    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
   }
 
  private:

@@ -308,6 +308,10 @@ class SCOPED_LOCKABLE NetRegistryScope {
 // // ...
 // DCHECK_THREAD_GUARD_SCOPE(registry_);
 // DCHECK_RUN_ON_REGISTRY(&registry_);
+//
+// ::basis::UnownedRef<ECS::SafeRegistry> registry2_;
+// DCHECK_RUN_ON_REGISTRY(&(*registry2_));
+//
 #define DCHECK_RUN_ON_REGISTRY(x)                                              \
   ECS::NetRegistryScope internal_registry_scope(x); \
   DCHECK((x)); \

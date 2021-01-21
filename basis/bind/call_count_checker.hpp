@@ -167,15 +167,12 @@ class CallCountChecker
  public:
   static constexpr CounterType kZeroCallCount = 0;
 
-  GUARD_NOT_THREAD_BOUND_METHOD(CallCountChecker)
   CallCountChecker(
     const ::base::Location& location
     , const CounterType& expectedCallCount)
     : expectedCallCount_(expectedCallCount)
     , location_(location)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(CallCountChecker);
-
     DCHECK_GE(expectedCallCount_, kZeroCallCount)
       << location_.ToString()
       << " Expected call count expected to be >= 0";
@@ -233,10 +230,7 @@ class CallCountChecker
 
   // inc call count on callback invocation
   void runCheckBeforeInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
-
     DCHECK(!is_moved_out_.load());
 
     DCHECK_LE(callCount_.load(), std::numeric_limits<CounterType>::max())
@@ -247,10 +241,7 @@ class CallCountChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
-  {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
-  }
+  {}
 
  private:
   std::atomic<CounterType> callCount_;
@@ -260,15 +251,6 @@ class CallCountChecker
   ::base::Location location_;
 
   std::atomic<bool> is_moved_out_{false};
-
-  // Object construction can be on any thread
-  CREATE_METHOD_GUARD(CallCountChecker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckBeforeInvoker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckAfterInvoker);
 
   DISALLOW_COPY_AND_ASSIGN(CallCountChecker);
 };

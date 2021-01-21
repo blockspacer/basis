@@ -386,7 +386,7 @@ std::string Status::ToString() const {
       , location());
   } else {
     const ErrorSpace* const space = error_space();
-    DCHECK_VALID_PTR_OR(space);
+    DCHECK_VALID_PTR(space);
     status = base::Substitute(
       "$1 $2 $3 ($4)"
       , space->SpaceName()

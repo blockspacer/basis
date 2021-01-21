@@ -59,7 +59,6 @@ class DelayTimeChecker
 
   static constexpr ::base::TimeDelta kMaxDelayTime = ::base::TimeDelta::Max();
 
-  GUARD_NOT_THREAD_BOUND_METHOD(DelayTimeChecker)
   DelayTimeChecker(
     const ::base::Location& location
     , const ::base::TimeDelta& limitDelayTime)
@@ -67,8 +66,6 @@ class DelayTimeChecker
     , limitDelayTime_(limitDelayTime)
     , location_(location)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(DelayTimeChecker);
-
     DCHECK_GE(limitDelayTime_, kMinDelayTime)
       << location_.ToString()
       << " Delay time limit must be >= 0";
@@ -96,10 +93,7 @@ class DelayTimeChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
-
     ::base::TimeDelta elapsedTime
       = ::base::TimeDelta(base::Time::Now() - startDelayTime_);
 
@@ -118,10 +112,7 @@ class DelayTimeChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
-  {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
-  }
+  {}
 
  private:
   ::base::Time startDelayTime_;
@@ -129,15 +120,6 @@ class DelayTimeChecker
   ::base::TimeDelta limitDelayTime_;
 
   ::base::Location location_;
-
-  // Object construction can be on any thread
-  CREATE_METHOD_GUARD(DelayTimeChecker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckBeforeInvoker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckAfterInvoker);
 
   DISALLOW_COPY_AND_ASSIGN(DelayTimeChecker);
 };

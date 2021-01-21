@@ -230,8 +230,7 @@ class FixedSizeFilterBloomTestContext : public BloomTestContext {
   std::unique_ptr<const FilterPolicy> filter_policy_{
       NewFixedSizeFilterPolicy(
           FilterPolicy::kDefaultFixedSizeFilterBits,
-          FilterPolicy::kDefaultFixedSizeFilterErrorRate,
-          &LOG_STREAM(INFO))};
+          FilterPolicy::kDefaultFixedSizeFilterErrorRate)};
 };
 
 TYPED_ENUM(BuilderReaderBloomTestType, int, (kFullFilter)(kFixedSizeFilter))

@@ -102,7 +102,7 @@ basis::StatusOr<int64_t> VarInt::ToInt64() const {
     << base::Substitute("VarInt $1 cannot be converted"
                         " to int64 due to invalid stored pointer", *this);
 
-  DCHECK_VALID_PTR_OR(impl_.get());
+  DCHECK_VALID_PTR(impl_.get());
 
 #if DCHECK_IS_ON()
   // Validates for overflow, invalid chars etc.

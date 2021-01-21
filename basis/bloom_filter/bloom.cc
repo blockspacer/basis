@@ -118,9 +118,8 @@ char* FullFilterBitsBuilder::ReserveSpace(const int num_entry,
   return data;
 }
 
-FullFilterBitsReader::FullFilterBitsReader(const base::StringPiece& contents, std::ostream* logger)
-    : logger_(DCHECK_VALID_PTR_OR(logger)),
-      data_(const_cast<char*>(contents.data())),
+FullFilterBitsReader::FullFilterBitsReader(const base::StringPiece& contents)
+    : data_(const_cast<char*>(contents.data())),
       data_len_(static_cast<uint32_t>(contents.size())),
       num_probes_(0),
       num_lines_(0) {
@@ -214,7 +213,7 @@ FilterBitsBuilder* BloomFilterPolicy::GetFilterBitsBuilder() const {
 }
 
 FilterBitsReader* BloomFilterPolicy::GetFilterBitsReader(const base::StringPiece& contents) const {
-  return new FullFilterBitsReader(contents, &LOG_STREAM(INFO));
+  return new FullFilterBitsReader(contents);
 }
 
 BloomFilterPolicy::BloomFilterPolicy(int bits_per_key, bool use_block_based_builder)
@@ -334,10 +333,10 @@ base::StringPiece FixedSizeFilterBitsBuilder::Finish(std::unique_ptr<const char[
   return base::StringPiece(buf->get(), FilterSize());
 }
 
-FixedSizeFilterPolicy::FixedSizeFilterPolicy(uint32_t total_bits, double error_rate, std::ostream* logger)
+FixedSizeFilterPolicy::FixedSizeFilterPolicy(uint32_t total_bits, double error_rate)
     : total_bits_(total_bits),
-      error_rate_(error_rate),
-      logger_(logger) {
+      error_rate_(error_rate)
+{
   DCHECK_GT(error_rate, 0);
   // Make sure num_probes > 0.
   DCHECK_GT(static_cast<int64_t> (-std::log(error_rate) / kLog2), 0);
@@ -348,7 +347,7 @@ FilterBitsBuilder* FixedSizeFilterPolicy::GetFilterBitsBuilder() const {
 }
 
 FilterBitsReader* FixedSizeFilterPolicy::GetFilterBitsReader(const base::StringPiece& contents) const {
-  return new FixedSizeFilterBitsReader(contents, logger_);
+  return new FixedSizeFilterBitsReader(contents);
 }
 
 // static
@@ -364,9 +363,8 @@ const FilterPolicy* NewBloomFilterPolicy(int bits_per_key,
 }
 
 const FilterPolicy* NewFixedSizeFilterPolicy(uint32_t total_bits,
-                                             double error_rate,
-                                             std::ostream* logger) {
-  return new FixedSizeFilterPolicy(total_bits, error_rate, logger);
+                                             double error_rate) {
+  return new FixedSizeFilterPolicy(total_bits, error_rate);
 }
 
 }  // namespace basis

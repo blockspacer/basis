@@ -46,7 +46,6 @@ class PtrChecker
 {
  public:
   template <typename U>
-  GUARD_NOT_THREAD_BOUND_METHOD(PtrChecker)
   explicit
   PtrChecker(
     const ::base::Location& location
@@ -54,8 +53,6 @@ class PtrChecker
     : ptr_(ptr)
     , location_(location)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(PtrChecker);
-
     /// \note disallows nullptr
     CHECK(ptr_)
       << location_.ToString();
@@ -81,10 +78,7 @@ class PtrChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
-
     /// \note disallows nullptr
     CHECK(ptr_)
       << location_.ToString();
@@ -92,10 +86,7 @@ class PtrChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
-  {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
-  }
+  {}
 
  private:
   // check that object is alive, use memory tool like ASAN
@@ -113,15 +104,6 @@ class PtrChecker
   PtrType* ptr_ = nullptr;
 
   ::base::Location location_;
-
-  // Object construction can be on any thread
-  CREATE_METHOD_GUARD(PtrChecker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckBeforeInvoker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckAfterInvoker);
 
   DISALLOW_COPY_AND_ASSIGN(PtrChecker);
 };

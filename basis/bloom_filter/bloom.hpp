@@ -94,14 +94,13 @@ class FullFilterBitsBuilder : public FilterBitsBuilder {
 
 class FullFilterBitsReader : public FilterBitsReader {
  public:
-  explicit FullFilterBitsReader(const base::StringPiece& contents, std::ostream* logger);
+  explicit FullFilterBitsReader(const base::StringPiece& contents);
 
   ~FullFilterBitsReader() {}
 
   bool MayMatch(const base::StringPiece& entry) override;
 
  private:
-  std::ostream* logger_;
   // Filter meta data
   char* data_;
   uint32_t data_len_;
@@ -221,13 +220,13 @@ class FixedSizeFilterBitsReader : public FullFilterBitsReader {
   FixedSizeFilterBitsReader(const FixedSizeFilterBitsReader&) = delete;
   void operator=(const FixedSizeFilterBitsReader&) = delete;
 
-  explicit FixedSizeFilterBitsReader(const base::StringPiece& contents, std::ostream* logger)
-      : FullFilterBitsReader(contents, logger) {}
+  explicit FixedSizeFilterBitsReader(const base::StringPiece& contents)
+      : FullFilterBitsReader(contents) {}
 };
 
 class FixedSizeFilterPolicy : public FilterPolicy {
  public:
-  explicit FixedSizeFilterPolicy(uint32_t total_bits, double error_rate, std::ostream* logger);
+  explicit FixedSizeFilterPolicy(uint32_t total_bits, double error_rate);
 
   virtual FilterPolicy::FilterType GetFilterType() const override {
     return FilterType::kFixedSizeFilter;
@@ -257,14 +256,12 @@ class FixedSizeFilterPolicy : public FilterPolicy {
  private:
   uint32_t total_bits_;
   double error_rate_;
-  std::ostream* logger_;
 };
 
 const FilterPolicy* NewBloomFilterPolicy(int bits_per_key,
                                          bool use_block_based_builder);
 
 const FilterPolicy* NewFixedSizeFilterPolicy(uint32_t total_bits,
-                                             double error_rate,
-                                             std::ostream* logger);
+                                             double error_rate);
 
 }  // namespace basis

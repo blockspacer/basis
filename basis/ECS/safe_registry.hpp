@@ -67,8 +67,7 @@ public:
     , Args &&... args)
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-    DCHECK_NOT_THREAD_BOUND(registry_);
+    DCHECK_NOT_THREAD_BOUND_GUARD(registry_);
 
     DCHECK_RUN_ON_SEQUENCED_RUNNER(taskRunner_.get());
 
@@ -108,11 +107,8 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   const ECS::Registry& registry() const NO_EXCEPTION
-    GUARD_NOT_THREAD_BOUND_METHOD(registryUnsafe)
   {
-    DCHECK_NOT_THREAD_BOUND(registry_);
-
-    DCHECK_NOT_THREAD_BOUND_METHOD(registryUnsafe);
+    DCHECK_NOT_THREAD_BOUND_GUARD(registry_);
 
     return registry_;
   }
@@ -121,45 +117,21 @@ public:
   MUST_USE_RETURN_VALUE
   ALWAYS_INLINE
   ECS::Registry& registryUnsafe() NO_EXCEPTION
-    GUARD_NOT_THREAD_BOUND_METHOD(registryUnsafe)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(registryUnsafe);
-
-    DCHECK_NOT_THREAD_BOUND(registry_);
+    DCHECK_NOT_THREAD_BOUND_GUARD(registry_);
 
     return registry_;
   }
 
   ALWAYS_INLINE
   bool RunsTasksInCurrentSequence() const NO_EXCEPTION
-    GUARD_NOT_THREAD_BOUND_METHOD(RunsTasksInCurrentSequence)
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
-    DCHECK_NOT_THREAD_BOUND_METHOD(RunsTasksInCurrentSequence);
-
     return taskRunner_->RunsTasksInCurrentSequence();
   }
 
   ALWAYS_INLINE
-  TaskRunnerType& taskRunner()
-    GUARD_NOT_THREAD_BOUND_METHOD(taskRunner)
-  {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
-    DCHECK_NOT_THREAD_BOUND_METHOD(taskRunner);
-
-    return taskRunner_;
-  }
-
-  ALWAYS_INLINE
   const TaskRunnerType& taskRunner() const
-    GUARD_NOT_THREAD_BOUND_METHOD(taskRunner)
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
-    DCHECK_NOT_THREAD_BOUND_METHOD(taskRunner);
-
     return taskRunner_;
   }
 
@@ -174,8 +146,6 @@ public:
   operator ECS::Registry&() NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
     /// \note we assume that purpose of
     /// calling `operator*` is to change registry,
     /// so we need to validate thread-safety
@@ -194,8 +164,6 @@ public:
   const ECS::Registry& operator*() const NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
     /// \note we assume that purpose of
     /// calling `operator*` is to change registry,
     /// so we need to validate thread-safety
@@ -207,8 +175,6 @@ public:
   ECS::Registry& operator*() NO_EXCEPTION
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
     /// \note we assume that purpose of
     /// calling `operator*` is to change registry,
     /// so we need to validate thread-safety
@@ -227,8 +193,6 @@ public:
   const ECS::Registry* operator->() const
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
     /// \note we assume that purpose of
     /// calling `operator->` is to change registry,
     /// so we need to validate thread-safety
@@ -240,8 +204,6 @@ public:
   ECS::Registry* operator->()
     PUBLIC_METHOD_RUN_ON(taskRunner_.get())
   {
-    DCHECK_NOT_THREAD_BOUND(taskRunner_);
-
     /// \note we assume that purpose of
     /// calling `operator->` is to change registry,
     /// so we need to validate thread-safety
@@ -250,25 +212,19 @@ public:
     return &registry_;
   }
 
-public:
-  /// \note `registry(...)` is not thread-safe
-  CREATE_METHOD_GUARD(registryUnsafe);
-  CREATE_METHOD_GUARD(RunsTasksInCurrentSequence);
-  CREATE_METHOD_GUARD(taskRunner);
-
 private:
   SEQUENCE_CHECKER(sequence_checker_);
 
   // modification of |SafeRegistry_| guarded by |taskRunner_|
   /// \note do not destruct |Listener| while |taskRunner_|
   /// has scheduled or executing tasks
-  TaskRunnerType taskRunner_
-    GUARD_NOT_THREAD_BOUND(taskRunner_);
+  const TaskRunnerType taskRunner_;
 
   // Registry stores entities and arranges pools of components
   /// \note entt API is not thread-safe
+  CREATE_NOT_THREAD_BOUND_GUARD(registry_);
   ECS::Registry registry_
-    GUARD_NOT_THREAD_BOUND(registry_);
+    GUARDED_BY(NOT_THREAD_BOUND_GUARD(registry_));
 
   SET_WEAK_POINTERS(SafeRegistry);
 

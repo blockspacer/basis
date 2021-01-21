@@ -11,7 +11,7 @@
 // USAGE
 //
 // bool has_err = ...;
-// LOG_TIMING_IF(has_err, &LOG_STREAM(ERROR), "Some calculations ")
+// LOG_TIMING_IF(has_err, logging::LOG_INFO, "Some calculations ")
 // {
 //   //  ... Some calculations ...
 // }
@@ -21,7 +21,7 @@
 
 // USAGE
 //
-// LOG_TIMING(&LOG_STREAM(INFO), "Some calculations ")
+// LOG_TIMING(logging::LOG_INFO, "Some calculations ")
 // {
 //   //  ... Some calculations ...
 // }
@@ -43,13 +43,13 @@ namespace basis {
 // }
 //
 // {
-//   ::basis::ScopedLogRunTime scopedLogRunTime{&LOG_STREAM(INFO), "Some calculations "};
+//   ::basis::ScopedLogRunTime scopedLogRunTime{logging::LOG_INFO, "Some calculations "};
 //   //  ... Some calculations ...
 // }
 //
 class ScopedLogRunTime {
 public:
-  ScopedLogRunTime(std::ostream* out = &LOG_STREAM(INFO), const std::string& prefix = "");
+  ScopedLogRunTime(logging::LogSeverity = logging::LOG_INFO, const std::string& prefix = "");
 
   ~ScopedLogRunTime();
 
@@ -58,7 +58,7 @@ private:
 
   std::string prefix_;
 
-  std::ostream* stream_;
+  logging::LogSeverity severity_;
 
   DISALLOW_COPY_AND_ASSIGN(ScopedLogRunTime);
 };

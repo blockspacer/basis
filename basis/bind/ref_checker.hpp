@@ -46,7 +46,6 @@ class RefChecker
 {
  public:
   template <typename U>
-  GUARD_NOT_THREAD_BOUND_METHOD(RefChecker)
   explicit
   RefChecker(
     const ::base::Location& location
@@ -54,8 +53,6 @@ class RefChecker
     : ptr_(&ref)
     , location_(location)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(RefChecker);
-
     /// \note disallows nullptr
     CHECK(ptr_)
       << location_.ToString();
@@ -81,10 +78,7 @@ class RefChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
-
     /// \note disallows nullptr
     CHECK(ptr_)
       << location_.ToString();
@@ -92,10 +86,7 @@ class RefChecker
   }
 
   void runCheckAfterInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
-  {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
-  }
+  {}
 
  private:
   // check that object is alive, use memory tool like ASAN
@@ -113,15 +104,6 @@ class RefChecker
   RefType* ptr_ = nullptr;
 
   ::base::Location location_;
-
-  // Object construction can be on any thread
-  CREATE_METHOD_GUARD(RefChecker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckBeforeInvoker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckAfterInvoker);
 
   DISALLOW_COPY_AND_ASSIGN(RefChecker);
 };

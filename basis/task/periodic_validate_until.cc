@@ -20,8 +20,6 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
   LOG_CALL(DVLOG(99));
 
   DCHECK_RUN_ON(&sequence_checker_);
-  DCHECK_NOT_THREAD_BOUND(periodicVerifyRunner_);
-  DCHECK_NOT_THREAD_BOUND(timeoutTaskRunner_);
 
   DCHECK(base::ThreadPool::GetInstance());
   // wait and signal on different task runners
@@ -92,8 +90,6 @@ PeriodicValidateUntil::VoidPromise
     , ::basis::PeriodicCheckUntil::CheckPeriod&& checkPeriod) NO_EXCEPTION
 {
   LOG_CALL(DVLOG(99));
-
-  DCHECK_NOT_THREAD_BOUND(periodicVerifyRunner_);
 
   DCHECK(periodicVerifyRunner_);
   DCHECK_RUN_ON_SEQUENCED_RUNNER(periodicVerifyRunner_.get());

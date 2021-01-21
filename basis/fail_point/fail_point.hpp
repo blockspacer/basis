@@ -53,10 +53,19 @@
 // USAGE
 //
 // ASSIGN_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
+// IF_FAIL_POINT(failPointPtr) {
+//   return {FROM_HERE, "something"}
+// };
+#define IF_FAIL_POINT(failPoint) \
+  if(UNLIKELY(failPoint->checkFail()))
+
+// USAGE
+//
+// ASSIGN_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
 // RETURN_IF_FAIL_POINT_FAIL(failPointPtr, REFERENCED(message));
 #define RETURN_IF_FAIL_POINT(failPoint, ...) \
   do {                                       \
-    if(UNLIKELY(failPoint->checkFail()))     \
+    IF_FAIL_POINT(failPoint->checkFail())    \
     {                                        \
       return;                                \
     }                                        \

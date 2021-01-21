@@ -4,21 +4,23 @@
 
 namespace basis {
 
-ScopedLogRunTime::ScopedLogRunTime(std::ostream* out, const std::string& prefix)
+ScopedLogRunTime::ScopedLogRunTime(logging::LogSeverity severity, const std::string& prefix)
   : timer_(std::make_unique<::base::ElapsedTimer>())
-  , stream_(out)
+  , severity_(severity)
   , prefix_(prefix)
 {}
 
 basis::ScopedLogRunTime::~ScopedLogRunTime()
 {
   ::base::TimeDelta elapsed_delta = timer_->Elapsed();
-
-  *stream_
-    << prefix_
-    << "Done in : "
-    << elapsed_delta.InMilliseconds() << " milliseconds"
-    <<" (" << elapsed_delta.InNanoseconds() << " nanoseconds)";
+  if(::logging::ShouldCreateLogMessage(severity_))
+  {
+    ::logging::LogMessage(__FILE__, __LINE__, severity_).stream()
+      << prefix_
+      << "Done in : "
+      << elapsed_delta.InMilliseconds() << " milliseconds"
+      <<" (" << elapsed_delta.InNanoseconds() << " nanoseconds)";
+  }
 }
 
 }  // namespace basis

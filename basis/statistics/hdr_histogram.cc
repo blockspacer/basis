@@ -449,7 +449,7 @@ void HdrHistogram::DumpHumanReadable(std::ostream* out) const {
 ///////////////////////////////////////////////////////////////////////
 
 AbstractHistogramIterator::AbstractHistogramIterator(const HdrHistogram* histogram)
-  : histogram_(CHECK_PTR(histogram)),
+  : histogram_(CHECK_VALID_PTR_OR(histogram)),
     cur_iter_val_(),
     histogram_total_count_(histogram_->CurrentCount()),
     current_bucket_index_(0),

@@ -204,7 +204,7 @@ TEST_F(TestMemcmpableVarint, BenchmarkEncode) {
 
   LOG_TIMING(&LOG_STREAM(INFO), "Encoding integers")
   {
-  ::basis::ScopedLogRunTime scopedLogRunTime{&LOG_STREAM(INFO)};
+  ::basis::ScopedLogRunTime scopedLogRunTime{logging::LOG_INFO};
     for (int trial = 0; trial < 100; trial++) {
       for (uint64_t i = 0; i < 1000000; i++) {
         buf.clear();
@@ -228,7 +228,7 @@ TEST_F(TestMemcmpableVarint, BenchmarkDecode) {
   // Decode the whole buffer 100 times.
   LOG_TIMING(&LOG_STREAM(INFO), "Decoding integers")
   {
-    //::basis::ScopedLogRunTime scopedLogRunTime{&LOG_STREAM(INFO)};
+    //::basis::ScopedLogRunTime scopedLogRunTime{logging::LOG_INFO};
     uint64_t sum_vals = 0;
     for (int trial = 0; trial < 100; trial++) {
       base::StringPiece s(buf);

@@ -57,12 +57,21 @@
 // USAGE
 //
 // ASSIGN_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
+// IF_PLUG_POINT_HAS_VALUE(plugPointPtr, REFERENCED(message)) {
+//   return {FROM_HERE, "something"}
+// };
+#define IF_PLUG_POINT_HAS_VALUE(plugPoint, ...) \
+  if(const base::Optional<bool> pluggedReturn         \
+      = plugPoint->Run(__VA_ARGS__);                  \
+      UNLIKELY(pluggedReturn))
+
+// USAGE
+//
+// ASSIGN_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
 // RETURN_IF_PLUG_POINT_HAS_VALUE(plugPointPtr, REFERENCED(message));
 #define RETURN_IF_PLUG_POINT_HAS_VALUE(plugPoint, ...) \
   do {                                                 \
-    const base::Optional<bool> pluggedReturn           \
-      = plugPoint->Run(__VA_ARGS__);                   \
-    if(UNLIKELY(pluggedReturn))                        \
+    IF_PLUG_POINT_HAS_VALUE(plugPoint, __VA_ARGS__)    \
     {                                                  \
       return;                                          \
     }                                                  \
@@ -461,9 +470,7 @@ class PlugPointNotifierStorage
     = ::base::RepeatingCallback<RetType(ArgsType...)>;
 
   using CBList
-    = ::base::CallbackList<
-        RetType(ArgsType...)
-      >;
+    = ::std::queue<CallbackType>;
 
   using Subscription
     = typename CBList::Subscription;

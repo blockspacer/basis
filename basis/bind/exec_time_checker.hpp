@@ -73,15 +73,12 @@ class ExecTimeChecker
 
   static constexpr ::base::TimeDelta kMaxExecTime = ::base::TimeDelta::Max();
 
-  GUARD_NOT_THREAD_BOUND_METHOD(ExecTimeChecker)
   ExecTimeChecker(
     const ::base::Location& location
     , const ::base::TimeDelta& limitExecTime)
     : limitExecTime_(limitExecTime)
     , location_(location)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(ExecTimeChecker);
-
     DCHECK_GE(limitExecTime_, kMinExecTime)
       << location_.ToString()
       << " Execution time limit must be >= 0";
@@ -104,18 +101,12 @@ class ExecTimeChecker
   }
 
   void runCheckBeforeInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckBeforeInvoker);
-
     perSequenceStoreTimeBeforeCallbackExecution();
   }
 
   void runCheckAfterInvoker()
-  GUARD_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker)
   {
-    DCHECK_NOT_THREAD_BOUND_METHOD(runCheckAfterInvoker);
-
     ::base::Time startExecTime
       = perSequenceGetTimeBeforeCallbackExecution();
 
@@ -146,15 +137,6 @@ class ExecTimeChecker
   ::base::TimeDelta limitExecTime_;
 
   ::base::Location location_;
-
-  // Object construction can be on any thread
-  CREATE_METHOD_GUARD(ExecTimeChecker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckBeforeInvoker);
-
-  // can be called on any thread
-  CREATE_METHOD_GUARD(runCheckAfterInvoker);
 
   DISALLOW_COPY_AND_ASSIGN(ExecTimeChecker);
 };

@@ -11,6 +11,7 @@
 
 namespace basis {
 
+/// \note Prefer `CREATE_UNOWNED_REF_LIFETIME_GUARD` to `UnownedRef`
 /// \note Prefer `UnownedRef` to `gsl::not_null`, `std::reference_wrapper` etc.
 // UnownedRef is similar to std::reference_wrapper
 //
@@ -28,6 +29,9 @@ namespace basis {
 //
 // 5. Because |UnownedRef| expected to be NOT modified after construction,
 //    it is more thread-safe than |UnownedPtr|
+//
+// 6. When built for a memory tool like ASAN, the class provides a destructor
+//    which checks that the object being pointed to is still alive.
 
 template <class Type>
 class UnownedRef
@@ -86,8 +90,7 @@ public:
       , void
       >
     >
-  explicit UnownedRef(
-    UNOWNED_LIFETIME(const U& pObj))
+  explicit UnownedRef(const U& pObj)
     : COPIED(pObj_(&pObj))
   {
     DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
@@ -98,8 +101,7 @@ public:
   template <
     typename U
     >
-  UnownedRef(
-    UNOWNED_LIFETIME(const std::reference_wrapper<U>& pObj))
+  UnownedRef(const std::reference_wrapper<U>& pObj)
     : COPIED(pObj_(&pObj.get()))
   {
     DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
@@ -128,8 +130,7 @@ public:
   // to be NOT changed after construction
   // (but some patterns like object pool require
   // possibility of modification to avoid allocations).
-  void reset(
-    UNOWNED_LIFETIME(Type*) that)
+  void reset(Type* that)
   {
     DFAKE_SCOPED_LOCK(debug_thread_collision_warner_);
 

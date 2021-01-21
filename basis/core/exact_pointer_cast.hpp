@@ -23,7 +23,7 @@ DerivedPtr exact_pointer_cast(Base* basePtr)
   if (basePtr != nullptr
       && typeid(*basePtr) == typeid(Derived))
   {
-    DCHECK_VALID_PTR_OR(basePtr); // Supports memory tools like ASAN
+    DCHECK_VALID_PTR(basePtr); // Supports memory tools like ASAN
     return static_cast<DerivedPtr>(basePtr);
   }
 

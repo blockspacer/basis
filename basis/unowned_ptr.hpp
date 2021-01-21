@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <functional>
 
+/// \note Prefer `CREATE_UNOWNED_PTR_LIFETIME_GUARD` to `UnownedRef`
 /// \note Prefer `UnownedRef` if stored pointer
 /// always set (can not be nullptr)
 /// i.e. `UnownedPtr` should be almost never used.

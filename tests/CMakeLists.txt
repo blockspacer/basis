@@ -25,10 +25,10 @@ set( GTEST_TEST_ARGS --gtest_shuffle)
 # Usage: cmake --build build --target run_all_tests
 # NOTE: you can run single test manually like so:
 # HEAPCHECK=draconian BASE_GDBINIT_SOURCED=1 gdb -ex r -ex bt -ex q \
-#   --args $HOME/basis/build/Debug/tests/basis-tests/basis-varint \
+#   --args ~/basis/build/Debug/tests/basis-tests/basis-varint \
 #   --single-process-tests \
 #   --gtest_filter=* \
-#   --test-data-dir="$HOME/chromium_base_conan/tests/data/" \
+#   --test-data-dir="~/chromium_base_conan/tests/data/" \
 #   --enable-features=print_status_macro_error
 add_custom_target(${ROOT_PROJECT_NAME}_run_all_tests
     DEPENDS ${ROOT_PROJECT_LIB}

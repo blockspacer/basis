@@ -54,7 +54,7 @@
 //
 // ASSIGN_FAIL_POINT(failPointPtr, flexnet::ws::FailPoint_RecievedData);
 // IF_FAIL_POINT(failPointPtr) {
-//   return {FROM_HERE, "something"}
+//   return {"something"}
 // };
 #define IF_FAIL_POINT(failPoint) \
   if(UNLIKELY(failPoint->checkFail()))

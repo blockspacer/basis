@@ -35,7 +35,7 @@
 //
 // uint64_t decoded_value;
 // size_t decoded_size = 0;
-// RETURN_AND_MODIFY_IF_NOT_OK(FastDecodeUnsignedVarInt(buf, size, &decoded_value, &decoded_size))
+// RETURN_WITH_MESSAGE_IF_NOT_OK(FastDecodeUnsignedVarInt(buf, size, &decoded_value, &decoded_size))
 //   << "Data not fully decoded.";
 //
 // // ... use decoded_value ...

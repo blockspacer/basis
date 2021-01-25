@@ -173,7 +173,7 @@ basis::StatusOr<int64_t> VarInt::ToInt64() const {
                         , *this,  detected_output, expected_output);
 #endif // DCHECK_IS_ON()
 
-  return {FROM_HERE, RVALUE_CAST(detected_output)};
+  return {RVALUE_CAST(detected_output)};
 }
 
 basis::Status VarInt::FromString(const char* cstr) {

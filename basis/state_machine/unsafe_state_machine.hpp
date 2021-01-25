@@ -266,15 +266,15 @@ class UnsafeStateMachine {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
     // Do not change states if the transition is invalid.
-    ASSIGN_OR_RETURN(
+    CONSUME_OR_RETURN(
       State next_state, NextState(current_state_.load(), event));
-    // FIXME: Wait for ASSIGN_OR_RETURN impl with error message
+    // FIXME: Wait for CONSUME_OR_RETURN impl with error message
       // _.LogWarning() << "Event " << event << " [" << reason <<
       //"] was discarded in State " << current_state_);
 
     // Perform exit actions for the current state.
     for (const auto& exit_action : exit_actions_[current_state_.load()]) {
-      RETURN_AND_MODIFY_IF_NOT_OK(
+      RETURN_WITH_MESSAGE_IF_NOT_OK(
         exit_action.Run(event, next_state, recovery_event)) <<
         "Failed to perform exit action of state " << current_state_.load() <<
         " in transition to " << next_state << ".";
@@ -282,7 +282,7 @@ class UnsafeStateMachine {
 
     // Perform entry actions for the next state.
     for (const auto& entry_action : entry_actions_[next_state]) {
-      RETURN_AND_MODIFY_IF_NOT_OK(
+      RETURN_WITH_MESSAGE_IF_NOT_OK(
         entry_action.Run(event, next_state, recovery_event)) <<
         "Failed to perform entry action of state " << next_state <<
         " in transition from " << current_state_.load() << ".";
@@ -294,7 +294,7 @@ class UnsafeStateMachine {
     DVLOG(99)
       << "Changing current state to " << current_state_.load();
 
-    return ::basis::OkStatus(FROM_HERE);
+    RETURN_OK();
   }
 
   // Returns whether a given state-event pair results in a valid transition.
@@ -318,7 +318,7 @@ class UnsafeStateMachine {
     }
 
     // A valid transition was found; return the next state.
-    return {FROM_HERE, next_state_iter->second};
+    return {next_state_iter->second};
   }
 
  private:

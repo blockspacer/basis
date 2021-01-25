@@ -176,7 +176,7 @@ class ErrorSpace;
 class MUST_USE_RESULT Status final {
  public:
   // Creates a "successful" status.
-  Status(const ::base::Location& from_here);
+  Status();
 
   // Create a status in the canonical error space with the specified
   // code, and error message.  If "code == 0", error_message is
@@ -213,8 +213,6 @@ class MUST_USE_RESULT Status final {
 
   // Some pre-defined Status objects
   static const Status& OK;  // Identical to 0-arg constructor
-  static const Status& CANCELLED;
-  static const Status& UNKNOWN;
 
   // Return the canonical error space.
   static const ErrorSpace* canonical_space();
@@ -318,10 +316,6 @@ class MUST_USE_RESULT Status final {
     Rep* t = this->rep_;
     this->rep_ = that->rep_;
     that->rep_ = t;
-
-    auto loc = this->location_;
-    this->location_ = that->location_;
-    that->location_ = loc;
   }
 
   // Returns a copy of the status object with error message stripped off.
@@ -341,9 +335,13 @@ class MUST_USE_RESULT Status final {
     int canonical_code;             // 0 means use space to calculate
     const ErrorSpace* space_ptr;    // NULL means canonical_space()
     std::string* message_ptr;       // NULL means empty
+    // Each ERROR status must provide `Location`.
+    // OK status does not need `Location`.
+    // You can manually "chain" locations (converted to strings)
+    // from multiple error statuses to build their stacktrace.
+    ::base::Location location;
   };
   Rep* rep_;  // Never NULL.
-  ::base::Location location_;
 
   static void UnrefSlow(Rep*);
   inline static void Ref(Rep* r) {
@@ -374,11 +372,13 @@ class MUST_USE_RESULT Status final {
   static Rep* NewRep(const ErrorSpace*
     , int code
     , const std::string&
+    , const ::base::Location&
     , int canonical_code);
   static void ResetRep(Rep* rep
     , const ErrorSpace*
     , int code
     , const std::string&
+    , const ::base::Location&
     , int canonical_code);
   static bool EqualsSlow(const ::basis::Status& a, const ::basis::Status& b);
 
@@ -460,13 +460,12 @@ class ErrorSpace {
 // -----------------------------------------------------------------
 // Implementation details follow
 
-inline Status::Status(const ::base::Location& location)
+inline Status::Status()
   : rep_(&global_reps[0])
-  , location_(location)
 {}
 
 inline Status::Status(const Status& x)
-  : rep_(x.rep_), location_(x.location_)
+  : rep_(x.rep_)
 {
   Ref(rep_);
 }
@@ -478,7 +477,6 @@ inline Status& Status::operator=(const Status& x) {
     rep_ = x.rep_;
     Unref(old_rep);
   }
-  location_ = x.location_;
   return *this;
 }
 
@@ -495,7 +493,7 @@ inline bool Status::ok() const { return rep_->code == 0; }
 inline int Status::error_code() const { return rep_->code; }
 
 inline const ::base::Location& Status::location() const {
-  return location_;
+  return rep_->location;
 }
 
 inline const std::string& Status::error_message() const {
@@ -525,38 +523,24 @@ inline bool Status::Matches(::basis::error::Code expected) const {
 extern std::ostream& operator<<(std::ostream& os, const Status& x);
 
 // Returns an OK status, equivalent to a default constructed instance.
-Status OkStatus(const ::base::Location& location);
+Status OkStatus();
 
-#ifndef SWIG
-inline Status OkStatus(const ::base::Location& location) { return Status(location); }
-#endif  // SWIG
+inline Status OkStatus() { return Status(); }
 
 // Returns an CANCELLED status, equivalent to a default constructed instance.
 Status CancelledStatus(const ::base::Location& location, const std::string& error_message = "");
 
-#ifndef SWIG
 inline Status CancelledStatus(const ::base::Location& location, const std::string& error_message) {
-  if (error_message.empty()) {
-    static_assert(::basis::error::CANCELLED == 1, "Wrong code for ::basis::error::CANCELLED.");
-    return Status::CANCELLED;
-  }
   return Status(location, ::basis::Status::canonical_space(),
                 ::basis::Status::CANCELLED_CODE, error_message);
 }
-#endif  // SWIG
 
 // Returns an UNKNOWN status, equivalent to a default constructed instance.
 Status UnknownStatus(const ::base::Location& location, const std::string& error_message = "");
 
-#ifndef SWIG
 inline Status UnknownStatus(const ::base::Location& location, const std::string& error_message) {
-  if (error_message.empty()) {
-    static_assert(::basis::error::UNKNOWN == 2, "Wrong code for ::basis::error::UNKNOWN.");
-    return Status::UNKNOWN;
-  }
   return Status(location, ::basis::Status::canonical_space(),
                 ::basis::Status::UNKNOWN_CODE, error_message);
 }
-#endif  // SWIG
 
 }  // namespace basis

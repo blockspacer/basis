@@ -122,7 +122,7 @@ basis::Status Dependencies::removeDependencies(scoped_refptr<Dependencies> other
   RETURN_ERROR_IF(!other, INVALID_ARGUMENT)
     << "null can not be dependency";
 
-  basis::Status result(FROM_HERE);
+  basis::Status result;
 
   for (scoped_refptr<Dependency> dependency: other->storage()) {
     DCHECK(dependency);

@@ -78,9 +78,9 @@ class VarInt {
     using namespace basis::error;
 
     VarInt result;
-    RETURN_AND_MODIFY_IF_NOT_OK(result.FromString(input))
+    RETURN_WITH_MESSAGE_IF_NOT_OK(result.FromString(input))
       << "Failed to create varint from string";
-    return {FROM_HERE, std::move(result)};
+    return {std::move(result)};
   }
 
   template<std::size_t N>
@@ -88,9 +88,9 @@ class VarInt {
     using namespace basis::error;
     VarInt result;
 
-    RETURN_AND_MODIFY_IF_NOT_OK(result.FromString(DCHECK_VALID_PTR_OR(input)))
+    RETURN_WITH_MESSAGE_IF_NOT_OK(result.FromString(DCHECK_VALID_PTR_OR(input)))
       << "Failed to create varint from string";
-    return {FROM_HERE, std::move(result)};
+    return {std::move(result)};
   }
 
   // <0, =0, >0 if this <,=,> other numerically.

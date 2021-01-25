@@ -58,7 +58,7 @@
 //
 // ASSIGN_PLUG_POINT(plugPointPtr, flexnet::ws::PlugPoint_RecievedData);
 // IF_PLUG_POINT_HAS_VALUE(plugPointPtr, REFERENCED(message)) {
-//   return {FROM_HERE, "something"}
+//   return {"something"}
 // };
 #define IF_PLUG_POINT_HAS_VALUE(plugPoint, ...) \
   if(const base::Optional<bool> pluggedReturn         \

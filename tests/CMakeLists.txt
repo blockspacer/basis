@@ -480,6 +480,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-statusor
     "${BASIS_DIR}/status/statusor_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-status_macros
+    "${BASIS_DIR}/status/status_macros_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-with_details
     "${BASIS_DIR}/status/with_details_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -490,7 +493,10 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
     "${BASIS_DIR}/time/system_time_change_notifier_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-backoff_timer
-    "${BASIS_DIR}/time/backoff_timer.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+    "${BASIS_DIR}/time/backoff_timer_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-time_macros
+    "${BASIS_DIR}/time/time_macros_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-observable
     "${BASIS_DIR}/core/observable_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")

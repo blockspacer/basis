@@ -38,7 +38,7 @@ static const ::basis::ErrorSpace* kNullSpace =
     reinterpret_cast<::basis::ErrorSpace*>(NULL);
 
 static const ::basis::ErrorSpace* OkSpace() {
-  return ::basis::OkStatus(FROM_HERE).error_space();
+  return ::basis::OkStatus().error_space();
 }
 
 static int CanonicalCode(const ::basis::Status& s) {
@@ -68,7 +68,7 @@ static void CheckStatus(const ::basis::Status& s, const ::basis::ErrorSpace* spa
 
 TEST(ErrorSpace, SpaceName) {
   ASSERT_EQ(std::string("generic"),
-            ::basis::OkStatus(FROM_HERE).error_space()->SpaceName());
+            ::basis::OkStatus().error_space()->SpaceName());
   ASSERT_EQ(std::string("myerrors"), my_error_space.SpaceName());
 }
 
@@ -100,11 +100,11 @@ TEST(ErrorSpace, GenericCodeNames) {
 }
 
 TEST(Status, Empty) {
-  ::basis::Status status(FROM_HERE);
+  ::basis::Status status;
   CheckStatus(status, OkSpace(), 0, "");
 }
 
-TEST(Status, OK) { CheckStatus(::basis::OkStatus(FROM_HERE), OkSpace(), 0, ""); }
+TEST(Status, OK) { CheckStatus(::basis::OkStatus(), OkSpace(), 0, ""); }
 
 TEST(Status, GenericCodes) {
   EXPECT_EQ(static_cast<int>(::basis::error::OK),
@@ -116,19 +116,19 @@ TEST(Status, GenericCodes) {
 }
 
 TEST(Status, ConstructorZero) {
-  ::basis::Status status(FROM_HERE);
+  ::basis::Status status;
   CheckStatus(status, OkSpace(), 0, "");
 }
 
 TEST(Status, CheckOK) {
-  ::basis::Status status(FROM_HERE);
+  ::basis::Status status;
   CHECK_OK(status);
   CHECK_OK(status) << "Failed";
   DCHECK_OK(status) << "Failed";
 }
 
 TEST(DeathStatus, CheckOK) {
-  ::basis::Status status(FROM_HERE);
+  ::basis::Status status;
   status =
       ::basis::Status(FROM_HERE, ::basis::Status::canonical_space(),
                      ::basis::Status::CANCELLED_CODE, "Operation Cancelled");
@@ -159,13 +159,13 @@ TEST(Status, FilledNegative) {
 }
 
 TEST(Status, Set) {
-  ::basis::Status status(FROM_HERE);
+  ::basis::Status status;
   status = ::basis::Status(FROM_HERE, &my_error_space, 2, "message");
   CheckStatus(status, &my_error_space, 2, "message");
 }
 
 TEST(Status, SetOverlappingMessage) {
-  ::basis::Status status(FROM_HERE);
+  ::basis::Status status;
   status = ::basis::Status(FROM_HERE, &my_error_space, 2, "message");
   CheckStatus(status, &my_error_space, 2, "message");
 
@@ -194,14 +194,14 @@ TEST(Status, Copy) {
 
 TEST(Status, Assign) {
   ::basis::Status a(FROM_HERE, &my_error_space, 2, "message");
-  ::basis::Status b(FROM_HERE);
+  ::basis::Status b;
   b = a;
   ASSERT_EQ(a.ToString(), b.ToString());
 }
 
 TEST(Status, Update) {
-  ::basis::Status s(FROM_HERE);
-  s.UpdateIfOk(::basis::OkStatus(FROM_HERE));
+  ::basis::Status s;
+  s.UpdateIfOk(::basis::OkStatus());
   ASSERT_TRUE(s.ok());
   ::basis::Status a(FROM_HERE, &my_error_space, 2, "message");
   s.UpdateIfOk(a);
@@ -209,7 +209,7 @@ TEST(Status, Update) {
   ::basis::Status b(FROM_HERE, &my_error_space, 17, "other message");
   s.UpdateIfOk(b);
   ASSERT_EQ(s.ToString(), a.ToString());
-  s.UpdateIfOk(::basis::OkStatus(FROM_HERE));
+  s.UpdateIfOk(::basis::OkStatus());
   ASSERT_EQ(s.ToString(), a.ToString());
   ASSERT_FALSE(s.ok());
 }
@@ -217,7 +217,7 @@ TEST(Status, Update) {
 TEST(Status, Swap) {
   ::basis::Status a(FROM_HERE, &my_error_space, 2, "message");
   ::basis::Status b = a;
-  ::basis::Status c(FROM_HERE);
+  ::basis::Status c;
   c.Swap(&a);
   ASSERT_EQ(c.ToString(), b.ToString());
   EXPECT_THAT(a.ToString(), testing::HasSubstr("OK"));
@@ -235,7 +235,7 @@ TEST(Status, UnknownCode) {
 }
 
 TEST(Status, MatchOK) {
-  ASSERT_TRUE(::basis::OkStatus(FROM_HERE).Matches(::basis::OkStatus(FROM_HERE)));
+  ASSERT_TRUE(::basis::OkStatus().Matches(::basis::OkStatus()));
 }
 
 TEST(Status, MatchSame) {
@@ -268,7 +268,7 @@ TEST(Status, MatchDifferentMessage) {
   ASSERT_TRUE(a.Matches(b));
 }
 
-TEST(Status, EqualsOK) { ASSERT_EQ(::basis::OkStatus(FROM_HERE), ::basis::OkStatus(FROM_HERE)); }
+TEST(Status, EqualsOK) { ASSERT_EQ(::basis::OkStatus(), ::basis::OkStatus()); }
 
 TEST(Status, EqualsSame) {
   const ::basis::Status a = ::basis::Status(FROM_HERE, &my_error_space, 1, "message");
@@ -335,7 +335,7 @@ static void SanityCheck(const ::basis::Status& s, const ::basis::ErrorSpace* spa
   ::basis::Status other(FROM_HERE, ::basis::error::DEADLINE_EXCEEDED, "_sanity_check_");
   EXPECT_NE(other, s);
 
-  ::basis::Status updated(FROM_HERE);
+  ::basis::Status updated;
   updated.UpdateIfOk(s);
   EXPECT_EQ(s, updated);
 
@@ -348,14 +348,14 @@ static void SanityCheck(const ::basis::Status& s, const ::basis::ErrorSpace* spa
   }
 
   // SetError
-  ::basis::Status err(FROM_HERE);
+  ::basis::Status err;
   err = ::basis::Status(FROM_HERE, space, code, msg);
   EXPECT_EQ(s, err);
 }
 
 TEST(Status, Globals) {
   const ::basis::ErrorSpace* space = ::basis::Status::canonical_space();
-  SanityCheck(::basis::OkStatus(FROM_HERE), space, ::basis::Status::OK_CODE, "");
+  SanityCheck(::basis::OkStatus(), space, ::basis::Status::OK_CODE, "");
   SanityCheck(::basis::CancelledStatus(FROM_HERE), space, ::basis::Status::CANCELLED_CODE,
               "");
   SanityCheck(::basis::UnknownStatus(FROM_HERE), space, ::basis::Status::UNKNOWN_CODE, "");
@@ -381,7 +381,7 @@ static void VerifyCanonical(const ::basis::Status& s,
 }
 
 TEST(Canonical, CanonicalCode) {
-  ::basis::Status ok = ::basis::OkStatus(FROM_HERE);
+  ::basis::Status ok = ::basis::OkStatus();
   ::basis::Status cancel = ::basis::CancelledStatus(FROM_HERE);
   ::basis::Status perm(FROM_HERE, &my_error_space, 60, "message");
   ::basis::Status other(FROM_HERE, &my_error_space, 10, "message");

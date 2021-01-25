@@ -124,7 +124,7 @@ StatusOr<Money> tryAddMoney(const Money& a
       RETURN_ERROR(OUT_OF_RANGE)
         << "Money addition positive overflow";
     }
-    return {FROM_HERE, sum};
+    return {sum};
   }
 
   // Detect negative overflow. Note there is a tricky case that can only happen
@@ -141,7 +141,7 @@ StatusOr<Money> tryAddMoney(const Money& a
       RETURN_ERROR(OUT_OF_RANGE)
         << "Money addition negative overflow";
     }
-    return {FROM_HERE, sum};
+    return {sum};
   }
 
   // The success case.
@@ -151,7 +151,7 @@ StatusOr<Money> tryAddMoney(const Money& a
   DCHECK(::basis::validateMoney(sum).ok())
     << "The given money must be valid or the result may be wrong.";
 
-  return {FROM_HERE, sum};
+  return {sum};
 }
 
 StatusOr<Money> saturatedAddMoney(const Money& a, const Money& b)
@@ -172,7 +172,7 @@ StatusOr<Money> saturatedAddMoney(const Money& a, const Money& b)
   {
     DCHECK(::basis::validateMoney(statusor.ConsumeValueOrDie()).ok())
       << "The given money must be valid or the result may be wrong.";
-    return {FROM_HERE, statusor.ValueOrDie()};
+    return {statusor.ValueOrDie()};
   }
 
   // Do not ignore errors like `INVALID_ARGUMENT`.

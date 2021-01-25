@@ -468,7 +468,7 @@ StatusOr<base::Value> Jsonb::ToJson() const {
   base::Value document;
   RETURN_IF_NOT_OK(FromJsonbInternal(serialized_jsonb_, &document));
 
-  return {FROM_HERE, std::move(document)};
+  return {std::move(document)};
 }
 
 StatusOr<std::string> Jsonb::ToJsonString() const {
@@ -488,7 +488,7 @@ StatusOr<std::string> Jsonb::ToJsonString() const {
   base::ReplaceSubstringsAfterOffset(&serialized_json, 0,
                                kWinLineEnds, kLinuxLineEnds);
 
-  return {FROM_HERE, serialized_json};
+  return {serialized_json};
 }
 
 Status Jsonb::FromJsonbProcessObject(const base::span<const char>& jsonb,

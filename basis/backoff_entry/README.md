@@ -26,6 +26,8 @@ Retries after this point do not need to continue increasing backoff time.
 
 The truncated (Truncated exponential backoff) simply means that after a certain number of increases, the exponentiation stops.
 
+Use `BackoffEntry.maximum_backoff_ms` to truncate exponential backoff.
+
 See for details:
 
 * https://www.tutorialspoint.com/back-off-algorithm-for-csma-cd

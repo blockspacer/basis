@@ -152,26 +152,14 @@ struct Status::Pod {
 
 Status::Rep Status::global_reps[3] = {
   /// \note OK Status does not store message, so can be used globally
-  {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, 0, nullptr, nullptr},
-  // CANCELLED Status without message or custom error space
-  {ATOMIC_VAR_INIT(kGlobalRef), CANCELLED_CODE, 0, nullptr, nullptr},
-  // UNKNOWN Status without message or custom error space
-  {ATOMIC_VAR_INIT(kGlobalRef), UNKNOWN_CODE, 0, nullptr, nullptr}
+  {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, 0, nullptr, nullptr}
 };
 
 const Status& Status::OK
   = *reinterpret_cast<const Status*>(&globals[::basis::error::OK]);
-const Status& Status::CANCELLED
-  = *reinterpret_cast<const Status*>(&globals[::basis::error::CANCELLED]);
-const Status& Status::UNKNOWN
-  = *reinterpret_cast<const Status*>(&globals[::basis::error::UNKNOWN]);
 
 static_assert(::basis::error::OK == 0, "Wrong code for ::basis::error::OK.");
-static_assert(::basis::error::CANCELLED == 1, "Wrong code for ::basis::error::CANCELLED.");
-static_assert(::basis::error::UNKNOWN == 2, "Wrong code for ::basis::error::UNKNOWN.");
-const Status::Pod Status::globals[3] = {{&Status::global_reps[::basis::error::OK]},
-                                        {&Status::global_reps[::basis::error::CANCELLED]},
-                                        {&Status::global_reps[::basis::error::UNKNOWN]}};
+const Status::Pod Status::globals[1] = {{&Status::global_reps[::basis::error::OK]}};
 
 void Status::UnrefSlow(Rep* r) {
   DCHECK(r->ref != kGlobalRef);
@@ -187,6 +175,7 @@ void Status::UnrefSlow(Rep* r) {
 Status::Rep* Status::NewRep(const ErrorSpace* space
   , int code
   , const std::string& msg
+  , const ::base::Location& location
   , int canonical_code)
 {
   DCHECK(space != nullptr);
@@ -194,22 +183,10 @@ Status::Rep* Status::NewRep(const ErrorSpace* space
   /// \note OK Status does not store message, so can be used globally
   DCHECK_NE(code, ::basis::error::OK) << "Use Status::OK instead";
 
-  /// \todo Create global shared rep. per each error code.
-  // Do not re-create global_reps
-  // OK status does not need custom data at all.
-  // Any not-ok status may have custom data so we need
-  // to check if `msg.empty()` etc.
-  if (msg.empty() && space == Status::canonical_space()) {
-    if(code == ::basis::error::CANCELLED)
-      return &global_reps[::basis::error::CANCELLED];
-    else if(code == ::basis::error::UNKNOWN)
-      return &global_reps[::basis::error::UNKNOWN];
-  }
-
   Rep* rep = new Rep;
   rep->ref = 1; /// \todo magic const 1???
   rep->message_ptr = nullptr;
-  ResetRep(rep, space, code, msg, canonical_code);
+  ResetRep(rep, space, code, msg, location, canonical_code);
   return rep;
 }
 
@@ -217,12 +194,14 @@ void Status::ResetRep(Rep* rep
   , const ErrorSpace* space
   , int code
   , const std::string& msg
+  , const ::base::Location& location
   , int canonical_code)
 {
   DCHECK(rep != nullptr);
   DCHECK_EQ(rep->ref, 1); /// \todo magic const 1???
   DCHECK(space != canonical_space() || canonical_code == ::basis::error::OK);
 
+  rep->location = location;
   rep->code = code;
   rep->space_ptr = space;
   rep->canonical_code = canonical_code;
@@ -239,27 +218,12 @@ Status::Status(const ::base::Location& location
   , error::Code code
   , const std::string& msg)
 {
-  /// \todo Create global shared rep. per each error code.
-  // We can use global shared rep. with Status-es without custom data
-  // (without error message, in canonical error space etc.).
-  // OK status does not need custom data at all.
-  // Any not-ok status may have custom data so we need
-  // to check if `msg.empty()` etc.
   if (code == ::basis::error::OK) {
     // Construct an OK status
     rep_ = &global_reps[::basis::error::OK];
-  } else if (msg.empty() && code == ::basis::error::CANCELLED) {
-    // Construct an CANCELLED status
-    rep_ = &global_reps[::basis::error::CANCELLED];
-  }
-  else if (msg.empty() && code == ::basis::error::UNKNOWN) {
-    // Construct an UNKNOWN status
-    rep_ = &global_reps[::basis::error::UNKNOWN];
   } else {
-    rep_ = NewRep(canonical_space(), code, msg, ::basis::error::OK);
+    rep_ = NewRep(canonical_space(), code, msg, location, ::basis::error::OK);
   }
-
-  location_ = location;
 }
 
 Status::Status(const ::base::Location& location
@@ -273,10 +237,8 @@ Status::Status(const ::base::Location& location
     // Construct an OK status
     rep_ = &global_reps[::basis::error::OK];
   } else {
-    rep_ = NewRep(space, code, msg, ::basis::error::OK);
+    rep_ = NewRep(space, code, msg, location, ::basis::error::OK);
   }
-
-  location_ = location;
 }
 
 int Status::RawCanonicalCode() const {
@@ -325,7 +287,7 @@ void Status::PrepareToModify() {
   if (rep_->ref != 1) { /// \todo magic const 1???
     Rep* old_rep = rep_;
     rep_ = NewRep(error_space(), error_code(), error_message(),
-                  old_rep->canonical_code);
+                  location(), old_rep->canonical_code);
     Unref(old_rep);
   }
 }
@@ -343,25 +305,15 @@ void Status::InternalSet(const ::base::Location& location
   if (code == ::basis::error::OK) {
     // Construct an OK status
     Clear();
-  /// \todo Create global shared rep. per each error code.
-  } else if ((!space || space == canonical_space()) && msg.empty() && code == ::basis::error::CANCELLED) {
-    location_ = location;
-    rep_ = &global_reps[::basis::error::CANCELLED];
-  }
-  else if ((!space || space == canonical_space()) && msg.empty() && code == ::basis::error::UNKNOWN) {
-    location_ = location;
-    rep_ = &global_reps[::basis::error::UNKNOWN];
   } else if (rep_->ref == 1) { /// \todo magic const 1???
     // Update in place
-    ResetRep(rep_, space, code, msg, canonical_code);
-    location_ = location;
+    ResetRep(rep_, space, code, msg, location, canonical_code);
   } else {
     // If we are doing an update, then msg may point into rep_.
     // Wait to Unref rep_ *after* we copy these into the new rep_,
     // so that it will stay alive and unmodified while we're working.
     Rep* old_rep = rep_;
-    rep_ = NewRep(space, code, msg, canonical_code);
-    location_ = location;
+    rep_ = NewRep(space, code, msg, location, canonical_code);
     Unref(old_rep);
   }
 }

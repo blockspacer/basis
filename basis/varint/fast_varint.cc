@@ -31,8 +31,7 @@ std::array<uint8_t, 0x100> MakeUnsignedVarIntSize() {
 auto kUnsignedVarIntSize = MakeUnsignedVarIntSize();
 
 basis::Status NotEnoughEncodedBytes(size_t decoded_varint_size, size_t bytes_provided) {
-  RETURN_ERROR()
-    << base::Substitute("Decoded VarInt size as $1 but only $2 bytes provided"
+  RETURN_STATUS_SUBSTITUTE("Decoded VarInt size as $1 but only $2 bytes provided"
                         , decoded_varint_size, bytes_provided);
 }
 
@@ -188,7 +187,7 @@ basis::StatusOr<DecodedSignedPair> FastDecodeSignedVarInt(const uint8_t* src, si
   for (const uint8_t* i = std::max(src - 8 + n_bytes, src); i != src + n_bytes; ++i) {
     temp = (temp << 8) | *i;
   }
-  return {FROM_HERE, ResultType(((temp & mask) | (~mask & negative)) - negative, n_bytes)};
+  return {ResultType(((temp & mask) | (~mask & negative)) - negative, n_bytes)};
 #else
   // We are interested in range [src, src+n_bytes), so we use 64bit number that ends at src+n_bytes.
   // Then we use mask to drop header and bytes out of range.
@@ -197,7 +196,7 @@ basis::StatusOr<DecodedSignedPair> FastDecodeSignedVarInt(const uint8_t* src, si
   // And add one: "- negative".
   // In case of non negative number, negative == 0.
   // So number will be unchanged by those manipulations.
-  return {FROM_HERE, ResultType(
+  return {ResultType(
         ((__builtin_bswap64(*reinterpret_cast<const uint64_t*>(src - 8 + n_bytes)) & mask) |
             (~mask & negative)) - negative,
         n_bytes)};
@@ -206,16 +205,16 @@ basis::StatusOr<DecodedSignedPair> FastDecodeSignedVarInt(const uint8_t* src, si
 
 basis::Status FastDecodeSignedVarInt(
     const uint8_t* src, size_t src_size, int64_t* v, size_t* decoded_size) {
-  ASSIGN_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(src, src_size));
+  CONSUME_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(src, src_size));
   *v = temp.first;
   *decoded_size = temp.second;
   RETURN_OK();
 }
 
 basis::StatusOr<int64_t> FastDecodeSignedVarInt(base::span<const uint8_t>* slice) {
-  ASSIGN_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(slice->data(), slice->size()));
+  CONSUME_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(slice->data(), slice->size()));
   *slice = slice->without_suffix(temp.second);
-  return {FROM_HERE, temp.first};
+  return {temp.first};
 }
 
 basis::Status FastDecodeSignedVarInt(const std::string& encoded, int64_t* v, size_t* decoded_size) {
@@ -224,16 +223,16 @@ basis::Status FastDecodeSignedVarInt(const std::string& encoded, int64_t* v, siz
 }
 
 basis::Status FastDecodeDescendingSignedVarInt(base::span<const uint8_t>* slice, int64_t *dest) {
-  ASSIGN_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(slice->data(), slice->size()));
+  CONSUME_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(slice->data(), slice->size()));
   *dest = -temp.first;
   *slice = slice->without_suffix(temp.second);
   RETURN_OK();
 }
 
 basis::StatusOr<int64_t> FastDecodeDescendingSignedVarInt(base::span<const uint8_t>* slice) {
-  ASSIGN_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(slice->data(), slice->size()));
+  CONSUME_OR_RETURN(DecodedSignedPair temp, FastDecodeSignedVarInt(slice->data(), slice->size()));
   *slice = slice->without_suffix(temp.second);
-  return {FROM_HERE, -temp.first};
+  return {-temp.first};
 }
 
 size_t UnsignedVarIntLength(uint64_t v) {
@@ -334,21 +333,21 @@ basis::StatusOr<uint64_t> FastDecodeUnsignedVarInt(base::span<const uint8_t>* sl
   size_t size = 0;
   uint64_t value = 0;
 
-  RETURN_AND_MODIFY_IF_NOT_OK(FastDecodeUnsignedVarInt(slice->data(), slice->size(), &value, &size))
+  RETURN_WITH_MESSAGE_IF_NOT_OK(FastDecodeUnsignedVarInt(slice->data(), slice->size(), &value, &size))
     << "Slice not fully decoded.";
 
   *slice = slice->without_prefix(size);
-  return {FROM_HERE, value};
+  return {value};
 }
 
 basis::StatusOr<uint64_t> FastDecodeUnsignedVarInt(const base::span<const uint8_t>& slice) {
   base::span<const uint8_t> s(slice);
-  ASSIGN_OR_RETURN(const uint64_t result, FastDecodeUnsignedVarInt(&s));
+  CONSUME_OR_RETURN(const uint64_t result, FastDecodeUnsignedVarInt(&s));
 
   RETURN_ERROR_IF(s.size() != 0)
     << "Slice not fully decoded.";
 
-  return {FROM_HERE, result};
+  return {result};
 }
 
 }  // namespace basis

@@ -489,6 +489,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-thread_health_checker
     "${BASIS_DIR}/threading/thread_health_checker_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-test_macros
+    "${BASIS_DIR}/test/test_macros_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-system_time_change_notifier
     "${BASIS_DIR}/time/system_time_change_notifier_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -546,6 +549,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   # FIXME: run only under ASAN
   #tests_add_executable(${ROOT_PROJECT_NAME}-unowned_ptr
   #  "${BASIS_DIR}/unowned_ptr_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-race_sync_point
+    "${BASIS_DIR}/race_sync_point/race_sync_point_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   # FIXME: use base::WrappedPromise
   # Check failed: !promise_. The PassedPromise must be Cleared or passed onto a Wrapped Promise

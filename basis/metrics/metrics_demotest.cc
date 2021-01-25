@@ -31,6 +31,7 @@
 //
 
 #include "tests_common.h"
+#include "basis/test/test_macros.hpp"
 
 #include "basis/statistics/hdr_histogram.hpp"
 #include "basis/metrics/metrics.hpp"
@@ -49,16 +50,6 @@
 using std::string;
 using std::unordered_set;
 using std::vector;
-
-#ifndef ASSERT_STR_CONTAINS
-#define ASSERT_STR_CONTAINS(str, substr) do { \
-  std::string _s = (str); \
-  if (_s.find((substr)) == std::string::npos) { \
-    FAIL() << "Expected to find substring '" << (substr) \
-    << "'. Got: '" << _s << "'"; \
-  } \
-  } while (0)
-#endif // ASSERT_STR_CONTAINS
 
 namespace {
 

@@ -296,6 +296,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/dependency_hierarchy/dependency_util.cc
   ${BASIS_DIR}/dependency_hierarchy/dependency_util.hpp
   #
+  ${BASIS_DIR}/race_sync_point/race_sync_point.cc
+  ${BASIS_DIR}/race_sync_point/race_sync_point.hpp
+  #
   ${BASIS_DIR}/ECS/unsafe_context.cc
   ${BASIS_DIR}/ECS/unsafe_context.hpp
   #

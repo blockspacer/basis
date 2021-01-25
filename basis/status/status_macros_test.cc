@@ -6,6 +6,7 @@
 
 #include "basis/status/status_callback.hpp"
 #include "basis/status/app_error_space.hpp"
+#include "basis/test/test_macros.hpp"
 
 #include <base/strings/strcat.h>
 #include <base/strings/string_number_conversions.h>
@@ -18,16 +19,6 @@
 #include <string>
 #include <algorithm>
 #include <functional>
-
-#ifndef ASSERT_STR_CONTAINS
-#define ASSERT_STR_CONTAINS(str, substr) do { \
-  std::string _s = (str); \
-  if (_s.find((substr)) == std::string::npos) { \
-    FAIL() << "Expected to find substring '" << (substr) \
-    << "'. Got: '" << _s << "'"; \
-  } \
-  } while (0)
-#endif // ASSERT_STR_CONTAINS
 
 class MyErrorSpace : public ::basis::ErrorSpace {
  public:

@@ -25,6 +25,29 @@
           class FP_##VAR##Tag \
         >
 
+// Build fail point name
+#define FAIL_POINT(VAR) \
+  FP_##VAR
+
+// Enables fail point if command line has switch with provided name
+//
+// USAGE
+//
+// #include "basis/fail_point/fail_point.hpp"
+// #include "base/command_line.h"
+// ENABLE_FAIL_POINT_IF_HAS_SWITCH(
+//   my_ns::FailPoint_RecievedData, switches::kMyFailPoint);
+//
+#define ENABLE_FAIL_POINT_IF_HAS_SWITCH(VAR, FLAG_NAME)                        \
+  [&](){                                                                       \
+    const base::CommandLine* internal_command_line                             \
+      = base::CommandLine::ForCurrentProcess();                                \
+    if (internal_command_line->HasSwitch(FLAG_NAME)) {                         \
+      VAR->setFailure();                                                       \
+      VAR->enable();                                                           \
+    }                                                                          \
+  }()
+
 // USAGE
 //
 // STRONG_FAIL_POINT(FP_AcceptedConnectionAborted);

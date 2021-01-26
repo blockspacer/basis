@@ -8,6 +8,25 @@
 
 namespace basis {
 
+// This is a POD form of uint128 which can be used for static variables which
+// need to be operated on as uint128.
+//
+// USAGE
+//
+// #include <basis/numerics/integral_macros.hpp>
+// const uint128_pod kuint128max = {static_cast<uint64_t>(LONGLONG(0xFFFFFFFFFFFFFFFF)),
+//                                  static_cast<uint64_t>(LONGLONG(0xFFFFFFFFFFFFFFFF))};
+//
+struct uint128_pod {
+    // Note: The ordering of fields is different than 'class uint128' but the
+    // same as its 2-arg constructor.  This enables more obvious initialization
+    // of static instances, which is the primary reason for this struct in the
+    // first place.  This does not seem to defeat any optimizations wrt
+    // operations involving this struct.
+    uint64_t hi;
+    uint64_t lo;
+};
+
 /// \note GCC and Clang (but not Microsoft VS) support __int128 only for 64-bit architectures.
 /// \todo make interoperable with __int128 (if supported),
 /// signed 128-bit integer types and overloads for std::numeric_limits,
@@ -24,6 +43,7 @@ class Uint128 {
   constexpr Uint128(uint32_t bottom);  // Top 96 bits = 0
   constexpr Uint128(uint64_t bottom);  // hi_ = 0
   constexpr Uint128(const Uint128& val);
+  Uint128(const uint128_pod& val);
 
   void Initialize(uint64_t top, uint64_t bottom);
 
@@ -97,6 +117,8 @@ constexpr Uint128::Uint128(uint64_t top, uint64_t bottom)
     : lo_(bottom), hi_(top) {}
 constexpr Uint128::Uint128(const Uint128& v)
     : lo_(v.lo_), hi_(v.hi_) {}
+inline Uint128::Uint128(const uint128_pod& v)
+    : lo_(v.lo), hi_(v.hi) {}
 constexpr Uint128::Uint128(uint64_t bottom)
     : lo_(bottom), hi_(0) {}
 constexpr Uint128::Uint128(uint32_t bottom)

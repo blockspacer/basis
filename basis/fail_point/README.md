@@ -1,4 +1,4 @@
-## Key concepts: Fail points
+## Key concepts: Fail points (code points for conditional failure)
 
 * Fail points are used to add code points where errors may be injected in a user controlled fashion. Fail point is a code snippet that is only executed when the corresponding failpoint is active.
 * Useful for fault-injection testing.
@@ -6,13 +6,15 @@
 
 See `StrongFailPoint` in `fail_point.hpp`.
 
+Inspired by [FreeBSD's failpoints](https://www.freebsd.org/cgi/man.cgi?query=fail)
+
 ## What to use: unit tests (mocking) or fail points?
 
 Unlike unit tests fail points can be used in production servers (for example, to test failure recovery, load balancing, etc.)
 
 ## What to use: `plug_point` or `fail_point`?
 
-`Fail point` is like `bool`. Perfect for simple condition.
+`fail point` is like `bool`. Perfect for simple condition.
 
 `fail points` can not return custom data or recieve input data (`fail point` is like simple bool).
 
@@ -23,7 +25,7 @@ If you want to perform complex logic in custom callback, than use `plug point`.
 ## TIPS AND TRICKS: use macros
 
 ```cpp
-#include "basis/basis/fail_point/fail_point.hpp"
+#include "basis/fail_point/fail_point.hpp"
 
 #include "base/command_line.h"
 #include "base/strings/string_number_conversions.h"
@@ -52,11 +54,8 @@ const char switches::kMyFailPoint[] =
 
 // ...
 
-const base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-if (command_line->HasSwitch(switches::kMyFailPoint)) {
- my_ns::FailPoint_RecievedData->setFailure();
- my_ns::FailPoint_RecievedData->enable();
-}
+ENABLE_FAIL_POINT_IF_HAS_SWITCH(
+  my_ns::FailPoint_RecievedData, switches::kMyFailPoint);
 
 // ...
 

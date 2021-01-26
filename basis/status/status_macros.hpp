@@ -265,7 +265,7 @@ class MakeErrorStream {
   // Disable sending this message to LOG(ERROR), even if this code is usually
   // logged. Some error codes are logged by default, and others are not.
   // Usage:
-  //   return MAKE_ERROR().without_logging() << "Message";
+  //   RETURN_ERROR().without_logging() << "Message";
   MakeErrorStream& without_logging() {
     impl_->should_log_ = false;
     return *this;
@@ -273,7 +273,7 @@ class MakeErrorStream {
 
   // Send this message to LOG(ERROR), even if this code is not usually logged.
   // Usage:
-  //   return MAKE_ERROR().with_logging() << "Message";
+  //   RETURN_ERROR().with_logging() << "Message";
   MakeErrorStream& with_logging() {
     impl_->should_log_ = true;
     return *this;
@@ -382,8 +382,8 @@ class MakeErrorStream {
 // default.  Returns a ::basis::Status object that must be returned or stored.
 //
 // Examples:
-//   return MAKE_ERROR() << "Message";
-//   return MAKE_ERROR(INTERNAL_ERROR) << "Message";
+//   RETURN_ERROR() << "Message";
+//   RETURN_ERROR(INTERNAL_ERROR) << "Message";
 //   ::basis::Status status = MAKE_ERROR() << "Message";
 #define MAKE_ERROR(...) \
   ::basis::status_macros::MakeErrorStream(FROM_HERE, ##__VA_ARGS__)
@@ -535,6 +535,17 @@ class UtilStatusConvertibleToBool {
   ::basis::Status status_;
 };
 }  // namespace internal
+
+/// \note does not perform extra logging
+/// even with `IsMacroErrorLoggedByDefault` enabled bacause status is OK
+#define RETURN_IF_OK(expr)                                                   \
+  do {                                                                       \
+    /* Using _status below to avoid capture problems if expr is "status". */ \
+    const ::basis::Status _status = (expr);                                  \
+    if (LIKELY(_status.ok())) {                                              \
+      return _status;                                                        \
+    }                                                                        \
+  } while (0)
 
 #define SILENT_RETURN_IF_NOT_OK(expr)                                                \
   do {                                                                       \
@@ -757,7 +768,7 @@ class UtilStatusConvertibleToBool {
 //   RET_CHECK(condition) << message;
 // is equivalent to:
 //   if(!condition) {
-//     return MAKE_ERROR() << message;
+//     RETURN_ERROR() << message;
 //   }
 // Note that the RET_CHECK macro includes some more information in the error
 // and logs a stack trace.
@@ -872,7 +883,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 //   RET_CHECK_EQ(val1, val2) << message;
 // is equivalent to
 //   if(!(val1 == val2)) {
-//     return MAKE_ERROR() << message;
+//     RETURN_ERROR() << message;
 //   }
 // Note that the RET_CHECK macro includes some more information in the error
 // and logs a stack trace.

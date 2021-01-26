@@ -1,7 +1,6 @@
 # About
 
-unit tests and stress test use the SyncPoint utility heavily
-to inject delay, failure or custom logic to simulate specific execution sequence.
+unit tests and stress test use the SyncPoint utility to simulate specific execution sequence.
 
 ```cpp
 // Use TEST_SYNC_POINT to specify sync points inside code base.

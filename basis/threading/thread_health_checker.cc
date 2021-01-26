@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "basis/threading/thread_health_checker.hpp" // IWYU pragma: associated
-#include "basis/bind/bind_to_task_runner.h"
+#include "basis/bind/bind_to_task_runner.hpp"
 
 #include <memory>
 #include <string>

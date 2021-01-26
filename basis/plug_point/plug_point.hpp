@@ -17,6 +17,11 @@
 #include <functional>
 #include <string>
 
+/// \note `StrongPlugPoint` can store only one callback.
+/// If you want to support multiple callbacks, than use
+/// `PlugPointNotifier` or `PlugPointRunner.
+/// Registered callback can be removed.
+//
 // USAGE
 //
 // STRONG_PLUG_POINT(PlugPoint_RecievedData, base::Optional<bool>(const std::string&));
@@ -27,6 +32,39 @@
           class PP_##VAR##Tag \
           , __VA_ARGS__ \
         >
+
+/// \note Can support multiple void callbacks with same args.
+/// Registered callbacks can NOT be removed.
+///
+//
+// USAGE
+//
+// STRONG_PLUG_POINT_NOTIFIER(PlugPoint_RecievedData, void(const std::string&));
+//
+#define STRONG_PLUG_POINT_NOTIFIER(VAR, ...) \
+  using VAR \
+    = ::basis::StrongPlugPointNotifier< \
+          class PP_##VAR##Tag \
+          , __VA_ARGS__ \
+        >
+
+/// \note Can support multiple callbacks with same signature (return type and args).
+/// Registered callbacks can be removed.
+//
+// USAGE
+//
+// STRONG_PLUG_POINT_RUNNER(PlugPoint_RecievedData, base::Optional<bool>(const std::string&));
+//
+#define STRONG_PLUG_POINT_RUNNER(VAR, ...) \
+  using VAR \
+    = ::basis::StrongPlugPointRunner< \
+          class PP_##VAR##Tag \
+          , __VA_ARGS__ \
+        >
+
+// Build plug point name
+#define PLUG_POINT(VAR) \
+  PP_##VAR
 
 // USAGE
 //
@@ -153,6 +191,7 @@ class PlugPointStorage
   using CallbackType
     = ::base::RepeatingCallback<RetType(ArgsType...)>;
 
+  // Use subscription to remove registered callbacks
   class Subscription {
    public:
     Subscription(PlugPointStorage* plug_storage)
@@ -290,7 +329,15 @@ class PlugPointStorage
 template<typename Tag, typename T>
 class StrongPlugPoint;
 
-/// \note works only with single callback
+/// \note `StrongPlugPoint` can store only one callback.
+/// If you want to support multiple callbacks, than use
+/// `PlugPointNotifier` or `PlugPointRunner`.
+/// Registered callback can be removed.
+//
+// USE CASE
+//
+// Multiple plugins can provide callback to process some file,
+// but only one callback must be run to process file only once.
 //
 // USAGE
 //
@@ -470,16 +517,13 @@ class PlugPointNotifierStorage
     = ::base::RepeatingCallback<RetType(ArgsType...)>;
 
   using CBList
-    = ::std::queue<CallbackType>;
-
-  using Subscription
-    = typename CBList::Subscription;
+    = ::std::vector<CallbackType>;
 
   explicit PlugPointNotifierStorage(const ::base::Location& location, const PlugPointName& name)
     : name_(name)
     , location_(location)
     , is_active_(false)
-    , callbacks_()
+    , priority_callbacks_()
   {
   }
 
@@ -519,9 +563,13 @@ class PlugPointNotifierStorage
       return;
     }
 
-    for(size_t i = 0; i < callbacks_.size(); i++)
+    for(size_t i = 0; i < priority_callbacks_.size(); i++)
     {
-      callbacks_[i].Notify(FORWARD(args)...);
+      CBList& cb_list = priority_callbacks_[i];
+      for(CallbackType& task : cb_list)
+      {
+        task.Run(FORWARD(args)...);
+      }
     }
   }
 
@@ -531,24 +579,20 @@ class PlugPointNotifierStorage
     Notify(FORWARD(args)...);
   }
 
-  std::unique_ptr<
-    Subscription
-  >
-    addCallback(PlugPointPriority priority
+  void addCallback(PlugPointPriority priority
       , const CallbackType& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return callbacks_[static_cast<size_t>(priority)].Add(callback);
+    CBList& cb_list = priority_callbacks_[static_cast<size_t>(priority)];
+    cb_list.push_back(callback);
   }
 
-  std::unique_ptr<
-    Subscription
-  >
-    addCallback(PlugPointPriority priority
+  void addCallback(PlugPointPriority priority
       , CallbackType&& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return callbacks_[static_cast<size_t>(priority)].Add(RVALUE_CAST(callback));
+    CBList& cb_list = priority_callbacks_[static_cast<size_t>(priority)];
+    cb_list.push_back(RVALUE_CAST(callback));
   }
 
  private:
@@ -558,7 +602,7 @@ class PlugPointNotifierStorage
 
   bool is_active_;
 
-  std::array<CBList, static_cast<size_t>(PlugPointPriority::TOTAL)> callbacks_;
+  std::array<CBList, static_cast<size_t>(PlugPointPriority::TOTAL)> priority_callbacks_;
 
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
@@ -568,8 +612,17 @@ class PlugPointNotifierStorage
   DISALLOW_COPY_AND_ASSIGN(PlugPointNotifierStorage);
 };
 
+/// \note Registered callbacks can NOT be removed.
+//
 // Each plug point is unique object (uses `GetInstance`)
 // and unique data type (uses type-tag similar to StrongAlias)
+//
+// USE CASE
+//
+// Multiple plugins can provide callback to process some file,
+// and all registered callbacks must be run to process file.
+// All callbacks return `void` because they do not affect original logic
+// (i.e. they watch data, but do not change it).
 //
 // MOTIVATION
 //
@@ -600,12 +653,6 @@ class StrongPlugPointNotifier;
 //          , void(int, double)
 //        >;
 //
-//  std::vector<
-//    std::unique_ptr<
-//      PlugPointNotifier_FP1::Subscription
-//    >
-//  > notifier_subscriptions;
-//
 //  // on `plugin A` thread, before app started
 //  {
 //    // `plugin A` includes "my_plug_points.hpp"
@@ -615,7 +662,7 @@ class StrongPlugPointNotifier;
 //
 //    plugPoint->enable();
 //
-//    notifier_subscriptions.push_back(plugPoint->addCallback(basis::PlugPointPriority::High,
+//    plugPoint->addCallback(basis::PlugPointPriority::High,
 //      base::BindRepeating(
 //        [
 //        ](
@@ -625,9 +672,9 @@ class StrongPlugPointNotifier;
 //        {
 //          return;
 //        }
-//      )));
+//      ));
 //
-//    notifier_subscriptions.push_back(plugPoint->addCallback(basis::PlugPointPriority::Lowest,
+//    plugPoint->addCallback(basis::PlugPointPriority::Lowest,
 //      base::BindRepeating(
 //        [
 //        ](
@@ -637,7 +684,7 @@ class StrongPlugPointNotifier;
 //        {
 //          return;
 //        }
-//      )));
+//      ));
 //  }
 //
 //  // on `plugin B` thread, while app is running
@@ -667,9 +714,6 @@ class StrongPlugPointNotifier<Tag, RetType(ArgsType...)>
     = ::base::CallbackList<
         RetType(ArgsType...)
       >;
-
-  using Subscription
-    = typename CBList::Subscription;
 
   MUST_USE_RETURN_VALUE
   static StrongPlugPointNotifier* GetInstance(
@@ -717,22 +761,16 @@ class StrongPlugPointNotifier<Tag, RetType(ArgsType...)>
     Notify(FORWARD(args)...);
   }
 
-  std::unique_ptr<
-    Subscription
-  >
-    addCallback(PlugPointPriority priority
+  void addCallback(PlugPointPriority priority
       , const CallbackType& callback) NO_EXCEPTION
   {
-    return value_.addCallback(priority, callback);
+    value_.addCallback(priority, callback);
   }
 
-  std::unique_ptr<
-    Subscription
-  >
-    addCallback(PlugPointPriority priority
+  void addCallback(PlugPointPriority priority
       , CallbackType&& callback) NO_EXCEPTION
   {
-    return value_.addCallback(priority, RVALUE_CAST(callback));
+    value_.addCallback(priority, RVALUE_CAST(callback));
   }
 
 private:
@@ -760,6 +798,7 @@ namespace internal {
 template <typename CallbackType>
 class CallbackListRunnerBase {
  public:
+  // Use subscription to remove registered callbacks
   class Subscription {
    public:
     Subscription(CallbackListRunnerBase<CallbackType>* list,
@@ -904,7 +943,7 @@ class CallbackListRunner<RetType(Args...)>
   /// i.e. returns if result of iterated callback not `base::nullopt`.
   /// If all callbacks resulted in `base::nullopt`, than returns `base::nullopt`.
   template <typename... RunArgs>
-  RetType RunUntilHasValue(RunArgs&&... args) {
+  RetType RunUntilReturnValueOrNullopt(RunArgs&&... args) {
     auto it = this->GetIterator();
     CallbackType* cb;
     while ((cb = it.GetNext()) != nullptr) {
@@ -958,7 +997,7 @@ class PlugPointRunnerStorage
     : name_(name)
     , location_(location)
     , is_active_(false)
-    , callbacks_()
+    , priority_callbacks_()
   {
   }
 
@@ -990,7 +1029,7 @@ class PlugPointRunnerStorage
 
   template <typename... Args>
   MUST_USE_RETURN_VALUE
-  RetType RunUntilHasValue(Args&&... args) NO_EXCEPTION
+  RetType RunUntilReturnValueOrNullopt(Args&&... args) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
@@ -999,10 +1038,10 @@ class PlugPointRunnerStorage
       return base::nullopt;
     }
 
-    for(size_t i = 0; i < callbacks_.size(); i++)
+    for(size_t i = 0; i < priority_callbacks_.size(); i++)
     {
       RetType result
-        = callbacks_[i].RunUntilHasValue(FORWARD(args)...);
+        = priority_callbacks_[i].RunUntilReturnValueOrNullopt(FORWARD(args)...);
 
       if(result)
       {
@@ -1018,7 +1057,7 @@ class PlugPointRunnerStorage
   MUST_USE_RETURN_VALUE
   RetType operator()(Args&&... args) NO_EXCEPTION
   {
-    return RunUntilHasValue(FORWARD(args)...);
+    return RunUntilReturnValueOrNullopt(FORWARD(args)...);
   }
 
   std::unique_ptr<
@@ -1028,7 +1067,7 @@ class PlugPointRunnerStorage
       , const CallbackType& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return callbacks_[static_cast<size_t>(priority)].Add(callback);
+    return priority_callbacks_[static_cast<size_t>(priority)].Add(callback);
   }
 
   std::unique_ptr<
@@ -1038,7 +1077,7 @@ class PlugPointRunnerStorage
       , CallbackType&& callback) NO_EXCEPTION
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return callbacks_[static_cast<size_t>(priority)].Add(RVALUE_CAST(callback));
+    return priority_callbacks_[static_cast<size_t>(priority)].Add(RVALUE_CAST(callback));
   }
 
  private:
@@ -1048,7 +1087,7 @@ class PlugPointRunnerStorage
 
   bool is_active_;
 
-  std::array<CBList, static_cast<size_t>(PlugPointPriority::TOTAL)> callbacks_;
+  std::array<CBList, static_cast<size_t>(PlugPointPriority::TOTAL)> priority_callbacks_;
 
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
@@ -1060,6 +1099,13 @@ class PlugPointRunnerStorage
 
 // Each plug point is unique object (uses `GetInstance`)
 // and unique data type (uses type-tag similar to StrongAlias)
+//
+// USE CASE
+//
+// Multiple plugins can provide callback to process some file,
+// and all registered callbacks must be run to process file.
+// All callbacks return NOT `void` result because they DO affect original logic
+// (i.e. they watch data AND change it).
 //
 // MOTIVATION
 //
@@ -1136,7 +1182,7 @@ class StrongPlugPointRunner;
 //
 //    PlugPointRunner_FP1* plugPoint
 //      = PlugPointRunner_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"plugPoint"});
-//    const base::Optional<bool> pluggedReturn = plugPoint->RunUntilHasValue(int{1}, double{3.0});
+//    const base::Optional<bool> pluggedReturn = plugPoint->RunUntilReturnValueOrNullopt(int{1}, double{3.0});
 //    if(UNLIKELY(pluggedReturn))
 //    {
 //      return pluggedReturn.value();
@@ -1201,16 +1247,16 @@ class StrongPlugPointRunner<Tag, RetType(ArgsType...)>
 
   template <typename... Args>
   MUST_USE_RETURN_VALUE
-  RetType RunUntilHasValue(Args&&... args) NO_EXCEPTION
+  RetType RunUntilReturnValueOrNullopt(Args&&... args) NO_EXCEPTION
   {
-    return value_.RunUntilHasValue(FORWARD(args)...);
+    return value_.RunUntilReturnValueOrNullopt(FORWARD(args)...);
   }
 
   template <typename... Args>
   MUST_USE_RETURN_VALUE
   RetType operator()(Args&&... args) NO_EXCEPTION
   {
-    return RunUntilHasValue(FORWARD(args)...);
+    return RunUntilReturnValueOrNullopt(FORWARD(args)...);
   }
 
   std::unique_ptr<

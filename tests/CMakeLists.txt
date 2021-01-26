@@ -449,6 +449,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-concurrent_int64
     "${BASIS_DIR}/concurrency/concurrent_int64_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-multiconfig_unittest
+    "${BASIS_DIR}/multiconfig/multiconfig_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-metrics_unittest
     "${BASIS_DIR}/metrics/metrics_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -533,6 +536,12 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-file_path_util
     "${BASIS_DIR}/files/file_path_util_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-plug_point
+    "${BASIS_DIR}/plug_point/plug_point_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-fail_point
+    "${BASIS_DIR}/fail_point/fail_point_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   tests_add_executable(${ROOT_PROJECT_NAME}-dependency_hierarchy
     "${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")

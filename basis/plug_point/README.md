@@ -1,4 +1,4 @@
-## Key concepts: Plug points
+## Key concepts: Plug points (code points to plug into)
 
 * Plug points are similar to `sigslot`
 * Plug points have priority
@@ -10,7 +10,48 @@ Plug points are similar to synchronous event dispatching or sigslot i.e. single 
 
 NOTE: It is also possible to use single plug point `StrongPlugPoint` (can store only one callback) and plug point without return value (`PlugPointNotifierStorage`, can store only callback<void(...)>)
 
-See `StrongPlugPointRunner` in `plug_point.hpp`.
+`StrongPlugPoint` can store only one callback.
+
+If you want to support multiple callbacks, than use `StrongPlugPointNotifier` or `StrongPlugPointRunner.
+
+Registered callback can be removed by `StrongPlugPoint` or `StrongPlugPointRunner`.
+
+Registered callback can NOT be removed by `StrongPlugPointNotifier`.
+
+## What to use: `StrongPlugPoint`, `StrongPlugPointNotifier` or `StrongPlugPointRunner`
+
+See `USE CASE` comments in `plug_point.hpp`
+
+`StrongPlugPoint`:
+
+```cpp
+// USE CASE
+//
+// Multiple plugins can provide callback to process some file,
+// but only one callback must be run to process file only once.
+```
+
+`StrongPlugPointNotifier`:
+
+```cpp
+// USE CASE
+//
+// Multiple plugins can provide callback to process some file,
+// and all registered callbacks must be run to process file.
+// All callbacks return `void` because they do not affect original logic
+// (i.e. they watch data, but do not change it).
+```
+
+`StrongPlugPointRunner`:
+
+```cpp
+// USE CASE
+//
+// Multiple plugins can provide callback to process some file,
+// and all registered callbacks must be run to process file.
+// All callbacks return NOT `void` result because they DO affect original logic
+// (i.e. they watch data AND change it).
+```
 
 ## What to use: `plug points` or `fail points`
 
@@ -24,7 +65,11 @@ So use `plug points` when you need to return custom data or recieve input data.
 
 Receiver in `entt::dispatcher` does NOT return any value (e.g., returns void) i.e. event system well suited to add extra logic, while plug points can modify original logic.
 
-`plug points` can control event propagation (unlike `sigslot`). If single plug point has multiple receivers - any receiver can stop event processing (or return `base::nullopt` to continue event propagation).
+`plug points` can control event propagation (unlike `sigslot`).
+
+`event propagation` in `plug points` will continue until some callback returns value instead of `nullopt`.
+
+If single plug point has multiple receivers - any receiver can stop event processing (or return `base::nullopt` to continue event propagation).
 
 ## Motivation: Event propagation
 
@@ -92,7 +137,7 @@ std::vector<
 
   PlugPointRunner_FP1* fp1
     = PlugPointRunner_FP1::GetInstance(FROM_HERE, ::basis::PlugPointName{"fp1"});
-  const base::Optional<bool> pluggedReturn = fp1->RunUntilHasValue(int{1}, double{3.0});
+  const base::Optional<bool> pluggedReturn = fp1->RunUntilReturnValueOrNullopt(int{1}, double{3.0});
   if(UNLIKELY(pluggedReturn))
   {
     return pluggedReturn.value();

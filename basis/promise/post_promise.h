@@ -389,11 +389,27 @@ void waitForPromiseResolve(
   event.TimedWait(wait_delta);
 }
 
+/// \note reply must return void
+//
+// USAGE
+//
+// base::PostTaskAndReplyWithPromise(thread.task_runner().get()
+//   , FROM_HERE
+//   , ::base::BindOnce(&MyTest::testFunc, base::Unretained(this), "MyTestData")
+//   , ::base::BindOnce([](basis::Status testFuncResult) {
+//       EXPECT_NOT_OK(testFuncResult);
+//   })
+// )
+// .ThenOn(thread.task_runner()
+//   , FROM_HERE
+//   , run_loop.QuitClosure()
+// );
+//
 template <template <typename> class CallbackType,
           typename TaskReturnType,
           typename ReplyArgType,
           typename = EnableIfIsBaseCallback<CallbackType>>
-bool PostTaskAndReplyWithPromise(TaskRunner* task_runner,
+auto PostTaskAndReplyWithPromise(TaskRunner* task_runner,
                                  const Location& from_here,
                                  CallbackType<TaskReturnType()> task,
                                  CallbackType<void(ReplyArgType)> reply,

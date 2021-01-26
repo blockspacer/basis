@@ -2,6 +2,9 @@
 
 #include <base/logging.h>
 
+// Use `polymorphic_upcast` when casting from a base to a derived class.
+// Similar to `implicit_cast` it keeps you safe if you confuse both classes.
+
 namespace basis {
 
 namespace internal {

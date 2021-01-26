@@ -41,7 +41,7 @@
 
 namespace basis {
 
-// This is only set from db_stress.cc and for testing only.
+// This is only set for testing only.
 // If non-zero, kill at various points in source code with probability 1/this
 extern int basis_kill_odds;
 

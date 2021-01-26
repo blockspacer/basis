@@ -61,6 +61,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/metrics/metrics.cc
   ${BASIS_DIR}/metrics/metrics.hpp
   #
+  ${BASIS_DIR}/multiconfig/multiconfig.cc
+  ${BASIS_DIR}/multiconfig/multiconfig.hpp
+  #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
   ${BASIS_DIR}/strong_types/strong_int.hpp
   ${BASIS_DIR}/strong_types/strong_string.hpp

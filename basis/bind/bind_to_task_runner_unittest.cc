@@ -5,7 +5,7 @@
 #include "tests_common.h"
 
 #include "base/test/scoped_task_environment.h"
-#include "basis/bind/bind_to_task_runner.h"
+#include "basis/bind/bind_to_task_runner.hpp"
 
 #include <memory>
 #include <utility>

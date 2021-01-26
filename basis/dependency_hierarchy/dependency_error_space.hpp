@@ -61,7 +61,7 @@ const ::basis::ErrorSpace* ErrorSpace();
 }  // namespace dependency_error_space
 
 // Allow using status_macros. For example:
-// return MAKE_ERROR(ERR_UNKNOWN) << "test";
+// RETURN_ERROR(ERR_UNKNOWN) << "test";
 namespace status_macros {
 
 template <>

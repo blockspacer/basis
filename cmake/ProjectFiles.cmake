@@ -63,6 +63,8 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/multiconfig/multiconfig.cc
   ${BASIS_DIR}/multiconfig/multiconfig.hpp
+  ${BASIS_DIR}/multiconfig/option_parser.cc
+  ${BASIS_DIR}/multiconfig/option_parser.hpp
   #
   ${BASIS_DIR}/strong_types/strong_alias.hpp
   ${BASIS_DIR}/strong_types/strong_int.hpp

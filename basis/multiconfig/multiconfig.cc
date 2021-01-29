@@ -1,4 +1,4 @@
-#include "basis/multiconfig/multiconfig.hpp"  // IWYU pragma: associated
+#include "basis/multiconfig/multiconfig.hpp" // IWYU pragma: associated
 
 #include <base/environment.h>
 #include <base/location.h>
@@ -24,7 +24,7 @@
 
 namespace basis {
 
-namespace {
+namespace internal {
 
 static const size_t kMaxDebugLogItemSize = 9999;
 
@@ -73,7 +73,7 @@ basis::StatusOr<base::Value> parseJSONData(
   return std::move(value_with_error.value.value());
 }
 
-} // namespace
+} // namespace internal
 
 std::string formatConfigNameAndGroup(
   const std::string&name, const std::string group)
@@ -96,9 +96,13 @@ EnvMultiConf& EnvMultiConf::GetInstance() {
 }
 
 basis::StatusOr<std::string> EnvMultiConf::tryLoadString(
-  const std::string& name, const std::string& configuration_group)
+  const std::string& name
+  , const std::string& configuration_group
+  , const base::Value& option_settings)
 {
   DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+  UNREFERENCED_PARAMETER(option_settings);
 
   std::string key = formatConfigNameAndGroup(name, configuration_group);
 
@@ -140,9 +144,13 @@ CmdMultiConf& CmdMultiConf::GetInstance() {
 }
 
 basis::StatusOr<std::string> CmdMultiConf::tryLoadString(
-  const std::string& name, const std::string& configuration_group)
+  const std::string& name
+  , const std::string& configuration_group
+  , const base::Value& option_settings)
 {
   DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+  UNREFERENCED_PARAMETER(option_settings);
 
   std::string key = formatConfigNameAndGroup(name, configuration_group);
 
@@ -254,15 +262,19 @@ basis::Status JsonMultiConf::clearAndParseFromString(
 
   // will hold the nullptr in case of an error.
   CONSUME_OR_RETURN_WITH_MESSAGE(cached_dictionary_
-    , parseJSONData(json_data), std::string{"failed_to_parse_JSON_string"});
+    , internal::parseJSONData(json_data), std::string{"failed_to_parse_JSON_string"});
 
   RETURN_OK();
 }
 
 basis::StatusOr<std::string> JsonMultiConf::tryLoadString(
-  const std::string& name, const std::string& configuration_group)
+  const std::string& name
+  , const std::string& configuration_group
+  , const base::Value& option_settings)
 {
   DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+  UNREFERENCED_PARAMETER(option_settings);
 
   std::string key = formatConfigNameAndGroup(name, configuration_group);
 
@@ -301,15 +313,28 @@ basis::StatusOr<std::string> JsonMultiConf::tryLoadString(
   return *foundValue;
 }
 
+MultiConfOption::MultiConfOption()
+  : name()
+  , default_str()
+  , loaders()
+  , configuration_group()
+  , useGlobalLoaders(basis::UseGlobalLoaders::kFalse)
+  , optionSettings()
+{}
+
 MultiConfOption::MultiConfOption(
   const std::string& key
   , const base::Optional<std::string>& default_value
   , const std::initializer_list<MultiConfLoader>& loaders
-  , const std::string& configuration_group)
+  , const std::string& configuration_group
+  , ::basis::UseGlobalLoaders useGlobal
+  , base::Value&& option_settings)
   : name(key)
   , default_str(default_value)
   , loaders(loaders)
   , configuration_group(configuration_group)
+  , useGlobalLoaders(useGlobal)
+  , optionSettings(base::rvalue_cast(option_settings))
 {}
 
 MultiConf::Observer::Observer() = default;
@@ -353,10 +378,6 @@ void MultiConf::addObserver(
   DCHECK(observer);
   DCHECK(observers_);
 
-  DVLOG(999)
-    << "Added observer "
-    << observer->id();
-
   /// \note thread-safe, so skip `debug_thread_collision_warner_`
   observers_->AddObserver(observer);
 }
@@ -367,10 +388,6 @@ void MultiConf::removeObserver(
   DCHECK(observer);
   DCHECK(observers_);
 
-  DVLOG(999)
-    << "Removed observer "
-    << observer->id();
-
   /// \note thread-safe, so skip `debug_thread_collision_warner_`
   observers_->RemoveObserver(observer);
 }
@@ -380,6 +397,56 @@ MultiConf& MultiConf::GetInstance() {
   // thread-safe.
   static base::NoDestructor<MultiConf> instance;
   return *instance;
+}
+
+void MultiConf::addGlobalLoaders(
+  const std::initializer_list<MultiConfLoader>& loaders)
+{
+  DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+  CHECK_GT(loaders.size(), 0)
+    << "No configuration loaders provided";
+
+  std::vector<MultiConfLoader> tmp(loaders);
+
+  // Move elements from src to dest.
+  // src is left in undefined but safe-to-destruct state.
+  global_loaders_.insert(
+    global_loaders_.end(),
+    std::make_move_iterator(tmp.begin()),
+    std::make_move_iterator(tmp.end())
+  );
+}
+
+void MultiConf::removeGlobalLoaders(
+  const std::initializer_list<MultiConfLoader>& loaders)
+{
+  DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+  CHECK_GT(loaders.size(), 0)
+    << "No configuration loaders provided";
+
+  for(const MultiConfLoader& loader : loaders) {
+    base::Erase(global_loaders_, loader);
+  }
+}
+
+
+bool MultiConf::hasGlobalLoaders(
+  const std::initializer_list<MultiConfLoader>& loaders)
+{
+  DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+  CHECK_GT(loaders.size(), 0)
+    << "No configuration loaders provided";
+
+  for(const MultiConfLoader& loader : loaders) {
+    if(!base::ContainsValue(global_loaders_, loader)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 basis::Status MultiConf::addOption(const MultiConfOption& option)
@@ -427,6 +494,21 @@ basis::Status MultiConf::reloadOptionWithName(
   RETURN_OK();
 }
 
+basis::StatusOr<MultiConfOption> MultiConf::findOptionWithName(
+  const std::string& name
+  , const std::string& configuration_group)
+{
+  DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+
+  // creates dummy option to find real option
+  auto it = known_config_options_.find(MultiConfOption{name, base::nullopt, {}, configuration_group});
+  RETURN_ERROR_IF(it == known_config_options_.end())
+    << "Failed to find configuration option: "
+    << formatConfigNameAndGroup(name, configuration_group);
+
+  return *it;
+}
+
 basis::Status MultiConf::clearAndReload(bool clear_cache_on_error)
 {
   DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
@@ -446,9 +528,6 @@ basis::Status MultiConf::clearAndReload(bool clear_cache_on_error)
       // because we will call it below anyway
       , false
       , clear_cache_on_error));
-    DVLOG(999)
-      << "Reloaded configuration value: "
-      << formatConfigNameAndGroup(option.name, option.configuration_group);
   }
 
   notifyCacheReloaded();
@@ -494,11 +573,7 @@ basis::Status MultiConf::reloadOption(
         << "Failed to load configuration value: "
         << formatConfigNameAndGroup(option.name, option.configuration_group);
     }
-    DVLOG(999)
-      << "Configuration value: "
-      << formatConfigNameAndGroup(option.name, option.configuration_group)
-      << " uses default value: "
-      << option.default_str.value();
+    // Configuration option uses default value
     current_config_cache_[formatConfigNameAndGroup(option.name, option.configuration_group)]
       = option.default_str.value();
   }
@@ -516,19 +591,30 @@ basis::Status MultiConf::reloadOption(
 
 basis::StatusOr<std::string> MultiConf::getAsStringFromCache(
   const std::string& name
-  , const std::string& configuration_group)
+  , const std::string& configuration_group
+  , bool allow_default_value)
 {
   DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
   std::string* result
     = base::FindOrNull(current_config_cache_
       , formatConfigNameAndGroup(name, configuration_group));
-  if (!result) {
+
+  if (!result && !allow_default_value) {
     RETURN_ERROR()
       << "Unable to find cached configuration value "
       << formatConfigNameAndGroup(name, configuration_group)
       << ". Maybe you forgot to reload configuration"
       << " or configuration is broken?";
+  }
+
+  if(!result && allow_default_value) {
+    basis::StatusOr<MultiConfOption> statusor
+      = findOptionWithName(name, configuration_group);
+    RETURN_IF_NOT_OK(statusor.status());
+    MultiConfOption option = base::rvalue_cast(statusor.ConsumeValueOrDie());
+    RETURN_ERROR_IF(!option.default_str.has_value());
+    *result = option.default_str.value();
   }
 
   return *result;
@@ -544,16 +630,23 @@ basis::StatusOr<std::string> MultiConf::loadAsStringWithoutDefaults(
     << formatConfigNameAndGroup(option.name, option.configuration_group);
 
   /// \note loading order is not guaranteed to be same as user may want
-  for(const MultiConfLoader& loader: option.loaders) {
+  for(const MultiConfLoader& loader : option.loaders) {
     basis::StatusOr<std::string> result
-      = loader.func.Run(option.name, option.configuration_group);
+      = loader.func.Run(option.name, option.configuration_group, option.optionSettings);
     if (result.ok()) {
-      DVLOG(999)
-        << "Configuration value: "
-        << formatConfigNameAndGroup(option.name, option.configuration_group)
-        << " uses loader: "
-        << loader.name;
+      // Valid configuration value loaded by loader
       return result;
+    }
+  }
+
+  if(option.useGlobalLoaders) {
+    for(const MultiConfLoader& loader : global_loaders_) {
+      basis::StatusOr<std::string> result
+        = loader.func.Run(option.name, option.configuration_group, option.optionSettings);
+      if (result.ok()) {
+        // Valid configuration value loaded by loader
+        return result;
+      }
     }
   }
 

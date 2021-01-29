@@ -2,6 +2,7 @@
 
 #include "basis/multiconfig/multiconfig.hpp"
 
+#include "basis/promise/post_promise.h"
 #include "basis/promise/post_task_executor.h"
 #include "basis/promise/do_nothing_promise.h"
 
@@ -9,6 +10,7 @@
 #include "base/test/bind_test_util.h"
 #include "base/test/test_mock_time_task_runner.h"
 #include "base/test/scoped_task_environment.h"
+#include "base/location.h"
 #include "base/bind.h"
 #include "base/run_loop.h"
 #include "base/threading/thread.h"
@@ -25,6 +27,8 @@
 
 namespace basis {
 
+constexpr char kMustReturnStr[] = "MustReturnStr";
+constexpr char kMustReturnStrResult[] = "kMustReturnStrResult";
 constexpr char kDefaultTestGroup[] = "test_group_1";
 constexpr char kUnknownKey[] = "unknown_key";
 constexpr char kDefaultKey[] = "default_key";
@@ -61,7 +65,9 @@ static void assertClearedJsonConfEquals(
 
 struct TestMultiConf_1 {
   static basis::StatusOr<std::string> tryLoadString(
-    const std::string& key, const std::string& configuration_group);
+    const std::string& key
+    , const std::string& configuration_group
+    , const base::Value& option_settings);
 
   // id for debug purposes
   static constexpr char kId[] = "TestMultiConf_1";
@@ -69,9 +75,19 @@ struct TestMultiConf_1 {
 
 // static
 basis::StatusOr<std::string> TestMultiConf_1::tryLoadString(
-  const std::string& key, const std::string& configuration_group)
+  const std::string& key
+  , const std::string& configuration_group
+  , const base::Value& option_settings)
 {
+  UNREFERENCED_PARAMETER(option_settings);
+
   DCHECK(!key.empty());
+
+  if(option_settings.is_dict()) {
+    if(const base::Value* value = option_settings.FindKey(kMustReturnStr); value) {
+      return value->GetString();
+    }
+  }
 
   if(base::ToLowerASCII(formatConfigNameAndGroup(key, configuration_group))
       == formatConfigNameAndGroup(kTestKeyA, configuration_group))
@@ -101,7 +117,9 @@ basis::StatusOr<std::string> TestMultiConf_1::tryLoadString(
 
 struct TestMultiConf_2 {
   static basis::StatusOr<std::string> tryLoadString(
-    const std::string& key, const std::string& configuration_group);
+    const std::string& key
+    , const std::string& configuration_group
+    , const base::Value& option_settings);
 
   // id for debug purposes
   static constexpr char kId[] = "TestMultiConf_2";
@@ -109,8 +127,12 @@ struct TestMultiConf_2 {
 
 // static
 basis::StatusOr<std::string> TestMultiConf_2::tryLoadString(
-  const std::string& key, const std::string& configuration_group)
+  const std::string& key
+  , const std::string& configuration_group
+  , const base::Value& option_settings)
 {
+  UNREFERENCED_PARAMETER(option_settings);
+
   DCHECK(!key.empty());
 
   if(base::ToLowerASCII(formatConfigNameAndGroup(key, configuration_group))
@@ -144,6 +166,7 @@ class MultiConfTestObserver : public MultiConf::Observer {
     , const std::string& prev_value
     , const std::string& new_value) override
   {
+    UNREFERENCED_PARAMETER(option);
     DVLOG(999)
       << "Detected change in configuration option from "
       << prev_value
@@ -193,7 +216,8 @@ class MultiConfTest : public testing::Test {
   }
  public:
   ::base::test::ScopedTaskEnvironment task_environment_;
-  /// \note observer uses `PostTask`, so it requires `base::RunLoop().RunUntilIdle();`
+  /// \note observer uses `PostTask`,
+  /// so it requires `base::RunLoop().RunUntilIdle();`
   std::unique_ptr<MultiConfTestObserver> observer_;
 };
 
@@ -205,31 +229,36 @@ TEST_F(MultiConfTest, DefaultValueTest) {
   // Skips `onCacheReloaded` because no configuration options provided.
   ASSERT_EQ(observer_->num_cache_changed(), 1);
 
-  ScopedMultiConfObserver<std::string> tmp(
-    kDefaultKey, kResultForDefaultKey, {TEST_MULTICONF_LOADER_1}, kDefaultTestGroup);
-  ScopedMultiConfObserver<std::string> keyDefaultObserver
+  MultiConfWrapper<std::string> tmp(CheckOptionPolicy::kCheckAddedNew,
+    kDefaultKey, kResultForDefaultKey, {TEST_MULTICONF_LOADER_1}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
+  MultiConfWrapper<std::string> keyDefaultObserver
     = base::rvalue_cast(tmp);
-  ASSERT_NOT_OK(TestMultiConf_1::tryLoadString(kDefaultKey, kDefaultTestGroup));
+  ASSERT_NOT_OK(TestMultiConf_1::tryLoadString(
+    kDefaultKey, kDefaultTestGroup, base::Value{}));
 
-  // already added by ScopedMultiConfObserver
+  // already added by MultiConfWrapper
   {
     // must call `removeObserver(&tmp)` and `addObserver(&keyDefaultObserver)`
-    ASSERT_TRUE(!tmp.is_auto_registered());
-    ASSERT_TRUE(keyDefaultObserver.is_auto_registered());
     EXPECT_EQ(kResultForDefaultKey, keyDefaultObserver.GetValue());
 
-    ASSERT_NOT_OK(basis::MultiConf::GetInstance().addOption(basis::MultiConfOption{
-      kDefaultKey
-      , kResultForDefaultKey
-      , {TEST_MULTICONF_LOADER_1}
-      , kDefaultTestGroup
-    }));
+    ASSERT_NOT_OK(basis::MultiConf::GetInstance().addOption(
+      basis::MultiConfOption{
+        kDefaultKey
+        , kResultForDefaultKey
+        , {TEST_MULTICONF_LOADER_1}
+        , kDefaultTestGroup
+        , basis::UseGlobalLoaders::kFalse
+      }));
   }
 
-  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kDefaultKey, kDefaultTestGroup));
+  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+    kDefaultKey, kDefaultTestGroup));
 
-  MULTICONF_String(my_conf_key_1, "abcd", {TEST_MULTICONF_LOADER_1}, kDefaultTestGroup);
-  ASSERT_NOT_OK(TestMultiConf_1::tryLoadString("my_conf_key_1", kDefaultTestGroup));
+  MULTICONF_String(my_conf_key_1, "abcd", {TEST_MULTICONF_LOADER_1}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
+  ASSERT_NOT_OK(TestMultiConf_1::tryLoadString(
+    "my_conf_key_1", kDefaultTestGroup, base::Value{}));
 
   ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
   base::RunLoop().RunUntilIdle();
@@ -240,16 +269,19 @@ TEST_F(MultiConfTest, DefaultValueTest) {
 
   {
     base::RunLoop().RunUntilIdle();
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName("my_conf_key_1", kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache("my_conf_key_1", kDefaultTestGroup))
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      "my_conf_key_1", kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        "my_conf_key_1", kDefaultTestGroup))
       , "abcd");
     EXPECT_EQ(my_conf_key_1.GetValue(), "abcd");
   }
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kDefaultKey, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kDefaultKey, kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
       basis::MultiConf::GetInstance().getAsStringFromCache(kDefaultKey, kDefaultTestGroup))
       , kResultForDefaultKey);
     base::RunLoop().RunUntilIdle();
@@ -257,8 +289,35 @@ TEST_F(MultiConfTest, DefaultValueTest) {
   }
 
   {
-    EXPECT_FALSE(basis::MultiConf::GetInstance().hasOptionWithName(kUnknownKey, kDefaultTestGroup));
-    EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(kUnknownKey, kDefaultTestGroup));
+    EXPECT_FALSE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kUnknownKey, kDefaultTestGroup));
+    EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(
+      kUnknownKey, kDefaultTestGroup));
+  }
+
+  {
+    base::Value json_settings = basis::internal::parseJSONData(base::Substitute(R"raw(
+{
+  "opt1":"val1",
+  "$1":"$2",
+  "opt3":"val3"
+}
+)raw", kMustReturnStr, kMustReturnStrResult)).ConsumeValueOrDie();
+    const base::Value* json_key = json_settings.FindKey(kMustReturnStr);
+    EXPECT_EQ(json_key->GetString(), kMustReturnStrResult);
+    MULTICONF_String(my_conf_key_json, "ggdf", {TEST_MULTICONF_LOADER_1}
+      , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse
+      , base::rvalue_cast(json_settings));
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      "my_conf_key_json", kDefaultTestGroup));
+    EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(
+      "my_conf_key_json", kDefaultTestGroup));
+    ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
+    base::RunLoop().RunUntilIdle();
+    EXPECT_EQ(kMustReturnStrResult, my_conf_key_json.GetValue());
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache("my_conf_key_json", kDefaultTestGroup))
+      , kMustReturnStrResult);
   }
 }
 
@@ -270,10 +329,12 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
   // Skips `onCacheReloaded` because no configuration options provided.
   ASSERT_EQ(observer_->num_cache_changed(), 1);
 
-  MULTICONF_String(my_conf_key_1, "abcd", {JSON_MULTICONF_LOADER}, kDefaultTestGroup);
+  MULTICONF_String(my_conf_key_1, "abcd", {JSON_MULTICONF_LOADER}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
 
   {
-    ASSERT_OK(basis::MultiConf::GetInstance().reloadOptionWithName("my_conf_key_1"
+    ASSERT_OK(basis::MultiConf::GetInstance().reloadOptionWithName(
+      "my_conf_key_1"
       , kDefaultTestGroup // configuration_group
       , false // notify_cache_reload
       , false // clear_cache_on_error
@@ -284,10 +345,13 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
     ASSERT_EQ(observer_->num_option_changed(), 1);
     ASSERT_EQ(observer_->num_cache_changed(), 1);
 
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName("my_conf_key_1", kDefaultTestGroup));
-    ASSERT_NOT_OK(basis::JsonMultiConf::GetInstance().tryLoadString("my_conf_key_1", kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache("my_conf_key_1", kDefaultTestGroup)
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      "my_conf_key_1", kDefaultTestGroup));
+    ASSERT_NOT_OK(basis::JsonMultiConf::GetInstance().tryLoadString(
+      "my_conf_key_1", kDefaultTestGroup, base::Value{}));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        "my_conf_key_1", kDefaultTestGroup)
     ), "abcd");
     EXPECT_EQ(my_conf_key_1.GetValue(), "abcd");
   }
@@ -299,7 +363,8 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
     ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
     assertClearedJsonConfEquals(json_data);
 
-    ASSERT_OK(basis::MultiConf::GetInstance().reloadOptionWithName("my_conf_key_1"
+    ASSERT_OK(basis::MultiConf::GetInstance().reloadOptionWithName(
+      "my_conf_key_1"
       , kDefaultTestGroup // configuration_group
       , true // notify_cache_reload
       , false // clear_cache_on_error
@@ -310,12 +375,15 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
     ASSERT_EQ(observer_->num_option_changed(), 2);
     ASSERT_EQ(observer_->num_cache_changed(), 2);
 
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName("my_conf_key_1", kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::JsonMultiConf::GetInstance().tryLoadString("my_conf_key_1", kDefaultTestGroup)
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      "my_conf_key_1", kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::JsonMultiConf::GetInstance().tryLoadString(
+        "my_conf_key_1", kDefaultTestGroup, base::Value{})
     ), "gdgdf");
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache("my_conf_key_1", kDefaultTestGroup)
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        "my_conf_key_1", kDefaultTestGroup)
     ), "gdgdf");
     EXPECT_EQ(my_conf_key_1.GetValue(), "gdgdf");
   }
@@ -327,7 +395,8 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
     ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
     assertClearedJsonConfEquals(json_data);
 
-    ASSERT_OK(basis::MultiConf::GetInstance().reloadOptionWithName("my_conf_key_1"
+    ASSERT_OK(basis::MultiConf::GetInstance().reloadOptionWithName(
+      "my_conf_key_1"
       , kDefaultTestGroup // configuration_group
       , false // notify_cache_reload
       , false // clear_cache_on_error
@@ -338,12 +407,15 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
     ASSERT_EQ(observer_->num_option_changed(), 3);
     ASSERT_EQ(observer_->num_cache_changed(), 2);
 
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName("my_conf_key_1", kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::JsonMultiConf::GetInstance().tryLoadString("my_conf_key_1", kDefaultTestGroup)
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      "my_conf_key_1", kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::JsonMultiConf::GetInstance().tryLoadString(
+        "my_conf_key_1", kDefaultTestGroup, base::Value{})
     ), "fhhffg");
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache("my_conf_key_1", kDefaultTestGroup)
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        "my_conf_key_1", kDefaultTestGroup)
     ), "fhhffg");
     EXPECT_EQ(my_conf_key_1.GetValue(), "fhhffg");
   }
@@ -357,25 +429,27 @@ TEST_F(MultiConfTest, SimpleTest) {
   // Skips `onCacheReloaded` because no configuration options provided.
   ASSERT_EQ(observer_->num_cache_changed(), 1);
 
-  basis::ScopedMultiConfObserver<std::string> keyAObserver(
-    kTestKeyA, "EMPTY", {TEST_MULTICONF_LOADER_1}, kDefaultTestGroup);
+  basis::MultiConfWrapper<std::string> keyAObserver(CheckOptionPolicy::kCheckAddedNew,
+    kTestKeyA, "EMPTY", {TEST_MULTICONF_LOADER_1}, kDefaultTestGroup
+    , basis::UseGlobalLoaders::kFalse);
   base::RunLoop().RunUntilIdle();
   EXPECT_EQ("EMPTY", keyAObserver.GetValue());
 
-  // already added by ScopedMultiConfObserver
+  // already added by MultiConfWrapper
   {
-    ASSERT_TRUE(keyAObserver.is_auto_registered());
     ASSERT_NOT_OK(basis::MultiConf::GetInstance().addOption(basis::MultiConfOption{
       kTestKeyA
       , base::nullopt
       , { TEST_MULTICONF_LOADER_1 }
       , kDefaultTestGroup
+      , basis::UseGlobalLoaders::kFalse
     }));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      TestMultiConf_1::tryLoadString(kTestKeyA, kDefaultTestGroup)), kResultForTestKeyA);
+    EXPECT_EQ(CONSUME_STATUSOR(
+      TestMultiConf_1::tryLoadString(kTestKeyA, kDefaultTestGroup, base::Value{})), kResultForTestKeyA);
   }
 
-  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyA, kDefaultTestGroup));
+  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+    kTestKeyA, kDefaultTestGroup));
   base::RunLoop().RunUntilIdle();
   EXPECT_EQ("EMPTY", keyAObserver.GetValue());
 
@@ -384,10 +458,12 @@ TEST_F(MultiConfTest, SimpleTest) {
     , base::nullopt
     , { TEST_MULTICONF_LOADER_1 }
     , kDefaultTestGroup
+    , basis::UseGlobalLoaders::kFalse
   }));
-  EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-    TestMultiConf_1::tryLoadString(kTestKeyB, kDefaultTestGroup)), kResultForTestKeyB);
-  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyB, kDefaultTestGroup));
+  EXPECT_EQ(CONSUME_STATUSOR(
+    TestMultiConf_1::tryLoadString(kTestKeyB, kDefaultTestGroup, base::Value{})), kResultForTestKeyB);
+  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+    kTestKeyB, kDefaultTestGroup));
 
   ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
   base::RunLoop().RunUntilIdle();
@@ -397,13 +473,16 @@ TEST_F(MultiConfTest, SimpleTest) {
   ASSERT_EQ(observer_->num_cache_changed(), 2);
 
   {
-    EXPECT_FALSE(basis::MultiConf::GetInstance().hasOptionWithName(kUnknownKey, kDefaultTestGroup));
-    EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(kUnknownKey, kDefaultTestGroup));
+    EXPECT_FALSE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kUnknownKey, kDefaultTestGroup));
+    EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(
+      kUnknownKey, kDefaultTestGroup));
   }
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyA, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kTestKeyA, kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
       basis::MultiConf::GetInstance().getAsStringFromCache(kTestKeyA, kDefaultTestGroup))
       , kResultForTestKeyA);
     base::RunLoop().RunUntilIdle();
@@ -411,8 +490,9 @@ TEST_F(MultiConfTest, SimpleTest) {
   }
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyB, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kTestKeyB, kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
       basis::MultiConf::GetInstance().getAsStringFromCache(kTestKeyB, kDefaultTestGroup))
       , kResultForTestKeyB);
   }
@@ -423,10 +503,12 @@ TEST_F(MultiConfTest, SimpleTest) {
     , base::nullopt
     , { TEST_MULTICONF_LOADER_2 }
     , kDefaultTestGroup
+    , basis::UseGlobalLoaders::kFalse
   }));
-  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyC, kDefaultTestGroup));
-  EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-    TestMultiConf_2::tryLoadString(kTestKeyC, kDefaultTestGroup)), kResultForTestKeyC);
+  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+    kTestKeyC, kDefaultTestGroup));
+  EXPECT_EQ(CONSUME_STATUSOR(
+    TestMultiConf_2::tryLoadString(kTestKeyC, kDefaultTestGroup, base::Value{})), kResultForTestKeyC);
 
   /// \note added new option, need to reload cache
   ASSERT_OK(basis::MultiConf::GetInstance().addOption(basis::MultiConfOption{
@@ -434,8 +516,10 @@ TEST_F(MultiConfTest, SimpleTest) {
     , base::nullopt
     , { JSON_MULTICONF_LOADER }
     , kDefaultTestGroup
+    , basis::UseGlobalLoaders::kFalse
   }));
-  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyD, kDefaultTestGroup));
+  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+    kTestKeyD, kDefaultTestGroup));
 
   base::test::ScopedEnvironmentVariableOverride scoped_env1(
     formatConfigNameAndGroup(kTestKeyF, kDefaultTestGroup), kResultForTestKeyF);
@@ -454,10 +538,13 @@ TEST_F(MultiConfTest, SimpleTest) {
     , base::nullopt
     , { ENV_MULTICONF_LOADER }
     , kDefaultTestGroup
+    , basis::UseGlobalLoaders::kFalse
   }));
-  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyF, kDefaultTestGroup));
+  EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+    kTestKeyF, kDefaultTestGroup));
 
-  MULTICONF_String(my_conf_key_1, "abcd", {ENV_MULTICONF_LOADER}, kDefaultTestGroup);
+  MULTICONF_String(my_conf_key_1, "abcd", {ENV_MULTICONF_LOADER}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
 
   base::test::ScopedEnvironmentVariableOverride scoped_env2(
     formatConfigNameAndGroup("my_conf_key_1", kDefaultTestGroup), "12345");
@@ -479,63 +566,358 @@ TEST_F(MultiConfTest, SimpleTest) {
   ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
   base::RunLoop().RunUntilIdle();
 
-  EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-    basis::EnvMultiConf::GetInstance().tryLoadString(kTestKeyF, kDefaultTestGroup)
+  EXPECT_EQ(CONSUME_STATUSOR(
+    basis::EnvMultiConf::GetInstance().tryLoadString(
+      kTestKeyF, kDefaultTestGroup, base::Value{})
   ), kResultForTestKeyF);
 
-  EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-    basis::JsonMultiConf::GetInstance().tryLoadString(kTestKeyD, kDefaultTestGroup)
+  EXPECT_EQ(CONSUME_STATUSOR(
+    basis::JsonMultiConf::GetInstance().tryLoadString(
+      kTestKeyD, kDefaultTestGroup, base::Value{})
   ), kResultForTestKeyD);
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName("my_conf_key_1", kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::EnvMultiConf::GetInstance().tryLoadString("my_conf_key_1", kDefaultTestGroup)
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      "my_conf_key_1", kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::EnvMultiConf::GetInstance().tryLoadString(
+        "my_conf_key_1", kDefaultTestGroup, base::Value{})
     ), "12345");
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache("my_conf_key_1", kDefaultTestGroup)
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        "my_conf_key_1", kDefaultTestGroup)
     ), "12345");
     EXPECT_EQ(my_conf_key_1.GetValue(), "12345");
   }
 
   {
-    EXPECT_FALSE(basis::MultiConf::GetInstance().hasOptionWithName(kUnknownKey, kDefaultTestGroup));
-    EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(kUnknownKey, kDefaultTestGroup));
+    EXPECT_FALSE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kUnknownKey, kDefaultTestGroup));
+    EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(
+      kUnknownKey, kDefaultTestGroup));
   }
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyA, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache(kTestKeyA, kDefaultTestGroup))
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kTestKeyA, kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        kTestKeyA, kDefaultTestGroup))
       , kResultForTestKeyA);
   }
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyB, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache(kTestKeyB, kDefaultTestGroup))
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kTestKeyB, kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        kTestKeyB, kDefaultTestGroup))
       , kResultForTestKeyB);
   }
 
   {
     EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyC, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
+    EXPECT_EQ(CONSUME_STATUSOR(
       basis::MultiConf::GetInstance().getAsStringFromCache(kTestKeyC, kDefaultTestGroup))
       , kResultForTestKeyC);
   }
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyD, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache(kTestKeyD, kDefaultTestGroup))
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kTestKeyD, kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        kTestKeyD, kDefaultTestGroup))
       , kResultForTestKeyD);
   }
 
   {
-    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(kTestKeyF, kDefaultTestGroup));
-    EXPECT_EQ(CHECKED_CONSUME_STATUS_VALUE(
-      basis::MultiConf::GetInstance().getAsStringFromCache(kTestKeyF, kDefaultTestGroup))
+    EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
+      kTestKeyF, kDefaultTestGroup));
+    EXPECT_EQ(CONSUME_STATUSOR(
+      basis::MultiConf::GetInstance().getAsStringFromCache(
+        kTestKeyF, kDefaultTestGroup))
       , kResultForTestKeyF);
+  }
+}
+
+class MultiThreadChecker {
+ public:
+  using Resolver
+    = ::base::ManualPromiseResolver<
+        void, ::base::NoReject
+      >;
+
+  MultiThreadChecker(
+    MultiConfWrapper<std::string>& observer
+    , const std::string& thread_name
+    , scoped_refptr<::base::SingleThreadTaskRunner> runner)
+    : observer(observer)
+    , thread{std::make_shared<base::Thread>(thread_name)}
+    , promiseResolver(FROM_HERE)
+    , main_loop_task_runner_(runner)
+  {}
+
+  MultiThreadChecker(const MultiThreadChecker& other)
+    : observer{other.observer}
+    , thread{other.thread}
+    , promiseResolver{other.promiseResolver}
+    , main_loop_task_runner_{other.main_loop_task_runner_}
+  {}
+
+  MultiThreadChecker(MultiThreadChecker&& other)
+    : observer(RVALUE_CAST(other.observer))
+    , thread{RVALUE_CAST(other.thread)}
+    , promiseResolver{RVALUE_CAST(other.promiseResolver)}
+    , main_loop_task_runner_{RVALUE_CAST(other.main_loop_task_runner_)}
+  {}
+
+  MultiThreadChecker& operator=(
+    const MultiThreadChecker& other)
+  {
+    observer = other.observer;
+    thread = other.thread;
+    promiseResolver = other.promiseResolver;
+    main_loop_task_runner_ = other.main_loop_task_runner_;
+    return *this;
+  }
+
+  MultiThreadChecker& operator=(
+    MultiThreadChecker&& other)
+  {
+    observer = RVALUE_CAST(other.observer);
+    thread = RVALUE_CAST(other.thread);
+    promiseResolver = RVALUE_CAST(other.promiseResolver);
+    main_loop_task_runner_ = RVALUE_CAST(other.main_loop_task_runner_);
+    return *this;
+  }
+
+  auto postClearAndReload() {
+    /// \note `clearAndReload` is not thread-safe
+    return base::PostTaskAndReplyWithPromise(main_loop_task_runner_.get()
+      , FROM_HERE
+      , ::base::BindOnce(
+          &basis::MultiConf::clearAndReload
+          , base::Unretained(&basis::MultiConf::GetInstance())
+          , true // clear_cache_on_error
+        )
+      // check result of `clearAndReload`
+      , ::base::BindOnce([](
+          basis::Status result)
+        {
+          EXPECT_OK(result);
+        })
+    );
+  }
+
+  void onTaskDone(const std::string& expected_value) {
+    /// \note requires `clearAndReload`
+    EXPECT_EQ(observer.get().GetValue(), expected_value);
+    // allow program termination
+    // after all threads executed `GetResolveCallback`
+    base::rvalue_cast(promiseResolver.GetResolveCallback()).Run();
+  }
+
+  void DoTask(const std::string& expected_value) {
+    postClearAndReload()
+    .ThenHere(
+      FROM_HERE
+      , ::base::BindOnce(
+          &MultiThreadChecker::onTaskDone
+          , base::Unretained(this)
+          , expected_value)
+    );
+  }
+
+  std::reference_wrapper<MultiConfWrapper<std::string>> observer;
+
+  std::shared_ptr<::base::Thread> thread;
+
+  Resolver promiseResolver;
+
+  // allows to schedule arbitrary tasks on main loop
+  scoped_refptr<::base::SingleThreadTaskRunner> main_loop_task_runner_;
+};
+
+TEST_F(MultiConfTest, ReloadObserver) {
+  MULTICONF_String(my_key_X, "dasasd", {JSON_MULTICONF_LOADER}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
+  EXPECT_EQ(my_key_X.target_name(), "my_key_X");
+  EXPECT_EQ(my_key_X.target_configuration_group(), kDefaultTestGroup);
+
+  MULTICONF_Observer(observer_X, my_key_X);
+  EXPECT_EQ(observer_X.target_name(), my_key_X.target_name());
+  EXPECT_EQ(observer_X.target_configuration_group(), my_key_X.target_configuration_group());
+
+  ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
+  base::RunLoop().RunUntilIdle();
+
+  EXPECT_EQ("dasasd", my_key_X.GetValue());
+  EXPECT_EQ("dasasd", observer_X.GetValue());
+
+  std::string json_data = base::Substitute(R"raw(
+{"$1":"$2"}
+)raw", formatConfigNameAndGroup("my_key_X", kDefaultTestGroup), "bbbddf");
+  ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
+  assertClearedJsonConfEquals(json_data);
+
+  ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
+  base::RunLoop().RunUntilIdle();
+
+  EXPECT_EQ("bbbddf", my_key_X.GetValue());
+  EXPECT_EQ("bbbddf", observer_X.GetValue());
+}
+
+TEST_F(MultiConfTest, GlobalLoader) {
+  basis::MultiConf::GetInstance().addGlobalLoaders({JSON_MULTICONF_LOADER});
+  EXPECT_TRUE(basis::MultiConf::GetInstance().hasGlobalLoaders({JSON_MULTICONF_LOADER}));
+
+  MULTICONF_String(my_key_global_load, "dasasd", {DUMMY_LOADER}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kTrue);
+  EXPECT_EQ(my_key_global_load.target_name(), "my_key_global_load");
+  EXPECT_EQ(my_key_global_load.target_configuration_group(), kDefaultTestGroup);
+
+  MULTICONF_String(my_key_without_global_load, "dffgg", {DUMMY_LOADER}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
+
+  MULTICONF_Observer(observer_X, my_key_global_load);
+  EXPECT_EQ(observer_X.target_name(), my_key_global_load.target_name());
+  EXPECT_EQ(observer_X.target_configuration_group(), my_key_global_load.target_configuration_group());
+
+  ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
+  base::RunLoop().RunUntilIdle();
+
+  EXPECT_EQ("dffgg", my_key_without_global_load.GetValue());
+  EXPECT_EQ("dasasd", my_key_global_load.GetValue());
+  EXPECT_EQ("dasasd", observer_X.GetValue());
+
+  std::string json_data = base::Substitute(R"raw(
+{
+  "$1":"$2",
+  "$3":"$4"
+}
+)raw"
+  , formatConfigNameAndGroup("my_key_global_load", kDefaultTestGroup)
+  , "bbbddf"
+  , formatConfigNameAndGroup("my_key_without_global_load", kDefaultTestGroup)
+  , "bbbddf");
+  ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
+  assertClearedJsonConfEquals(json_data);
+
+  ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
+  base::RunLoop().RunUntilIdle();
+
+  EXPECT_EQ(CONSUME_STATUSOR(
+    basis::MultiConf::GetInstance().getAsStringFromCache("my_key_without_global_load", kDefaultTestGroup))
+    , "dffgg");
+  EXPECT_EQ("dffgg", my_key_without_global_load.GetValue());
+  EXPECT_EQ(CONSUME_STATUSOR(
+    basis::MultiConf::GetInstance().getAsStringFromCache("my_key_global_load", kDefaultTestGroup))
+    , "bbbddf");
+  EXPECT_EQ("bbbddf", my_key_global_load.GetValue());
+  EXPECT_EQ("bbbddf", observer_X.GetValue());
+
+  basis::MultiConf::GetInstance().removeGlobalLoaders({JSON_MULTICONF_LOADER});
+  EXPECT_FALSE(basis::MultiConf::GetInstance().hasGlobalLoaders({JSON_MULTICONF_LOADER}));
+
+  ASSERT_OK(basis::MultiConf::GetInstance().clearAndReload());
+  base::RunLoop().RunUntilIdle();
+
+  EXPECT_EQ(CONSUME_STATUSOR(
+    basis::MultiConf::GetInstance().getAsStringFromCache("my_key_without_global_load", kDefaultTestGroup))
+    , "dffgg");
+  EXPECT_EQ("dffgg", my_key_without_global_load.GetValue());
+  EXPECT_EQ(CONSUME_STATUSOR(
+    basis::MultiConf::GetInstance().getAsStringFromCache("my_key_global_load", kDefaultTestGroup))
+    , "dasasd");
+  EXPECT_EQ("dasasd", my_key_global_load.GetValue());
+  EXPECT_EQ("dasasd", observer_X.GetValue());
+}
+
+TEST_F(MultiConfTest, MultiThreadTest) {
+  static constexpr const size_t num_treads = 8;
+
+  MULTICONF_String(my_conf_key_Y, "abcd", {TEST_MULTICONF_LOADER_1}
+    , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
+
+  MULTICONF_Observer(key_Y_observer_0, my_conf_key_Y);
+  MULTICONF_Observer(key_Y_observer_1, my_conf_key_Y);
+  MULTICONF_Observer(key_Y_observer_2, my_conf_key_Y);
+  MULTICONF_Observer(key_Y_observer_3, my_conf_key_Y);
+  MULTICONF_Observer(key_Y_observer_4, my_conf_key_Y);
+  MULTICONF_Observer(key_Y_observer_5, my_conf_key_Y);
+  MULTICONF_Observer(key_Y_observer_6, my_conf_key_Y);
+  MULTICONF_Observer(key_Y_observer_7, my_conf_key_Y);
+
+  base::RunLoop run_loop;
+
+  std::vector<MultiThreadChecker> thread_checkers;
+
+  {
+    /// \note Each thread uses individual observer.
+    /// If you change code to use single observer by multiple threads,
+    /// than test must `DCHECK` on thread collision.
+    std::array<std::reference_wrapper<decltype(my_conf_key_Y)>, num_treads> thread_observers {
+      REFERENCED(key_Y_observer_0)
+      , REFERENCED(key_Y_observer_1)
+      , REFERENCED(key_Y_observer_2)
+      , REFERENCED(key_Y_observer_7)
+      , REFERENCED(key_Y_observer_4)
+      , REFERENCED(key_Y_observer_5)
+      , REFERENCED(key_Y_observer_6)
+      , REFERENCED(key_Y_observer_7)
+    };
+    for(size_t i = 0; i < num_treads; i++)
+    {
+      thread_checkers.emplace_back(
+        REFERENCED(thread_observers[i].get())
+        , base::Substitute("Test thread $1", i)
+        , base::MessageLoop::current()->task_runner());
+    }
+  }
+
+  // Run `run_loop.QuitClosure()` after all threads finished `DoTask`
+  std::vector<base::Promise<void>> thread_promises;
+  for(MultiThreadChecker& thread_checker: thread_checkers) {
+    thread_promises.push_back(thread_checker.promiseResolver.promise());
+  }
+  base::Promises::All(FROM_HERE, thread_promises)
+  .ThenHere(FROM_HERE
+    , run_loop.QuitClosure()
+  );
+
+  for(MultiThreadChecker& thread_checker: thread_checkers) {
+    ASSERT_TRUE(thread_checker.thread->Start());
+    // Without this call this test is racy.
+    EXPECT_TRUE(thread_checker.thread->WaitUntilThreadStarted());
+  }
+
+  /// \note schedules per-thread tasks only after `run_loop.Run()`
+  base::MessageLoop::current()->task_runner()->PostTask(
+    FROM_HERE
+    , base::BindOnce([
+    ](
+      std::vector<MultiThreadChecker>& thread_checkers
+    ){
+      /// \note runs per-thread tasks
+      for(MultiThreadChecker& thread_checker: thread_checkers) {
+        thread_checker.thread->task_runner()->PostTask(
+          FROM_HERE
+          , ::base::BindOnce(
+              &MultiThreadChecker::DoTask
+              , base::Unretained(&thread_checker)
+              , "abcd"
+            )
+        );
+      }
+    }
+    , REFERENCED(thread_checkers))
+  );
+
+  run_loop.Run();
+
+  for(MultiThreadChecker& thread_checker: thread_checkers) {
+    thread_checker.thread->Stop();
   }
 }
 

@@ -1,12 +1,19 @@
 #pragma once
 
 #include "basis/status/status_macros.hpp"
+#include "basis/strong_types/strong_bool.hpp"
+#include "basis/core/typed_enum.hpp"
+#include "basis/core/type_name.hpp"
+#include "basis/concept/dependent_false.hpp"
+#include "basis/multiconfig/option_parser.hpp"
+#include "basis/checks_and_guard_annotations.hpp"
 
 #include <base/gtest_prod_util.h>
 #include <base/logging.h>
 #include <base/values.h>
 #include <base/callback_forward.h>
 #include <base/bind.h>
+#include <base/values.h>
 #include <base/base_export.h>
 #include <base/macros.h>
 #include <base/no_destructor.h>
@@ -14,10 +21,7 @@
 #include <base/rvalue_cast.h>
 #include <base/files/file_path.h>
 #include <base/threading/thread_collision_warner.h>
-#include <base/strings/string_number_conversions.h>
 #include <base/observer_list_threadsafe.h>
-#include <base/numerics/safe_conversions.h>
-#include <base/numerics/floating_point_comparison.h>
 
 #include <string>
 #include <ostream>
@@ -46,6 +50,13 @@
           , base::Unretained(&JsonMultiConf::GetInstance())) \
     }
 
+// Does nothing, useful for tests
+#define DUMMY_LOADER \
+    basis::MultiConfLoader{ \
+      ::basis::DummyLoader::kId \
+      , base::BindRepeating(&::basis::DummyLoader::tryLoadString) \
+    }
+
 #define BUILTIN_MULTICONF_LOADERS \
   { \
     CMD_MULTICONF_LOADER \
@@ -65,13 +76,20 @@
 
 // USAGE
 //
+// MULTICONF_type(float, my_conf_key, "1.12", BUILTIN_MULTICONF_LOADERS);
+//
+#define MULTICONF_type(TYPE, KEY_NAME, DEFAULT_STR, ...) \
+  basis::MultiConfWrapper<TYPE> KEY_NAME \
+    {basis::CheckOptionPolicy::kCheckAddedNew, STRINGIFY(KEY_NAME) \
+      , DEFAULT_STR \
+      , __VA_ARGS__}
+
+// USAGE
+//
 // MULTICONF_String(my_conf_key, "abcd", BUILTIN_MULTICONF_LOADERS);
 //
 #define MULTICONF_String(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<std::string> KEY_NAME \
-    {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+  MULTICONF_type(std::string, KEY_NAME, DEFAULT_STR, __VA_ARGS__)
 
 // USAGE
 //
@@ -80,101 +98,90 @@
 // MULTICONF_Bool(my_conf_key, "TRUE", BUILTIN_MULTICONF_LOADERS);
 // MULTICONF_Bool(my_conf_key, "1", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Bool(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<bool> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Bool(...) \
+  MULTICONF_type(bool, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Int(my_conf_key, "-12345", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Int(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<int> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Int(...) \
+  MULTICONF_type(int, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Uint(my_conf_key, "12345", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Uint(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<unsigned> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Uint(...) \
+  MULTICONF_type(unsigned, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Int64(my_conf_key, "-12345", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Int64(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<int64_t> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Int64(...) \
+  MULTICONF_type(int64_t, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Int32(my_conf_key, "-12345", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Int32(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<int32_t> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Int32(...) \
+  MULTICONF_type(int32_t, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Uint32(my_conf_key, "12345", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Uint32(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<uint32_t> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Uint32(...) \
+  MULTICONF_type(uint32_t, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Uint64(my_conf_key, "12345", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Uint64(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<uint64_t> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Uint64(...) \
+  MULTICONF_type(uint64_t, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_SizeT(my_conf_key, "12345", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_SizeT(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<size_t> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_SizeT(...) \
+  MULTICONF_type(size_t, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Double(my_conf_key, "1.12", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Double(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<double> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Double(...) \
+  MULTICONF_type(double, __VA_ARGS__)
 
 // USAGE
 //
 // MULTICONF_Float(my_conf_key, "1.12", BUILTIN_MULTICONF_LOADERS);
 //
-#define MULTICONF_Float(KEY_NAME, DEFAULT_STR, ...) \
-  basis::ScopedMultiConfObserver<float> KEY_NAME \
-    = {STRINGIFY(KEY_NAME) \
-      , DEFAULT_STR \
-      , __VA_ARGS__}
+#define MULTICONF_Float(...) \
+  MULTICONF_type(float, __VA_ARGS__)
+
+// MOTIVATION
+//
+// `MULTICONF_type` can not be used concurrently from multiple threads.
+// You can create per-thread `MULTICONF_Observer` to overcome that issue.
+//
+// USAGE
+//
+// MULTICONF_Float(my_conf_key, "1.12", BUILTIN_MULTICONF_LOADERS);
+// // Observe existing variable on multiple threads
+// MULTICONF_Observer(my_conf_key_observer_thread_1, my_namespace::my_conf_key);
+// MULTICONF_Observer(my_conf_key_observer_thread_2, my_namespace::my_conf_key);
+// MULTICONF_Observer(my_conf_key_observer_thread_3, my_namespace::my_conf_key);
+//
+/// \note `KEY_NAME` expected to be already existing variable
+/// of type `MultiConfWrapper<...>` i.e. no need to call `addOption`.
+//
+#define MULTICONF_Observer(VAR_NAME, KEY_NAME) \
+  auto VAR_NAME = KEY_NAME
 
 namespace base {
 
@@ -185,8 +192,27 @@ class CommandLine;
 
 namespace basis {
 
+namespace internal {
+
+basis::StatusOr<base::Value> parseJSONData(
+  const std::string& json_data);
+
+} // namespace internal
+
 std::string formatConfigNameAndGroup(
   const std::string&name, const std::string group);
+
+struct DummyLoader {
+  static basis::StatusOr<std::string> tryLoadString(
+    const std::string& key
+    , const std::string& configuration_group
+    , const base::Value& option_settings) {
+    RETURN_ERROR();
+  }
+
+  // id for debug purposes
+  static constexpr char kId[] = "DummyLoader";
+};
 
 // Configuration loader that uses environment vars
 class JsonMultiConf {
@@ -199,7 +225,9 @@ class JsonMultiConf {
   // * uppercase(key)
   // * lowercase(key)
   basis::StatusOr<std::string> tryLoadString(
-    const std::string& name, const std::string& configuration_group);
+    const std::string& name
+    , const std::string& configuration_group
+    , const base::Value& option_settings);
 
   /// \note resets cache even in case of loading error
   MUST_USE_RETURN_VALUE
@@ -249,7 +277,9 @@ class EnvMultiConf {
   // * uppercase(key)
   // * lowercase(key)
   basis::StatusOr<std::string> tryLoadString(
-    const std::string& name, const std::string& configuration_group);
+    const std::string& name
+    , const std::string& configuration_group
+    , const base::Value& option_settings);
 
  public:
   // id for debug purposes
@@ -284,7 +314,9 @@ class CmdMultiConf {
   // * uppercase(key)
   // * lowercase(key)
   basis::StatusOr<std::string> tryLoadString(
-    const std::string& name, const std::string& configuration_group);
+    const std::string& name
+    , const std::string& configuration_group
+    , const base::Value& option_settings);
 
  public:
   // id for debug purposes
@@ -314,36 +346,104 @@ struct MultiConfLoader {
     = base::RepeatingCallback<
         basis::StatusOr<std::string>(
           const std::string& name
-          , const std::string& configuration_group)
+          , const std::string& configuration_group
+          , const base::Value& option_settings)
       >;
+
+  friend bool operator==(const MultiConfLoader& a, const MultiConfLoader& b) {
+    return a.name == b.name;
+  }
+
+  friend bool operator<(const MultiConfLoader& a, const MultiConfLoader& b) {
+    return a.name < b.name;
+  }
+
+  friend std::ostream& operator<<(std::ostream& out, const MultiConfLoader& i) {
+    return out << i.name;
+  }
 
   std::string name;
   LoaderFunc func;
 };
 
+STRONGLY_TYPED_BOOL(UseGlobalLoaders);
+
 // Configuration option that can be read from file, environment vars, etc.
 struct MultiConfOption
 {
  public:
+  MultiConfOption();
+
   MultiConfOption(
     const std::string& name
     , const base::Optional<std::string>& default_value
     , const std::initializer_list<MultiConfLoader>& loaders
-    , const std::string& configuration_group);
+    , const std::string& configuration_group
+    , UseGlobalLoaders useGlobal = UseGlobalLoaders::kTrue
+    , base::Value&& option_settings = base::Value{});
 
   friend bool operator<(const MultiConfOption& a, const MultiConfOption& b) {
     return formatConfigNameAndGroup(a.name, a.configuration_group)
            < formatConfigNameAndGroup(b.name, b.configuration_group);
   }
 
+  friend bool operator==(const MultiConfOption& a, const MultiConfOption& b) {
+    return formatConfigNameAndGroup(a.name, a.configuration_group)
+           == formatConfigNameAndGroup(b.name, b.configuration_group);
+  }
+
   friend std::ostream& operator<<(std::ostream& out, const MultiConfOption& i) {
     return out << formatConfigNameAndGroup(i.name, i.configuration_group);
+  }
+
+  MultiConfOption(const MultiConfOption& other)
+    : name{other.name}
+    , default_str{other.default_str}
+    , loaders{other.loaders}
+    , configuration_group{other.configuration_group}
+    , useGlobalLoaders{other.useGlobalLoaders}
+    , optionSettings{other.optionSettings.Clone()}
+  {}
+
+  MultiConfOption(MultiConfOption&& other)
+    : name{RVALUE_CAST(other.name)}
+    , default_str{RVALUE_CAST(other.default_str)}
+    , loaders{RVALUE_CAST(other.loaders)}
+    , configuration_group{RVALUE_CAST(other.configuration_group)}
+    , useGlobalLoaders{RVALUE_CAST(other.useGlobalLoaders)}
+    , optionSettings{RVALUE_CAST(other.optionSettings)}
+  {}
+
+  MultiConfOption& operator=(
+    const MultiConfOption& other)
+  {
+    name = other.name;
+    default_str = other.default_str;
+    loaders = other.loaders;
+    configuration_group = other.configuration_group;
+    useGlobalLoaders = other.useGlobalLoaders;
+    optionSettings = other.optionSettings.Clone();
+    return *this;
+  }
+
+  MultiConfOption& operator=(
+    MultiConfOption&& other)
+  {
+    name = RVALUE_CAST(other.name);
+    default_str = RVALUE_CAST(other.default_str);
+    loaders = RVALUE_CAST(other.loaders);
+    configuration_group = RVALUE_CAST(other.configuration_group);
+    useGlobalLoaders = RVALUE_CAST(other.useGlobalLoaders);
+    optionSettings = RVALUE_CAST(other.optionSettings);
+    return *this;
   }
 
   std::string name;
   base::Optional<std::string> default_str = base::nullopt;
   std::vector<MultiConfLoader> loaders;
   std::string configuration_group;
+  UseGlobalLoaders useGlobalLoaders;
+  base::Value optionSettings;
 };
 
 class MultiConf {
@@ -435,6 +535,15 @@ class MultiConf {
   // Adds configuration option to `known_config_options_`
   basis::Status addOption(const MultiConfOption& option);
 
+  void addGlobalLoaders(
+    const std::initializer_list<MultiConfLoader>& loaders);
+
+  void removeGlobalLoaders(
+    const std::initializer_list<MultiConfLoader>& loaders);
+
+  bool hasGlobalLoaders(
+    const std::initializer_list<MultiConfLoader>& loaders);
+
   /// \note Will reload cache even if nothing changed.
   /// \note Will do nothing if `known_config_options_.empty()`.
   // Updates config based on current content of config files, env. vars, etc.
@@ -446,7 +555,8 @@ class MultiConf {
 
   // Finds key with provided name in `current_config_cache_`
   basis::StatusOr<std::string> getAsStringFromCache(const std::string& name
-    , const std::string& configuration_group);
+    , const std::string& configuration_group
+    , bool allow_default_value = false);
 
   bool hasOptionWithName(const std::string& name
     , const std::string& configuration_group);
@@ -464,6 +574,11 @@ class MultiConf {
     // if your application requires all configuration values
     // to be valid or have defaults, than set `clear_cache_on_error` to true
     , bool clear_cache_on_error = true);
+
+  // can be used to get default value of registered option
+  basis::StatusOr<MultiConfOption> findOptionWithName(
+    const std::string& name
+    , const std::string& configuration_group);
 
  private:
   MultiConf();
@@ -494,6 +609,8 @@ class MultiConf {
 
   std::map<std::string, std::string> current_config_cache_;
 
+  std::vector<MultiConfLoader> global_loaders_;
+
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
@@ -503,156 +620,55 @@ class MultiConf {
 };
 
 template<typename T>
-class ScopedMultiConfObserver : public MultiConf::Observer {
+class MultiConfObserver : public MultiConf::Observer {
  public:
-  // USE CASE
-  // `FileA.cc` creates configuration option `my_option` using `MULTICONF_String`
-  // `FileB.cc` wants to use `my_option` without need to access `FileA.h`,
-  // but it can not use `MULTICONF_String` again.
-  // So `FileB.cc` can create `ScopedMultiConfObserver`
-  // with `auto_registered_(false)`.
-  ScopedMultiConfObserver(const std::string& target_name
-    , const std::string& default_name
+  MultiConfObserver(const std::string& target_name
+    , const std::string& default_value
     , const std::string& configuration_group)
     : target_name_(target_name)
-    , auto_registered_(false)
-  {
-    basis::StatusOr<T> statusor = parseValueAs<T>(default_name);
-    DCHECK(statusor.ok())
-      << "default configuration value expected to be valid";
-    if(statusor.ok()) {
-      cached_value_ = base::rvalue_cast(statusor.ConsumeValueOrDie());
-    } else {
-      error_status_ = statusor.status();
-    }
-  }
+    , target_configuration_group_(configuration_group)
+    /// \note `ConsumeValueOrDie` can CRASH without error,
+    /// so provide error text using `dcheckCanParseAndReturnOk`,
+    /// but only in DEBUG builds.
+    , error_status_(dcheckCanParseAndReturnOk(default_value))
+    /// \note Will CRASH without error text
+    /// if default configuration value is not valid!
+    , cached_value_{base::rvalue_cast(parseOptionAs<T>(default_value).ConsumeValueOrDie())}
+  {}
 
-  // Used by `MULTICONF_*` macros to both create configuration option
-  // and register observer using single var.
-  /// \note Automatically adds configuration option
-  /// \note Automatically adds and removes itself from observer list
-  ScopedMultiConfObserver(const std::string& target_name
-    , const std::string& default_name
-    , const std::initializer_list<MultiConfLoader>& loaders
-    , const std::string& configuration_group)
-    : target_name_(target_name)
-    , auto_registered_(true)
-  {
-    CHECK_GT(loaders.size(), 0)
-      << "No configuration loaders provided for option:"
-      << target_name;
+  ~MultiConfObserver() override {}
 
-    CHECK_OK(basis::MultiConf::GetInstance().addOption(basis::MultiConfOption{
-      target_name
-      , default_name
-      , loaders
-      , configuration_group
-    }));
-
-    basis::StatusOr<T> statusor = parseValueAs<T>(default_name);
-    DCHECK(statusor.ok())
-      << "default configuration value expected to be valid";
-    if(statusor.ok()) {
-      cached_value_ = base::rvalue_cast(statusor.ConsumeValueOrDie());
-    } else {
-      error_status_ = statusor.status();
-    }
-    basis::MultiConf::GetInstance().addObserver(this);
-  }
-
-  ~ScopedMultiConfObserver() override {
-    /// \note make sure `ScopedMultiConfObserver`
-    /// destructs before `basis::MultiConf::GetInstance()`
-    /// \note moved-from object can be in any valid state,
-    /// so make sure to reset `auto_registered_` in that case.
-    if(auto_registered_) {
-      basis::MultiConf::GetInstance().removeObserver(this);
-    }
-  }
-
-  ScopedMultiConfObserver(const ScopedMultiConfObserver& other)
+  MultiConfObserver(const MultiConfObserver& other)
     : target_name_{other.target_name_}
+    , target_configuration_group_{other.target_configuration_group_}
     , cached_value_{other.cached_value_}
     , error_status_{other.error_status_}
-  {
-    // |observer| must not already be in the list.
-    if(other.auto_registered_ && !auto_registered_) {
-      basis::MultiConf::GetInstance().addObserver(this);
-    }
-    if(!other.auto_registered_ && auto_registered_) {
-      basis::MultiConf::GetInstance().removeObserver(this);
-    }
-    auto_registered_ = other.auto_registered_;
-  }
+  {}
 
-  ScopedMultiConfObserver(ScopedMultiConfObserver&& other)
+  MultiConfObserver(MultiConfObserver&& other)
     : target_name_{RVALUE_CAST(other.target_name_)}
+    , target_configuration_group_{RVALUE_CAST(other.target_configuration_group_)}
     , cached_value_{RVALUE_CAST(other.cached_value_)}
     , error_status_{RVALUE_CAST(other.error_status_)}
-  {
-    // if moved-from type was observer -> make itself observer (if was not before)
-    // if moved-from type was NOT observer -> make itself NOT observer (if was not before)
-    {
-      // |observer| must not already be in the list.
-      if(other.auto_registered_ && !auto_registered_) {
-        basis::MultiConf::GetInstance().addObserver(this);
-      }
-      if(!other.auto_registered_ && auto_registered_) {
-        basis::MultiConf::GetInstance().removeObserver(this);
-      }
-    }
-    // moved-from type must not be used as observer
-    {
-      auto_registered_ = other.auto_registered_;
-      if(other.auto_registered_) {
-        basis::MultiConf::GetInstance().removeObserver(&other);
-      }
-      other.auto_registered_ = false;
-    }
-  }
+  {}
 
-  ScopedMultiConfObserver& operator=(
-    const ScopedMultiConfObserver& other)
+  MultiConfObserver& operator=(
+    const MultiConfObserver& other)
   {
     target_name_ = other.target_name_;
+    target_configuration_group_ = other.target_configuration_group_;
     cached_value_ = other.cached_value_;
     error_status_ = other.error_status_;
-    // |observer| must not already be in the list.
-    if(other.auto_registered_ && !auto_registered_) {
-      basis::MultiConf::GetInstance().addObserver(this);
-    }
-    if(!other.auto_registered_ && auto_registered_) {
-      basis::MultiConf::GetInstance().removeObserver(this);
-    }
-    auto_registered_ = other.auto_registered_;
     return *this;
   }
 
-  ScopedMultiConfObserver& operator=(
-    ScopedMultiConfObserver&& other)
+  MultiConfObserver& operator=(
+    MultiConfObserver&& other)
   {
     target_name_ = RVALUE_CAST(other.target_name_);
+    target_configuration_group_ = RVALUE_CAST(other.target_configuration_group_);
     cached_value_ = RVALUE_CAST(other.cached_value_);
     error_status_ = RVALUE_CAST(other.error_status_);
-    // if moved-from type was observer -> make itself observer (if was not before)
-    // if moved-from type was NOT observer -> make itself NOT observer (if was not before)
-    {
-      // |observer| must not already be in the list.
-      if(other.auto_registered_ && !auto_registered_) {
-        basis::MultiConf::GetInstance().addObserver(this);
-      }
-      if(!other.auto_registered_ && auto_registered_) {
-        basis::MultiConf::GetInstance().removeObserver(this);
-      }
-    }
-    // moved-from type must not be used as observer
-    {
-      auto_registered_ = other.auto_registered_;
-      if(other.auto_registered_) {
-        basis::MultiConf::GetInstance().removeObserver(&other);
-      }
-      other.auto_registered_ = false;
-    }
     return *this;
   }
 
@@ -663,16 +679,13 @@ class ScopedMultiConfObserver : public MultiConf::Observer {
   {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
-    DVLOG(999)
-      << "Detected change in configuration option from "
-      << prev_value
-      << " to "
-      << new_value;
-
     error_status_ = basis::OkStatus();
 
-    if (option.name == target_name_ && prev_value != new_value) {
-      basis::StatusOr<T> statusor = parseValueAs<T>(new_value);
+    if (option.name == target_name_
+        && option.configuration_group == target_configuration_group_
+        && prev_value != new_value)
+    {
+      basis::StatusOr<T> statusor = parseOptionAs<T>(new_value);
       if(statusor.ok()) {
         cached_value_ = base::rvalue_cast(statusor.ConsumeValueOrDie());
       } else {
@@ -681,15 +694,35 @@ class ScopedMultiConfObserver : public MultiConf::Observer {
     }
   }
 
-  void onCacheReloaded() override {}
+  void onCacheReloaded() override {
+    error_status_ = basis::OkStatus();
 
-  std::string id() override {
-    return "ScopedMultiConfObserver";
+    basis::StatusOr<std::string> cache_statusor
+      = basis::MultiConf::GetInstance().getAsStringFromCache(
+          target_name_
+          , target_configuration_group_
+          , true // allow default value
+        );
+    if(cache_statusor.ok()) {
+      basis::StatusOr<T> new_value_statusor
+        = parseOptionAs<T>(cache_statusor.ConsumeValueOrDie());
+      if(new_value_statusor.ok()) {
+        T new_value = new_value_statusor.ConsumeValueOrDie();
+        if (cached_value_ != new_value) {
+          cached_value_ = base::rvalue_cast(new_value);
+        }
+      } else {
+        // failed to parse new value
+        error_status_ = new_value_statusor.status();
+      }
+    } else {
+      // failed to find value in cache or use default value
+      error_status_ = cache_statusor.status();
+    }
   }
 
-  bool is_auto_registered() const NO_EXCEPTION {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return auto_registered_;
+  std::string id() override {
+    return "MultiConfObserver";
   }
 
   basis::Status error_status() const NO_EXCEPTION {
@@ -697,8 +730,20 @@ class ScopedMultiConfObserver : public MultiConf::Observer {
     return error_status_;
   }
 
+  std::string target_name() const NO_EXCEPTION {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    return target_name_;
+  }
+
+  std::string target_configuration_group() const NO_EXCEPTION {
+    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
+    return target_configuration_group_;
+  }
+
   /// \note `GetValue()` requires `error_status().ok()`
-  T GetValue(const base::Location& location = base::Location::Current()) const NO_EXCEPTION {
+  T GetValue(
+    const base::Location& location = base::Location::Current()) const NO_EXCEPTION
+  {
     DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
     CHECK(error_status_.ok())
       << location.ToString();
@@ -706,148 +751,203 @@ class ScopedMultiConfObserver : public MultiConf::Observer {
   }
 
  private:
-  template<typename Type>
-  basis::StatusOr<Type> parseValueAs(
-    const std::string& str) const NO_EXCEPTION;
-
-  template<>
-  basis::StatusOr<std::string> parseValueAs<std::string>(
-    const std::string& str) const NO_EXCEPTION
+  static basis::Status dcheckCanParseAndReturnOk(const std::string& default_value) NO_EXCEPTION
   {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return str;
-  }
-
-  /// \note Strings "TrUe", "True", "true" and "1" will result in `true` value.
-  template<>
-  basis::StatusOr<bool> parseValueAs<bool>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    return base::EqualsCaseInsensitiveASCII(str, "true") || str == "1";
-  }
-
-  template<>
-  basis::StatusOr<int> parseValueAs<int>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    int output;
-    RETURN_ERROR_IF(!base::StringToInt(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<unsigned> parseValueAs<unsigned>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    unsigned output;
-    RETURN_ERROR_IF(!base::StringToUint(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<int64_t> parseValueAs<int64_t>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    int64_t output;
-    RETURN_ERROR_IF(!base::StringToInt64(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<int32_t> parseValueAs<int32_t>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    int32_t output;
-    RETURN_ERROR_IF(!base::StringToInt32(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<uint32_t> parseValueAs<uint32_t>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    uint32_t output;
-    RETURN_ERROR_IF(!base::StringToUint32(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<uint64_t> parseValueAs<uint64_t>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    uint64_t output;
-    RETURN_ERROR_IF(!base::StringToUint64(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<size_t> parseValueAs<size_t>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    size_t output;
-    RETURN_ERROR_IF(!base::StringToSizeT(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<double> parseValueAs<double>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    double output;
-    RETURN_ERROR_IF(!base::StringToDouble(str, &output));
-    return output;
-  }
-
-  template<>
-  basis::StatusOr<float> parseValueAs<float>(
-    const std::string& str) const NO_EXCEPTION
-  {
-    DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
-    double output;
-    RETURN_ERROR_IF(!base::StringToDouble(str, &output));
-    DCHECK(base::WithinEpsilon(output, static_cast<double>(base::saturated_cast<float>(output))))
-      << "unable to store " << output << " in float type";
-    /// \note Converts from double with saturation
-    /// to FLOAT_MAX, FLOAT_MIN, or 0 for NaN.
-    return base::saturated_cast<float>(output);
+#if DCHECK_IS_ON()
+    basis::StatusOr<T> statusor = parseOptionAs<T>(default_value);
+    CHECK(statusor.ok())
+      << "Default configuration value expected to be valid."
+      << " Can not parse to "
+      << type_name<T>()
+      << " value: "
+      << default_value;
+#endif // DCHECK_IS_ON
+    RETURN_OK();
   }
 
  private:
   std::string target_name_;
 
-  // if `true`, than will call in destructor
-  // `basis::MultiConf::GetInstance().removeObserver(this);`
-  /// \todo separate `ScopedMultiConfObserver`
-  /// into `MultiConfObserver mco` and
-  /// `ScopedAddObserver<MultiConf::Observer> y(&mco
-  ///                      , base::BindRepeating(&basis::MultiConf::addObserver, base::Unretained(&basis::MultiConf::GetInstance()))
-  ///                      , base::BindRepeating(&basis::MultiConf::removeObserver, base::Unretained(&basis::MultiConf::GetInstance()))`
-  /// and rewrite `MULTICONF_String` to use
-  /// template<typename T>
-  /// struct MultiConfWrapper {
-  ///   MultiConfObserver mco;
-  ///   ScopedAddObserver<MultiConf::Observer> y;
-  ///   T GetValue() { mco.GetValue(); }
-  /// }
-  bool auto_registered_;
+  std::string target_configuration_group_;
+
+  basis::Status error_status_;
 
   T cached_value_;
-
-  basis::Status error_status_{basis::OkStatus()};
 
   // Thread collision warner to ensure that API is not called concurrently.
   // API allowed to call from multiple threads, but not
   // concurrently.
   DFAKE_MUTEX(debug_thread_collision_warner_);
+};
+
+template<typename T>
+class ScopedAddConfObserver {
+ public:
+  using AddObserverCb
+    = base::RepeatingCallback<void(MultiConf::Observer*)>;
+
+  using DelObserverCb
+    = base::RepeatingCallback<void(MultiConf::Observer*)>;
+
+  ScopedAddConfObserver(T* ptr
+    , AddObserverCb addObserverCb
+    , DelObserverCb delObserverCb)
+    : ptr_(ptr)
+    , addObserverCb_(addObserverCb)
+    , delObserverCb_(delObserverCb)
+  {
+    DCHECK(addObserverCb_);
+    addObserverCb_.Run(ptr_);
+  }
+
+  ~ScopedAddConfObserver()
+  {
+    DCHECK(delObserverCb_);
+    delObserverCb_.Run(ptr_);
+  }
+
+private:
+  T* ptr_;
+
+  SCOPED_UNOWNED_PTR_CHECKER(ptr_);
+
+  AddObserverCb addObserverCb_;
+  DelObserverCb delObserverCb_;
+
+  DISALLOW_COPY_AND_ASSIGN(ScopedAddConfObserver);
+};
+
+TYPED_ENUM(CheckOptionPolicy, int, (kCheckAddedNew)(kCheckExists)(kIgnoreCheck))
+
+// Used by `MULTICONF_*` macros to both create configuration option
+// and register observer using single var,
+// so you will be able to write code: `static MULTICONF_String(...)`.
+/// \note Automatically adds configuration option
+/// \note Automatically adds and removes itself from observer list
+template<typename T>
+class MultiConfWrapper {
+ public:
+  using MCO
+    = MultiConfObserver<T>;
+
+  using SAO
+    = ScopedAddConfObserver<MCO>;
+
+  template <typename... Args>
+  MultiConfWrapper(CheckOptionPolicy checkOptionPolicy
+    , const std::string& target_name
+    , const std::string& default_value
+    , const std::initializer_list<MultiConfLoader>& loaders
+    , const std::string& configuration_group
+    , Args... args)
+    : mco_{std::make_shared<MCO>(target_name, default_value, configuration_group)}
+    , sao_{std::make_shared<SAO>(
+        mco_.get()
+        , base::BindRepeating(
+            &basis::MultiConf::addObserver
+            , base::Unretained(&basis::MultiConf::GetInstance()))
+        , base::BindRepeating(
+            &basis::MultiConf::removeObserver
+            , base::Unretained(&basis::MultiConf::GetInstance()))
+      )}
+    , target_name_(target_name)
+    , target_configuration_group_(configuration_group)
+  {
+    switch (checkOptionPolicy) {
+      case CheckOptionPolicy::kCheckExists: {
+        CHECK(basis::MultiConf::GetInstance().hasOptionWithName(target_name, configuration_group));
+        break;
+      }
+      case CheckOptionPolicy::kCheckAddedNew: {
+        CHECK_GT(loaders.size(), 0)
+          << "No configuration loaders provided for option:"
+          << target_name;
+        auto result
+          = basis::MultiConf::GetInstance().addOption(basis::MultiConfOption{
+              target_name
+              , default_value
+              , loaders
+              , target_configuration_group_
+              , FORWARD(args)...
+            });
+        if(checkOptionPolicy == CheckOptionPolicy::kCheckAddedNew) {
+          CHECK_OK(result);
+        } else {
+          ignore_result(result);
+        }
+        break;
+      }
+      case CheckOptionPolicy::kIgnoreCheck: {
+        break;
+      }
+      default: {
+        FATAL_INVALID_ENUM_VALUE(CheckOptionPolicy, checkOptionPolicy);
+      }
+    }
+  }
+
+  T GetValue(
+    const base::Location& location = base::Location::Current()) const NO_EXCEPTION
+  {
+    return mco_->GetValue();
+  }
+
+  basis::Status error_status() const NO_EXCEPTION {
+    return mco_->error_status();
+  }
+
+  MultiConfWrapper(const MultiConfWrapper& other)
+    : mco_{other.mco_}
+    , sao_{other.sao_}
+    , target_name_{other.target_name_}
+    , target_configuration_group_{other.target_configuration_group_}
+  {
+  }
+
+  MultiConfWrapper(MultiConfWrapper&& other)
+    : mco_{RVALUE_CAST(other.mco_)}
+    , sao_{RVALUE_CAST(other.sao_)}
+    , target_name_{RVALUE_CAST(other.target_name_)}
+    , target_configuration_group_{RVALUE_CAST(other.target_configuration_group_)}
+  {
+  }
+
+  MultiConfWrapper& operator=(
+    const MultiConfWrapper& other)
+  {
+    mco_ = other.mco_;
+    sao_ = other.sao_;
+    target_name_ = other.target_name_;
+    target_configuration_group_ = other.target_configuration_group_;
+    return *this;
+  }
+
+  MultiConfWrapper& operator=(
+    MultiConfWrapper&& other)
+  {
+    mco_ = RVALUE_CAST(other.mco_);
+    sao_ = RVALUE_CAST(other.sao_);
+    target_name_ = RVALUE_CAST(other.target_name_);
+    target_configuration_group_ = RVALUE_CAST(other.target_configuration_group_);
+    return *this;
+  }
+
+  std::string target_name() const NO_EXCEPTION {
+    return target_name_;
+  }
+
+  std::string target_configuration_group() const NO_EXCEPTION {
+    return target_configuration_group_;
+  }
+
+ private:
+  // Multiple wrappers can have shared MCO (MultiConfObserver<T>)
+  // and shared SAO (ScopedAddConfObserver)
+  std::shared_ptr<MCO> mco_;
+  std::shared_ptr<SAO> sao_;
+  std::string target_name_;
+  std::string target_configuration_group_;
+
 };
 
 } // namespace basis

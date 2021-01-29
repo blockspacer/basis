@@ -215,7 +215,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<std::invoke_result_t<F&&, T&>> transform(F&& f) &
   {
     if (ok())
-      return {FORWARD(f)(*value_)};
+      return {FORWARD(f)(ValueOrDie())};
     else
       return {status_};
   }
@@ -225,7 +225,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<std::invoke_result_t<F&&, const T&>> transform(F&& f) const&
   {
     if (ok())
-      return {FORWARD(f)(*value_)};
+      return {FORWARD(f)(ValueOrDie())};
     else
       return {status_};
   }
@@ -235,7 +235,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<std::invoke_result_t<F&&, T&&>> transform(F&& f) &&
   {
     if (ok())
-      return {FORWARD(f)(*RVALUE_CAST(value_))};
+      return {FORWARD(f)(RVALUE_CAST(ConsumeValueOrDie()))};
     else
       return {RVALUE_CAST(status_)};
   }
@@ -245,7 +245,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<std::invoke_result_t<F&&, const T&&>> transform(F&& f) const&&
   {
     if (ok())
-      return {FORWARD(f)(*RVALUE_CAST(value_))};
+      return {FORWARD(f)(RVALUE_CAST(ConsumeValueOrDie()))};
     else
       return {COPY_OR_MOVE(status_)};
   }
@@ -273,7 +273,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<typename std::invoke_result_t<F&&, T&>::value_type> andThen(F&& f) &
   {
     if (ok())
-      return {FORWARD(f)(*value_)};
+      return {FORWARD(f)(ValueOrDie())};
     else
       return {status_};
   }
@@ -283,7 +283,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<typename std::invoke_result_t<F&&, const T&>::value_type> andThen(F&& f) const&
   {
     if (ok())
-      return {FORWARD(f)(*value_)};
+      return {FORWARD(f)(ValueOrDie())};
     else
       return {status_};
   }
@@ -293,7 +293,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<typename std::invoke_result_t<F&&, T&&>::value_type> andThen(F&& f) &&
   {
     if (ok())
-      return {FORWARD(f)(*RVALUE_CAST(value_))};
+      return {FORWARD(f)(RVALUE_CAST(ConsumeValueOrDie()))};
     else
       return {RVALUE_CAST(status_)};
   }
@@ -303,7 +303,7 @@ class MUST_USE_RESULT StatusOr {
   StatusOr<typename std::invoke_result_t<F&&, const T&&>::value_type> andThen(F&& f) const&&
   {
     if (ok())
-      return {FORWARD(f)(*RVALUE_CAST(value_))};
+      return {FORWARD(f)(RVALUE_CAST(ConsumeValueOrDie()))};
     else
       return {COPY_OR_MOVE(status_)};
   }
@@ -352,11 +352,15 @@ inline StatusOr<T>::StatusOr(const base::Location& location)
     /// \note Default status is unknown status because we can not use
     /// `Status::OK` without custom `value_`
     /// (`Status::OK` means that `value_` must be set).
-    : status_(basis::UnknownStatus(location)), value_() {}
+    : status_(basis::UnknownStatus(location))
+    , value_()
+{}
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const ::basis::Status& status)
-    : status_(status), value_() {
+    : status_(status)
+    , value_()
+{
   if (status_.ok()) {
     /// \note `Status::OK` means that `value_` must be set.
     /// But constructor with `Status::OK` does not provide value (only default constructs it).
@@ -382,7 +386,9 @@ template <typename T>
 template <typename U>
 inline StatusOr<T>& StatusOr<T>::operator=(const StatusOr<U>& other) {
   status_ = other.status_;
-  value_ = other.value_;
+  if (status_.ok()) {
+    value_ = other.value_;
+  }
   return *this;
 }
 
@@ -397,14 +403,20 @@ inline StatusOr<T>::StatusOr(T&& value)
 template <typename T>
 template <typename U>
 inline StatusOr<T>::StatusOr(StatusOr<U>&& other)  // NOLINT
-    : status_(other.status_),
-      value_(RVALUE_CAST(other.value_)) {}
+    : status_(other.status_)
+{
+  if (status_.ok()) {
+    value_ = RVALUE_CAST(other.value_);
+  }
+}
 
 template <typename T>
 template <typename U>
 inline StatusOr<T>& StatusOr<T>::operator=(StatusOr<U>&& other) {
   status_ = other.status_;
-  value_ = RVALUE_CAST(other.value_);
+  if (status_.ok()) {
+    value_ = RVALUE_CAST(other.value_);
+  }
   return *this;
 }
 

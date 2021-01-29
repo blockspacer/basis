@@ -1,5 +1,7 @@
 #pragma once
 
+#include "basis/concept/dependent_false.hpp"
+
 #include <vector>
 #include <string>
 
@@ -27,8 +29,10 @@ class DefaultTypeNameGeneratorTag;
 // the string representation of type name
 /// \note You can create custom `NameGeneratorTag`
 /// to prevent `type_name()` collision.
-template<typename T, typename NameGeneratorTag = ::base::DefaultTypeNameGeneratorTag>
+template<typename T, typename NameGeneratorTag = ::basis::DefaultTypeNameGeneratorTag>
 inline const char* type_name() {
+  static_assert(dependent_false<T>::value
+    , "type_name() does not support provided type.");
   return "";
 }
 
@@ -41,16 +45,14 @@ inline const char* type_name() {
 
 // macro to quickly declare traits information
 #define DECLARE_TYPE_NAME(Type, Name)                 \
-  DECLARE_CUSTOM_TYPE_NAME(Type, Name, ::base::DefaultTypeNameGeneratorTag)
+  DECLARE_CUSTOM_TYPE_NAME(Type, Name, ::basis::DefaultTypeNameGeneratorTag)
 
-DECLARE_TYPE_NAME(float, "float")
-
-DECLARE_TYPE_NAME(double, "double")
-
-DECLARE_TYPE_NAME(int, "int")
+DECLARE_TYPE_NAME(int32_t, "int32")
 
 // int (non-negative)
 DECLARE_TYPE_NAME(uint32_t, "uint32")
+
+DECLARE_TYPE_NAME(int64_t, "int64")
 
 // long (non-negative)
 DECLARE_TYPE_NAME(uint64_t, "uint64")
@@ -58,5 +60,18 @@ DECLARE_TYPE_NAME(uint64_t, "uint64")
 DECLARE_TYPE_NAME(std::string, "std::string")
 
 DECLARE_TYPE_NAME(bool, "boolean")
+
+DECLARE_TYPE_NAME(float, "float")
+
+DECLARE_TYPE_NAME(double, "double")
+
+// redefinition
+//DECLARE_TYPE_NAME(size_t, "size_t")
+
+// redefinition
+// DECLARE_TYPE_NAME(unsigned, "unsigned")
+
+// redefinition
+// DECLARE_TYPE_NAME(int, "int")
 
 }  // namespace basis

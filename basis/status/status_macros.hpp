@@ -960,9 +960,9 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 //
 // AFTER
 //
-// int64_t converted = CHECKED_CONSUME_STATUS_VALUE(varint.ToInt64());
+// int64_t converted = CONSUME_STATUSOR(varint.ToInt64());
 //
-#define CHECKED_CONSUME_STATUS_VALUE(expr) \
+#define CONSUME_STATUSOR(expr) \
   [&](){ \
     auto statusor = (expr); \
     DCHECK_OK(statusor) << #expr << " failed with " << statusor; \
@@ -981,9 +981,9 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 //
 // AFTER
 //
-// int64_t converted = CHECKED_COPY_STATUS_VALUE(varint.ToInt64());
+// int64_t converted = EXTRACT_STATUSOR(varint.ToInt64());
 //
-#define CHECKED_COPY_STATUS_VALUE(expr) \
+#define EXTRACT_STATUSOR(expr) \
   [&](){ \
     auto statusor = (expr); \
     DCHECK_OK(statusor) << #expr << " failed with " << statusor; \

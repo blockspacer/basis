@@ -1,16 +1,20 @@
 ## About
 
-`multiconfig` - configuration system that can support multiple configuration providers.
+`multiconfig` - configuration system that can support
+multiple configuration providers.
 
-Configuration providers can read value from some data source (json file, environment variables, etc.)
+Configuration providers can read value from some data source
+(json file, environment variables, etc.)
 
-Imagine that you already have `json configuration loader` and `ini configuration loader`.
+Imagine that you already have `json configuration loader`
+and `ini configuration loader`.
 
 Some configuration options use `json configuration loader`: `my_json_guid`.
 
-And configuration options some use `ini configuration loader`: `my_ini_id`.
+And some configuration options use `ini configuration loader`: `my_ini_id`.
 
-You can use `multiconfig` to add configuration option `my_name` that can load from either `json configuration loader` or `ini configuration loader`.
+You can use `multiconfig` to add configuration option `my_name`
+that can load from either `json configuration loader` or `ini configuration loader`.
 
 ```cpp
 // "my_name" can load from ini or json files
@@ -23,54 +27,11 @@ MULTICONF_string(my_json_guid, "my_default_value", {JSON_MULTICONF_LOADER});
 MULTICONF_string(my_ini_id, "my_default_value", {INI_MULTICONF_LOADER});
 ```
 
-## Configuration groups
-
-Imagine that you have multiple "plugins" and you need to avoid collision.
-
-You can not create same option `my_key` using
-`MULTICONF_String(my_key, "", MY_LOADERS);`
-multiple times (even in different files or plugins).
-
-Use multiple configuration groups to avoid collision like so:
-#define CONFIG_GROUP_A "my_plugin_a"
-#define CONFIG_GROUP_B "my_plugin_b"
-`MULTICONF_String(my_key, "", MY_LOADERS, CONFIG_GROUP_A);`
-`MULTICONF_String(my_key, "", MY_LOADERS, CONFIG_GROUP_B);`
-
-It will create `my_plugin_a_my_key` and `my_plugin_b_my_key` configuration values (combines group name and option name).
-
-For now we used configuration groups only to avoid collision.
-
-They can also be used to reload on demand limited set of options
-without need to refresh whole configuration.
-
-That may help if you have configuration stored in multiple files,
-each configuration group can be associated with individual file.
-
-See:
+Note that `MULTICONF_String` is same as `MULTICONF_type(std::string, ...)`
 
 ```cpp
-basis::StatusOr<std::string> tryLoadString(
-  const std::string& name, const std::string& configuration_group)
-```
-
-The basic idea is that your configuration loader can load file based on provided `configuration_group`.
-
-```cpp
-// load file with name based on `configuration_group`!
-std::string json_loaded = loadFileByPath(configuration_group);
-// no need to combine `name` and `configuration_group` here!
-std::string result = getValueByJsonKey(name);
-```
-
-Make sure that `configuration_group` is used somehow to avoid collision.
-If `configuration_group` does not affect anything, than at least use it to create combined key name:
-
-```cpp
-// load configuration option with title `key`, but not with title `name`!
-std::string key = formatConfigNameAndGroup(name, configuration_group);
-// used combined `name` and `configuration_group` here!
-std::string result = getEnvironmentVariableByName(key);
+#define MULTICONF_String(...) \
+  MULTICONF_type(std::string, __VA_ARGS__)
 ```
 
 ## Usage
@@ -78,24 +39,29 @@ std::string result = getEnvironmentVariableByName(key);
 Syntax used to add new configuration option:
 
 ```cpp
-MULTICONF_typename(NAME, DEFAULT_VALUE, INITIALIZER_LIST_OF_LOADERS);
+MULTICONF_{{typename}}({[NAME}}, {{DEFAULT_VALUE}}, {{INITIALIZER_LIST_OF_LOADERS}});
 ```
 
-Syntax used to add multiple configuration options:
+Example that adds multiple configuration options:
 
 ```cpp
 // creates var. `my_string_key` and configuration option using text "my_string_key"
 MULTICONF_String(my_string_key, "-12345", BUILTIN_MULTICONF_LOADERS);
+
 // creates var. `my_bool_key` and configuration option using text "my_bool_key"
 MULTICONF_Bool(my_bool_key, "True", BUILTIN_MULTICONF_LOADERS);
+
 MULTICONF_Int(my_int_key, "-12345", BUILTIN_MULTICONF_LOADERS);
 ```
 
-Note that `MULTICONF_Bool(my_bool_key, ...` will declare variable `basis::MultiConfValueObserver<bool> my_bool_key = ...`.
+Note that `MULTICONF_Bool(my_bool_key, ...`
+will declare variable `basis::MultiConfValueObserver<bool> my_bool_key = ...`.
 
-So make sure that you place `MULTICONF_` inside anonymous namespace or struct/class/etc.
+So make sure that you place `MULTICONF_`
+inside anonymous namespace or struct/class/etc.
 
-It is also valid to use `static` like so: `static MULTICONF_Bool(my_bool_key, "True", BUILTIN_MULTICONF_LOADERS);`
+It is also valid to use `static` like so:
+`static MULTICONF_Bool(my_bool_key, "True", BUILTIN_MULTICONF_LOADERS);`
 
 To use registered configuration options:
 
@@ -114,15 +80,211 @@ bool flag = my_bool_key.GetValue();
 ```
 
 Note that without `clearAndReload` configuration values will be cached
-i.e. changes in configuration files are NOT auto detected (but you can add that functionality manually, see `addObserver`).
+i.e. changes in configuration files are NOT auto detected
+(but you can add that functionality manually, see `addObserver`).
 
 Note that `GetValue` may fail if provided configuration is broken
 (for example, if `my_int_key` can not be converted to `int`  from `string`),
 so you can check for errors using `error_status().ok()`.
 
+
+## Configuration groups
+
+Imagine that you have multiple "plugins" and you need to avoid collision.
+
+You can not create same option `my_key` using
+`MULTICONF_String(my_key, "", MY_LOADERS);`
+multiple times (even in different files or plugins).
+
+Use multiple configuration groups to avoid collision like so:
+#define CONFIG_GROUP_A "my_plugin_a"
+#define CONFIG_GROUP_B "my_plugin_b"
+`MULTICONF_String(my_key, "", MY_LOADERS, CONFIG_GROUP_A);`
+`MULTICONF_String(my_key, "", MY_LOADERS, CONFIG_GROUP_B);`
+
+It will create `my_plugin_a_my_key` and `my_plugin_b_my_key`
+configuration values (combines group name and option name).
+
+For now we used configuration groups only to avoid collision.
+
+They can also be used to reload on demand limited set of options
+without need to refresh whole configuration.
+
+That may help if you have configuration stored in multiple files,
+each configuration group can be associated with individual file.
+
+See:
+
+```cpp
+basis::StatusOr<std::string> tryLoadString(
+  const std::string& name
+  , const std::string& configuration_group
+  , const base::Value& option_settings)
+```
+
+The basic idea is that your configuration loader can load file based
+on provided `configuration_group`.
+
+```cpp
+// load file with name based on `configuration_group`!
+std::string json_loaded = loadFileByPath(configuration_group);
+// no need to combine `name` and `configuration_group` here!
+std::string result = getValueByJsonKey(name);
+```
+
+Make sure that `configuration_group` is used somehow to avoid collision.
+If `configuration_group` does not affect anything, than at least use it
+to create combined key name:
+
+```cpp
+// load configuration option with title `key`, but not with title `name`!
+std::string key = formatConfigNameAndGroup(name, configuration_group);
+// used combined `name` and `configuration_group` here!
+std::string result = getEnvironmentVariableByName(key);
+```
+
+## Multiple threads
+
+`MULTICONF_String`, `MULTICONF_type` can be called from multiple threads,
+but can NOT be called concurrently.
+
+You can create per-thread `MULTICONF_Observer` to overcome that issue.
+
+```cpp
+MULTICONF_Float(my_conf_key, "1.12", BUILTIN_MULTICONF_LOADERS);
+// Observe existing variable on multiple thread
+MULTICONF_Observer(conf_key_observer_on_thread_1, my_namespace::my_conf_key);
+MULTICONF_Observer(conf_key_observer_on_thread_2, my_namespace::my_conf_key);
+MULTICONF_Observer(conf_key_observer_on_thread_3, my_namespace::my_conf_key);
+```
+
+Note that `MULTICONF_Observer` observes already existing configuration option.
+
+## Global configuration loaders
+
+You can create configuration option with
+`basis::useGlobalLoaders::kTrue` or `basis::useGlobalLoaders::kFalse`
+
+```cpp
+MULTICONF_String(my_conf_key_1, "abcd", BUILTIN_MULTICONF_LOADERS, basis::useGlobalLoaders::kTrue);
+
+MULTICONF_String(my_conf_key_2, "abcd", BUILTIN_MULTICONF_LOADERS, basis::useGlobalLoaders::kFalse);
+```
+
+Not provided `basis::useGlobalLoaders` value equals to `kTrue`.
+
+If you used `basis::useGlobalLoaders::kTrue`,
+than your configuration option will be affeted by functions:
+
+* basis::MultiConf::GetInstance().addGlobalLoaders(...)
+* basis::MultiConf::GetInstance().removeGlobalLoaders(...)
+* basis::MultiConf::GetInstance().hasGlobalLoaders(...)
+
+I.e. configuration option will use no only loaders prvodided during its construction,
+but also global ones.
+
+## Dynamic per-option settings using `base::Value`
+
+You can associate `base::Value` with configuration option:
+
+```cpp
+MULTICONF_String(my_conf_key_Y, "abcd", {MY_LOADER_1}
+  , kDefaultTestGroup, basis::useGlobalLoaders::kTrue, jsonConfigOption());
+```
+
+Here `jsonConfigOption` is:
+
+```cpp
+static base::Value simpleJsonConfigOption()
+{
+  base::Value root(base::Value::Type::DICTIONARY);
+
+  // `root.ExtractPath("one.two.three")` is `Value(123)`
+  root.SetPath("one.two.three", base::Value(123));
+
+  // `moved_value.FindKey("Int")->GetInt()` is `Value(123)`
+  storage.emplace("Int", std::make_unique<Value>(123));
+
+  return root;
+}
+```
+
+Because `base::Value` can be parsed from json,
+you can associate arbitrary json string with configuration option:
+
+```cpp
+constexpr char kMustReturnStr[] = "MustReturnStr";
+constexpr char kMustReturnStrResult[] = "kMustReturnStrResult";
+constexpr char kDefaultTestGroup[] = "test_group_1";
+
+MULTICONF_String(my_conf_key_json, "default_val", {MY_LOADER_1}
+  , kDefaultTestGroup, basis::useGlobalLoaders::kTrue
+  , basis::internal::parseJSONData(base::Substitute(R"raw(
+{
+  "opt1":"val1",
+  "$1":"$2",
+  "opt3":"val3"
+}
+)raw", kMustReturnStr, kMustReturnStrResult)).ConsumeValueOrDie());
+
+EXPECT_EQ(kMustReturnStrResult, my_conf_key_json.GetValue());
+```
+
+Here `parseJSONData` is:
+
+```cpp
+basis::StatusOr<base::Value> parseJSONData(
+  const std::string& json_data)
+{
+  static const size_t kMaxDebugLogItemSize = 9999;
+
+  // This could be really slow.
+  base::ScopedBlockingCall scoped_blocking_call(
+    FROM_HERE, base::BlockingType::MAY_BLOCK);
+
+  base::JSONReader::ValueWithError value_with_error =
+    base::JSONReader::ReadAndReturnValueWithError(
+      json_data
+      , base::JSON_PARSE_RFC);
+
+  if (!value_with_error.value) {
+    RETURN_ERROR()
+      << "Failed to parse JSON: "
+      << "JSON error "
+      << base::StringPrintf(
+           "%s (%d:%d)"
+           , value_with_error.error_message.c_str()
+           , value_with_error.error_line
+           ,  value_with_error.error_column)
+      << " JSON data starts with: "
+      << json_data.substr(0, kMaxDebugLogItemSize)
+      << " ...";
+  }
+
+  base::Value& root
+    = value_with_error.value.value();
+
+  if (!root.is_dict()) {
+    RETURN_ERROR()
+      << "Failed to parse JSON:"
+      << " Root item must be a dictionary."
+      << " But it is: "
+      << base::Value::GetTypeName(root.type())
+      << " and it has type index: "
+      << static_cast<size_t>(root.type())
+      << " JSON data starts with: "
+      << json_data.substr(0, kMaxDebugLogItemSize)
+      << " ...";
+  }
+
+  return std::move(value_with_error.value.value());
+}
+```
+
 ## How to add custom configuration provider
 
-Imagine that you want to load some configuration option from either json file environment variable.
+Imagine that you want to load some configuration option from
+either json file environment variable.
 
 Lets create configuration provider that can read environment variables.
 
@@ -130,7 +292,9 @@ Each configuration provider must have public `id` and function that returns `bas
 
 ```cpp
 basis::StatusOr<std::string> tryLoadString(
-  const std::string& name, const std::string& configuration_group);
+  const std::string& name
+  , const std::string& configuration_group
+  , const base::Value& option_settings);
 static constexpr char kId[] = "EnvMultiConf";
 ```
 
@@ -145,7 +309,9 @@ class EnvMultiConf {
 
   // Loads configuraton value from environment vars
   basis::StatusOr<std::string> tryLoadString(
-    const std::string& name, const std::string& configuration_group);
+    const std::string& name
+    , const std::string& configuration_group
+    , const base::Value& option_settings);
 
  public:
   // id for debug purposes
@@ -175,8 +341,12 @@ EnvMultiConf& EnvMultiConf::GetInstance() {
 }
 
 basis::StatusOr<std::string> EnvMultiConf::tryLoadString(
-  const std::string& name, const std::string& configuration_group)
+  const std::string& name
+  , const std::string& configuration_group
+  , const base::Value& option_settings)
 {
+  UNREFERENCED_PARAMETER(option_settings);
+
   std::string key = FORMAT_NAME_AND_GROUP(name, configuration_group);
 
   DCHECK(!key.empty());
@@ -196,7 +366,8 @@ basis::StatusOr<std::string> EnvMultiConf::tryLoadString(
 }
 ```
 
-Now you can pass created configuration provided when you create new configuration options using `MULTICONF_`
+Now you can pass created configuration provided when you create
+new configuration options using `MULTICONF_`
 
 Example:
 
@@ -224,7 +395,8 @@ Cached value may be any data type that was parsed from `string`.
 
 `GetValue()` does not parse `string` on each use.
 
-We use observer pattern to detect configuration changes and invalidate only required values in cache, see `addObserver`.
+We use observer pattern to detect configuration changes and invalidate
+only required values in cache, see `addObserver`.
 
 Each `MULTICONF_*` macro expected to create single wariable,
 so you will be able to write code: `static MULTICONF_String(...)`.

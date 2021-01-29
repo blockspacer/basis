@@ -97,9 +97,7 @@ PeriodicValidateUntil::VoidPromise
   // promise will be resolved when `validationTask.Run()` returns true
   ::base::ManualPromiseResolver<
       void, ::base::NoReject
-    > promiseResolver = ::base::ManualPromiseResolver<
-      void, ::base::NoReject
-    >(FROM_HERE);
+    > promiseResolver(FROM_HERE);
 
   // Bind `GetRepeatingResolveCallback` to passed `validation task`
   DCHECK(validationTask);

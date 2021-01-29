@@ -346,6 +346,28 @@ TEST(StatusMacros, AssignOrReturn) {
     RETURN_OK();
   };
 
+  std::function<basis::Status(int&)> taskC
+    = [&](int& val) -> basis::Status
+  {
+    basis::StatusOr<int> statusor;
+    if (val > 0) statusor = basis::StatusOr<int>{val};
+    CONSUME_OR_RETURN_WITH_MESSAGE(val
+      , statusor, std::string{"failed_to_parse_JSON_string"});
+    RETURN_OK();
+  };
+
+  {
+    int val = -1;
+    ASSERT_NOT_OK(taskC(REFERENCED(val)));
+    ASSERT_EQ(val, -1);
+  }
+
+  {
+    int val = 1;
+    ASSERT_OK(taskC(REFERENCED(val)));
+    ASSERT_EQ(val, 1);
+  }
+
   {
     basis::Status result = taskB(taskA(-123));
     EXPECT_ERROR_CODE(ERR_OUT_OF_RANGE, result);

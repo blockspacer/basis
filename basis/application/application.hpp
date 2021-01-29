@@ -111,7 +111,7 @@ private:
 
   friend class ApplicationStateObserver;
 
-  /// \note ObserverListThreadSafe may be ued from multiple threads
+  /// \note ObserverListThreadSafe may be used from multiple threads
   const scoped_refptr<
       ::base::ObserverListThreadSafe<ApplicationStateObserver>
     > observers_;

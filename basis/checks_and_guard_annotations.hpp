@@ -1,7 +1,6 @@
 #pragma once
 
 #include "basis/bind/verify_nothing.hpp"
-#include "basis/unowned_ptr.hpp"
 
 #include <base/macros.h>
 #include <base/sequence_checker.h>
@@ -399,24 +398,24 @@ struct FakeLockCheckWholeScope
 {
   /// \todo refactor to `enum class`
   static constexpr bool isWholeScope = true;
-  static constexpr bool isEnterScope = false;
-  static constexpr bool isExitScope = false;
+  static constexpr bool isOnlyEnterScope = false;
+  static constexpr bool isOnlyExitScope = false;
 };
 
 struct FakeLockCheckEnterScope
 {
   /// \todo refactor to `enum class`
   static constexpr bool isWholeScope = false;
-  static constexpr bool isEnterScope = true;
-  static constexpr bool isExitScope = false;
+  static constexpr bool isOnlyEnterScope = true;
+  static constexpr bool isOnlyExitScope = false;
 };
 
 struct FakeLockCheckExitScope
 {
   /// \todo refactor to `enum class`
   static constexpr bool isWholeScope = false;
-  static constexpr bool isEnterScope = false;
-  static constexpr bool isExitScope = true;
+  static constexpr bool isOnlyEnterScope = false;
+  static constexpr bool isOnlyExitScope = true;
 };
 
 
@@ -432,25 +431,33 @@ class LOCKABLE FakeLockWithLifetimeCheck {
 public:
   FakeLockWithLifetimeCheck(T* ptr) : ptr_(ptr) {}
 
-  ~FakeLockWithLifetimeCheck() { ptr_.checkForLifetimeIssues(); }
+  ~FakeLockWithLifetimeCheck() { checkForLifetimeIssues(); }
 
   MUST_USE_RETURN_VALUE
   bool Acquire() const NO_EXCEPTION EXCLUSIVE_LOCK_FUNCTION()
   {
-    ptr_.checkForLifetimeIssues();
+    checkForLifetimeIssues();
     return true;
   }
 
   MUST_USE_RETURN_VALUE
   bool Release() const NO_EXCEPTION UNLOCK_FUNCTION()
   {
-    ptr_.checkForLifetimeIssues();
+    checkForLifetimeIssues();
     return true;
   }
 
+  // check that object is alive, use memory tool like ASAN
+  /// \note ignores nullptr
+  inline void checkForLifetimeIssues() const
+  {
+    // Works with `-fsanitize=address,undefined`
+    DCHECK_UNOWNED_PTR(ptr_);
+  }
+
  private:
-  // See `ptr_.checkForLifetimeIssues()`
-  basis::UnownedPtr<T> ptr_;
+  // See `checkForLifetimeIssues()`
+  T* ptr_ = nullptr;
 
   DISALLOW_COPY_AND_ASSIGN(FakeLockWithLifetimeCheck);
 };
@@ -462,8 +469,8 @@ template <
   // FakeLockCheckType::isAlways performs checks in all builds
   , typename FakeLockPolicyType
   // FakeLockCheckType::isWholeScope performs check on both scope enter and exit
-  // FakeLockCheckType::isEnterScope performs check only on scope enter
-  // FakeLockCheckType::isEnterScope performs check only on scope exit
+  // FakeLockCheckType::isOnlyEnterScope performs check only on scope enter
+  // FakeLockCheckType::isOnlyEnterScope performs check only on scope exit
   , typename FakeLockCheckType
 >
 class SCOPED_LOCKABLE ScopedFakeLockWithLifetimeCheck
@@ -476,7 +483,7 @@ class SCOPED_LOCKABLE ScopedFakeLockWithLifetimeCheck
     : lock_(lock)
     , from_here_(from_here)
   {
-    if constexpr (!FakeLockCheckType::isExitScope)
+    if constexpr (!FakeLockCheckType::isOnlyExitScope)
     {
       if constexpr (FakeLockPolicyType::isDebugOnly
         && DCHECK_IS_ON())
@@ -495,7 +502,7 @@ class SCOPED_LOCKABLE ScopedFakeLockWithLifetimeCheck
 
   ~ScopedFakeLockWithLifetimeCheck() UNLOCK_FUNCTION()
   {
-    if constexpr (!FakeLockCheckType::isEnterScope)
+    if constexpr (!FakeLockCheckType::isOnlyEnterScope)
     {
       if constexpr (FakeLockPolicyType::isDebugOnly
         && DCHECK_IS_ON())
@@ -534,8 +541,8 @@ template <
   // FakeLockCheckType::isAlways performs checks in all builds
   , typename FakeLockPolicyType
   // FakeLockCheckType::isWholeScope performs check on both scope enter and exit
-  // FakeLockCheckType::isEnterScope performs check only on scope enter
-  // FakeLockCheckType::isEnterScope performs check only on scope exit
+  // FakeLockCheckType::isOnlyEnterScope performs check only on scope enter
+  // FakeLockCheckType::isOnlyEnterScope performs check only on scope exit
   , typename FakeLockCheckType
   , typename Signature
 >
@@ -843,7 +850,7 @@ class SCOPED_LOCKABLE
     : lock_(lock)
     , from_here_(from_here)
   {
-    if constexpr (!FakeLockCheckType::isExitScope)
+    if constexpr (!FakeLockCheckType::isOnlyExitScope)
     {
       if constexpr (FakeLockPolicyType::isDebugOnly
         && DCHECK_IS_ON())
@@ -862,7 +869,7 @@ class SCOPED_LOCKABLE
 
   ~ScopedFakeLockWithChecks() UNLOCK_FUNCTION()
   {
-    if constexpr (!FakeLockCheckType::isEnterScope)
+    if constexpr (!FakeLockCheckType::isOnlyEnterScope)
     {
       if constexpr (FakeLockPolicyType::isDebugOnly
         && DCHECK_IS_ON())
@@ -999,7 +1006,7 @@ class SCOPED_LOCKABLE
     ::basis::FakeLockPolicyDebugOnly, \
     ::basis::FakeLockCheckWholeScope)
 
-// FakeLockCheckType::isEnterScope performs check only on scope enter
+// FakeLockCheckType::isOnlyEnterScope performs check only on scope enter
 //
 // EXAMPLE
 //  /// \note `is_stream_valid_` may become invalid on scope exit,
@@ -1077,7 +1084,7 @@ class SCOPED_LOCKABLE
 #define GUARD_MEMBER_WITH_DYNAMIC_CHECK(Name) \
   SET_DYNAMIC_THREAD_GUARD(MEMBER_GUARD(Name))
 
-// FakeLockCheckType::isEnterScope performs check only on scope exit
+// FakeLockCheckType::isOnlyEnterScope performs check only on scope exit
 #define DCHECK_THREAD_GUARD_SCOPE_EXIT(Name) \
   FAKE_CUSTOM_THREAD_GUARD(Name, \
     ::basis::FakeLockPolicyDebugOnly, \
@@ -1210,22 +1217,77 @@ class SCOPED_LOCKABLE
 #define DCHECK_NOT_THREAD_BOUND_METHOD(Name) \
   DCHECK_THREAD_GUARD_SCOPE_ENTER(FUNC_GUARD(Name))
 
+// Will check if pointer is valid on scope exit.
+// Can be used with safety annotations (GUARDED_BY).
+//
+// USAGE
+//
+// class Ex1 {
+//  // ...
+//  int* my_ptr;
+//  SCOPED_UNOWNED_PTR_CHECKER(my_ptr);
+//  int data_that_requires_my_ptr
+//    GUARDED_BY(UNOWNED_PTR_LIFETIME_GUARD(my_ptr));
+//  // ...
+//  DCHECK_UNOWNED_PTR_LIFETIME_GUARD(data_that_requires_my_ptr);
+//  data_that_requires_my_ptr = (*my_ptr) * 123;
+// }
+//
+#define SCOPED_UNOWNED_PTR_CHECKER(Name) \
+  ::basis::FakeLockWithLifetimeCheck< \
+    const void  \
+  > UNOWNED_PTR_LIFETIME_GUARD(Name) { static_cast<const void*>( Name ) }; \
+  ::basis::ScopedFakeLockWithLifetimeCheck<\
+    const void \
+    , ::basis::FakeLockPolicyDebugOnly \
+    , ::basis::FakeLockCheckExitScope \
+  > \
+    CGEN_UNIQUE_NAME(auto_lock_ptr_lifetime_checker_)  \
+      { UNOWNED_PTR_LIFETIME_GUARD(Name), FROM_HERE }
+
+// Will check if reference is valid on scope exit.
+// Can be used with safety annotations (GUARDED_BY).
+//
+// USAGE
+//
+// class Ex1 {
+//  // ...
+//  int& my_ref;
+//  SCOPED_UNOWNED_REF_CHECKER(my_ref);
+//  int data_that_requires_my_ref
+//    GUARDED_BY(UNOWNED_REF_LIFETIME_GUARD(my_ref));
+//  // ...
+//  DCHECK_UNOWNED_REF_LIFETIME_GUARD(data_that_requires_my_ref);
+//  data_that_requires_my_ref = my_ref * 123;
+// }
+#define SCOPED_UNOWNED_REF_CHECKER(Name) \
+  ::basis::FakeLockWithLifetimeCheck< \
+    const void  \
+  > UNOWNED_REF_LIFETIME_GUARD(Name){static_cast<const void*>(&Name)}; \
+  ::basis::ScopedFakeLockWithLifetimeCheck<\
+    const void \
+    , ::basis::FakeLockPolicyDebugOnly \
+    , ::basis::FakeLockCheckExitScope \
+  > \
+    CGEN_UNIQUE_NAME(auto_lock_ref_lifetime_checker_) \
+     { UNOWNED_REF_LIFETIME_GUARD(Name), FROM_HERE }
+
 #define DCHECK_UNOWNED_REF_LIFETIME_GUARD(Name) \
   ::basis::ScopedFakeLockWithLifetimeCheck<\
     std::remove_reference_t<decltype(Name)> \
     , ::basis::FakeLockPolicyDebugOnly \
-    , ::basis::FakeLockCheckEnterScope \
+    , ::basis::FakeLockCheckWholeScope \
   > \
-    CGEN_UNIQUE_NAME(auto_lock_run_on_) \
+    CGEN_UNIQUE_NAME(auto_lock_ref_lifetime_guard_) \
       (UNOWNED_REF_LIFETIME_GUARD(Name), FROM_HERE)
 
 #define DCHECK_UNOWNED_PTR_LIFETIME_GUARD(Name) \
   ::basis::ScopedFakeLockWithLifetimeCheck<\
     std::remove_reference_t<decltype(Name)> \
     , ::basis::FakeLockPolicyDebugOnly \
-    , ::basis::FakeLockCheckEnterScope \
+    , ::basis::FakeLockCheckWholeScope \
   > \
-    CGEN_UNIQUE_NAME(auto_lock_run_on_) \
+    CGEN_UNIQUE_NAME(auto_lock_ptr_lifetime_guard_) \
       (UNOWNED_PTR_LIFETIME_GUARD(Name), FROM_HERE)
 
 // Documents that class (or struct, etc.)
@@ -1238,6 +1300,9 @@ class SCOPED_LOCKABLE
 #define CREATE_NOT_THREAD_BOUND_GUARD(Name) \
   CREATE_FAKE_THREAD_GUARD(NOT_THREAD_BOUND_GUARD(Name))
 
+/// \note Do not forget to init created UNOWNED_REF_LIFETIME_GUARD(Name)
+/// in constructor.
+//
 // USAGE
 //
 // CREATE_NOT_THREAD_BOUND_GUARD(registry_);
@@ -1246,13 +1311,17 @@ class SCOPED_LOCKABLE
 // ECS::SafeRegistry& registry_
 //   GUARDED_BY(NOT_THREAD_BOUND_GUARD(registry_))
 //   GUARDED_BY(UNOWNED_REF_LIFETIME_GUARD(registry_));
-//
+// // ... in constructor ...
+// : UNOWNED_REF_LIFETIME_GUARD(Name){&registry_}
 #define CREATE_UNOWNED_REF_LIFETIME_GUARD(Name, ...) \
   ::basis::FakeLockWithLifetimeCheck< \
       __VA_ARGS__  \
     > \
     UNOWNED_REF_LIFETIME_GUARD(Name)
 
+/// \note Do not forget to init created UNOWNED_PTR_LIFETIME_GUARD(Name)
+/// in constructor.
+//
 // USAGE
 //
 // CREATE_NOT_THREAD_BOUND_GUARD(registry_);
@@ -1261,6 +1330,8 @@ class SCOPED_LOCKABLE
 // ECS::SafeRegistry* registry_
 //   GUARDED_BY(NOT_THREAD_BOUND_GUARD(registry_))
 //   GUARDED_BY(UNOWNED_PTR_LIFETIME_GUARD(registry_));
+// // ... in constructor ...
+// : UNOWNED_PTR_LIFETIME_GUARD(Name){&registry_}
 //
 #define CREATE_UNOWNED_PTR_LIFETIME_GUARD(Name, ...) \
   ::basis::FakeLockWithLifetimeCheck< \

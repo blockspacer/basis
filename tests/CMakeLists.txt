@@ -28,6 +28,7 @@ set( GTEST_TEST_ARGS --gtest_shuffle)
 #   --args ~/basis/build/Debug/tests/basis-tests/basis-varint \
 #   --single-process-tests \
 #   --gtest_filter=* \
+#   --vmodule=*=9999 \
 #   --test-data-dir="~/chromium_base_conan/tests/data/" \
 #   --enable-features=print_status_macro_error
 add_custom_target(${ROOT_PROJECT_NAME}_run_all_tests

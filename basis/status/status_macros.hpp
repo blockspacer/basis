@@ -666,29 +666,23 @@ class UtilStatusConvertibleToBool {
 #define STATUS_MACROS_CONCAT_NAME_INNER(x, y) x##y
 #define STATUS_MACROS_CONCAT_NAME(x, y) STATUS_MACROS_CONCAT_NAME_INNER(x, y)
 
-#define SILENT_CONSUME_OR_RETURN_IMPL(statusor, lhs, rexpr)                       \
-  auto statusor = (rexpr);                                                \
-  if (UNLIKELY(!statusor.ok())) {                               \
-    return statusor.status();                                             \
-  }                                                                       \
-  lhs = statusor.ConsumeValueOrDie();
-
 /// \note performs extra logging using `LOG(ERROR)`
 /// only if `IsMacroErrorLoggedByDefault` enabled
 //
-#define CONSUME_OR_RETURN_IMPL(statusor, lhs, rexpr)                         \
-  auto statusor = (rexpr);                                                  \
-  if (UNLIKELY(!statusor.ok())) {                                           \
-    if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault()))    \
-      LOG(ERROR) << "Return Error: " << #rexpr << " at " << __FILE__ << ":" \
-               << __LINE__;                                                 \
-    return statusor.status();                                               \
-  }                                                                         \
-  lhs = statusor.ConsumeValueOrDie();
+// USAGE
+//
+//  CONSUME_OR_RETURN_WITH_MESSAGE(cached_dictionary_
+//    , parseJSONData(json_data), std::string{"failed_to_parse_JSON_string"});
+//
+#define CONSUME_OR_RETURN_WITH_MESSAGE(lhs, rexpr, ...) \
+  CONSUME_OR_RETURN_WITH_MESSAGE_IMPL( \
+      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr, ##__VA_ARGS__)
 
-#define CONSUME_OR_RETURN_WITHOUT_LOG(lhs, rexpr) \
-  SILENT_CONSUME_OR_RETURN_IMPL( \
-      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr);
+#define CONSUME_OR_RETURN_WITH_MESSAGE_IMPL(statusor, lhs, rexpr, ...)    \
+  auto statusor = (rexpr);                                                \
+  RETURN_WITH_MESSAGE_IF_NOT_OK(statusor.status())                        \
+    << "Failed check: " << #rexpr << " " << __VA_ARGS__;                  \
+  lhs = std::move(statusor.ConsumeValueOrDie())                           \
 
 /// \note performs extra logging using `LOG(ERROR)`
 /// only if `IsMacroErrorLoggedByDefault` enabled
@@ -722,17 +716,8 @@ class UtilStatusConvertibleToBool {
 // WARNING: CONSUME_OR_RETURN expands into multiple statements; it cannot be used
 //  in a single statement (e.g. as the body of an if statement without {})!
 #define CONSUME_OR_RETURN(lhs, rexpr) \
-  CONSUME_OR_RETURN_IMPL( \
-      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr);
-
-// Similar to `SILENT_CONSUME_OR_RETURN_IMPL`, but
-// calls `ValueOrDie` instead of `ConsumeValueOrDie`
-#define SILENT_COPY_OR_RETURN_IMPL(statusor, lhs, rexpr)                       \
-  auto statusor = (rexpr);                                                \
-  if (UNLIKELY(!statusor.ok())) {                               \
-    return statusor.status();                                             \
-  }                                                                       \
-  lhs = statusor.ValueOrDie();
+  CONSUME_OR_RETURN_WITH_MESSAGE_IMPL( \
+      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr, std::string{""})
 
 /// \note performs extra logging using `LOG(ERROR)`
 /// only if `IsMacroErrorLoggedByDefault` enabled
@@ -740,27 +725,26 @@ class UtilStatusConvertibleToBool {
 // Similar to `CONSUME_OR_RETURN_IMPL`, but
 // calls `ValueOrDie` instead of `ConsumeValueOrDie`
 //
-#define COPY_OR_RETURN_IMPL(statusor, lhs, rexpr)                         \
-  auto statusor = (rexpr);                                                  \
-  if (UNLIKELY(!statusor.ok())) {                                           \
-    if (UNLIKELY(::basis::status_macros::IsMacroErrorLoggedByDefault()))    \
-      LOG(ERROR) << "Return Error: " << #rexpr << " at " << __FILE__ << ":" \
-               << __LINE__;                                                 \
-    return statusor.status();                                               \
-  }                                                                         \
-  lhs = statusor.ValueOrDie();
+// USAGE
+//
+//  COPY_OR_RETURN_WITH_MESSAGE(cached_dictionary_
+//    , parseJSONData(json_data), std::string{"failed_to_parse_JSON_string"});
+//
+#define COPY_OR_RETURN_WITH_MESSAGE_IMPL(statusor, lhs, rexpr, ...)       \
+  auto statusor = (rexpr);                                                \
+  RETURN_WITH_MESSAGE_IF_NOT_OK(statusor.status())                        \
+    << "Failed check: " << #rexpr << " " << __VA_ARGS__;                  \
+  lhs = statusor.ValueOrDie()                                             \
 
-// Similar to `CONSUME_OR_RETURN_WITHOUT_LOG`, but
-// calls `ValueOrDie` instead of `ConsumeValueOrDie`
-#define COPY_OR_RETURN_WITHOUT_LOG(lhs, rexpr) \
-  SILENT_COPY_OR_RETURN_IMPL( \
-      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr);
+#define COPY_OR_RETURN_WITH_MESSAGE(lhs, rexpr, ...) \
+  COPY_OR_RETURN_WITH_MESSAGE_IMPL( \
+      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr, ##__VA_ARGS__)
 
 // Similar to `CONSUME_OR_RETURN`, but
 // calls `ValueOrDie` instead of `ConsumeValueOrDie`
 #define COPY_OR_RETURN(lhs, rexpr) \
-  COPY_OR_RETURN_IMPL( \
-      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr);
+  COPY_OR_RETURN_WITH_MESSAGE( \
+      STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr, std::string{""})
 
 // If condition is false, this macro returns, from the current function, a
 // ::basis::Status with the ::basis::error::INTERNAL code.

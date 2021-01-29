@@ -112,7 +112,7 @@ private:
   /// but used on |task_runner_|
   ::base::RepeatingTimer timer_;
 
-  /// \note ObserverListThreadSafe may be ued from multiple threads
+  /// \note ObserverListThreadSafe may be used from multiple threads
   const scoped_refptr<
       ::base::ObserverListThreadSafe<CheckUntilObserver>
     > observers_;

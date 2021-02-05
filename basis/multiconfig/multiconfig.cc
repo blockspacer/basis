@@ -41,7 +41,7 @@ basis::StatusOr<base::Value> parseJSONData(
       , base::JSON_PARSE_RFC);
 
   if (!value_with_error.value) {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "Failed to parse JSON: "
       << "JSON error "
       << base::StringPrintf(
@@ -58,7 +58,7 @@ basis::StatusOr<base::Value> parseJSONData(
     = value_with_error.value.value();
 
   if (!root.is_dict()) {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "Failed to parse JSON:"
       << " Root item must be a dictionary."
       << " But it is: "
@@ -125,7 +125,7 @@ basis::StatusOr<std::string> EnvMultiConf::tryLoadString(
     return result;
   }
 
-  RETURN_ERROR()
+  RETURN_ERROR().with_dvlog(99)
     << "unable to find key in environment variables: "
     << key
     << " in loader "
@@ -152,28 +152,22 @@ basis::StatusOr<std::string> CmdMultiConf::tryLoadString(
 
   UNREFERENCED_PARAMETER(option_settings);
 
-  std::string key = formatConfigNameAndGroup(name, configuration_group);
+  const std::string key
+    = formatConfigNameAndGroup(name, configuration_group);
 
   DCHECK(!key.empty());
 
-  if(command_line_->HasSwitch(key))
+  /// \note command line switches will `DCHECK` if switch is not lowercase.
+  const std::string key_lower = base::ToLowerASCII(key);
+
+  if(command_line_->HasSwitch(key_lower))
   {
-    return command_line_->GetSwitchValueASCII(key);
+    return command_line_->GetSwitchValueASCII(key_lower);
   }
 
-  if(std::string upper = base::ToUpperASCII(key); command_line_->HasSwitch(upper))
-  {
-    return command_line_->GetSwitchValueASCII(upper);
-  }
-
-  if(std::string lower = base::ToLowerASCII(key); command_line_->HasSwitch(lower))
-  {
-    return command_line_->GetSwitchValueASCII(lower);
-  }
-
-  RETURN_ERROR()
-    << "unable to find key in environment variables: "
-    << key
+  RETURN_ERROR().with_dvlog(99)
+    << "unable to find key in command-line switches: "
+    << key_lower
     << " in loader "
     << kId;
 }
@@ -201,7 +195,7 @@ basis::Status JsonMultiConf::clearAndParseFromFilePath(
   // initialized as best as possible.
   if (!base::PathExists(file_path))
   {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "File does not exist: "
       << file_path.value()
       << " in loader "
@@ -212,7 +206,7 @@ basis::Status JsonMultiConf::clearAndParseFromFilePath(
       base::PathExists(file_path)
       && !base::ReadFileToString(file_path, &json_data))
   {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "Failed to read JSON from file: "
       << file_path.value()
       << " in loader "
@@ -251,7 +245,7 @@ basis::Status JsonMultiConf::clearAndParseFromString(
   DFAKE_SCOPED_RECURSIVE_LOCK(debug_thread_collision_warner_);
 
   if (json_data.empty()) {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "empty JSON"
       << " in loader "
       << kId;
@@ -282,7 +276,7 @@ basis::StatusOr<std::string> JsonMultiConf::tryLoadString(
 
   if(!cached_dictionary_.has_value())
   {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "json configuration not loaded"
       << key
       << " in loader "
@@ -292,7 +286,7 @@ basis::StatusOr<std::string> JsonMultiConf::tryLoadString(
   DCHECK(cached_dictionary_.value().is_dict());
   if(!cached_dictionary_.value().is_dict())
   {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "invalid json configuration for key: "
       << key
       << " in loader "
@@ -303,7 +297,7 @@ basis::StatusOr<std::string> JsonMultiConf::tryLoadString(
     = cached_dictionary_.value().FindStringKey(key);
   if(foundValue == nullptr)
   {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "unable to find key in json configuration: "
       << key
       << " in loader "
@@ -569,7 +563,7 @@ basis::Status MultiConf::reloadOption(
         // cache corrupted, need to notify about change anyway
         notifyCacheReloaded();
       }
-      RETURN_ERROR()
+      RETURN_ERROR().with_dvlog(99)
         << "Failed to load configuration value: "
         << formatConfigNameAndGroup(option.name, option.configuration_group);
     }
@@ -601,7 +595,7 @@ basis::StatusOr<std::string> MultiConf::getAsStringFromCache(
       , formatConfigNameAndGroup(name, configuration_group));
 
   if (!result && !allow_default_value) {
-    RETURN_ERROR()
+    RETURN_ERROR().with_dvlog(99)
       << "Unable to find cached configuration value "
       << formatConfigNameAndGroup(name, configuration_group)
       << ". Maybe you forgot to reload configuration"
@@ -650,7 +644,7 @@ basis::StatusOr<std::string> MultiConf::loadAsStringWithoutDefaults(
     }
   }
 
-  RETURN_ERROR()
+  RETURN_ERROR().with_dvlog(99)
     << "Failed to find configuration value: "
     << formatConfigNameAndGroup(option.name, option.configuration_group)
     << " Count of used loaders: "

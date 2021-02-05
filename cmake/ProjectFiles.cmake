@@ -49,6 +49,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/bloom_filter/double_hashing_bloom.hpp
   ${BASIS_DIR}/bloom_filter/double_hashing_bloom.cc
   #
+  ${BASIS_DIR}/bit_field/bit_field.hpp
+  #
   ${BASIS_DIR}/tracing/tracing_util.hpp
   ${BASIS_DIR}/tracing/tracing_util.cc
   ${BASIS_DIR}/tracing/local_trace.hpp
@@ -168,6 +170,10 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/numerics/uint128.hpp
   ${BASIS_DIR}/numerics/math_utils.hpp
+  ${BASIS_DIR}/numerics/pack_numbers.hpp
+  #
+  ${BASIS_DIR}/decimal/decimal.hpp
+  ${BASIS_DIR}/decimal/decimal_numeric_limits.hpp
   #
   ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.hpp
   ${BASIS_DIR}/concurrency/lock_free_producer_consumer_queue.cc
@@ -219,6 +225,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/fail_point/fail_point.hpp
   ${BASIS_DIR}/fail_point/fail_point.cc
   #
+  ${BASIS_DIR}/disjoint_sets/disjoint_sets.hpp
+  #
   ${BASIS_DIR}/plug_point/plug_point.hpp
   ${BASIS_DIR}/plug_point/plug_point.cc
   #
@@ -261,8 +269,8 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/time/system_time_change_notifier.cc
   ${BASIS_DIR}/time/system_time_change_notifier.hpp
   #
-  ${BASIS_DIR}/time/interval_timer.hpp
-  ${BASIS_DIR}/time/interval_timer.cc
+  ${BASIS_DIR}/time/delta_timer.hpp
+  ${BASIS_DIR}/time/delta_timer.cc
   ${BASIS_DIR}/time/backoff_timer.hpp
   ${BASIS_DIR}/time/backoff_timer.cc
   #
@@ -273,6 +281,7 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/interval/interval.hpp
   ${BASIS_DIR}/interval/interval_set.hpp
+  ${BASIS_DIR}/interval/interval_map.hpp
   #
   ${BASIS_DIR}/statistics/usage_limiter.cc
   ${BASIS_DIR}/statistics/usage_limiter.hpp
@@ -293,6 +302,9 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/statistics/weighted_moving_linear_regression.cc
   ${BASIS_DIR}/statistics/hdr_histogram.hpp
   ${BASIS_DIR}/statistics/hdr_histogram.cc
+  #
+  ${BASIS_DIR}/lru/lru_cache.hpp
+  ${BASIS_DIR}/lru/lru.hpp
   #
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.cc
   ${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy.hpp

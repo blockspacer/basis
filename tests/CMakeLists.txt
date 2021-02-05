@@ -441,6 +441,12 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-hdr_histogram_unittest
     "${BASIS_DIR}/statistics/hdr_histogram_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-lru_unittest
+    "${BASIS_DIR}/lru/lru_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-lru_cache_unittest
+    "${BASIS_DIR}/lru/lru_cache_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-top_n
     "${BASIS_DIR}/algorithm/top_n_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -544,6 +550,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-fail_point
     "${BASIS_DIR}/fail_point/fail_point_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-disjoint_sets
+    "${BASIS_DIR}/disjoint_sets/disjoint_sets_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-dependency_hierarchy
     "${BASIS_DIR}/dependency_hierarchy/dependency_hierarchy_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
@@ -597,11 +606,20 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-interval_set
     "${BASIS_DIR}/interval/interval_set_test.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-interval_map_unittest
+    "${BASIS_DIR}/interval/interval_map_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-bloom_unittest
     "${BASIS_DIR}/bloom_filter/bloom_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-counting_bloom_unittest
+    "${BASIS_DIR}/bloom_filter/counting_bloom_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-double_hashing_bloom_unittest
     "${BASIS_DIR}/bloom_filter/double_hashing_bloom_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-bit_field_unittest
+    "${BASIS_DIR}/bit_field/bit_field_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   set ( fakeit_deps
     fakeit.test.cpp
@@ -629,6 +647,9 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 
   tests_add_executable(${ROOT_PROJECT_NAME}-pack_numbers
     "${BASIS_DIR}/numerics/pack_numbers_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_executable(${ROOT_PROJECT_NAME}-decimal_unittest
+    "${BASIS_DIR}/decimal/decimal_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
   #add_to_tests_list(utils)
   #add_to_tests_list(pimpl)

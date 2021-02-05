@@ -98,6 +98,9 @@ class FullFilterBitsReader : public FilterBitsReader {
 
   ~FullFilterBitsReader() {}
 
+  // Can tell you that:
+  // A) given element is definitely not in the set, or
+  // B) given element is maybe in the set.
   bool MayMatch(const base::StringPiece& entry) override;
 
  private:

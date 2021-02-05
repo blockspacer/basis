@@ -206,6 +206,9 @@ class BloomFilter {
   BloomFilter(const base::span<const uint8_t>& data, size_t n_hashes);
 
   // Return true if the filter may contain the given key.
+  // Can tell you that:
+  // A) given element is definitely not in the set, or
+  // B) given element is maybe in the set.
   bool MayContainKey(const BloomKeyProbe &probe) const;
 
  private:

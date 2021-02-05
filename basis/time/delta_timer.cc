@@ -1,8 +1,8 @@
-#include "basis/time/interval_timer.hpp" // IWYU pragma: associated
+#include "basis/time/delta_timer.hpp" // IWYU pragma: associated
 
 namespace basis {
 
-void IntervalTimer::SetCurrent(const std::chrono::nanoseconds& current)
+void DeltaTimer::SetCurrent(const std::chrono::nanoseconds& current)
 {
   DCHECK(current > std::chrono::nanoseconds::min()
     && current < std::chrono::nanoseconds::max());
@@ -10,7 +10,7 @@ void IntervalTimer::SetCurrent(const std::chrono::nanoseconds& current)
   _current = current;
 }
 
-void IntervalTimer::SetInterval(const std::chrono::nanoseconds& interval)
+void DeltaTimer::SetPeriod(const std::chrono::nanoseconds& interval)
 {
   DCHECK(interval > std::chrono::nanoseconds{0}
     && interval < std::chrono::nanoseconds::max());
@@ -18,12 +18,12 @@ void IntervalTimer::SetInterval(const std::chrono::nanoseconds& interval)
   _interval = interval;
 }
 
-IntervalTimer::IntervalTimer()
+DeltaTimer::DeltaTimer()
   : _interval(std::chrono::nanoseconds{0}), _current(std::chrono::nanoseconds{0})
 {
 }
 
-IntervalTimer::IntervalTimer(const std::chrono::nanoseconds& interval)
+DeltaTimer::DeltaTimer(const std::chrono::nanoseconds& interval)
   : _interval(interval), _current(std::chrono::nanoseconds{0})
 {
 }

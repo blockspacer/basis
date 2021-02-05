@@ -57,8 +57,6 @@ inline std::string CodeEnumToString(error::Code code) {
       return "ALREADY_EXISTS";
     case PERMISSION_DENIED:
       return "PERMISSION_DENIED";
-    case UNAUTHENTICATED:
-      return "UNAUTHENTICATED";
     case RESOURCE_EXHAUSTED:
       return "RESOURCE_EXHAUSTED";
     case FAILED_PRECONDITION:
@@ -75,6 +73,54 @@ inline std::string CodeEnumToString(error::Code code) {
       return "UNAVAILABLE";
     case DATA_LOSS:
       return "DATA_LOSS";
+    case UNAUTHENTICATED:
+      return "UNAUTHENTICATED";
+    case TIMEOUT:
+      return "TIMEOUT";
+    case ALLOCATION_FAILED:
+      return "ALLOCATION_FAILED";
+    case IO_ERROR:
+      return "IO_ERROR";
+    case NOT_IMPLEMENTED:
+      return "NOT_IMPLEMENTED";
+    case END_OF_FILE:
+      return "END_OF_FILE";
+    case RUNTIME:
+      return "RUNTIME";
+    case MEMORY_LIMIT_EXCEEDED:
+      return "MEMORY_LIMIT_EXCEEDED";
+    case TOO_MANY_TASKS:
+      return "TOO_MANY_TASKS";
+    case SERVICE_UNAVAILABLE:
+      return "SERVICE_UNAVAILABLE";
+    case UNINITIALIZED:
+      return "UNINITIALIZED";
+    case UNSUPPORTED_TYPE:
+      return "UNSUPPORTED_TYPE";
+    case TOO_LONG:
+      return "TOO_LONG";
+    case TOO_LARGE:
+      return "TOO_LARGE";
+    case CONFLICT:
+      return "CONFLICT";
+    case NOT_ACCEPTABLE:
+      return "NOT_ACCEPTABLE";
+    case PAYMENT_REQUIRED:
+      return "PAYMENT_REQUIRED";
+    case BAD_REQUEST:
+      return "BAD_REQUEST";
+    case REDIRECT:
+      return "REDIRECT";
+    case FOUND:
+      return "FOUND";
+    case MULTIPLE_CHOICES:
+      return "MULTIPLE_CHOICES";
+    case PARTIAL_CONTENT:
+      return "PARTIAL_CONTENT";
+    case NO_CONTENT:
+      return "NO_CONTENT";
+    case LENGTH_REQUIRED:
+      return "LENGTH_REQUIRED";
     case DO_NOT_USE_RESERVED_FOR_FUTURE_EXPANSION_USE_DEFAULT_IN_SWITCH_INSTEAD_:  // NOLINT
       // We are not adding a default clause here, to explicitly make clang
       // detect the missing codes. This conversion method must stay in sync

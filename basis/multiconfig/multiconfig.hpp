@@ -13,7 +13,6 @@
 #include <base/values.h>
 #include <base/callback_forward.h>
 #include <base/bind.h>
-#include <base/values.h>
 #include <base/base_export.h>
 #include <base/macros.h>
 #include <base/no_destructor.h>
@@ -501,6 +500,16 @@ class MultiConf {
     , const std::string& prev_value
     , const std::string& new_value);
 
+  // USAGE
+  //
+  // /// \note will cache configuration values,
+  // /// so use `clearAndReload` if you need to update configuration values.
+  // CHECK_OK(basis::MultiConf::GetInstance().init())
+  //   << "Wrong configuration.";
+  // /// \note required to refresh configuration cache.
+  // /// Do not use `RunUntilIdle` if you already started another `RunLoop`.
+  // base::RunLoop().RunUntilIdle();
+  //
   MUST_USE_RETURN_VALUE
   basis::Status init() {
     DCHECK_EQ(current_config_cache_.size(), 0);
@@ -548,9 +557,19 @@ class MultiConf {
   /// \note Will do nothing if `known_config_options_.empty()`.
   // Updates config based on current content of config files, env. vars, etc.
   // Populates `current_config_cache_`
+  //
+  // USAGE
+  //
+  // CHECK_OK(basis::MultiConf::GetInstance().clearAndReload())
+  //   << "Wrong configuration.";
+  // /// \note required to refresh configuration cache.
+  // /// Do not use `RunUntilIdle` if you already started another `RunLoop`.
+  // base::RunLoop().RunUntilIdle();
+  //
   basis::Status clearAndReload(
     // if your application requires all configuration values
-    // to be valid or have defaults, than set `clear_cache_on_error` to true
+    // to be valid or have valid defaults,
+    // than set `clear_cache_on_error` to true
     bool clear_cache_on_error = true);
 
   // Finds key with provided name in `current_config_cache_`
@@ -572,7 +591,8 @@ class MultiConf {
     // than set `notify_cache_reload_on_success` to true
     , bool notify_cache_reload_on_success = true
     // if your application requires all configuration values
-    // to be valid or have defaults, than set `clear_cache_on_error` to true
+    // to be valid or have valid defaults,
+    // than set `clear_cache_on_error` to true
     , bool clear_cache_on_error = true);
 
   // can be used to get default value of registered option
@@ -930,6 +950,39 @@ class MultiConfWrapper {
     target_name_ = RVALUE_CAST(other.target_name_);
     target_configuration_group_ = RVALUE_CAST(other.target_configuration_group_);
     return *this;
+  }
+
+  // USAGE
+  //
+  // ::base::FilePath file_exe_{};
+  //
+  // if (!base::PathService::Get(base::FILE_EXE, &file_exe_)) {
+  //   NOTREACHED();
+  //   // stop app execution with EXIT_FAILURE
+  //   return
+  //     false;
+  // }
+  //
+  // ::base::FilePath base_exe_name_ = file_exe_.BaseName().RemoveExtension();
+  //
+  // MULTICONF_String(log_file_conf
+  //   , /* default value */ ""
+  //   , BUILTIN_MULTICONF_LOADERS
+  //   , /* name of configuration group */ base_exe_name_);
+  //
+  // {
+  //   const std::string& log_file = log_file_conf.GetValue();
+  //   if (log_file.empty()) {
+  //     LOG(WARNING)
+  //       << "You can set path to log file using configuration option: "
+  //       << log_file_conf.optionFormatted();
+  //   }
+  //   ::basis::initLogging(
+  //     log_file
+  //   );
+  // }
+  std::string optionFormatted() {
+    return formatConfigNameAndGroup(target_name(), target_configuration_group());
   }
 
   std::string target_name() const NO_EXCEPTION {

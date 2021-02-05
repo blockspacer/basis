@@ -38,6 +38,18 @@ namespace basis {
 // errors include invalid currency_code format, nanos out of range, and
 // the signs of units and nanos disagree. In all error cases the error
 // code is INVALID_ARGUMENT, with an error message.
+//
+// EXAMPLE
+//
+// validateMoney{"USD", units(1), nanos(1000000000)}
+// results in INVALID_ARGUMENT due to out of range
+//
+// validateMoney{"USD", units(1), nanos(-1)}
+// results in INVALID_ARGUMENT due to sign inconsistency
+//
+// validateMoney{"A__INVALID", units(1), nanos(1)}
+// results in INVALID_ARGUMENT due to invalid currency code
+//
 MUST_USE_RETURN_VALUE
 Status validateMoney(
   const Money& money);
@@ -54,6 +66,15 @@ Status validateMoney(
 MUST_USE_RETURN_VALUE
 int getAmountSign(const Money& money);
 
+MUST_USE_RETURN_VALUE
+bool isPositive(const Money& money);
+
+MUST_USE_RETURN_VALUE
+bool isNegative(const Money& money);
+
+MUST_USE_RETURN_VALUE
+bool isZero(const Money& money);
+
 // Adds a and b together into sum. The caller owns the lifetime of sum. Both
 // a and b must be valid money values (see ValidateMoney), otherwise sum may
 // contain invalid value.
@@ -68,6 +89,10 @@ StatusOr<Money> tryAddMoney(const Money& a
   , const Money& b
   , bool fail_on_overflow = true);
 
+/// \note If `saturatedAddMoney` overflows, than value will be saturated
+/// (ex. if you add 123 to INT64_MAX it result in INT64_MAX)
+/// Prefer `tryAddMoney` if you want to check for overflow i.e. `OUT_OF_RANGE`.
+//
 // Returns the sum of a and b. Both a and b must be valid money values (see
 // ValidateMoney), otherwise the result may contain invalid value. The
 // caller must ensure a and b have the same currency_code, otherwise it's a

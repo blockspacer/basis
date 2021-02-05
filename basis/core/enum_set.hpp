@@ -11,7 +11,11 @@
 
 namespace basis {
 
+/// \note Prefer to use `basis/core/typed_enum.hpp` where possible
+//
 /// \note See also `basis/core/bitmask.hpp` and `basis/core/typed_enum.hpp`
+//
+/// \note `EnumSet` can be used as `BitMask`
 //
 // |EnumSet| USAGE:
 //

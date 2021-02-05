@@ -27,7 +27,6 @@ The classic example of using bloom filters is to reduce expensive disk (or netwo
 If the element is not in the bloom filter, then we know for sure we don’t need to perform the expensive lookup.
 
 See:
-
 * https://vorbrodt.blog/2019/04/04/bloom-filters/
 * https://daankolthof.com/2019/05/06/implementing-a-simple-high-performance-bloom-filter-in-c/
 * https://hackernoon.com/probabilistic-data-structures-bloom-filter-5374112a7832
@@ -47,7 +46,13 @@ See:
 
 ## Here is a very nice visualization of how it works.
 
-https://www.jasondavies.com/bloomfilter/
+See:
+* https://www.jasondavies.com/bloomfilter/
+
+## How do giant sites like Facebook and Google check Username or Domain availability so fast?
+
+See:
+* https://www.hackerearth.com/blog/developers/how-websites-check-username-availability-quickly/
 
 ## Usage examples
 
@@ -83,7 +88,9 @@ Bloom filters are a good basic data structure that leave them ripe to variations
 
 ### Counting Bloom filter
 
-Counting Bloom Filters are poorly named; the name ‘counting’ sounds like you can query frequencies instead of just set membership. In fact, the only additional feature a counting Bloom filter provides is the ability to delete entries. Removing entries from a traditional Bloom filter is not possible normally. Resetting bits to 1 might remove additional keys if there were any hash collisions. Instead of setting a single bit, a counting Bloom filter maintains a 4-bit counter, so that hash collisions increment the counters, and a removal just decrements. (The math shows that 4 bits is sufficient, with high probability.) Patrick Mylud has an implementation of a counting Bloom filter in pmylund/go-bloom.
+Counting Bloom Filters are poorly named; the name ‘counting’ sounds like you can query frequencies instead of just set membership.
+
+In fact, the only additional feature a counting Bloom filter provides is the ability to delete entries. Removing entries from a traditional Bloom filter is not possible normally. Resetting bits to 1 might remove additional keys if there were any hash collisions. Instead of setting a single bit, a counting Bloom filter maintains a 4-bit counter, so that hash collisions increment the counters, and a removal just decrements. (The math shows that 4 bits is sufficient, with high probability.) Patrick Mylud has an implementation of a counting Bloom filter in pmylund/go-bloom.
 
 ### Scaling Bloom Filters
 

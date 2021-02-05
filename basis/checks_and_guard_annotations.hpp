@@ -1243,7 +1243,7 @@ class SCOPED_LOCKABLE
     , ::basis::FakeLockCheckExitScope \
   > \
     CGEN_UNIQUE_NAME(auto_lock_ptr_lifetime_checker_)  \
-      { UNOWNED_PTR_LIFETIME_GUARD(Name), FROM_HERE }
+      { UNOWNED_PTR_LIFETIME_GUARD(Name), ::base::Location::CreateFromHere(__FILE__) }
 
 // Will check if reference is valid on scope exit.
 // Can be used with safety annotations (GUARDED_BY).
@@ -1270,7 +1270,7 @@ class SCOPED_LOCKABLE
     , ::basis::FakeLockCheckExitScope \
   > \
     CGEN_UNIQUE_NAME(auto_lock_ref_lifetime_checker_) \
-     { UNOWNED_REF_LIFETIME_GUARD(Name), FROM_HERE }
+     { UNOWNED_REF_LIFETIME_GUARD(Name), ::base::Location::CreateFromHere(__FILE__) }
 
 #define DCHECK_UNOWNED_REF_LIFETIME_GUARD(Name) \
   ::basis::ScopedFakeLockWithLifetimeCheck<\

@@ -17,7 +17,7 @@ namespace basis {
 //
 // MOTIVATION
 //
-// `Money` does not use floating point numbers, don not use floats for currency!
+// `Money` does not use floating point numbers, do not use floats for currency!
 // The float and double types are particularly ill-suited
 // for monetary calculations because it is impossible to represent 0.1
 // (or any other negative power of ten) as a float or double exactly.

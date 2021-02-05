@@ -21,6 +21,8 @@
 
 #include <unordered_map>
 
+/// \note `TYPED_ENUM` can be used as `BitMask`
+//
 // Creates enum class with string conversion functions and provides helpers
 // (enum as bit set (bit flags), enum iteration, enum size, etc.)
 //

@@ -279,6 +279,33 @@ class MakeErrorStream {
     return *this;
   }
 
+  MakeErrorStream& with_debug_logging() {
+#if DCHECK_IS_ON()
+    impl_->should_log_ = true;
+#else
+    impl_->should_log_ = false;
+#endif // DCHECK_IS_ON
+    return *this;
+  }
+
+  // `with_dvlog(99)` resuts in `DVLOG(99)`
+  // Usage:
+  //   RETURN_ERROR().with_dvlog(99) << "Message";
+  MakeErrorStream& with_dvlog(LogSeverity log_severity) {
+    /// \note positive log severity will become log verbosity that < 0
+    DCHECK_GT(log_severity, 0);
+    return with_debug_logging().severity(-log_severity);
+  }
+
+  // `with_vlog(99)` resuts in `VLOG(99)`
+  // Usage:
+  //   RETURN_ERROR().with_vlog(99) << "Message";
+  MakeErrorStream& with_vlog(LogSeverity log_severity) {
+    /// \note positive log severity will become log verbosity that < 0
+    DCHECK_GT(log_severity, 0);
+    return with_logging().severity(-log_severity);
+  }
+
   // Determine whether to log this message based on the value of <should_log>.
   MakeErrorStream& set_logging(bool should_log) {
     impl_->should_log_ = should_log;
@@ -286,7 +313,14 @@ class MakeErrorStream {
   }
 
   // Log the status at this LogSeverity: INFO, WARNING, or ERROR.
-  // Setting severity to NUM_SEVERITIES will disable logging.
+  // Setting severity to NUM_SEVERITIES will disable logging.]
+  //
+  /// \note pass `-9` to set VLOG(9)
+  //
+  // USAGE
+  //
+  // RETURN_ERROR().with_logging().severity(logging::LOG_WARNING) << "...";
+  //
   MakeErrorStream& severity(LogSeverity log_severity) {
     impl_->log_severity_ = log_severity;
     return *this;

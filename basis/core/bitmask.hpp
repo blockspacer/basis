@@ -2,6 +2,8 @@
 
 namespace basis {
 
+/// \note Prefer to use `basis/core/typed_enum.hpp` where possible
+//
 /// \note See also `basis/core/enum_set.hpp` and `basis/core/typed_enum.hpp`
 //
 // see http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/

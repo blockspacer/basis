@@ -52,6 +52,27 @@ int getAmountSign(const Money& money)
   }
 }
 
+MUST_USE_RETURN_VALUE
+bool isPositive(const Money& money)
+{
+  // Sign of $8.3 is 1.
+  return getAmountSign(money) == 1;
+}
+
+MUST_USE_RETURN_VALUE
+bool isNegative(const Money& money)
+{
+  // Sign of $-2.75 is -1.
+  return getAmountSign(money) == -1;
+}
+
+MUST_USE_RETURN_VALUE
+bool isZero(const Money& money)
+{
+  // Sign of $0.0 is 0.
+  return getAmountSign(money) == 0;
+}
+
 StatusOr<Money> tryAddMoney(const Money& a
   , const Money& b
   , bool fail_on_overflow)

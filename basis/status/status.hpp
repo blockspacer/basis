@@ -64,9 +64,6 @@ enum Code {
   /// PERMISSION_DENIED must not be used if the caller can not be identified
   /// (use UNAUTHENTICATED instead for those errors).
   PERMISSION_DENIED = 7,
-  /// The request does not have valid authentication credentials for the
-  /// operation.
-  UNAUTHENTICATED = 16,
   /// Some resource has been exhausted, perhaps a per-user quota, or perhaps the
   /// entire file system is out of space.
   RESOURCE_EXHAUSTED = 8,
@@ -127,12 +124,38 @@ enum Code {
   UNAVAILABLE = 14,
   /// Unrecoverable data loss or corruption.
   DATA_LOSS = 15,
+  /// The request does not have valid authentication credentials for the
+  /// operation.
+  UNAUTHENTICATED = 16,
+  TIMEOUT = 17,
+  ALLOCATION_FAILED = 18,
+  IO_ERROR = 19,
+  NOT_IMPLEMENTED = 20,
+  END_OF_FILE = 21,
+  RUNTIME = 22,
+  MEMORY_LIMIT_EXCEEDED = 23,
+  TOO_MANY_TASKS = 24,
+  SERVICE_UNAVAILABLE = 25,
+  UNINITIALIZED = 26,
+  UNSUPPORTED_TYPE = 27,
+  TOO_LONG = 28,
+  TOO_LARGE = 29,
+  CONFLICT = 30,
+  NOT_ACCEPTABLE = 31,
+  PAYMENT_REQUIRED = 32,
+  BAD_REQUEST = 33,
+  REDIRECT = 34,
+  FOUND = 35,
+  MULTIPLE_CHOICES = 36,
+  PARTIAL_CONTENT = 37,
+  NO_CONTENT = 38,
+  LENGTH_REQUIRED = 39,
   /// Force users to include a default branch:
-  DO_NOT_USE_RESERVED_FOR_FUTURE_EXPANSION_USE_DEFAULT_IN_SWITCH_INSTEAD_ = 20,
+  DO_NOT_USE_RESERVED_FOR_FUTURE_EXPANSION_USE_DEFAULT_IN_SWITCH_INSTEAD_ = 40,
   // **DO NOT ADD ANYTHING TO THIS**
 };
 static const enum Code Code_MIN = Code::OK;
-static const enum Code Code_MAX = Code::DATA_LOSS;
+static const enum Code Code_MAX = Code::LENGTH_REQUIRED;
 inline bool Code_IsValid(int c) { return (c >= Code_MIN) && (c <= Code_MAX); }
 }  // end namespace error
 }  // end namespace basis

@@ -15,7 +15,7 @@ namespace basis {
 //
 // // timer will fire every 100 nanoseconds, but only if update loop frequent enough.
 // const std::chrono::nanoseconds& interval = 100ns;
-// ::basis::IntervalTimer timer(interval);
+// ::basis::DeltaTimer timer(interval);
 //
 // while(...) {
 //   const std::chrono::nanoseconds& current_frame_elapsed_dt = ...;
@@ -30,15 +30,15 @@ namespace basis {
 //
 // PERFORMANCE
 //
-// `IntervalTimer` must be optimized for performance-critical code.
+// `DeltaTimer` must be optimized for performance-critical code.
 // We `inline` almost all functions due to performance reasons.
 //
-struct IntervalTimer
+struct DeltaTimer
 {
  public:
-  IntervalTimer();
+  DeltaTimer();
 
-  IntervalTimer(const std::chrono::nanoseconds& interval);
+  DeltaTimer(const std::chrono::nanoseconds& interval);
 
   inline /* `inline` to eleminate function call overhead */
   void Update(const std::chrono::nanoseconds& diff) noexcept
@@ -75,14 +75,14 @@ struct IntervalTimer
   }
 
   inline /* `inline` to eleminate function call overhead */
-  const std::chrono::nanoseconds GetInterval() const noexcept
+  const std::chrono::nanoseconds GetPeriod() const noexcept
   {
     return _interval;
   }
 
   void SetCurrent(const std::chrono::nanoseconds& current);
 
-  void SetInterval(const std::chrono::nanoseconds& interval);
+  void SetPeriod(const std::chrono::nanoseconds& interval);
 
  private:
   std::chrono::nanoseconds _interval;

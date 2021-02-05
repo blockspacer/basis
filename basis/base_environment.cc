@@ -10,6 +10,7 @@
 #include <basis/log/log_util.hpp>
 #include <basis/threading/thread_pool_util.hpp>
 #include <basis/tracing/tracing_util.hpp>
+#include <basis/multiconfig/multiconfig.hpp>
 
 #include "base/rvalue_cast.h"
 #include "base/base_switches.h"
@@ -209,9 +210,44 @@ bool ScopedBaseEnvironment::init(
 
   ::base::FeatureList::SetInstance(RVALUE_CAST(feature_list));
 
-  ::basis::initLogging(
-    "" // logFile
+  ::base::FilePath file_exe_{};
+
+  if (!base::PathService::Get(base::FILE_EXE, &file_exe_)) {
+    NOTREACHED();
+    // stop app execution with EXIT_FAILURE
+    return
+      false;
+  }
+
+  /// \note returns empty string if the path is not ASCII.
+  const std::string maybe_base_exe_name_
+    = file_exe_.BaseName().RemoveExtension().MaybeAsASCII();
+
+  MULTICONF_String(log_file_conf
+    , /* default value */ ""
+    , BUILTIN_MULTICONF_LOADERS
+    , /* name of configuration group */ maybe_base_exe_name_);
+
+  /// \note will cache configuration values,
+  /// so use `clearAndReload` if you need to update configuration values.
+  CHECK_OK(basis::MultiConf::GetInstance().init())
+    << "Wrong configuration.";
+  /// \note required to refresh configuration cache
+  base::RunLoop().RunUntilIdle();
+
+  {
+    const std::string& log_file = log_file_conf.GetValue();
+    LOG(INFO)
+      << "You can"
+      << (log_file.empty() ? " set" : " change")
+      << " path to log file using configuration option: "
+      << log_file_conf.optionFormatted()
+      << (log_file.empty() ? "" : " Using path to log file: ")
+      << log_file;
+    ::basis::initLogging(
+      log_file
     );
+  }
 
 #if DCHECK_IS_ON()
   ::base::FieldTrial::EnableBenchmarking();

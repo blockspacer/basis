@@ -1,7 +1,5 @@
 #pragma once
 
-#include <basis/time/interval_timer.hpp>
-
 #include <algorithm>
 #include <cstdint>
 #include <vector>

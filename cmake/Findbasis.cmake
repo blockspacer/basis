@@ -10,6 +10,7 @@ find_package(boost QUIET)
 # see https://doc.magnum.graphics/corrade/corrade-cmake.html#corrade-cmake-subproject
 find_package(Corrade REQUIRED PluginManager)
 find_package(doctest QUIET)
+find_package(fmt QUIET)
 
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 

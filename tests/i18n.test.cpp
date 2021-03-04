@@ -49,7 +49,7 @@
 #include <third_party/icu/source/common/unicode/uloc.h>
 
 static const ::base::FilePath::CharType kIcuDataFileName[]
-  = FILE_PATH_LITERAL("./resources/icu/optimal/icudt64l.dat");
+  = FILE_PATH_LITERAL("./resources/icu/optimal/icudt68l.dat");
 
 static void initICUi18n(
   const ::base::FilePath::CharType icuFileName[])

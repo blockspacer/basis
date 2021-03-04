@@ -136,6 +136,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["openssl"].enable_ubsan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_ubsan = True
+              self.options["benchmark"].enable_ubsan = True
 
         if self.options.enable_asan:
             self.options["chromium_base"].enable_asan = True
@@ -145,6 +146,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["openssl"].enable_asan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_asan = True
+              self.options["benchmark"].enable_asan = True
 
         if self.options.enable_msan:
             self.options["chromium_base"].enable_msan = True
@@ -154,6 +156,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["openssl"].enable_msan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_msan = True
+              self.options["benchmark"].enable_msan = True
 
         if self.options.enable_tsan:
             self.options["chromium_base"].enable_tsan = True
@@ -163,6 +166,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
             self.options["openssl"].enable_tsan = True
             if self._is_tests_enabled():
               self.options["conan_gtest"].enable_tsan = True
+              self.options["benchmark"].enable_tsan = True
 
     def build_requirements(self):
         self.build_requires("cmake_platform_detection/master@conan/stable")
@@ -191,6 +195,8 @@ class basis_conan_project(conan_build_helper.CMakePackage):
 
         self.requires("corrade/v2020.06@conan/stable")
 
+        self.requires("fmt/master@dev/stable")
+
         # \note dispatcher must be thread-safe,
         # so use entt after patch https://github.com/skypjack/entt/issues/449
         # see https://github.com/skypjack/entt/commit/74f3df83dbc9fc4b43b8cfb9d71ba02234bd5c4a
@@ -201,8 +207,10 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         # see use_test_support option in base
         self.requires("chromium_libxml/master@conan/stable")
 
-        # see use_test_support option in base
-        self.requires("conan_gtest/release-1.10.0@conan/stable")
+        if self._is_tests_enabled():
+          # see use_test_support option in base
+          self.requires("conan_gtest/release-1.10.0@conan/stable")
+          self.requires("benchmark/v1.5.2@dev/stable")
 
         no_doctest = (str(self.settings.build_type).lower() != "debug"
           and str(self.settings.build_type).lower() != "relwithdebinfo")

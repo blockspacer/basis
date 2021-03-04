@@ -265,6 +265,7 @@ list(APPEND BASIS_SOURCES
   #
   ${BASIS_DIR}/strings/string_util.cc
   ${BASIS_DIR}/strings/string_util.hpp
+  ${BASIS_DIR}/strings/format.hpp
   #
   ${BASIS_DIR}/time/system_time_change_notifier.cc
   ${BASIS_DIR}/time/system_time_change_notifier.hpp

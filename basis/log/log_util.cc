@@ -11,7 +11,7 @@ void initLogging(const std::string& logFile) {
   logging_settings.logging_dest
     = logFile.empty() ?
       logging::LOG_TO_SYSTEM_DEBUG_LOG : logging::LOG_TO_FILE;
-  logging_settings.log_file = logFile.c_str();
+  logging_settings.log_file_path = logFile.c_str();
 
   // Indicates that the log file should be locked when being written to.
   // Unless there is only one single-threaded process that is logging to
@@ -37,7 +37,7 @@ void initLogging(const std::string& logFile) {
     << "Log file "
     << (logFile.empty()
        ? "not provided"
-       : logging_settings.log_file);
+       : logging_settings.log_file_path);
 }
 
 }  // namespace basis

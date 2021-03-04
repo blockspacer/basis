@@ -535,6 +535,12 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-strong_bool
     "${BASIS_DIR}/strong_types/strong_bool_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 
+  tests_add_executable(${ROOT_PROJECT_NAME}-string_format_unittest
+    "${BASIS_DIR}/strings/string_format_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
+  tests_add_demoapp(${ROOT_PROJECT_NAME}-string_format_demotest
+    "${BASIS_DIR}/strings/string_format_demotest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
+
   tests_add_executable(${ROOT_PROJECT_NAME}-strong_string
     "${BASIS_DIR}/strong_types/strong_string_unittest.cc" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
 

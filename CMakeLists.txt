@@ -137,6 +137,19 @@ else()
   message(FATAL_ERROR "not supported ${build_util_LIB}: using system provided chromium_build_util library")
 endif()
 
+find_package(fmt QUIET)
+if(FMT_HEADER_ONLY)
+  set(FMTLIB CONAN_PKG::fmt-header-only)
+else()
+  set(FMTLIB CONAN_PKG::fmt)
+endif()
+#get_target_property(moggle_interface_includes ${FMTLIB} INTERFACE_INCLUDE_DIRECTORIES)
+#message(FATAL_ERROR "Moggle interface includes: ${moggle_interface_includes}")
+#
+if(NOT TARGET CONAN_PKG::fmt)
+  message(FATAL_ERROR "not supported ${FMTLIB}: using system provided CONAN_PKG::fmt library")
+endif()
+
 find_package(chromium_base REQUIRED)
 if(NOT TARGET ${base_LIB})
   message(FATAL_ERROR "not supported ${base_LIB}: using system provided chromium_base library")
@@ -176,6 +189,7 @@ add_relative_include_dir(${STATIC_LIB_NAME} PUBLIC PUBLIC "")
 list(APPEND USED_3DPARTY_LIBS
   ${base_LIB}
   ${build_util_LIB}
+  ${FMTLIB}
 )
 
 # POSITION_INDEPENDENT_CODE for -fPIC

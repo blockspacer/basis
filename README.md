@@ -4,7 +4,10 @@
 
 Unlike `base`, `basis` can use third-party libs (`boost`, `beast`, `entt`, etc.)
 
-Basis is pulled into many projects.
+If you want to add file into `basis` that depends on same third-party libs as `base`,
+than prefer to add it into `basic` (`chromium_base_conan/extensions/basic/`) instead of `basis`.
+
+`basis` is pulled into many projects.
 
 So the bar for adding stuff is that it must have demonstrated wide applicability.
 

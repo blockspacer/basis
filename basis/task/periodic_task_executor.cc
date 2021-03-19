@@ -17,7 +17,7 @@
 #include <base/trace_event/trace_event.h>
 #include <base/compiler_specific.h>
 #include <base/guid.h>
-#include <base/rvalue_cast.h>
+#include <basic/rvalue_cast.h>
 
 #include <basis/ECS/sequence_local_context.hpp>
 #include <basis/promise/promise.h>

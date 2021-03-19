@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/time/time_macros.hpp"
 
 #include "base/memory/ptr_util.h"
 #include "base/timer/mock_timer.h"
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "base/rand_util.h"
 #include "base/i18n/time_formatting.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/platform_thread.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 
@@ -39,7 +39,7 @@ class TimeMacrosTest : public testing::Test {
 
   base::TimeDelta time_step_ = base::TimeDelta::FromMicroseconds(100);
 
-  base::test::ScopedTaskEnvironment scoped_task_environment_;
+  base::test::TaskEnvironment task_environment;
 };
 
 TEST_F(TimeMacrosTest, Basic) {

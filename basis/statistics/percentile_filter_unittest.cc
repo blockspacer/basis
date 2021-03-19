@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "tests_common.h"
-
 #include "basis/statistics/percentile_filter.hpp"
 
-#include "base/rvalue_cast.h"
+#include "basic/rvalue_cast.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <cstdlib>
 #include <array>

@@ -20,7 +20,8 @@
 #include <base/test/test_suite.h>
 #include <build/build_config.h>
 
-#include "tests_common.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 #if defined(GTEST_NO_SUITE)
 static inline void initI18n()

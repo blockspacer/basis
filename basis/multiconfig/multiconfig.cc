@@ -328,7 +328,7 @@ MultiConfOption::MultiConfOption(
   , loaders(loaders)
   , configuration_group(configuration_group)
   , useGlobalLoaders(useGlobal)
-  , optionSettings(base::rvalue_cast(option_settings))
+  , optionSettings(basic::rvalue_cast(option_settings))
 {}
 
 MultiConf::Observer::Observer() = default;
@@ -606,7 +606,7 @@ basis::StatusOr<std::string> MultiConf::getAsStringFromCache(
     basis::StatusOr<MultiConfOption> statusor
       = findOptionWithName(name, configuration_group);
     RETURN_IF_NOT_OK(statusor.status());
-    MultiConfOption option = base::rvalue_cast(statusor.ConsumeValueOrDie());
+    MultiConfOption option = basic::rvalue_cast(statusor.ConsumeValueOrDie());
     RETURN_ERROR_IF(!option.default_str.has_value());
     *result = option.default_str.value();
   }

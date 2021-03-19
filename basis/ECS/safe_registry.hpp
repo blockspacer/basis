@@ -3,7 +3,7 @@
 #include "basis/ECS/ecs.hpp"
 
 #include "basis/unowned_ptr.hpp" // IWYU pragma: keep
-#include "basis/checks_and_guard_annotations.hpp" // IWYU pragma: keep
+#include "basic/annotations/guard_annotations.h" // IWYU pragma: keep
 
 #include <base/timer/timer.h>
 #include <base/time/time.h>
@@ -11,11 +11,10 @@
 #include <base/logging.h>
 #include <base/macros.h>
 #include <base/optional.h>
-#include <base/rvalue_cast.h>
+#include <basic/rvalue_cast.h>
 #include <base/files/file_path.h>
 #include <base/trace_event/trace_event.h>
 #include <base/strings/string_piece.h>
-#include <base/bind_helpers.h>
 #include <base/synchronization/waitable_event.h>
 #include <base/observer_list_threadsafe.h>
 #include <base/task/thread_pool/thread_pool.h>

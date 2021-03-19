@@ -1,13 +1,11 @@
-#include "tests_common.h"
-
 #include "basis/task/prioritized_once_task_heap.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <vector>
 
-#include "base/rvalue_cast.h"
-#include "base/bind_helpers.h"
+#include "basic/rvalue_cast.h"
+
 #include "base/location.h"
 #include "base/rand_util.h"
 #include "base/run_loop.h"
@@ -17,8 +15,10 @@
 #include "base/synchronization/lock.h"
 #include "base/synchronization/waitable_event.h"
 #include "base/task/post_task.h"
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "base/threading/thread_restrictions.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 namespace {
@@ -33,7 +33,7 @@ class PrioritizedOnceTaskHeapTest : public testing::Test {
   }
 
  protected:
-  base::test::ScopedTaskEnvironment scoped_task_environment_;
+  base::test::TaskEnvironment task_environment;
   std::vector<std::string> task_names_;
   base::Lock task_names_lock_;
 

@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "tests_common.h"
-
 #include "basis/statistics/moving_median_filter.hpp"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <cstdint>
 #include <algorithm>

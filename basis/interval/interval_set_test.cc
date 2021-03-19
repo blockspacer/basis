@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/interval/interval_set.hpp"
 
 #include <stdarg.h>
 
 #include <iterator>
 #include <limits>
+
+#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 using std::string;
 

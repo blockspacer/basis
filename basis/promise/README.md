@@ -14,6 +14,8 @@ Promises forum topics: https://groups.google.com/a/chromium.org/forum/#!topic/cx
 
 C++ Promises for Chromium - Google Docs https://docs.google.com/document/d/1l12PAJgEtlrqTXKiw6mk2cR2jP7FAfCCDr-DGIdiC9w/
 
+Tracking bug for all promises related patches - https://bugs.chromium.org/p/chromium/issues/detail?id=906125
+
 ## Performance
 
 Designed for NOT performance-critical code.
@@ -23,6 +25,34 @@ Uses dynamic allocations, so avoid it in hot-code-paths.
 Also `Promise` has shared ownership (`shared_ptr` is anti-pattern).
 
 Performance overhead expected to be NOT large (TODO: measure).
+
+## Avoid antipattern: The Broken Chain
+
+The problem:
+
+```cpp
+auto anAsyncCall() {
+  Promise<void, std::unique_ptr<Err>> promise1 = doSomethingAsync();
+  promise1.ThenOn(task_runner2, FROM_HERE, BindOnce([]() {
+                   somethingComplicated();
+                 }));
+  // The problem here is that any error raised in the somethingComplicated()
+  // method will not get caught.
+  return promise1;
+}
+```
+
+The fix:
+
+```cpp
+auto anAsyncCall() {
+  Promise<void, std::unique_ptr<Err>> promise1 = doSomethingAsync();
+  auto promise2 = promise1.ThenOn(task_runner2, FROM_HERE, BindOnce([]() {
+                    somethingComplicated();
+                  }));
+  return promise2;
+}
+```
 
 ## Alternatives
 
@@ -43,6 +73,21 @@ Note that:
 - Don't forget that `p.ThenHere(...); p.ThenHere(...)` is different from `p.ThenHere(...).ThenHere(...)`
 
 See examples section below.
+
+## Avoid memory leaks
+
+Cancel promises via `OnCanceled` that are not resolved.
+
+```cpp
+promise->OnCanceled();
+```
+
+Note that `OnCanceled` will be automatically called in `Promise` destructor.
+
+Handle cancellation to make sure we don't leak memory due to
+promises that will never be resolved. The semantics are described in the
+follow on patch. We'll need to decide if we want to expose this on the
+Promise<> template or not.
 
 ## Brief
 

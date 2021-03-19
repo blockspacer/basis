@@ -1,6 +1,6 @@
-#include "tests_common.h"
-
 #include "basis/unique_ptr_wrap.hpp"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <cstddef>
 

@@ -29,11 +29,12 @@
 // or implied.  See the License for the specific language governing permissions and limitations
 // under the License.
 //
-#include "tests_common.h"
 
 #include "basis/statistics/hdr_histogram.hpp" // IWYU pragma: associated
 
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 
@@ -46,7 +47,7 @@ class HdrHistogramTest : public testing::Test {
   }
 
  protected:
-  base::test::ScopedTaskEnvironment scoped_task_environment_;
+  base::test::TaskEnvironment task_environment;
 };
 
 TEST_F(HdrHistogramTest, SimpleTest) {

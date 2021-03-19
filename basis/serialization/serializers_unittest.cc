@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "base/files/file_util.h"
 #include "base/values.h"
+
 #include "basis/files/scoped_temp_file.hpp"
 #include "basis/serialization/serializers.hpp"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <vector>
 

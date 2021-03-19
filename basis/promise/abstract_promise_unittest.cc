@@ -2,17 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "base/task/promise/abstract_promise.h"
-#include "base/rvalue_cast.h"
 #include "base/task/post_task.h"
-#include "base/test/bind_test_util.h"
 #include "base/test/do_nothing_promise.h"
 #include "base/test/task_environment.h"
 #include "base/test/test_simple_task_runner.h"
 #include "base/threading/thread.h"
 #include "base/threading/thread_task_runner_handle.h"
+
+#include "basic/rvalue_cast.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 // Errors from PROMISE_API_DCHECK are only observable in builds where DCHECKS
 // are on.

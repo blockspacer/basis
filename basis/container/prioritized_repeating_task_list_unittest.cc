@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/container/prioritized_repeating_task_list.hpp"
 
 #include <ctype.h>
@@ -15,12 +13,13 @@
 #include "base/logging.h"
 #include "base/compiler_specific.h"
 #include "base/bind.h"
-#include "base/bind_helpers.h"
 #include "base/stl_util.h"
 #include "base/callback.h"
 #include "base/run_loop.h"
 
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 
@@ -63,7 +62,7 @@ class PrioritizedRepeatingTaskListTest : public testing::Test {
   std::unique_ptr<PrioritizedRepeatingTaskList> task_list_;
   std::vector<std::string> task_names_;
   base::Lock task_names_lock_;
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
 };
 
 TEST_F(PrioritizedRepeatingTaskListTest, RepeatingClosure) {

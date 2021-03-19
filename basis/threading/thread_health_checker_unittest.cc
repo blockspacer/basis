@@ -1,17 +1,16 @@
-#include "tests_common.h"
-
 #include "basis/threading/thread_health_checker.hpp"
 
 #include "base/bind.h"
 #include "base/memory/ref_counted.h"
 #include "base/synchronization/waitable_event.h"
-#include "base/test/bind_test_util.h"
 #include "base/test/mock_callback.h"
 #include "base/test/null_task_runner.h"
 #include "base/test/simple_test_tick_clock.h"
 #include "base/test/test_mock_time_task_runner.h"
 #include "base/test/test_simple_task_runner.h"
 #include "base/test/trace_event_analyzer.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 

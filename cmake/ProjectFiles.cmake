@@ -249,7 +249,6 @@ list(APPEND BASIS_SOURCES
   ${BASIS_DIR}/ECS/helpers/lifetime/populate_delayed_construction_components.hpp
   ${BASIS_DIR}/ECS/helpers/lifetime/populate_delayed_construction_components.cc
   #
-  ${BASIS_DIR}/bind/verify_nothing.hpp
   ${BASIS_DIR}/bind/exec_time_checker.hpp
   ${BASIS_DIR}/bind/exec_time_checker.cc
   ${BASIS_DIR}/bind/callable_hook.hpp

@@ -35,10 +35,10 @@
 
 #include <base/logging.h>
 #include <base/memory/scoped_refptr.h>
-#include <base/rvalue_cast.h>
+#include <basic/rvalue_cast.h>
 #include <base/synchronization/lock.h>
 
-#include "base/strings/substitute.h"
+#include "basic/strings/substitute.h"
 
 #include <algorithm>
 #include <cmath>
@@ -49,7 +49,7 @@ using base::subtle::NoBarrier_AtomicIncrement;
 using base::subtle::NoBarrier_Store;
 using base::subtle::NoBarrier_Load;
 using base::subtle::NoBarrier_CompareAndSwap;
-using base::Substitute;
+using basic::Substitute;
 using std::endl;
 
 namespace {

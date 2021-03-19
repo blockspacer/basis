@@ -1,7 +1,7 @@
-#include "tests_common.h"
-
 #include <utility>
 #include <vector>
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include "basis/unowned_ptr.hpp"
 

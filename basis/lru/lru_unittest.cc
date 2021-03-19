@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
 #include "basis/test/test_macros.hpp"
-#include "base/test/test_random.h"
-
 #include "basis/lru/lru.hpp"
 
+#include "base/test/test_random.h"
 #include "base/logging.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <cstddef>
 #include <list>

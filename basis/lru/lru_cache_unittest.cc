@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
 #include "basis/test/test_macros.hpp"
 
 #include "basis/lru/lru_cache.hpp"
 #include "basis/lru/estimate_memory_usage_for_lru_cache.hpp"
+
+#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 #include <string>
 #include <vector>

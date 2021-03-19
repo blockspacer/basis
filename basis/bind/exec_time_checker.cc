@@ -1,7 +1,7 @@
-#include "basis/bind/exec_time_checker.hpp" // IWYU pragma: associated
+#include "basic/bind/exec_time_checker.h" // IWYU pragma: associated
 
-#include <basis/ECS/sequence_local_context.hpp>
-#include <basis/strong_types/strong_alias.hpp>
+#include <basic/ECS/sequence_local_context.h>
+#include <basic/strong_types/strong_alias.h>
 
 #include <base/threading/sequenced_task_runner_handle.h>
 

@@ -9,12 +9,12 @@
 // Author: Will Neveitt (wneveitt@google.com)
 // ----------------------------------------------------------------------
 
-#include "tests_common.h"
-
 #include "basis/interval/interval.hpp"
 
 #include "base/logging.h"
 #include "base/time/time.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 using std::string;
 

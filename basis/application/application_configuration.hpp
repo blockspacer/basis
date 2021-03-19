@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basis/application/platform_detection.hpp"
+#include "build/build_config.h"
 
 #if defined(OS_POSIX)
 #include "posix/application_configuration_posix.hpp"

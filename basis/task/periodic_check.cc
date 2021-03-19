@@ -18,7 +18,7 @@
 #include <base/task/task_traits.h>
 #include <base/trace_event/trace_event.h>
 #include <base/compiler_specific.h>
-#include <base/rvalue_cast.h>
+#include <basic/rvalue_cast.h>
 
 #include <basis/promise/post_promise.h>
 #include <basis/tracing/trace_event_util.hpp>

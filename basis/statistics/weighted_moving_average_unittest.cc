@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include <math.h>
 
 #include "basis/statistics/weighted_moving_average.hpp"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 

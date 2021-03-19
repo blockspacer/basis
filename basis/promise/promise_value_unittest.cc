@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/promise/promise_value.h"
 #include "basis/promise/do_nothing_promise.h"
 #include "basis/promise/no_op_promise_executor.h"
 
 #include "base/test/gtest_util.h"
-#include "base/test/bind_test_util.h"
 #include "base/test/copy_only_int.h"
 #include "base/test/move_only_int.h"
-#include "base/rvalue_cast.h"
+
+#include "basic/rvalue_cast.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace base {
 namespace internal {

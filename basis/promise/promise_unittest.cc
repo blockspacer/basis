@@ -2,20 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/promise/promise.h"
 #include "basis/promise/do_nothing_promise.h"
 
 #include <memory>
 #include <string>
 
-#include "base/rvalue_cast.h"
+#include "basic/rvalue_cast.h"
+
 #include "base/test/gtest_util.h"
-#include "base/test/bind_test_util.h"
 #include "base/bind.h"
 #include "base/test/test_mock_time_task_runner.h"
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "base/run_loop.h"
 #include "base/task/post_task.h"
 #include "base/threading/sequenced_task_runner_handle.h"
@@ -23,6 +21,9 @@
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/values.h"
 #include "base/task/thread_pool/thread_pool.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 using testing::ElementsAre;
 
@@ -78,7 +79,7 @@ struct Cancelable {
 
 class PromiseTest : public testing::Test {
  public:
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
 };
 
 TEST(PromiseMemoryLeakTest, TargetTaskRunnerClearsTasks) {
@@ -109,7 +110,7 @@ TEST(PromiseMemoryLeakTest, TargetTaskRunnerClearsTasks) {
 }
 
 TEST(PromiseMemoryLeakTest, GetResolveCallbackNeverRun) {
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
   OnceCallback<void(int)> cb;
   MockObject mock_object;
   bool delete_task_flag = false;
@@ -129,7 +130,7 @@ TEST(PromiseMemoryLeakTest, GetResolveCallbackNeverRun) {
 }
 
 TEST(PromiseMemoryLeakTest, GetRepeatingResolveCallbackNeverRun) {
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
   RepeatingCallback<void(int)> cb;
   MockObject mock_object;
   bool delete_task_flag = false;
@@ -149,7 +150,7 @@ TEST(PromiseMemoryLeakTest, GetRepeatingResolveCallbackNeverRun) {
 }
 
 TEST(PromiseMemoryLeakTest, GetRejectCallbackNeverRun) {
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
   OnceCallback<void(int)> cb;
   MockObject mock_object;
   bool delete_task_flag = false;
@@ -169,7 +170,7 @@ TEST(PromiseMemoryLeakTest, GetRejectCallbackNeverRun) {
 }
 
 TEST(PromiseMemoryLeakTest, GetRepeatingRejectCallbackNeverRun) {
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
   RepeatingCallback<void(int)> cb;
   MockObject mock_object;
   bool delete_task_flag = false;

@@ -2,15 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "tests_common.h"
-
 #include "basis/dependency_hierarchy/dependency_hierarchy.hpp"
 #include "basis/files/scoped_temp_file.hpp"
 
 #include <base/strings/strcat.h>
 #include <base/strings/string_number_conversions.h>
 #include <base/test/gtest_util.h>
-#include <base/test/bind_test_util.h>
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <stdio.h>
 

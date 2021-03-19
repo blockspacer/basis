@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/task/alarm_manager.hpp"
 
 #include <memory>
@@ -14,7 +12,10 @@
 #include "base/test/simple_test_clock.h"
 #include "base/test/test_mock_time_task_runner.h"
 #include "base/time/clock.h"
-#include "base/rvalue_cast.h"
+
+#include "basic/rvalue_cast.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 

@@ -1,29 +1,28 @@
-#include "tests_common.h"
-
 #include "basis/multiconfig/multiconfig.hpp"
-
 #include "basis/promise/post_promise.h"
 #include "basis/promise/post_task_executor.h"
 #include "basis/promise/do_nothing_promise.h"
 
+#include "basic/rvalue_cast.h"
+#include "basic/strings/substitute.h"
+
 #include "base/test/gtest_util.h"
-#include "base/test/bind_test_util.h"
 #include "base/test/test_mock_time_task_runner.h"
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "base/location.h"
 #include "base/bind.h"
 #include "base/run_loop.h"
 #include "base/threading/thread.h"
-#include "base/rvalue_cast.h"
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
 #include "base/task_runner.h"
-#include "base/strings/substitute.h"
 #include "base/strings/string_util.h"
 #include "base/test/scoped_environment_variable_override.h"
 #include "base/environment.h"
 #include "base/message_loop/message_loop.h"
 #include "base/run_loop.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 
@@ -215,7 +214,7 @@ class MultiConfTest : public testing::Test {
     basis::MultiConf::GetInstance().AssertObserversEmpty();
   }
  public:
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
   /// \note observer uses `PostTask`,
   /// so it requires `base::RunLoop().RunUntilIdle();`
   std::unique_ptr<MultiConfTestObserver> observer_;
@@ -233,7 +232,7 @@ TEST_F(MultiConfTest, DefaultValueTest) {
     kDefaultKey, kResultForDefaultKey, {TEST_MULTICONF_LOADER_1}
     , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse);
   MultiConfWrapper<std::string> keyDefaultObserver
-    = base::rvalue_cast(tmp);
+    = basic::rvalue_cast(tmp);
   ASSERT_NOT_OK(TestMultiConf_1::tryLoadString(
     kDefaultKey, kDefaultTestGroup, base::Value{}));
 
@@ -296,7 +295,7 @@ TEST_F(MultiConfTest, DefaultValueTest) {
   }
 
   {
-    base::Value json_settings = basis::internal::parseJSONData(base::Substitute(R"raw(
+    base::Value json_settings = basis::internal::parseJSONData(basic::Substitute(R"raw(
 {
   "opt1":"val1",
   "$1":"$2",
@@ -307,7 +306,7 @@ TEST_F(MultiConfTest, DefaultValueTest) {
     EXPECT_EQ(json_key->GetString(), kMustReturnStrResult);
     MULTICONF_String(my_conf_key_json, "ggdf", {TEST_MULTICONF_LOADER_1}
       , kDefaultTestGroup, basis::UseGlobalLoaders::kFalse
-      , base::rvalue_cast(json_settings));
+      , basic::rvalue_cast(json_settings));
     EXPECT_TRUE(basis::MultiConf::GetInstance().hasOptionWithName(
       "my_conf_key_json", kDefaultTestGroup));
     EXPECT_NOT_OK(basis::MultiConf::GetInstance().getAsStringFromCache(
@@ -357,7 +356,7 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
   }
 
   {
-    std::string json_data = base::Substitute(R"raw(
+    std::string json_data = basic::Substitute(R"raw(
   {"$1":"$2"}
   )raw", formatConfigNameAndGroup("my_conf_key_1", kDefaultTestGroup), "gdgdf");
     ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
@@ -389,7 +388,7 @@ TEST_F(MultiConfTest, ReloadJsonOptionTest) {
   }
 
   {
-    std::string json_data = base::Substitute(R"raw(
+    std::string json_data = basic::Substitute(R"raw(
   {"$1":"$2"}
   )raw", formatConfigNameAndGroup("my_conf_key_1", kDefaultTestGroup), "fhhffg");
     ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
@@ -557,7 +556,7 @@ TEST_F(MultiConfTest, SimpleTest) {
     ASSERT_EQ(key_value, "12345");
   }
 
-  std::string json_data = base::Substitute(R"raw(
+  std::string json_data = basic::Substitute(R"raw(
 {"$1":"$2"}
 )raw", formatConfigNameAndGroup(kTestKeyD, kDefaultTestGroup), kResultForTestKeyD);
   ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
@@ -715,7 +714,7 @@ class MultiThreadChecker {
     EXPECT_EQ(observer.get().GetValue(), expected_value);
     // allow program termination
     // after all threads executed `GetResolveCallback`
-    base::rvalue_cast(promiseResolver.GetResolveCallback()).Run();
+    basic::rvalue_cast(promiseResolver.GetResolveCallback()).Run();
   }
 
   void DoTask(const std::string& expected_value) {
@@ -755,7 +754,7 @@ TEST_F(MultiConfTest, ReloadObserver) {
   EXPECT_EQ("dasasd", my_key_X.GetValue());
   EXPECT_EQ("dasasd", observer_X.GetValue());
 
-  std::string json_data = base::Substitute(R"raw(
+  std::string json_data = basic::Substitute(R"raw(
 {"$1":"$2"}
 )raw", formatConfigNameAndGroup("my_key_X", kDefaultTestGroup), "bbbddf");
   ASSERT_OK(JsonMultiConf::GetInstance().clearAndParseFromString(json_data));
@@ -791,7 +790,7 @@ TEST_F(MultiConfTest, GlobalLoader) {
   EXPECT_EQ("dasasd", my_key_global_load.GetValue());
   EXPECT_EQ("dasasd", observer_X.GetValue());
 
-  std::string json_data = base::Substitute(R"raw(
+  std::string json_data = basic::Substitute(R"raw(
 {
   "$1":"$2",
   "$3":"$4"
@@ -871,7 +870,7 @@ TEST_F(MultiConfTest, MultiThreadTest) {
     {
       thread_checkers.emplace_back(
         REFERENCED(thread_observers[i].get())
-        , base::Substitute("Test thread $1", i)
+        , basic::Substitute("Test thread $1", i)
         , base::MessageLoop::current()->task_runner());
     }
   }

@@ -30,20 +30,20 @@
 // under the License.
 //
 
-#include "tests_common.h"
-
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "basis/concurrency/concurrent_int64.hpp"
-
-#include <memory>
 
 #include <base/atomicops.h>
 #include <base/threading/thread_local.h>
 #include <base/threading/platform_thread.h>
 #include <base/synchronization/lock.h>
 #include <base/threading/thread.h>
-#include <base/strings/substitute.h>
+#include <basic/strings/substitute.h>
 #include <base/run_loop.h>
+
+#include "testing/gtest/include/gtest/gtest.h"
+
+#include <memory>
 
 namespace basis {
 
@@ -60,7 +60,7 @@ class Striped64Test : public testing::Test {
   }
 
  protected:
-  base::test::ScopedTaskEnvironment scoped_task_environment_;
+  base::test::TaskEnvironment task_environment;
 };
 
 // Test some basic operations

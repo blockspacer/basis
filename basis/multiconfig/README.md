@@ -219,7 +219,7 @@ constexpr char kDefaultTestGroup[] = "test_group_1";
 
 MULTICONF_String(my_conf_key_json, "default_val", {MY_LOADER_1}
   , kDefaultTestGroup, basis::useGlobalLoaders::kTrue
-  , basis::internal::parseJSONData(base::Substitute(R"raw(
+  , basis::internal::parseJSONData(basic::Substitute(R"raw(
 {
   "opt1":"val1",
   "$1":"$2",

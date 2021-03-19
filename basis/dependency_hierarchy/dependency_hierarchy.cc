@@ -1,6 +1,7 @@
 #include "basis/dependency_hierarchy/dependency_hierarchy.hpp" // IWYU pragma: associated
 
-#include <base/recursion_checker.h>
+#include <basic/recursion_checker.h>
+
 #include <base/logging.h>
 #include <base/path_service.h>
 #include <base/files/file_util.h>

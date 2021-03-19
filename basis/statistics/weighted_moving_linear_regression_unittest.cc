@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/statistics/weighted_moving_linear_regression.hpp"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 

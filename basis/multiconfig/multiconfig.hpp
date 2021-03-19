@@ -6,7 +6,7 @@
 #include "basis/core/type_name.hpp"
 #include "basis/concept/dependent_false.hpp"
 #include "basis/multiconfig/option_parser.hpp"
-#include "basis/checks_and_guard_annotations.hpp"
+#include "basic/annotations/guard_annotations.h"
 
 #include <base/gtest_prod_util.h>
 #include <base/logging.h>
@@ -17,7 +17,7 @@
 #include <base/macros.h>
 #include <base/no_destructor.h>
 #include <base/optional.h>
-#include <base/rvalue_cast.h>
+#include <basic/rvalue_cast.h>
 #include <base/files/file_path.h>
 #include <base/threading/thread_collision_warner.h>
 #include <base/observer_list_threadsafe.h>
@@ -653,7 +653,7 @@ class MultiConfObserver : public MultiConf::Observer {
     , error_status_(dcheckCanParseAndReturnOk(default_value))
     /// \note Will CRASH without error text
     /// if default configuration value is not valid!
-    , cached_value_{base::rvalue_cast(parseOptionAs<T>(default_value).ConsumeValueOrDie())}
+    , cached_value_{basic::rvalue_cast(parseOptionAs<T>(default_value).ConsumeValueOrDie())}
   {}
 
   ~MultiConfObserver() override {}
@@ -707,7 +707,7 @@ class MultiConfObserver : public MultiConf::Observer {
     {
       basis::StatusOr<T> statusor = parseOptionAs<T>(new_value);
       if(statusor.ok()) {
-        cached_value_ = base::rvalue_cast(statusor.ConsumeValueOrDie());
+        cached_value_ = basic::rvalue_cast(statusor.ConsumeValueOrDie());
       } else {
         error_status_ = statusor.status();
       }
@@ -729,7 +729,7 @@ class MultiConfObserver : public MultiConf::Observer {
       if(new_value_statusor.ok()) {
         T new_value = new_value_statusor.ConsumeValueOrDie();
         if (cached_value_ != new_value) {
-          cached_value_ = base::rvalue_cast(new_value);
+          cached_value_ = basic::rvalue_cast(new_value);
         }
       } else {
         // failed to parse new value

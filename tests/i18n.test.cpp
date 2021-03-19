@@ -1,5 +1,3 @@
-#include "tests_common.h"
-
 #if !defined(USE_GTEST_TEST)
 #warning "use USE_GTEST_TEST"
 // default
@@ -15,6 +13,9 @@
 #include <thread>
 #include <vector>
 #include <algorithm>
+
+#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 #ifndef __has_include
   static_assert(false, "__has_include not supported");

@@ -30,16 +30,16 @@
 // under the License.
 //
 
-#include "tests_common.h"
 #include "basis/test/test_macros.hpp"
-
 #include "basis/statistics/hdr_histogram.hpp"
 #include "basis/metrics/metrics.hpp"
 
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "base/rand_util.h"
 #include "base/i18n/time_formatting.h"
 #include "base/strings/utf_string_conversions.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <string>
 #include <unordered_set>
@@ -650,7 +650,7 @@ class MetricsExampleServer : public testing::Test {
  protected:
   MetricRegistry registry_;
   scoped_refptr<MetricEntity> entity_;
-  base::test::ScopedTaskEnvironment scoped_task_environment_;
+  base::test::TaskEnvironment task_environment;
 };
 
 TEST_F(MetricsExampleServer, ExamplePrometheusWebEndpoint) {

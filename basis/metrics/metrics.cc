@@ -43,7 +43,7 @@
 #include <base/values.h>
 #include <base/json/json_reader.h>
 #include <base/json/json_writer.h>
-#include <base/strings/substitute.h>
+#include <basic/strings/substitute.h>
 
 // Process/server-wide metrics should go into the 'server' entity.
 // More complex applications will define other entities.
@@ -53,7 +53,7 @@ namespace basis {
 
 using std::string;
 using std::vector;
-using base::Substitute;
+using basic::Substitute;
 
 //
 // MetricUnit
@@ -276,7 +276,7 @@ Status MetricEntity::WriteAsJson(const vector<string>& requested_metrics,
   writer->StartArray();
   for (OrderedMetricMap::value_type& val : metrics) {
     WARN_IF_NOT_OK(val.second->WriteAsJson(writer, opts, metricsRetirementAgeMs),
-                base::Substitute("Failed to write $1 as JSON", val.first));
+                basic::Substitute("Failed to write $1 as JSON", val.first));
 
   }
   // Run the external metrics collection callback if there is one set.
@@ -350,7 +350,7 @@ basis::Status MetricEntity::WriteForPrometheus(PrometheusWriter* writer,
 
   for (OrderedMetricMap::value_type& val : metrics) {
     WARN_IF_NOT_OK(val.second->WriteForPrometheus(writer, prometheus_attr, opts, metricsRetirementAgeMs),
-                base::Substitute("Failed to write $1 as Prometheus", val.first));
+                basic::Substitute("Failed to write $1 as Prometheus", val.first));
 
   }
   // Run the external metrics collection callback if there is one set.

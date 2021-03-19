@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/container/prioritized_job_dispatcher.hpp"
+
+#include "base/logging.h"
+#include "base/compiler_specific.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <ctype.h>
 
 #include <memory>
 #include <string>
-
-#include "base/logging.h"
-#include "base/compiler_specific.h"
 
 namespace basis {
 

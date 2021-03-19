@@ -1,5 +1,3 @@
-#include "tests_common.h"
-
 #include "basis/fail_point/fail_point.hpp"
 #include "basis/status/status_macros.hpp"
 #include "basis/promise/post_task_executor.h"
@@ -7,16 +5,17 @@
 #include "basis/promise/do_nothing_promise.h"
 
 #include "base/test/gtest_util.h"
-#include "base/test/bind_test_util.h"
 #include "base/test/test_mock_time_task_runner.h"
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "base/bind.h"
 #include "base/run_loop.h"
 #include "base/threading/thread.h"
-#include "base/rvalue_cast.h"
+#include "basic/rvalue_cast.h"
 #include "basis/promise/abstract_promise.h"
 #include "basis/promise/helpers.h"
 #include "base/task_runner.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 
@@ -37,7 +36,7 @@ class FailPointTest : public testing::Test {
   }
 
  protected:
-  ::base::test::ScopedTaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment;
   FP_TestPoint* FAIL_POINT(testPoint_) = nullptr;
 };
 

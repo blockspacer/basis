@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
 #include "base/test/test_random.h"
 
 #include <cstdint>
@@ -11,6 +10,8 @@
 #include "basis/interval/interval_map.hpp"
 #include "base/logging.h"
 #include "base/strings/stringprintf.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
 

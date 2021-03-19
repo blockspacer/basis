@@ -12,7 +12,7 @@
 #include <basis/tracing/tracing_util.hpp>
 #include <basis/multiconfig/multiconfig.hpp>
 
-#include "base/rvalue_cast.h"
+#include "basic/rvalue_cast.h"
 #include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/process/memory.h"
@@ -52,6 +52,7 @@
 #include <locale>
 #include <sstream>
 #include <string.h>
+#include <locale.h>
 
 namespace basis {
 
@@ -112,7 +113,8 @@ bool ScopedBaseEnvironment::init(
   , const ::base::FilePath::CharType traceReportFileName[]
   , const int threadsNum)
 {
-  DCHECK(argc > 0);
+  CHECK(setlocale(LC_ALL, "en_US.UTF-8") != nullptr)
+      << "Failed to set locale: " << "en_US.UTF-8";
 
   if (!base::PathService::Get(base::DIR_EXE, &dir_exe_)) {
     NOTREACHED();

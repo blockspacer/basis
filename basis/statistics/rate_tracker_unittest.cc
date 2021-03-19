@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "tests_common.h"
-
 #include "basis/statistics/rate_tracker.hpp"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <cmath>
 

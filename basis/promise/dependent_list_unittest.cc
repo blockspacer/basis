@@ -2,18 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tests_common.h"
-
 #include "basis/promise/dependent_list.h"
 #include "basis/promise/do_nothing_promise.h"
+#include "basis/promise/abstract_promise.h"
 
 #include <cstdint>
 #include <limits>
 
 #include "base/test/gtest_util.h"
-#include "base/test/bind_test_util.h"
 #include "base/memory/scoped_refptr.h"
-#include "basis/promise/abstract_promise.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 namespace base {
 namespace internal {

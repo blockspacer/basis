@@ -205,11 +205,11 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         self.requires("chromium_build_util/master@conan/stable")
         
         # see use_test_support option in base
-        self.requires("chromium_libxml/master@conan/stable")
+        self.requires("chromium_libxml/stable@conan/stable")
 
         if self._is_tests_enabled():
           # see use_test_support option in base
-          self.requires("conan_gtest/release-1.10.0@conan/stable")
+          self.requires("conan_gtest/stable@conan/stable")
           self.requires("benchmark/v1.5.2@dev/stable")
 
         no_doctest = (str(self.settings.build_type).lower() != "debug"

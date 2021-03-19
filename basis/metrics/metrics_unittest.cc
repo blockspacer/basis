@@ -30,13 +30,13 @@
 // under the License.
 //
 
-#include "tests_common.h"
 #include "basis/test/test_macros.hpp"
-
 #include "basis/statistics/hdr_histogram.hpp"
 #include "basis/metrics/metrics.hpp"
 
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
+
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include <string>
 #include <unordered_set>
@@ -89,7 +89,7 @@ class MetricsTest : public testing::Test {
 
   MetricRegistry registry_;
   scoped_refptr<MetricEntity> entity_;
-  base::test::ScopedTaskEnvironment scoped_task_environment_;
+  base::test::TaskEnvironment task_environment;
 };
 
 METRIC_DEFINE_counter(test_entity, reqs_pending, "Requests Pending", MetricUnit::kRequests,

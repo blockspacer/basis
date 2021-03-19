@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 
-#include "basis/checks_and_guard_annotations.hpp"
+#include "basic/annotations/guard_annotations.h"
 #include "basis/strong_types/strong_alias.hpp"
 #include "basis/promise/promise.h"
 #include "basis/promise/helpers.h"
@@ -19,7 +19,7 @@
 #include <base/synchronization/waitable_event.h>
 #include <base/observer_list_threadsafe.h>
 #include <base/thread_annotations.h>
-#include <base/rvalue_cast.h>
+#include <basic/rvalue_cast.h>
 
 #include <vector>
 #include <optional>

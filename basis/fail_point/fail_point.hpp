@@ -7,7 +7,7 @@
 #include <base/threading/thread_collision_warner.h>
 #include <base/location.h>
 #include <base/no_destructor.h>
-#include <base/rvalue_cast.h>
+#include <basic/rvalue_cast.h>
 #include <base/callback_list.h>
 
 #include <basis/strong_types/strong_string.hpp>

@@ -10,7 +10,7 @@
 
 #include "basis/statistics/usage_limiter.hpp"
 
-#include "tests_common.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace basis {
 

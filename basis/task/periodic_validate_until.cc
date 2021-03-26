@@ -24,8 +24,7 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
   DCHECK(base::ThreadPool::GetInstance());
   // wait and signal on different task runners
   timeoutTaskRunner_ =
-    ::base::ThreadPool::GetInstance()->
-    CreateSequencedTaskRunnerWithTraits(
+    ::base::ThreadPool::CreateSequencedTaskRunner(
       ::base::TaskTraits{
         ::base::TaskPriority::BEST_EFFORT
         , ::base::MayBlock()
@@ -48,8 +47,7 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
   );
 
   periodicVerifyRunner_
-    = ::base::ThreadPool::GetInstance()->
-      CreateSequencedTaskRunnerWithTraits(
+    = ::base::ThreadPool::CreateSequencedTaskRunner(
         ::base::TaskTraits{
           ::base::TaskPriority::BEST_EFFORT
           , ::base::MayBlock()

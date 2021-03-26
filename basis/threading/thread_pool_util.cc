@@ -52,16 +52,13 @@ void initThreadPool(
       << " num_cores = " << num_cores;
   }
 
-  std::unique_ptr<::base::ThreadPool> thread_pool_
-    = std::make_unique<::base::internal::ThreadPoolImpl>("Test");
+  base::ThreadPoolInstance::InitParams thread_pool_init_params{
+    {backgroundMaxThreads, kSuggestedReclaimTime}
+    , {foregroundMaxThreads, kSuggestedReclaimTime}
+  };
 
-  ::base::ThreadPool::SetInstance(RVALUE_CAST(thread_pool_));
-  ::base::ThreadPool::GetInstance()->Start(
-    ::base::internal::ThreadPoolImpl::InitParams{
-      {backgroundMaxThreads, kSuggestedReclaimTime}
-      , {foregroundMaxThreads, kSuggestedReclaimTime}
-    }
-    , /*worker_thread_observer_*/nullptr);
+  base::ThreadPoolInstance::Create("AppThreadPool");
+  base::ThreadPoolInstance::Get()->Start(thread_pool_init_params);
 }
 
 }  // namespace basis

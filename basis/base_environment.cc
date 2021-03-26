@@ -2,8 +2,6 @@
 
 #include "basis/path_provider.hpp"
 
-#include <entt/signal/dispatcher.hpp>
-
 #include <basis/cmd_util.hpp>
 #include <basis/i18n/i18n.hpp>
 #include <basis/i18n/icu_util.hpp>

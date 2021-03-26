@@ -20,6 +20,7 @@
 #include <base/observer_list_threadsafe.h>
 #include <base/thread_annotations.h>
 #include <basic/rvalue_cast.h>
+#include <base/task/thread_pool.h>
 
 #include <vector>
 #include <optional>
@@ -186,8 +187,7 @@ private:
    DCHECK(base::ThreadPool::GetInstance());
    // wait and signal on different task runners
    scoped_refptr<::base::SequencedTaskRunner> timeout_task_runner =
-     ::base::ThreadPool::GetInstance()->
-     CreateSequencedTaskRunnerWithTraits(
+     ::base::ThreadPool::CreateSequencedTaskRunner(
        ::base::TaskTraits{
          ::base::TaskPriority::BEST_EFFORT
          , ::base::MayBlock()
@@ -287,8 +287,7 @@ private:
   DCHECK(base::ThreadPool::GetInstance());
   // wait and signal on different task runners
   scoped_refptr<::base::SequencedTaskRunner> timeout_task_runner =
-    ::base::ThreadPool::GetInstance()->
-    CreateSequencedTaskRunnerWithTraits(
+    ::base::ThreadPool::CreateSequencedTaskRunner(
       ::base::TaskTraits{
         ::base::TaskPriority::BEST_EFFORT
         , ::base::MayBlock()

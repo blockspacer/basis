@@ -16,6 +16,7 @@
 #include <base/task/post_task.h>
 #include <base/task/task_traits.h>
 #include <base/trace_event/trace_event.h>
+#include <base/task/thread_pool.h>
 
 namespace ECS {
 
@@ -26,8 +27,7 @@ SafeRegistry::SafeRegistry()
       weak_this_(
         weak_ptr_factory_.GetWeakPtr()))
   , taskRunner_{
-      ::base::ThreadPool::GetInstance()->
-        CreateSequencedTaskRunnerWithTraits(
+      ::base::ThreadPool::CreateSequencedTaskRunner
           ::base::TaskTraits{
             ::base::TaskPriority::BEST_EFFORT
             , ::base::MayBlock()

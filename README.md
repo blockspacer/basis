@@ -15,6 +15,25 @@ Pull into basis only when needed.
 
 In a project our size, sometimes even duplication is OK and inevitable.
 
+## Before build (dependencies)
+
+Create clang conan profile https://docs.conan.io/en/1.34/reference/profiles.html#examples
+
+Re-build dependencies:
+
+```bash
+git clone https://github.com/blockspacer/conan_github_downloader.git ~/conan_github_downloader
+
+cmake \
+  -DSCRIPT_PATH="$PWD/get_conan_dependencies.cmake"\
+  -DEXTRA_CONAN_OPTS="--profile;clang\
+;-s;build_type=Debug\
+;-s;cling_conan:build_type=Release\
+;-s;llvm_tools:build_type=Release\
+;--build;missing" \
+  -P ~/conan_github_downloader/conan_github_downloader.cmake
+```
+
 ## Build
 
 ```bash

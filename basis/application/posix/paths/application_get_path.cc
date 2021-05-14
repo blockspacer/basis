@@ -1,6 +1,6 @@
-#include "basis/application/paths/application_get_path.hpp" // IWYU pragma: associated
+#include "basis/application/paths/application_get_path.h" // IWYU pragma: associated
 
-#include "basis/application/application_configuration.hpp"
+#include "basis/application/application_configuration.h"
 
 #include <cstring>
 
@@ -10,6 +10,7 @@
 #include <base/strings/stringprintf.h>
 #include <base/path_service.h>
 #include <base/strings/safe_sprintf.h>
+#include <base/notreached.h>
 
 namespace {
 

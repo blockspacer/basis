@@ -1,11 +1,11 @@
 // DISABLE_DOCTEST: custom macro
 #if !defined(DISABLE_DOCTEST)
 
-/// \note place before "basis/doctest_util.hpp"
+/// \note place before "basis/doctest_util.h"
 /// \note define DOCTEST_* macro before `doctest.h`
-#include "basis/doctest_common.hpp"
+#include "basis/doctest_common.h"
 
-#include "basis/doctest_util.hpp" // IWYU pragma: associated
+#include "basis/doctest_util.h" // IWYU pragma: associated
 
 #include <utility>
 

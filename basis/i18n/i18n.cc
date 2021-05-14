@@ -1,5 +1,6 @@
-#include "basis/i18n/i18n.hpp" // IWYU pragma: associated
+#include "basis/i18n/i18n.h" // IWYU pragma: associated
 
+#include "base/logging.h"
 #include <base/i18n/rtl.h>
 #include <base/i18n/icu_util.h>
 #include <base/i18n/message_formatter.h>
@@ -9,6 +10,7 @@
 #include <base/time/time.h>
 #include <base/path_service.h>
 #include <base/files/file_util.h>
+#include "base/sequence_checker.h"
 #include <base/sequenced_task_runner.h>
 
 #include <third_party/icu/source/common/unicode/unistr.h>

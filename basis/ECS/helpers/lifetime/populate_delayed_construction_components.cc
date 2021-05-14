@@ -1,5 +1,5 @@
-﻿#include "basis/ECS/helpers/lifetime/populate_delayed_construction_components.hpp" // IWYU pragma: associated
-#include <basis/ECS/tags.hpp>
+﻿#include "basis/ECS/helpers/lifetime/populate_delayed_construction_components.h" // IWYU pragma: associated
+#include <basis/ECS/tags.h>
 
 namespace ECS {
 

@@ -1,4 +1,4 @@
-#include <basis/ECS/components/parent_entity.hpp> // IWYU pragma: associated
+#include <basis/ECS/components/parent_entity.h> // IWYU pragma: associated
 
 namespace ECS {
 

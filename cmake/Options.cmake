@@ -53,3 +53,5 @@ option(ENABLE_MSAN
 # to get proper debug information in your binary.
 option(ENABLE_TSAN
   "Enable Thread Sanitizer" OFF)
+
+set(BASIS_SOURCES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/basis/)

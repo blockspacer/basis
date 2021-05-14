@@ -2,16 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/task/alarm_manager.hpp"
+#include "basis/task/alarm_manager.h"
 
 #include <memory>
 #include <utility>
 
 #include "base/bind.h"
-#include "base/message_loop/message_loop.h"
+#include "base/run_loop.h"
 #include "base/test/simple_test_clock.h"
+#include "base/test/task_environment.h"
 #include "base/test/test_mock_time_task_runner.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "base/time/clock.h"
+#include "base/task/current_thread.h"
 
 #include "basic/rvalue_cast.h"
 
@@ -31,19 +34,9 @@ class AlarmManagerTest : public ::testing::Test {
     bool fired_;
     base::WeakPtrFactory<WallClockDependantTask> weak_factory_;
   };
-  void SetUp() override {
-    message_loop_.reset(new base::MessageLoop);
-    task_runner_ = new base::TestMockTimeTaskRunner;
-    message_loop_->SetTaskRunner(task_runner_);
-  }
 
-  void TearDown() override {
-    task_runner_ = nullptr;
-    message_loop_.reset();
-  }
-
-  std::unique_ptr<base::MessageLoop> message_loop_;
-  scoped_refptr<base::TestMockTimeTaskRunner> task_runner_;
+  base::test::SingleThreadTaskEnvironment task_environment_{
+      base::test::TaskEnvironment::TimeSource::MOCK_TIME};
 };
 
 TEST_F(AlarmManagerTest, AlarmNotFire) {
@@ -56,16 +49,16 @@ TEST_F(AlarmManagerTest, AlarmNotFire) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(10);
   std::unique_ptr<AlarmHandle> handle(manager->PostAlarmTask(
       base::BindOnce(&WallClockDependantTask::OnAlarmFire, task.GetWeakPtr()),
       alarm_time));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(9));
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(9));
   clock->Advance(base::TimeDelta::FromMinutes(9));
-  task_runner_->RunUntilIdle();
+  task_environment_.RunUntilIdle();
   ASSERT_FALSE(task.fired_);
 }
 
@@ -79,8 +72,8 @@ TEST_F(AlarmManagerTest, AlarmFire) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add an alarm.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(10);
@@ -88,15 +81,15 @@ TEST_F(AlarmManagerTest, AlarmFire) {
       base::BindOnce(&WallClockDependantTask::OnAlarmFire, task.GetWeakPtr()),
       alarm_time));
   clock->Advance(base::TimeDelta::FromMinutes(10));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(10));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(10));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task.fired_);
 
   // Fires only once.
   task.fired_ = false;
   clock->Advance(base::TimeDelta::FromMinutes(10));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(10));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(10));
+  task_environment_.RunUntilIdle();
   ASSERT_FALSE(task.fired_);
 }
 
@@ -109,16 +102,16 @@ TEST_F(AlarmManagerTest, AlarmPast) {
   std::unique_ptr<base::SimpleTestClock> test_clock =
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      test_clock.get(), base::ThreadTaskRunnerHandle::Get());
 
   // Add an alarm in the past. Should fire right away.
   base::Time alarm_time = base::Time::Now() - base::TimeDelta::FromMinutes(10);
   std::unique_ptr<AlarmHandle> handle(manager->PostAlarmTask(
       base::BindOnce(&WallClockDependantTask::OnAlarmFire, task.GetWeakPtr()),
       alarm_time));
-  task_runner_->FastForwardBy(base::TimeDelta::FromSeconds(10));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromSeconds(10));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task.fired_);
 }
 
@@ -132,8 +125,8 @@ TEST_F(AlarmManagerTest, AlarmTimeJump) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add an alarm. The time jumps to the future.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(10);
@@ -141,8 +134,8 @@ TEST_F(AlarmManagerTest, AlarmTimeJump) {
       base::BindOnce(&WallClockDependantTask::OnAlarmFire, task.GetWeakPtr()),
       alarm_time));
   clock->Advance(base::TimeDelta::FromMinutes(10));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task.fired_);
 }
 
@@ -156,8 +149,8 @@ TEST_F(AlarmManagerTest, AlarmJumpFuture) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add an alarm. The time jumps far into the future.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(10);
@@ -165,8 +158,8 @@ TEST_F(AlarmManagerTest, AlarmJumpFuture) {
       base::BindOnce(&WallClockDependantTask::OnAlarmFire, task.GetWeakPtr()),
       alarm_time));
   clock->Advance(base::TimeDelta::FromMinutes(60));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task.fired_);
 }
 
@@ -182,8 +175,8 @@ TEST_F(AlarmManagerTest, AlarmMultiple) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add first task.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(10);
@@ -199,8 +192,8 @@ TEST_F(AlarmManagerTest, AlarmMultiple) {
 
   // First task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(10));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task1.fired_);
   ASSERT_FALSE(task2.fired_);
 
@@ -210,8 +203,8 @@ TEST_F(AlarmManagerTest, AlarmMultiple) {
 
   // Second task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(2));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_FALSE(task1.fired_);
   ASSERT_TRUE(task2.fired_);
 }
@@ -228,8 +221,8 @@ TEST_F(AlarmManagerTest, AlarmMultipleReverseOrder) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add first task.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(12);
@@ -245,8 +238,8 @@ TEST_F(AlarmManagerTest, AlarmMultipleReverseOrder) {
 
   // Second task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(10));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_FALSE(task1.fired_);
   ASSERT_TRUE(task2.fired_);
 
@@ -256,8 +249,8 @@ TEST_F(AlarmManagerTest, AlarmMultipleReverseOrder) {
 
   // First task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(2));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task1.fired_);
   ASSERT_FALSE(task2.fired_);
 }
@@ -276,8 +269,8 @@ TEST_F(AlarmManagerTest, AlarmMultipleSameTime) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add first task.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(12);
@@ -299,8 +292,8 @@ TEST_F(AlarmManagerTest, AlarmMultipleSameTime) {
 
   // First and third task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(12));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task1.fired_);
   ASSERT_FALSE(task2.fired_);
   ASSERT_TRUE(task3.fired_);
@@ -320,8 +313,8 @@ TEST_F(AlarmManagerTest, AlarmMultipleShuffle) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add first task.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(15);
@@ -343,15 +336,15 @@ TEST_F(AlarmManagerTest, AlarmMultipleShuffle) {
 
   // Third task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(12));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_FALSE(task1.fired_);
   ASSERT_FALSE(task2.fired_);
   ASSERT_TRUE(task3.fired_);
 
   clock->Advance(base::TimeDelta::FromMinutes(3));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task1.fired_);
   ASSERT_FALSE(task2.fired_);
   ASSERT_TRUE(task3.fired_);
@@ -369,8 +362,8 @@ TEST_F(AlarmManagerTest, AlarmTwice) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add first task.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(15);
@@ -392,8 +385,8 @@ TEST_F(AlarmManagerTest, AlarmTwice) {
 
   // First task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(1));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task1.fired_);
   ASSERT_FALSE(task2.fired_);
 
@@ -402,8 +395,8 @@ TEST_F(AlarmManagerTest, AlarmTwice) {
 
   // First task should fire again because it was added twice.
   clock->Advance(base::TimeDelta::FromMinutes(14));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_TRUE(task1.fired_);
   ASSERT_FALSE(task2.fired_);
 }
@@ -425,8 +418,8 @@ TEST_F(AlarmManagerTest, AlarmCancel) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add first task.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(12);
@@ -451,8 +444,8 @@ TEST_F(AlarmManagerTest, AlarmCancel) {
 
   // Third task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(15));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_FALSE(task2->fired_);
   ASSERT_TRUE(task3->fired_);
 }
@@ -474,8 +467,8 @@ TEST_F(AlarmManagerTest, AlarmDeleteHandle) {
       std::make_unique<base::SimpleTestClock>();
   test_clock->SetNow(now);
   base::SimpleTestClock* clock = test_clock.get();
-  std::unique_ptr<AlarmManager> manager =
-      std::make_unique<AlarmManager>(RVALUE_CAST(test_clock), task_runner_);
+  std::unique_ptr<AlarmManager> manager = std::make_unique<AlarmManager>(
+      clock, base::ThreadTaskRunnerHandle::Get());
 
   // Add first task.
   base::Time alarm_time = now + base::TimeDelta::FromMinutes(12);
@@ -500,8 +493,8 @@ TEST_F(AlarmManagerTest, AlarmDeleteHandle) {
 
   // Third task should fire.
   clock->Advance(base::TimeDelta::FromMinutes(15));
-  task_runner_->FastForwardBy(base::TimeDelta::FromMinutes(1));
-  task_runner_->RunUntilIdle();
+  task_environment_.FastForwardBy(base::TimeDelta::FromMinutes(1));
+  task_environment_.RunUntilIdle();
   ASSERT_FALSE(task1->fired_);
   ASSERT_FALSE(task2->fired_);
   ASSERT_TRUE(task3->fired_);

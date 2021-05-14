@@ -1,4 +1,4 @@
-#include "task_util.hpp" // IWYU pragma: associated
+#include "basis/task/task_util.h" // IWYU pragma: associated
 
 #include <base/macros.h>
 #include <base/callback.h>
@@ -107,7 +107,7 @@ base::OnceClosure bindToTaskRunner(
       );
     }
     , from_here
-    , ::base::Passed(RVALUE_CAST(task))
+    , ::std::move(RVALUE_CAST(task))
     , task_runner
     , delay
   );

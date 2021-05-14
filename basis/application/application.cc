@@ -1,8 +1,10 @@
-#include "basis/application/application.hpp" // IWYU pragma: associated
+#include "basis/application/application.h" // IWYU pragma: associated
 
+#include "base/threading/thread_task_runner_handle.h"
 #include <base/strings/stringprintf.h>
 #include <base/trace_event/trace_event.h>
-#include <base/message_loop/message_loop_current.h>
+#include <base/notreached.h>
+#include "base/sequence_checker.h"
 
 namespace application {
 
@@ -23,7 +25,7 @@ ApplicationStateManager::ApplicationStateManager()
   DETACH_FROM_SEQUENCE(sequence_checker_);
 
   // init threading before |ApplicationStateManager| constructor
-  DCHECK(base::MessageLoopCurrent::Get());
+  DCHECK(base::ThreadTaskRunnerHandle::Get());
 }
 
 ApplicationStateManager::~ApplicationStateManager()

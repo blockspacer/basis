@@ -1,6 +1,4 @@
-﻿# see https://github.com/chromium/chromium/blob/9db0b5162b8648833c3a6b1af044cebd9d7d3855/base/BUILD.gn
-
-cmake_minimum_required(VERSION 3.4)
+﻿cmake_minimum_required(VERSION 3.4)
 
 # project() must be before checks, see https://stackoverflow.com/a/26437667/10904212
 set(PROJECT_NAME "basis")
@@ -9,7 +7,7 @@ project(${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
   LANGUAGES CXX C)
 
-set(STATIC_LIB_NAME ${PROJECT_NAME})
+set(BASIS_LIB_NAME ${PROJECT_NAME})
 
 # ------------------------------- Options --------------------------------------
 
@@ -165,7 +163,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CommonOptions.cmake)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ProjectFiles.cmake)
 
-add_library(${STATIC_LIB_NAME}-test-includes INTERFACE)
+add_library(${BASIS_LIB_NAME}-test-includes INTERFACE)
 
 # $<INSTALL_INTERFACE:...> is exported using install(EXPORT)
 # $<BUILD_INTERFACE:...> is exported using export(), or when the target is used by another target in the same buildsystem
@@ -174,17 +172,17 @@ macro(add_relative_include_dir TARGET VISIBILITY_BUILD VISIBILITY_INSTALL NEW_EL
     ${VISIBILITY_BUILD} "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${NEW_ELEM}>"
     ${VISIBILITY_INSTALL} "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/${NEW_ELEM}>"
   )
-  target_include_directories( ${STATIC_LIB_NAME}-test-includes SYSTEM INTERFACE
+  target_include_directories( ${BASIS_LIB_NAME}-test-includes SYSTEM INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/${NEW_ELEM} )
 endmacro(add_relative_include_dir)
 
-add_library(${STATIC_LIB_NAME} STATIC
+add_library(${BASIS_LIB_NAME} STATIC
   ${BASIS_SOURCES}
 )
 
-add_relative_include_dir(${STATIC_LIB_NAME} PRIVATE PRIVATE "basis")
+add_relative_include_dir(${BASIS_LIB_NAME} PRIVATE PRIVATE "basis")
 
-add_relative_include_dir(${STATIC_LIB_NAME} PUBLIC PUBLIC "")
+add_relative_include_dir(${BASIS_LIB_NAME} PUBLIC PUBLIC "")
 
 list(APPEND USED_3DPARTY_LIBS
   ${base_LIB}
@@ -193,23 +191,23 @@ list(APPEND USED_3DPARTY_LIBS
 )
 
 # POSITION_INDEPENDENT_CODE for -fPIC
-set_property(TARGET ${STATIC_LIB_NAME}
+set_property(TARGET ${BASIS_LIB_NAME}
   PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-set_property(TARGET ${STATIC_LIB_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${BASIS_LIB_NAME} PROPERTY CXX_STANDARD 17)
 
 if(TARGET_EMSCRIPTEN)
   # use PROPERTY CXX_STANDARD 17
 else()
-  target_compile_features(${STATIC_LIB_NAME}
+  target_compile_features(${BASIS_LIB_NAME}
     PUBLIC cxx_auto_type
     PRIVATE cxx_variadic_templates)
 endif()
 
-target_compile_options(${STATIC_LIB_NAME} PRIVATE
+target_compile_options(${BASIS_LIB_NAME} PRIVATE
   $<$<CXX_COMPILER_ID:GNU>:-Wall>)
 
-target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
+target_compile_definitions(${BASIS_LIB_NAME} PUBLIC
   ${BASIS_PRIVATE_DEFINES}
   # https://stackoverflow.com/a/30877725
   BOOST_SYSTEM_NO_DEPRECATED
@@ -222,18 +220,18 @@ target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
   BOOST_ASIO_STANDALONE=1
 )
 
-target_link_libraries(${STATIC_LIB_NAME} PUBLIC
+target_link_libraries(${BASIS_LIB_NAME} PUBLIC
   ${USED_3DPARTY_LIBS}
 )
 
 if(ENABLE_DOCTEST)
   message(STATUS "DOCTEST Enabled")
-  target_link_libraries(${STATIC_LIB_NAME} PUBLIC
+  target_link_libraries(${BASIS_LIB_NAME} PUBLIC
     CONAN_PKG::doctest
   )
 else()
   message(STATUS "DOCTEST Disabled")
-  target_compile_definitions(${STATIC_LIB_NAME} PUBLIC
+  target_compile_definitions(${BASIS_LIB_NAME} PUBLIC
     DISABLE_DOCTEST=1
   )
 endif()
@@ -241,23 +239,23 @@ endif()
 # see https://doc.magnum.graphics/corrade/corrade-cmake.html#corrade-cmake-subproject
 find_package(Corrade REQUIRED PluginManager)
 
-target_link_libraries(${STATIC_LIB_NAME} PRIVATE
+target_link_libraries(${BASIS_LIB_NAME} PRIVATE
   CONAN_PKG::openssl
 )
 
-target_link_libraries(${STATIC_LIB_NAME} PUBLIC
+target_link_libraries(${BASIS_LIB_NAME} PUBLIC
   CONAN_PKG::boost
   CONAN_PKG::entt
   Corrade::PluginManager
 )
 
 set(DEBUG_LIBRARY_SUFFIX "")
-set_target_properties(${STATIC_LIB_NAME}
+set_target_properties(${BASIS_LIB_NAME}
   PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /lib
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /lib
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /bin
-    OUTPUT_NAME "${STATIC_LIB_NAME}$<$<CONFIG:Debug>:${DEBUG_LIBRARY_SUFFIX}>"
+    OUTPUT_NAME "${BASIS_LIB_NAME}$<$<CONFIG:Debug>:${DEBUG_LIBRARY_SUFFIX}>"
 )
 
 ## ---------------------------- valgrind -------------------------------- ##
@@ -274,5 +272,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/setup_sanitizers.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 
 if(ENABLE_TESTS)
+  enable_testing()
+  message( "${PROJECT_NAME} testing enabled" )
   add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tests )
 endif()

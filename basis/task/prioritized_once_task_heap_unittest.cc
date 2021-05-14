@@ -1,4 +1,4 @@
-#include "basis/task/prioritized_once_task_heap.hpp"
+#include "basis/task/prioritized_once_task_heap.h"
 
 #include <algorithm>
 #include <limits>
@@ -9,6 +9,7 @@
 #include "base/location.h"
 #include "base/rand_util.h"
 #include "base/run_loop.h"
+#include "base/task/thread_pool.h"
 #include "base/sequenced_task_runner.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
@@ -33,7 +34,7 @@ class PrioritizedOnceTaskHeapTest : public testing::Test {
   }
 
  protected:
-  base::test::TaskEnvironment task_environment;
+  base::test::TaskEnvironment task_environment_;
   std::vector<std::string> task_names_;
   base::Lock task_names_lock_;
 
@@ -41,7 +42,7 @@ class PrioritizedOnceTaskHeapTest : public testing::Test {
   DISALLOW_COPY_AND_ASSIGN(PrioritizedOnceTaskHeapTest);
 };
 
-void runWithThreadCheck(scoped_refptr<base::TaskRunner> expected_task_runner,
+void runWithThreadCheck(scoped_refptr<base::SequencedTaskRunner> expected_task_runner,
                         base::OnceClosure callback)
 {
   EXPECT_TRUE(expected_task_runner->RunsTasksInCurrentSequence());
@@ -49,8 +50,13 @@ void runWithThreadCheck(scoped_refptr<base::TaskRunner> expected_task_runner,
 }
 
 TEST_F(PrioritizedOnceTaskHeapTest, OnceCbOnThread) {
-  auto task_runner =
-      base::CreateSequencedTaskRunnerWithTraits(base::TaskTraits());
+  auto task_runner = base::ThreadPool::CreateSequencedTaskRunner(
+    ::base::TaskTraits{
+      ::base::TaskPriority::BEST_EFFORT
+      , ::base::MayBlock()
+      , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+    }
+  );
   scoped_refptr<PrioritizedOnceTaskHeap> prioritized_task_heap =
       base::MakeRefCounted<PrioritizedOnceTaskHeap>(
         true // with_thread_locking
@@ -88,7 +94,7 @@ TEST_F(PrioritizedOnceTaskHeapTest, OnceCbOnThread) {
         , prioritized_task_heap
       )
       , base::BindOnce(runWithThreadCheck
-          , scoped_task_environment_.GetMainThreadTaskRunner()
+          , task_environment_.GetMainThreadTaskRunner()
           , run_loop.QuitClosure())
   );
 
@@ -98,8 +104,13 @@ TEST_F(PrioritizedOnceTaskHeapTest, OnceCbOnThread) {
 }
 
 TEST_F(PrioritizedOnceTaskHeapTest, RepeatingCbOnThread) {
-  auto task_runner =
-      base::CreateSequencedTaskRunnerWithTraits(base::TaskTraits());
+  auto task_runner = base::ThreadPool::CreateSequencedTaskRunner(
+    ::base::TaskTraits{
+      ::base::TaskPriority::BEST_EFFORT
+      , ::base::MayBlock()
+      , ::base::TaskShutdownBehavior::BLOCK_SHUTDOWN
+    }
+  );
   scoped_refptr<PrioritizedOnceTaskHeap> prioritized_task_heap =
       base::MakeRefCounted<PrioritizedOnceTaskHeap>(
         true // with_thread_locking
@@ -172,7 +183,7 @@ TEST_F(PrioritizedOnceTaskHeapTest, RepeatingCbOnThread) {
         , prioritized_task_heap
       )
       , base::BindOnce(runWithThreadCheck
-          , scoped_task_environment_.GetMainThreadTaskRunner()
+          , task_environment_.GetMainThreadTaskRunner()
           , run_loop.QuitClosure())
   );
 

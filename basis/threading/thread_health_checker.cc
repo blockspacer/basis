@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basis/threading/thread_health_checker.hpp" // IWYU pragma: associated
-#include "basis/bind/bind_to_task_runner.hpp"
+#include "basis/threading/thread_health_checker.h" // IWYU pragma: associated
+
+#include "basic/bind/bind_to_task_runner.h"
 
 #include <memory>
 #include <string>
@@ -61,7 +62,7 @@ void ThreadHealthChecker::Internal::CheckThreadHealth() {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   DCHECK(!failure_timer_->IsRunning());
   patient_task_runner_->PostTask(
-      FROM_HERE, BindToCurrentThread(base::BindOnce(
+      FROM_HERE, basic::BindToCurrentThread(base::BindOnce(
                      &ThreadHealthChecker::Internal::ThreadOk, this)));
   failure_timer_->Start(FROM_HERE, timeout_, this,
                         &ThreadHealthChecker::Internal::ThreadTimeout);

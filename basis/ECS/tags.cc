@@ -1,4 +1,4 @@
-#include <basis/ECS/tags.hpp>  // IWYU pragma: associated
+#include <basis/ECS/tags.h>  // IWYU pragma: associated
 
 ECS_DEFINE_METATYPE(UnusedTag)
 

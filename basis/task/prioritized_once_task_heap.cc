@@ -1,8 +1,10 @@
-#include "basis/task/prioritized_once_task_heap.hpp" // IWYU pragma: associated
+#include "basis/task/prioritized_once_task_heap.h" // IWYU pragma: associated
 
 #include <algorithm>
 
 #include <base/bind.h>
+#include "base/sequence_checker.h"
+
 #include <basic/rvalue_cast.h>
 
 #include <queue>

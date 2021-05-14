@@ -56,11 +56,6 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         "enable_msan=False",
         "enable_tsan=False",
         "enable_valgrind=False",
-        "*:integration=catch", # for FakeIt,
-        # chromium_base
-        "chromium_base:use_alloc_shim=True",
-        # chromium_tcmalloc
-        "chromium_tcmalloc:use_alloc_shim=True",
         # openssl
         "openssl:shared=True",
     )
@@ -186,10 +181,6 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         if self._is_llvm_tools_enabled():
           self.build_requires("llvm_tools/master@conan/stable")
 
-        if self._is_tests_enabled():
-            self.build_requires("catch2/[>=2.1.0]@bincrafters/stable")
-            self.build_requires("FakeIt/[>=2.0.5]@gasuketsu/stable")
-
     def requirements(self):
         self.requires("boost/1.71.0@dev/stable")
 
@@ -237,21 +228,13 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         if not self.options.enable_valgrind:
             cmake.definitions["ENABLE_VALGRIND"] = 'OFF'
 
-        cmake.definitions["ENABLE_UBSAN"] = 'ON'
-        if not self.options.enable_ubsan:
-            cmake.definitions["ENABLE_UBSAN"] = 'OFF'
+        cmake.definitions["ENABLE_UBSAN"] = "ON" if self.options.enable_ubsan else "OFF"
 
-        cmake.definitions["ENABLE_ASAN"] = 'ON'
-        if not self.options.enable_asan:
-            cmake.definitions["ENABLE_ASAN"] = 'OFF'
+        cmake.definitions["ENABLE_ASAN"] = "ON" if self.options.enable_asan else "OFF"
 
-        cmake.definitions["ENABLE_MSAN"] = 'ON'
-        if not self.options.enable_msan:
-            cmake.definitions["ENABLE_MSAN"] = 'OFF'
+        cmake.definitions["ENABLE_MSAN"] = "ON" if self.options.enable_msan else "OFF"
 
-        cmake.definitions["ENABLE_TSAN"] = 'ON'
-        if not self.options.enable_tsan:
-            cmake.definitions["ENABLE_TSAN"] = 'OFF'
+        cmake.definitions["ENABLE_TSAN"] = "ON" if self.options.enable_tsan else "OFF"
 
         cmake.definitions["CONAN_AUTO_INSTALL"] = 'OFF'
 
@@ -280,10 +263,13 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
         cmake = self._configure_cmake()
         cmake.install()
-        # Local build
-        # see https://docs.conan.io/en/latest/developing_packages/editable_packages.html
-        if not self.in_local_cache:
-            self.copy("conanfile.py", dst=".", keep_path=False)
+
+        self.copy_conanfile_for_editable_package(".")
+
+        self.rmdir_if_packaged('.git')
+        self.rmdir_if_packaged('tests')
+        self.rmdir_if_packaged('lib/tests')
+        self.rmdir_if_packaged('lib/pkgconfig')
 
     def build(self):
         cmake = self._configure_cmake()
@@ -306,9 +292,10 @@ class basis_conan_project(conan_build_helper.CMakePackage):
 
         if self._is_tests_enabled():
           self.output.info('Running tests')
-          cmake.build(args=["--target", "basis_run_all_tests", "--", "-j%s" % cpu_count])
+          #cmake.build(args=["--target", "basis_run_all_tests", "--", "-j%s" % cpu_count])
           #self.run('ctest --parallel %s' % (cpu_count))
           # TODO: use cmake.test()
+          cmake.test(target="basis_run_unittests", output_on_failure=True)
 
     # Importing files copies files from the local store to your project.
     def imports(self):

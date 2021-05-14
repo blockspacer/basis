@@ -1,4 +1,4 @@
-#include "basis/PluginManager.hpp" // IWYU pragma: associated
+#include "basis/plugin_manager.h" // IWYU pragma: associated
 
 #include <Corrade/PluginManager/AbstractManager.h>
 #include <Corrade/PluginManager/Manager.h>
@@ -10,6 +10,7 @@
 #include <base/files/file_util.h>
 #include <base/logging.h>
 #include <base/trace_event/trace_event.h>
+#include <base/notreached.h>
 
 #include <entt/signal/dispatcher.hpp>
 #include <entt/signal/sigh.hpp>

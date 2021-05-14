@@ -15,6 +15,7 @@
 #include "base/memory/ref_counted.h"
 #include "base/threading/thread_checker.h"
 #include "base/time/time.h"
+#include "base/task/thread_pool/thread_pool_instance.h"
 
 // Use DCHECK_CURRENTLY_ON_RUNNER(AppRunner::ID) to assert that a function can only
 // be called on the named AppRunner.

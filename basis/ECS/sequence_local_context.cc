@@ -1,4 +1,4 @@
-#include "basis/ECS/sequence_local_context.hpp" // IWYU pragma: associated
+#include "basis/ECS/sequence_local_context.h" // IWYU pragma: associated
 
 #include <base/memory/singleton.h>
 #include <base/no_destructor.h>
@@ -12,6 +12,14 @@
 
 namespace ECS {
 
+
+// Keep the global object in a TLS slot so it is impossible to
+// incorrectly from the wrong thread.
+static base::LazyInstance<
+    base::ThreadLocalPointer<SequenceLocalContext>>::DestructorAtExit lazy_tls =
+    LAZY_INSTANCE_INITIALIZER;
+
+#if 0
 namespace {
 base::LazyInstance<
     ::base::SequenceLocalStorageSlot<
@@ -20,6 +28,35 @@ base::LazyInstance<
 >::Leaky
   g_sls_current_sequence_local_storage = LAZY_INSTANCE_INITIALIZER;
 }  // namespace
+
+// static
+TLSSequenceContextStore* TLSSequenceContextStore::current() {
+  return lazy_tls.Pointer()->Get();
+}
+
+TLSSequenceContextStore::TLSSequenceContextStore() {
+  lazy_tls.Pointer()->Set(this);
+}
+
+TLSSequenceContextStore::~TLSSequenceContextStore() {
+  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+  lazy_tls.Pointer()->Set(NULL);
+}
+
+void TLSSequenceContextStore::Set(const scoped_refptr<SequenceLocalContext>& value) {
+  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+  value_ = value;
+}
+
+TLSSequenceContextStore* SequenceLocalContext::GetTLSSequenceContextStore()
+{
+  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+
+  if (!tls_store_.get())
+    tls_store_.reset(new TLSSequenceContextStore);
+  return tls_store_.get();
+}
+#endif
 
 SequenceLocalContext::SequenceLocalContext()
 {
@@ -34,8 +71,8 @@ SequenceLocalContext::~SequenceLocalContext()
   /// --> DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
-base::WeakPtr<SequenceLocalContext>
-  SequenceLocalContext::getSequenceLocalInstance(
+SequenceLocalContext*
+  SequenceLocalContext::getLocalInstance(
     const ::base::Location& from_here
     , scoped_refptr<::base::SequencedTaskRunner> task_runner)
 {
@@ -45,12 +82,12 @@ base::WeakPtr<SequenceLocalContext>
 
   /**
    * @brief saves from errors like  below
-   * (note that `getSequenceLocalInstance` called NOT from `timeout_task_runner`):
+   * (note that `getLocalInstance` called NOT from `timeout_task_runner`):
       .ThenOn(timeout_task_runner
         , FROM_HERE
         , ::base::BindOnce(
             &ECS::SequenceLocalContext::unset<PeriodicCheckUntilTime>
-            , ECS::SequenceLocalContext::getSequenceLocalInstance(
+            , ECS::SequenceLocalContext::getLocalInstance(
                 FROM_HERE, timeout_task_runner)
             , FROM_HERE
           )
@@ -59,13 +96,13 @@ base::WeakPtr<SequenceLocalContext>
   DCHECK(task_runner
     && task_runner->RunsTasksInCurrentSequence());
 
-  if(!g_sls_current_sequence_local_storage.Get().Get())
+  if(!lazy_tls.Pointer()->Get())
   {
     DVLOG(9)
       << "created new SequenceLocalContext from "
       << from_here.ToString();
 
-    g_sls_current_sequence_local_storage.Get().Set(
+    lazy_tls.Pointer()->Set(
       new SequenceLocalContext());
   } else {
     DVLOG(9)
@@ -75,14 +112,14 @@ base::WeakPtr<SequenceLocalContext>
 
   // `Get` Sets and returns a default-constructed value
   // if no value was previously set.
-  scoped_refptr<SequenceLocalContext>& ctx
-    = g_sls_current_sequence_local_storage.Get().Get();
+  SequenceLocalContext* ctx
+    = lazy_tls.Pointer()->Get();
 
   DCHECK(ctx)
     << "SequenceLocalStorageSlot cannot be used because no "
        "SequenceLocalContext was stored in TLS.";
 
-  return ctx->weak_ptr_factory_.GetWeakPtr();
+  return ctx;
 }
 
 } // namespace ECS

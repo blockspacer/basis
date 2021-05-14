@@ -1,19 +1,18 @@
-#include "basis/base_environment.hpp" // IWYU pragma: associated
+#include "basis/base_environment.h" // IWYU pragma: associated
+#include "basis/path_provider.h"
+#include <basis/i18n/i18n.h>
+#include <basis/i18n/icu_util.h>
+#include <basis/threading/thread_pool_util.h>
 
-#include "basis/path_provider.hpp"
-
-#include <basis/cmd_util.hpp>
-#include <basis/i18n/i18n.hpp>
-#include <basis/i18n/icu_util.hpp>
-#include <basis/log/log_util.hpp>
-#include <basis/threading/thread_pool_util.hpp>
-#include <basis/tracing/tracing_util.hpp>
-#include <basis/multiconfig/multiconfig.hpp>
-
-#include "basic/rvalue_cast.h"
+#include <base/notreached.h>
+#include "base/task/thread_pool/thread_pool_instance.h"
 #include "base/base_switches.h"
+#include "base/threading/hang_watcher.h"
 #include "base/command_line.h"
+#include "base/sequence_checker.h"
 #include "base/process/memory.h"
+#include "base/debug/leak_annotations.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "base/base_paths.h"
 #include "base/bind.h"
 #include "base/callback_forward.h"
@@ -24,10 +23,10 @@
 #include "base/logging.h"
 #include "base/memory/ref_counted_memory.h"
 #include "base/memory/scoped_refptr.h"
-#include "base/message_loop/message_loop.h"
-#include "base/message_loop/message_loop_current.h"
+#include "base/run_loop.h"
 #include "base/metrics/statistics_recorder.h"
 #include "base/metrics/field_trial.h"
+#include "base/metrics/field_trial_params.h"
 #include "base/metrics/histogram.h"
 #include "base/path_service.h"
 #include "base/run_loop.h"
@@ -37,12 +36,21 @@
 #include "base/strings/string_piece_forward.h"
 #include "base/strings/string_util.h"
 #include "base/system/sys_info.h"
-#include "base/task/thread_pool/thread_pool.h"
+#include <base/task/thread_pool.h>
 #include "base/threading/platform_thread.h"
 #include "base/trace_event/memory_dump_manager.h"
 #include "base/trace_event/trace_buffer.h"
 #include "base/trace_event/trace_event.h"
 #include "base/trace_event/trace_log.h"
+#include "base/power_monitor/power_monitor.h"
+#include "base/power_monitor/power_monitor_device_source.h"
+
+#include "basic/rvalue_cast.h"
+#include "basic/macros.h"
+#include <basic/cmd_util.h>
+#include <basic/log/log_util.h>
+#include <basic/tracing/tracing_util.h>
+#include <basic/multiconfig/multiconfig.h>
 
 #include <algorithm>
 #include <functional>
@@ -54,12 +62,32 @@
 
 namespace basis {
 
+static std::unique_ptr<base::FieldTrialList> setUpFieldTrials() {
+  std::unique_ptr<base::FieldTrialList> field_trial_list;
+  if (!base::FieldTrialList::GetInstance())
+    field_trial_list = std::make_unique<base::FieldTrialList>(nullptr);
+  const base::CommandLine* command_line =
+      base::CommandLine::ForCurrentProcess();
+
+  // Ensure any field trials specified on the command line are initialized.
+  if (command_line->HasSwitch(::switches::kForceFieldTrials)) {
+    // Create field trials without activating them, so that this behaves in a
+    // consistent manner with field trials created from the server.
+    bool result = base::FieldTrialList::CreateTrialsFromString(
+        command_line->GetSwitchValueASCII(::switches::kForceFieldTrials));
+    CHECK(result) << "Invalid --" << ::switches::kForceFieldTrials
+                  << " list specified.";
+  }
+
+  return field_trial_list;
+}
+
 ScopedBaseEnvironment::ScopedBaseEnvironment()
-  : main_loop_task_runner(base::MessageLoop::current()->task_runner())
+  : main_loop_task_runner(base::ThreadTaskRunnerHandle::Get())
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
 
-  DCHECK(base::MessageLoop::current()->task_runner());
+  DCHECK(base::ThreadTaskRunnerHandle::Get());
 }
 
 ScopedBaseEnvironment::~ScopedBaseEnvironment()
@@ -78,7 +106,7 @@ ScopedBaseEnvironment::~ScopedBaseEnvironment()
       = ::base::trace_event::TraceLog::GetInstance()->IsEnabled();
     if(need_write_tracing_report) {
       DCHECK(traceReportPath_);
-      ::basis::writeTraceReport(
+      ::basic::writeTraceReport(
         *traceReportPath_);
     } else {
       DVLOG(9)
@@ -90,8 +118,8 @@ ScopedBaseEnvironment::~ScopedBaseEnvironment()
     DVLOG(9)
       << "ThreadPool Shutdown...";
     TRACE_EVENT0("shutdown", "MainLoop:ThreadPool");
-    DCHECK(base::ThreadPool::GetInstance());
-    ::base::ThreadPool::GetInstance()->Shutdown();
+    DCHECK(base::ThreadTaskRunnerHandle::Get());
+    base::ThreadPoolInstance::Get()->Shutdown();
     // Tasks posted with TaskShutdownBehavior::BLOCK_SHUTDOWN and
     // tasks posted with TaskShutdownBehavior::SKIP_ON_SHUTDOWN that
     // have started to run before the Shutdown() call
@@ -113,6 +141,11 @@ bool ScopedBaseEnvironment::init(
 {
   CHECK(setlocale(LC_ALL, "en_US.UTF-8") != nullptr)
       << "Failed to set locale: " << "en_US.UTF-8";
+
+  // Various things break when you're using a locale where the decimal
+  // separator isn't a period.
+  CHECK(setlocale(LC_NUMERIC, "C") != nullptr)
+      << "Failed to set locale: " << "LC_NUMERIC C";
 
   if (!base::PathService::Get(base::DIR_EXE, &dir_exe_)) {
     NOTREACHED();
@@ -145,7 +178,7 @@ bool ScopedBaseEnvironment::init(
   // see https://stackoverflow.com/a/18981514/10904212
   std::locale::global(std::locale::classic());
 
-  ::basis::initCommandLine(argc, argv);
+  ::basic::initCommandLine(argc, argv);
 
 #if DCHECK_IS_ON()
   // Must be done before hooking any functions that make stack traces.
@@ -156,6 +189,11 @@ bool ScopedBaseEnvironment::init(
 
   /// \todo
   // init allocator https://github.com/aranajhonny/chromium/blob/caf5bcb822f79b8997720e589334266551a50a13/content/app/content_main_runner.cc#L512
+  // If we are on a platform where the default allocator is overridden (shim
+  // layer on windows, tcmalloc on Linux Desktop) smoke-tests that the
+  // overriding logic is working correctly. If not causes a hard crash, as its
+  // unexpected absence has security implications.
+  CHECK(base::allocator::IsAllocatorInitialized());
 
   // Enables 'terminate on heap corruption' flag. Helps protect against heap
   // overflow. Has no effect if the OS doesn't provide the necessary facility.
@@ -223,14 +261,17 @@ bool ScopedBaseEnvironment::init(
   const std::string maybe_base_exe_name_
     = file_exe_.BaseName().RemoveExtension().MaybeAsASCII();
 
+  base::FilePath tmp_dir;
+  CHECK(GetTempDir(&tmp_dir));
+
   MULTICONF_String(log_file_conf
-    , /* default value */ ""
+    , /* default value */ tmp_dir.AppendASCII(maybe_base_exe_name_ + ".log").MaybeAsASCII()
     , BUILTIN_MULTICONF_LOADERS
     , /* name of configuration group */ maybe_base_exe_name_);
 
   /// \note will cache configuration values,
   /// so use `clearAndReload` if you need to update configuration values.
-  CHECK_OK(basis::MultiConf::GetInstance().init())
+  CHECK_OK(basic::MultiConf::GetInstance().init())
     << "Wrong configuration.";
   /// \note required to refresh configuration cache
   base::RunLoop().RunUntilIdle();
@@ -244,14 +285,34 @@ bool ScopedBaseEnvironment::init(
       << log_file_conf.optionFormatted()
       << (log_file.empty() ? "" : " Using path to log file: ")
       << log_file;
-    ::basis::initLogging(
+    ::basic::initLogging(
       log_file
     );
   }
 
+  DCHECK(!base::FieldTrialList::GetInstance());
+
 #if DCHECK_IS_ON()
   ::base::FieldTrial::EnableBenchmarking();
 #endif // DCHECK_IS_ON()
+
+  // This is intentionally leaked since it needs to live for the duration
+  // of the process and there's no benefit in cleaning it up at exit.
+  base::FieldTrialList* leaked_field_trial_list =
+      SetUpFieldTrialsAndFeatureList().release();
+  ANNOTATE_LEAKING_OBJECT_PTR(leaked_field_trial_list);
+  ignore_result(leaked_field_trial_list);
+
+  // The hang watcher needs to be started once the feature list is available
+  // but before the IO thread is started.
+  if (base::HangWatcher::IsEnabled()) {
+    hang_watcher_ = new base::HangWatcher();
+    hang_watcher_->Start();
+    ANNOTATE_LEAKING_OBJECT_PTR(hang_watcher_);
+  }
+
+  base::PowerMonitor::Initialize(
+      std::make_unique<base::PowerMonitorDeviceSource>());
 
   if(!base::PathExists(dir_exe_.Append(icuFileName))) {
     LOG(ERROR)
@@ -273,9 +334,6 @@ bool ScopedBaseEnvironment::init(
   {
     const int num_cores
       = ::base::SysInfo::NumberOfProcessors();
-    const int kBackgroundMaxThreads
-    /// \note based on command-line paramater
-      = 1 + threadsNum;
     const int kMaxByDemandWorkerThreadsInPool
     /// \note based on command-line paramater
       = 1 + threadsNum;
@@ -288,15 +346,14 @@ bool ScopedBaseEnvironment::init(
       " Make sure you have at leat one cpu core";
 
     ::basis::initThreadPool(
-      kBackgroundMaxThreads
-      , kForegroundMaxThreads);
+      kForegroundMaxThreads);
   }
 
   // register ::basis::ApplicationPathKeys
   ::basis::AddPathProvider();
 
   // see http://dev.chromium.org/developers/how-tos/trace-event-profiling-tool
-  ::basis::initTracing(
+  ::basic::initTracing(
     need_auto_start_tracer
     , event_categories
     );

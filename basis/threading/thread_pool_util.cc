@@ -1,11 +1,13 @@
-#include "basis/threading/thread_pool_util.hpp" // IWYU pragma: associated
+#include "basis/threading/thread_pool_util.h" // IWYU pragma: associated
 
 #include <base/logging.h>
 #include <base/path_service.h>
 #include <base/files/file_util.h>
-#include <base/task/thread_pool/thread_pool.h>
-#include <base/task/thread_pool/thread_pool_impl.h>
+#include <base/task/thread_pool.h>
 #include <base/system/sys_info.h>
+#include "base/threading/thread_task_runner_handle.h"
+#include "base/task/thread_pool/thread_pool_instance.h"
+
 #include <basic/rvalue_cast.h>
 
 #include <memory>
@@ -13,15 +15,9 @@
 namespace basis {
 
 void initThreadPool(
-  const int backgroundMaxThreads
-  , const int foregroundMaxThreads
-  // when to reclaim idle threads
-  , ::base::TimeDelta kSuggestedReclaimTime
+  const int max_num_foreground_threads_in
 ){
-  DCHECK(!base::ThreadPool::GetInstance());
-
-  DCHECK(backgroundMaxThreads >= 1);
-  DCHECK(foregroundMaxThreads >= 1);
+  DCHECK(max_num_foreground_threads_in >= 1);
 
   // Values were chosen so that:
   // * There are few background threads.
@@ -32,29 +28,18 @@ void initThreadPool(
   const int num_cores
     = ::base::SysInfo::NumberOfProcessors();
 
-  if(num_cores < backgroundMaxThreads)
-  {
-    LOG(WARNING)
-      << "(low grade CPU or bad config)"
-      << " num_cores < background max threads."
-      << " Where"
-      << " background max threads = " << backgroundMaxThreads
-      << " num_cores = " << num_cores;
-  }
-
-  if(num_cores < foregroundMaxThreads)
+  if(num_cores < max_num_foreground_threads_in)
   {
     LOG(WARNING)
       << "(low grade CPU or bad config)"
       << " num_cores < foreground max threads."
       << " Where"
-      << " foreground max threads = " << foregroundMaxThreads
+      << " foreground max threads = " << max_num_foreground_threads_in
       << " num_cores = " << num_cores;
   }
 
   base::ThreadPoolInstance::InitParams thread_pool_init_params{
-    {backgroundMaxThreads, kSuggestedReclaimTime}
-    , {foregroundMaxThreads, kSuggestedReclaimTime}
+    max_num_foreground_threads_in
   };
 
   base::ThreadPoolInstance::Create("AppThreadPool");

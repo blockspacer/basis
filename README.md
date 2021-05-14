@@ -2,7 +2,7 @@
 
 `basis` extends `base` library from chromium https://github.com/chromium/chromium/tree/master/base
 
-Unlike `base`, `basis` can use third-party libs (`boost`, `beast`, `entt`, etc.)
+Unlike `base`, `basis` can use third-party libs (`boost`, `beast`, `corrade`, `entt`, etc.)
 
 If you want to add file into `basis` that depends on same third-party libs as `base`,
 than prefer to add it into `basic` (`chromium_base_conan/extensions/basic/`) instead of `basis`.
@@ -91,6 +91,57 @@ CONAN_REVISIONS_ENABLED=1 \
 conan remove "*" --build --force
 ```
 
+## Dev-only build (local conan flow)
+
+```bash
+find . -type f -name "*_buildflags.h" -exec rm {} \;
+find . -type f -name "*_buildflags.tmp" -exec rm {} \;
+
+(rm -rf local_build || true)
+
+mkdir local_build
+
+cd local_build
+
+export CONAN_REVISIONS_ENABLED=1
+export CONAN_VERBOSE_TRACEBACK=1
+export CONAN_PRINT_RUN_COMMANDS=1
+export CONAN_LOGGING_LEVEL=10
+export GIT_SSL_NO_VERIFY=true
+
+# NOTE: use --build=missing if you got error `ERROR: Missing prebuilt package`
+cmake -E time \
+  conan install .. \
+  --install-folder . \
+  -s build_type=Debug \
+  -s cling_conan:build_type=Release \
+  -s llvm_tools:build_type=Release \
+  --profile clang \
+  -e basis:enable_tests=True \
+  -o basis:shared=False \
+  -o perfetto:is_hermetic_clang=False
+
+(rm CMakeCache.txt || true)
+
+# You can use `cmake --build . -- -j14` on second run.
+cmake -E time \
+  conan build .. \
+  --build-folder . \
+  --source-folder . \
+  --install-folder .
+
+cmake -E time \
+  conan package --build-folder=. ..
+
+cmake -E time \
+  conan export-pkg .. conan/stable \
+  --settings build_type=Debug --force --profile clang
+
+cmake -E time \
+  conan test ../test_package basis/master@conan/stable \
+  --settings build_type=Debug --profile clang
+```
+
 ## For contibutors: conan editable mode
 
 With the editable packages, you can tell Conan where to find the headers and the artifacts ready for consumption in your local working directory.
@@ -126,14 +177,20 @@ CONAN_PRINT_RUN_COMMANDS=1 \
 CONAN_LOGGING_LEVEL=10 \
 GIT_SSL_NO_VERIFY=true \
   cmake -E time \
-    conan source . --source-folder local_build
+    conan source . \
+    --source-folder local_build \
+    --install-folder local_build
 
 conan build . \
-  --build-folder local_build
+  --build-folder local_build \
+  --source-folder local_build \
+  --install-folder local_build
 
 conan package . \
   --build-folder local_build \
-  --package-folder local_build/package_dir
+  --package-folder local_build/package_dir \
+  --source-folder local_build \
+  --install-folder local_build
 ```
 
 Set package to editable mode:
@@ -149,11 +206,15 @@ After change source in folder local_build (run commands in source package folder
 
 ```
 conan build . \
-  --build-folder local_build
+  --build-folder local_build \
+  --source-folder local_build \
+  --install-folder local_build
 
 conan package . \
   --build-folder local_build \
-  --package-folder local_build/package_dir
+  --package-folder local_build/package_dir \
+  --source-folder local_build \
+  --install-folder local_build
 ```
 
 Build your test project

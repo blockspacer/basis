@@ -1,4 +1,4 @@
-#include <basis/ECS/components/child_siblings.hpp> // IWYU pragma: associated
+#include <basis/ECS/components/child_siblings.h> // IWYU pragma: associated
 
 namespace ECS {
 

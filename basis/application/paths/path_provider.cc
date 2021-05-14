@@ -1,14 +1,15 @@
-#include "basis/application/paths/path_provider.hpp" // IWYU pragma: associated
+#include "basis/application/paths/path_provider.h" // IWYU pragma: associated
 
-#include "basis/application/paths/path_id.hpp"
-#include "basis/application/paths/application_paths.hpp"
-#include "basis/application/paths/application_get_path.hpp"
-#include "basis/application/application_configuration.hpp"
+#include "basis/application/paths/path_id.h"
+#include "basis/application/paths/application_paths.h"
+#include "basis/application/paths/application_get_path.h"
+#include "basis/application/application_configuration.h"
 
 #include <base/logging.h>
 #include <base/files/file.h>
 #include <base/files/file_util.h>
 #include <base/files/file_path.h>
+#include <base/notreached.h>
 
 namespace {
 

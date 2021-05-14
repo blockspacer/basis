@@ -1,4 +1,4 @@
-#include "basis/ECS/safe_registry.hpp" // IWYU pragma: associated
+#include "basis/ECS/safe_registry.h" // IWYU pragma: associated
 
 #include <base/logging.h>
 #include <base/files/file.h>
@@ -17,6 +17,7 @@
 #include <base/task/task_traits.h>
 #include <base/trace_event/trace_event.h>
 #include <base/task/thread_pool.h>
+#include "base/task/thread_pool/thread_pool_instance.h"
 
 namespace ECS {
 
@@ -27,7 +28,7 @@ SafeRegistry::SafeRegistry()
       weak_this_(
         weak_ptr_factory_.GetWeakPtr()))
   , taskRunner_{
-      ::base::ThreadPool::CreateSequencedTaskRunner
+      base::ThreadPool::CreateSequencedTaskRunner(
           ::base::TaskTraits{
             ::base::TaskPriority::BEST_EFFORT
             , ::base::MayBlock()

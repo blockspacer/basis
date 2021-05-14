@@ -1,7 +1,11 @@
-#include "basis/task/periodic_validate_until.hpp" // IWYU pragma: associated
+#include "basis/task/periodic_validate_until.h" // IWYU pragma: associated
 
-#include <basis/promise/post_promise.h>
-#include <base/task/thread_pool/thread_pool.h>
+#include <base/task/thread_pool.h>
+#include "base/task/thread_pool/thread_pool_instance.h"
+#include "base/threading/thread_task_runner_handle.h"
+
+#include <basic/macros.h>
+#include <basic/promise/post_promise.h>
 
 namespace basis {
 
@@ -21,10 +25,10 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
 
   DCHECK_RUN_ON(&sequence_checker_);
 
-  DCHECK(base::ThreadPool::GetInstance());
+  DCHECK(base::ThreadTaskRunnerHandle::Get());
   // wait and signal on different task runners
   timeoutTaskRunner_ =
-    ::base::ThreadPool::CreateSequencedTaskRunner(
+    base::ThreadPool::CreateSequencedTaskRunner(
       ::base::TaskTraits{
         ::base::TaskPriority::BEST_EFFORT
         , ::base::MayBlock()
@@ -40,14 +44,14 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
           &basis::setPeriodicTimeoutCheckerOnSequence
           , from_here
           , timeoutTaskRunner_
-          , ::base::Passed(RVALUE_CAST(debugEndingTimeout))
+          , ::std::move(RVALUE_CAST(debugEndingTimeout))
           // refresh period for (debug-only) execution time limiter
-          , COPIED() checkPeriod
+          , /*COPIED*/ checkPeriod
           , errorText))
   );
 
   periodicVerifyRunner_
-    = ::base::ThreadPool::CreateSequencedTaskRunner(
+    = base::ThreadPool::CreateSequencedTaskRunner(
         ::base::TaskTraits{
           ::base::TaskPriority::BEST_EFFORT
           , ::base::MayBlock()
@@ -62,9 +66,9 @@ PeriodicValidateUntil::VoidPromise PeriodicValidateUntil::runPromise(
     , ::base::BindOnce(
         &PeriodicValidateUntil::promiseValidationDone
         , ::base::Unretained(this)
-        , ::base::Passed(RVALUE_CAST(validationTask))
+        , ::std::move(RVALUE_CAST(validationTask))
           // refresh period for periodic validation
-        , COPIED() checkPeriod
+        , /*COPIED*/ checkPeriod
       )
       , ::base::IsNestedPromise{true}
   )
@@ -102,14 +106,14 @@ PeriodicValidateUntil::VoidPromise
   ::base::RepeatingClosure wrappedValidationTask
     = ::base::BindRepeating(
         validationTask
-        , COPIED() promiseResolver.GetRepeatingResolveCallback()
+        , /*COPIED*/ promiseResolver.GetRepeatingResolveCallback()
     );
 
   // check periodically until `validationTask.Run()` returns true
   ::basis::setPeriodicTaskExecutorOnSequence(
     FROM_HERE
     , periodicVerifyRunner_
-    , COPIED() wrappedValidationTask);
+    , /*COPIED*/ wrappedValidationTask);
 
   ::basis::startPeriodicTaskExecutorOnSequence(
     checkPeriod.value());

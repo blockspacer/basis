@@ -1,9 +1,10 @@
-#include "basis/i18n/icu_util.hpp" // IWYU pragma: associated
+#include "basis/i18n/icu_util.h" // IWYU pragma: associated
 
 #include <base/logging.h>
 #include <base/path_service.h>
 #include <base/files/file_util.h>
 #include <base/i18n/icu_util.h>
+#include <base/notreached.h>
 
 namespace basis {
 

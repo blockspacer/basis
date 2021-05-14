@@ -1,10 +1,5 @@
-#if !defined(USE_GTEST_TEST)
-#warning "use USE_GTEST_TEST"
-// default
-#define USE_GTEST_TEST 1
-#endif // !defined(USE_GTEST_TEST)
+#include "testing/gtest/include/gtest/gtest.h"
 
-#include <chrono>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -13,9 +8,6 @@
 #include <thread>
 #include <vector>
 #include <algorithm>
-
-#include "testing/gtest/include/gtest/gtest.h"
-#include "testing/gmock/include/gmock/gmock.h"
 
 #ifndef __has_include
   static_assert(false, "__has_include not supported");
@@ -43,19 +35,22 @@
 #include <base/time/time.h>
 #include <base/path_service.h>
 #include <base/files/file_util.h>
+#include "base/notreached.h"
+#include "base/stl_util.h"
+#include "base/logging.h"
 
 #include <third_party/icu/source/common/unicode/unistr.h>
 #include <third_party/icu/source/i18n/unicode/datefmt.h>
 #include <third_party/icu/source/i18n/unicode/msgfmt.h>
 #include <third_party/icu/source/common/unicode/uloc.h>
 
-static const ::base::FilePath::CharType kIcuDataFileName[]
+static const base::FilePath::CharType kIcuDataFileName[]
   = FILE_PATH_LITERAL("./resources/icu/optimal/icudt68l.dat");
 
 static void initICUi18n(
-  const ::base::FilePath::CharType icuFileName[])
+  const base::FilePath::CharType icuFileName[])
 {
-  ::base::FilePath dir_exe;
+  base::FilePath dir_exe;
   if (!base::PathService::Get(base::DIR_EXE, &dir_exe)) {
     NOTREACHED();
   }
@@ -69,7 +64,7 @@ static void initICUi18n(
       << dir_exe.Append(icuFileName);
   }
   bool icu_initialized
-    = ::base::i18n::InitializeICUWithPath(
+    = base::i18n::InitializeICUWithPath(
         dir_exe.Append(icuFileName));
   if(!icu_initialized) {
     LOG(WARNING)
@@ -80,12 +75,12 @@ static void initICUi18n(
 
 #if !UCONFIG_NO_FORMATTING
 TEST(MessageFormatterTest, PluralNumberedArgs) {
-  const ::base::string16 pattern = ::base::ASCIIToUTF16(
+  const base::string16 pattern = base::ASCIIToUTF16(
       "{1, plural, "
       "=1 {The cert for {0} expired yesterday.}"
       "=7 {The cert for {0} expired a week ago.}"
       "other {The cert for {0} expired # days ago.}}");
-  ::base::FilePath dir_exe;
+  base::FilePath dir_exe;
   if (!base::PathService::Get(base::DIR_EXE, &dir_exe)) {
     NOTREACHED() << dir_exe;
   }
@@ -94,21 +89,21 @@ TEST(MessageFormatterTest, PluralNumberedArgs) {
     NOTREACHED() << dir_exe.Append(kIcuDataFileName);
   }
 
-  ::base::i18n::AllowMultipleInitializeCallsForTesting();
+  base::i18n::AllowMultipleInitializeCallsForTesting();
   initICUi18n(kIcuDataFileName);
 
-  ::base::i18n::SetICUDefaultLocale(uloc_getDefault());
+  base::i18n::SetICUDefaultLocale(uloc_getDefault());
   std::string result
-    = ::base::UTF16ToASCII(
-        ::base::i18n::MessageFormatter::FormatWithNumberedArgs(
+    = base::UTF16ToASCII(
+        base::i18n::MessageFormatter::FormatWithNumberedArgs(
       pattern, "example.com", 1));
   EXPECT_EQ("The cert for example.com expired yesterday.", result);
-  result = ::base::UTF16ToASCII(
-    ::base::i18n::MessageFormatter::FormatWithNumberedArgs(
+  result = base::UTF16ToASCII(
+    base::i18n::MessageFormatter::FormatWithNumberedArgs(
       pattern, "example.com", 7));
   EXPECT_EQ("The cert for example.com expired a week ago.", result);
-  result = ::base::UTF16ToASCII(
-    ::base::i18n::MessageFormatter::FormatWithNumberedArgs(
+  result = base::UTF16ToASCII(
+    base::i18n::MessageFormatter::FormatWithNumberedArgs(
       pattern, "example.com", 15));
   EXPECT_EQ("The cert for example.com expired 15 days ago.", result);
 }

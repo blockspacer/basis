@@ -1,4 +1,6 @@
-#include <basis/ECS/ecs.hpp> // IWYU pragma: associated
+#include <basis/ECS/ecs.h> // IWYU pragma: associated
+
+#include <basic/macros.h>
 
 #include <base/macros.h>
 #include <base/logging.h>

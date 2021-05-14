@@ -1,4 +1,4 @@
-#include "basis/threading/thread_health_checker.hpp"
+#include "basis/threading/thread_health_checker.h"
 
 #include "base/bind.h"
 #include "base/memory/ref_counted.h"

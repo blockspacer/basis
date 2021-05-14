@@ -1,4 +1,4 @@
-#include "basis/ECS/unsafe_context.hpp" // IWYU pragma: associated
+#include "basis/ECS/unsafe_context.h" // IWYU pragma: associated
 
 #include <base/memory/singleton.h>
 #include <base/no_destructor.h>

@@ -1,6 +1,6 @@
-#include "basis/task/periodic_check.hpp" // IWYU pragma: associated
-
-#include "basis/ECS/sequence_local_context.hpp"
+#include "basis/task/periodic_check.h" // IWYU pragma: associated
+#include "basis/ECS/sequence_local_context.h"
+#include <basis/application/application_configuration.h>
 
 #include <base/logging.h>
 #include <base/files/file.h>
@@ -14,15 +14,15 @@
 #include <base/timer/timer.h>
 #include <base/path_service.h>
 #include <base/sequenced_task_runner.h>
+#include "base/sequence_checker.h"
 #include <base/task/post_task.h>
 #include <base/task/task_traits.h>
 #include <base/trace_event/trace_event.h>
 #include <base/compiler_specific.h>
-#include <basic/rvalue_cast.h>
 
-#include <basis/promise/post_promise.h>
-#include <basis/tracing/trace_event_util.hpp>
-#include <basis/application/application_configuration.hpp>
+#include <basic/tracing/trace_event_util.h>
+#include <basic/rvalue_cast.h>
+#include <basic/promise/post_promise.h>
 
 namespace basis {
 
@@ -296,8 +296,8 @@ void setPeriodicTimeoutCheckerOnSequence(
       , errorText /// \note copied
       );
 
-  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
-    = ECS::SequenceLocalContext::getSequenceLocalInstance(
+  ECS::SequenceLocalContext* sequenceLocalContext
+    = ECS::SequenceLocalContext::getLocalInstance(
         from_here, task_runner);
 
   DCHECK(sequenceLocalContext);
@@ -316,8 +316,8 @@ void unsetPeriodicTimeoutCheckerOnSequence()
 {
   LOG_CALL(DVLOG(99));
 
-  ::base::WeakPtr<ECS::SequenceLocalContext> sequenceLocalContext
-    = ECS::SequenceLocalContext::getSequenceLocalInstance(
+  ECS::SequenceLocalContext* sequenceLocalContext
+    = ECS::SequenceLocalContext::getLocalInstance(
         FROM_HERE, ::base::SequencedTaskRunnerHandle::Get());
 
   DCHECK(sequenceLocalContext);

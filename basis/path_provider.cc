@@ -1,10 +1,14 @@
-#include "basis/path_provider.hpp" // IWYU pragma: associated
+#include "basis/path_provider.h" // IWYU pragma: associated
 
 #include <base/files/file_util.h>
 #include <base/path_service.h>
 #include <base/base_paths.h>
 #include <base/files/file_path.h>
 #include <base/logging.h>
+#include <base/macros.h>
+#include <base/notreached.h>
+
+#include <basic/macros.h>
 
 #include <ostream>
 #include <string>

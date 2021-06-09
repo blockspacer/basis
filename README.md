@@ -37,21 +37,23 @@ cmake \
 ## Build
 
 ```bash
+export VERBOSE=1
+export CONAN_REVISIONS_ENABLED=1
+export CONAN_VERBOSE_TRACEBACK=1
+export CONAN_PRINT_RUN_COMMANDS=1
+export CONAN_LOGGING_LEVEL=10
+export GIT_SSL_NO_VERIFY=true
+
 # NOTE: change `build_type=Debug` to `build_type=Release` in production
-CONAN_REVISIONS_ENABLED=1 \
-    CONAN_VERBOSE_TRACEBACK=1 \
-    CONAN_PRINT_RUN_COMMANDS=1 \
-    CONAN_LOGGING_LEVEL=10 \
-    GIT_SSL_NO_VERIFY=true \
-    conan create . \
-        conan/stable \
-        -s build_type=Debug \
-        -s llvm_tools:build_type=Release \
-        --profile clang \
-        --build missing \
-        --build cascade \
-        -e basis:enable_tests=True \
-        -o openssl:shared=True
+conan create . \
+  conan/stable \
+  -s build_type=Debug \
+  -s llvm_tools:build_type=Release \
+  --profile clang \
+  --build missing \
+  --build cascade \
+  -e basis:enable_tests=True \
+  -o openssl:shared=True
 
 # clean build cache
 conan remove "*" --build --force
@@ -62,30 +64,32 @@ conan remove "*" --build --force
 Use `enable_asan` or `enable_ubsan`, etc.
 
 ```bash
+export VERBOSE=1
+export CONAN_REVISIONS_ENABLED=1
+export CONAN_VERBOSE_TRACEBACK=1
+export CONAN_PRINT_RUN_COMMANDS=1
+export CONAN_LOGGING_LEVEL=10
+export GIT_SSL_NO_VERIFY=true
+
 # NOTE: change `build_type=Debug` to `build_type=Release` in production
-CONAN_REVISIONS_ENABLED=1 \
-    CONAN_VERBOSE_TRACEBACK=1 \
-    CONAN_PRINT_RUN_COMMANDS=1 \
-    CONAN_LOGGING_LEVEL=10 \
-    GIT_SSL_NO_VERIFY=true \
-    conan create . \
-        conan/stable \
-        -s build_type=Debug \
-        -s llvm_tools:build_type=Release \
-        -o llvm_tools:enable_tsan=True \
-        -o llvm_tools:include_what_you_use=False \
-        --profile clang \
-        --build chromium_base \
-        --build chromium_tcmalloc \
-        -e chromium_base:enable_tests=True \
-        -o chromium_base:enable_tsan=True \
-        -e chromium_base:enable_llvm_tools=True \
-        -o chromium_base:use_alloc_shim=False \
-        -e basis:enable_tests=True \
-        -o basis:enable_tsan=True \
-        -e basis:enable_llvm_tools=True \
-        -o chromium_tcmalloc:use_alloc_shim=False \
-        -o openssl:shared=True
+conan create . \
+    conan/stable \
+    -s build_type=Debug \
+    -s llvm_tools:build_type=Release \
+    -o llvm_tools:enable_tsan=True \
+    -o llvm_tools:include_what_you_use=False \
+    --profile clang \
+    --build chromium_base \
+    --build chromium_tcmalloc \
+    -e chromium_base:enable_tests=True \
+    -o chromium_base:enable_tsan=True \
+    -e chromium_base:enable_llvm_tools=True \
+    -o chromium_base:use_alloc_shim=False \
+    -e basis:enable_tests=True \
+    -o basis:enable_tsan=True \
+    -e basis:enable_llvm_tools=True \
+    -o chromium_tcmalloc:use_alloc_shim=False \
+    -o openssl:shared=True
 
 # clean build cache
 conan remove "*" --build --force
@@ -152,34 +156,31 @@ See for details [https://docs.conan.io/en/latest/developing_packages/editable_pa
 Build locally:
 
 ```bash
-CONAN_REVISIONS_ENABLED=1 \
-CONAN_VERBOSE_TRACEBACK=1 \
-CONAN_PRINT_RUN_COMMANDS=1 \
-CONAN_LOGGING_LEVEL=10 \
-GIT_SSL_NO_VERIFY=true \
-  cmake -E time \
-    conan install . \
-    --install-folder local_build \
-    -s build_type=Debug \
-    -s llvm_tools:build_type=Release \
-    --profile clang \
-        --build missing \
-        --build cascade \
-        -e chromium_base:enable_tests=True \
-        -e chromium_base:enable_llvm_tools=True \
-        -e basis:enable_tests=True \
-        -e basis:enable_llvm_tools=True \
-        -o openssl:shared=True
+export VERBOSE=1
+export CONAN_REVISIONS_ENABLED=1
+export CONAN_VERBOSE_TRACEBACK=1
+export CONAN_PRINT_RUN_COMMANDS=1
+export CONAN_LOGGING_LEVEL=10
+export GIT_SSL_NO_VERIFY=true
 
-CONAN_REVISIONS_ENABLED=1 \
-CONAN_VERBOSE_TRACEBACK=1 \
-CONAN_PRINT_RUN_COMMANDS=1 \
-CONAN_LOGGING_LEVEL=10 \
-GIT_SSL_NO_VERIFY=true \
-  cmake -E time \
-    conan source . \
-    --source-folder local_build \
-    --install-folder local_build
+cmake -E time \
+  conan install . \
+  --install-folder local_build \
+  -s build_type=Debug \
+  -s llvm_tools:build_type=Release \
+  --profile clang \
+      --build missing \
+      --build cascade \
+      -e chromium_base:enable_tests=True \
+      -e chromium_base:enable_llvm_tools=True \
+      -e basis:enable_tests=True \
+      -e basis:enable_llvm_tools=True \
+      -o openssl:shared=True
+
+cmake -E time \
+  conan source . \
+  --source-folder local_build \
+  --install-folder local_build
 
 conan build . \
   --build-folder local_build \
@@ -248,28 +249,30 @@ NOTE: make sure you set `use_alloc_shim=False` and `enable_valgrind=True` (see b
 Run valgrind via cmake:
 
 ```bash
+export VERBOSE=1
+export CONAN_REVISIONS_ENABLED=1
+export CONAN_VERBOSE_TRACEBACK=1
+export CONAN_PRINT_RUN_COMMANDS=1
+export CONAN_LOGGING_LEVEL=10
+export GIT_SSL_NO_VERIFY=true
+
 # NOTE: set `use_alloc_shim=False` and `enable_valgrind=True` for valgrind support
-CONAN_REVISIONS_ENABLED=1 \
-CONAN_VERBOSE_TRACEBACK=1 \
-CONAN_PRINT_RUN_COMMANDS=1 \
-CONAN_LOGGING_LEVEL=10 \
-GIT_SSL_NO_VERIFY=true \
-  cmake -E time \
-    conan install . \
-    --install-folder local_build \
-    -s build_type=Debug \
-    -s cling_conan:build_type=Release \
-    -s llvm_tools:build_type=Release \
-    --profile clang \
-        -o basis:enable_valgrind=True \
-        -e basis:enable_tests=True \
-        -e basis:enable_llvm_tools=True \
-        -o chromium_base:enable_valgrind=True \
-        -e chromium_base:enable_llvm_tools=True \
-        -o chromium_base:use_alloc_shim=False \
-        -o chromium_tcmalloc:use_alloc_shim=False \
-        --build chromium_base \
-        --build chromium_tcmalloc
+cmake -E time \
+  conan install . \
+  --install-folder local_build \
+  -s build_type=Debug \
+  -s cling_conan:build_type=Release \
+  -s llvm_tools:build_type=Release \
+  --profile clang \
+      -o basis:enable_valgrind=True \
+      -e basis:enable_tests=True \
+      -e basis:enable_llvm_tools=True \
+      -o chromium_base:enable_valgrind=True \
+      -e chromium_base:enable_llvm_tools=True \
+      -o chromium_base:use_alloc_shim=False \
+      -o chromium_tcmalloc:use_alloc_shim=False \
+      --build chromium_base \
+      --build chromium_tcmalloc
 
 cd ~/basis
 

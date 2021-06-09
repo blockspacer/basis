@@ -34,7 +34,7 @@ if (CONAN_AUTO_INSTALL)
   # You can use `EXTRA_CONAN_AUTO_INSTALL_OPTIONS` like so:
   # cmake .. -DCONAN_AUTO_INSTALL=ON -DEXTRA_CONAN_AUTO_INSTALL_OPTIONS="--build missing" -DCMAKE_BUILD_TYPE=Debug
   conan_auto_install(
-    CONAN_OPTIONS "--profile=${CONAN_PROFILE} -s build_type=${conan_build_type} -s llvm_tools:build_type=Release --build=missing -o openssl:shared=True ${EXTRA_CONAN_AUTO_INSTALL_OPTIONS}"
+    CONAN_OPTIONS "--profile=${CONAN_PROFILE} -s build_type=${conan_build_type} -s llvm_9:build_type=Release --build=missing -o openssl:shared=True ${EXTRA_CONAN_AUTO_INSTALL_OPTIONS}"
     #FORCE
   )
 endif()

@@ -17,7 +17,7 @@ In a project our size, sometimes even duplication is OK and inevitable.
 
 ## Before build (dependencies)
 
-Create clang conan profile https://docs.conan.io/en/1.34/reference/profiles.html#examples
+Create clang12_compiler conan profile https://docs.conan.io/en/1.34/reference/profiles.html#examples
 
 Re-build dependencies:
 
@@ -26,7 +26,7 @@ git clone https://github.com/blockspacer/conan_github_downloader.git ~/conan_git
 
 cmake \
   -DSCRIPT_PATH="$PWD/get_conan_dependencies.cmake"\
-  -DEXTRA_CONAN_OPTS="--profile;clang\
+  -DEXTRA_CONAN_OPTS="--profile;clang12_compiler\
 ;-s;build_type=Debug\
 ;-s;cling_conan:build_type=Release\
 ;-s;llvm_tools:build_type=Release\
@@ -42,21 +42,102 @@ export CONAN_REVISIONS_ENABLED=1
 export CONAN_VERBOSE_TRACEBACK=1
 export CONAN_PRINT_RUN_COMMANDS=1
 export CONAN_LOGGING_LEVEL=10
-export GIT_SSL_NO_VERIFY=true
 
 # NOTE: change `build_type=Debug` to `build_type=Release` in production
 conan create . \
   conan/stable \
   -s build_type=Debug \
   -s llvm_tools:build_type=Release \
-  --profile clang \
-  --build missing \
-  --build cascade \
+  --profile clang12_compiler \
   -e basis:enable_tests=True \
-  -o openssl:shared=True
+  -o openssl:shared=True \
+  -o chromium_base:shared=True \
+  -e chromium_base:enable_tests=True \
+  -o perfetto:is_hermetic_clang=False \
+  --build missing \
+  --build cascade
 
 # clean build cache
 conan remove "*" --build --force
+```
+
+## Dev-only build (local conan flow)
+
+```bash
+find . -type f -name "*_buildflags.h" -exec rm {} \;
+find . -type f -name "*_buildflags.tmp" -exec rm {} \;
+
+export PKG_NAME=basis/master@conan/stable
+
+(CONAN_REVISIONS_ENABLED=1 \
+    conan remove --force $PKG_NAME || true)
+
+(rm -rf local_build || true)
+
+export CONAN_REVISIONS_ENABLED=1
+export CONAN_VERBOSE_TRACEBACK=1
+export CONAN_PRINT_RUN_COMMANDS=1
+export CONAN_LOGGING_LEVEL=10
+
+# NOTE: use --build=missing if you got error `ERROR: Missing prebuilt package`
+cmake -E time \
+  conan install . \
+  --install-folder local_build \
+  -s build_type=Debug \
+  -s cling_conan:build_type=Release \
+  -s llvm_tools:build_type=Release \
+  --profile clang12_compiler \
+  -e basis:enable_tests=True \
+  -o basis:shared=False \
+  -o chromium_base:shared=True \
+  -e chromium_base:enable_tests=True \
+  -o perfetto:is_hermetic_clang=False
+
+(rm local_build/CMakeCache.txt || true)
+
+cmake -E time \
+  conan source . \
+  --source-folder . \
+  --install-folder local_build
+
+# You can use `cmake --build . -- -j14` on second run.
+cmake -E time \
+  conan build . \
+  --build-folder local_build \
+  --source-folder . \
+  --install-folder local_build
+
+conan package . \
+  --build-folder local_build \
+  --package-folder local_build/package_dir \
+  --source-folder . \
+  --install-folder local_build
+
+cmake -E time \
+  conan export-pkg . conan/stable \
+  --package-folder local_build/package_dir \
+  --force \
+  -s build_type=Debug \
+  -s cling_conan:build_type=Release \
+  -s llvm_tools:build_type=Release \
+  --profile clang12_compiler \
+  -e basis:enable_tests=True \
+  -o basis:shared=False \
+  -o chromium_base:shared=True \
+  -e chromium_base:enable_tests=True \
+  -o perfetto:is_hermetic_clang=False
+
+cmake -E time \
+  conan test test_package basis/master@conan/stable \
+  -s build_type=Debug \
+  -s cling_conan:build_type=Release \
+  -s llvm_tools:build_type=Release \
+  --profile clang12_compiler \
+  -e basis:enable_tests=True \
+  -o basis:shared=False \
+  -o chromium_base:shared=True \
+  -e chromium_base:enable_tests=True \
+  -o perfetto:is_hermetic_clang=False
 ```
 
 ## HOW TO BUILD WITH SANITIZERS ENABLED
@@ -69,7 +150,6 @@ export CONAN_REVISIONS_ENABLED=1
 export CONAN_VERBOSE_TRACEBACK=1
 export CONAN_PRINT_RUN_COMMANDS=1
 export CONAN_LOGGING_LEVEL=10
-export GIT_SSL_NO_VERIFY=true
 
 # NOTE: change `build_type=Debug` to `build_type=Release` in production
 conan create . \
@@ -78,7 +158,7 @@ conan create . \
     -s llvm_tools:build_type=Release \
     -o llvm_tools:enable_tsan=True \
     -o llvm_tools:include_what_you_use=False \
-    --profile clang \
+    --profile clang12_compiler \
     --build chromium_base \
     --build chromium_tcmalloc \
     -e chromium_base:enable_tests=True \
@@ -93,57 +173,6 @@ conan create . \
 
 # clean build cache
 conan remove "*" --build --force
-```
-
-## Dev-only build (local conan flow)
-
-```bash
-find . -type f -name "*_buildflags.h" -exec rm {} \;
-find . -type f -name "*_buildflags.tmp" -exec rm {} \;
-
-(rm -rf local_build || true)
-
-mkdir local_build
-
-cd local_build
-
-export CONAN_REVISIONS_ENABLED=1
-export CONAN_VERBOSE_TRACEBACK=1
-export CONAN_PRINT_RUN_COMMANDS=1
-export CONAN_LOGGING_LEVEL=10
-export GIT_SSL_NO_VERIFY=true
-
-# NOTE: use --build=missing if you got error `ERROR: Missing prebuilt package`
-cmake -E time \
-  conan install .. \
-  --install-folder . \
-  -s build_type=Debug \
-  -s cling_conan:build_type=Release \
-  -s llvm_tools:build_type=Release \
-  --profile clang \
-  -e basis:enable_tests=True \
-  -o basis:shared=False \
-  -o perfetto:is_hermetic_clang=False
-
-(rm CMakeCache.txt || true)
-
-# You can use `cmake --build . -- -j14` on second run.
-cmake -E time \
-  conan build .. \
-  --build-folder . \
-  --source-folder . \
-  --install-folder .
-
-cmake -E time \
-  conan package --build-folder=. ..
-
-cmake -E time \
-  conan export-pkg .. conan/stable \
-  --settings build_type=Debug --force --profile clang
-
-cmake -E time \
-  conan test ../test_package basis/master@conan/stable \
-  --settings build_type=Debug --profile clang
 ```
 
 ## For contibutors: conan editable mode
@@ -161,14 +190,18 @@ export CONAN_REVISIONS_ENABLED=1
 export CONAN_VERBOSE_TRACEBACK=1
 export CONAN_PRINT_RUN_COMMANDS=1
 export CONAN_LOGGING_LEVEL=10
-export GIT_SSL_NO_VERIFY=true
+
+export PKG_NAME=basis/master@conan/stable
+
+(CONAN_REVISIONS_ENABLED=1 \
+    conan remove --force $PKG_NAME || true)
 
 cmake -E time \
   conan install . \
   --install-folder local_build \
   -s build_type=Debug \
   -s llvm_tools:build_type=Release \
-  --profile clang \
+  --profile clang12_compiler \
       --build missing \
       --build cascade \
       -e chromium_base:enable_tests=True \
@@ -254,7 +287,11 @@ export CONAN_REVISIONS_ENABLED=1
 export CONAN_VERBOSE_TRACEBACK=1
 export CONAN_PRINT_RUN_COMMANDS=1
 export CONAN_LOGGING_LEVEL=10
-export GIT_SSL_NO_VERIFY=true
+
+export PKG_NAME=basis/master@conan/stable
+
+(CONAN_REVISIONS_ENABLED=1 \
+    conan remove --force $PKG_NAME || true)
 
 # NOTE: set `use_alloc_shim=False` and `enable_valgrind=True` for valgrind support
 cmake -E time \
@@ -263,16 +300,16 @@ cmake -E time \
   -s build_type=Debug \
   -s cling_conan:build_type=Release \
   -s llvm_tools:build_type=Release \
-  --profile clang \
-      -o basis:enable_valgrind=True \
-      -e basis:enable_tests=True \
-      -e basis:enable_llvm_tools=True \
-      -o chromium_base:enable_valgrind=True \
-      -e chromium_base:enable_llvm_tools=True \
-      -o chromium_base:use_alloc_shim=False \
-      -o chromium_tcmalloc:use_alloc_shim=False \
-      --build chromium_base \
-      --build chromium_tcmalloc
+  --profile clang12_compiler \
+  -o basis:enable_valgrind=True \
+  -e basis:enable_tests=True \
+  -e basis:enable_llvm_tools=True \
+  -o chromium_base:enable_valgrind=True \
+  -e chromium_base:enable_llvm_tools=True \
+  -o chromium_base:use_alloc_shim=False \
+  -o chromium_tcmalloc:use_alloc_shim=False \
+  --build chromium_base \
+  --build chromium_tcmalloc
 
 cd ~/basis
 
@@ -315,7 +352,7 @@ cmake -E time cmake --build . \
 find $PWD -name *valgrind*.log
 ```
 
-TODO: try to build with clang 10 https://stackoverflow.com/questions/40509986/valgrind-reporting-mismatched-free-delete-delete
+TODO: try to build with modern clang https://stackoverflow.com/questions/40509986/valgrind-reporting-mismatched-free-delete-delete
 
 TODO: valgrind may not support chromium base, FIXME. And remove GTEST_NO_SUITE
 
@@ -328,7 +365,6 @@ NOTE: use `valgrind --tool=helgrind` to detect potential deadlocks and data race
 NOTE: use `valgrind --tool=massif --massif-out-file=massif_file --stacks=true` to measure size of heap. See also https://kde.org/applications/development/org.kde.massif-visualizer
 
 See for details https://stackoverflow.com/a/44989219
-
 
 ## Qualifications for being in basis OWNERS
 

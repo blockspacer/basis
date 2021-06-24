@@ -5,6 +5,7 @@
 #include <basis/threading/thread_pool_util.h>
 
 #include <base/notreached.h>
+#include "base/allocator/allocator_check.h"
 #include "base/task/thread_pool/thread_pool_instance.h"
 #include "base/base_switches.h"
 #include "base/threading/hang_watcher.h"
@@ -270,7 +271,7 @@ bool ScopedBaseEnvironment::init(
     , /* name of configuration group */ maybe_base_exe_name_);
 
   /// \note will cache configuration values,
-  /// so use `clearAndReload` if you need to update configuration values.
+  /// so use `resetAndReload` if you need to update configuration values.
   CHECK_OK(basic::MultiConf::GetInstance().init())
     << "Wrong configuration.";
   /// \note required to refresh configuration cache
@@ -299,7 +300,7 @@ bool ScopedBaseEnvironment::init(
   // This is intentionally leaked since it needs to live for the duration
   // of the process and there's no benefit in cleaning it up at exit.
   base::FieldTrialList* leaked_field_trial_list =
-      SetUpFieldTrialsAndFeatureList().release();
+      setUpFieldTrials().release();
   ANNOTATE_LEAKING_OBJECT_PTR(leaked_field_trial_list);
   ignore_result(leaked_field_trial_list);
 

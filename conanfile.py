@@ -7,18 +7,6 @@ from functools import total_ordering
 # if you using python less than 3 use from distutils import strtobool
 from distutils.util import strtobool
 
-conan_build_helper = python_requires("conan_build_helper/[~=0.0]@conan/stable")
-
-# Users locally they get the 1.0.0 version,
-# without defining any env-var at all,
-# and CI servers will append the build number.
-# USAGE
-# version = get_version("1.0.0")
-# BUILD_NUMBER=-pre1+build2 conan export-pkg . my_channel/release
-def get_version(version):
-    bn = os.getenv("BUILD_NUMBER")
-    return (version + bn) if bn else version
-
 # conan runs the methods in this order:
 # config_options(),
 # configure(),
@@ -32,6 +20,19 @@ def get_version(version):
 # build(),
 # package(),
 # package_info()
+
+conan_build_helper = python_requires("conan_build_helper/[~=0.0]@conan/stable")
+
+# Users locally they get the 1.0.0 version,
+# without defining any env-var at all,
+# and CI servers will append the build number.
+# USAGE
+# version = get_version("1.0.0")
+# BUILD_NUMBER=-pre1+build2 conan export-pkg . my_channel/release
+def get_version(version):
+    bn = os.getenv("BUILD_NUMBER")
+    return (version + bn) if bn else version
+
 class basis_conan_project(conan_build_helper.CMakePackage):
     name = "basis"
 
@@ -65,6 +66,11 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         "enable_msan=False",
         "enable_tsan=False",
         "enable_valgrind=False",
+        "*:integration=catch", # for FakeIt,
+        # chromium_base
+        "chromium_base:use_alloc_shim=True",
+        # chromium_tcmalloc
+        "chromium_tcmalloc:use_alloc_shim=True",
         # openssl
         "openssl:shared=True",
     )
@@ -190,8 +196,12 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         if self._is_llvm_tools_enabled():
           self.build_requires("llvm_tools/master@conan/stable")
 
+        if self._is_tests_enabled():
+            self.build_requires("catch2/[>=2.1.0]@bincrafters/stable")
+            self.build_requires("FakeIt/[>=2.0.5]@gasuketsu/stable")
+
     def requirements(self):
-        self.requires("boost/1.71.0@dev/stable")
+        self.requires("boost/1.72.0@dev/stable")
 
         self.requires("corrade/v2020.06@conan/stable")
 
@@ -227,7 +237,7 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         #self.requires("flatc_conan/v1.11.0@conan/stable")
 
         # must match openssl version used in webrtc
-        self.requires("openssl/OpenSSL_1_1_1-stable@conan/stable")
+        self.requires("openssl/1.1.1-stable@conan/stable")
     def _configure_cmake(self):
         cmake = CMake(self)
         cmake.parallel = True
@@ -269,42 +279,47 @@ class basis_conan_project(conan_build_helper.CMakePackage):
         return cmake
 
     def package(self):
-        self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
-        cmake = self._configure_cmake()
-        cmake.install()
+        with tools.vcvars(self.settings, only_diff=False): # https://github.com/conan-io/conan/issues/6577
+          self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
+          cmake = self._configure_cmake()
+          cmake.install()
+          # Local build
+          # see https://docs.conan.io/en/latest/developing_packages/editable_packages.html
+          if not self.in_local_cache:
+              self.copy("conanfile.py", dst=".", keep_path=False)
 
-        self.copy_conanfile_for_editable_package(".")
+          self.copy_conanfile_for_editable_package(".")
 
-        self.rmdir_if_packaged('.git')
-        self.rmdir_if_packaged('tests')
-        self.rmdir_if_packaged('lib/tests')
-        self.rmdir_if_packaged('lib/pkgconfig')
+          self.rmdir_if_packaged('.git')
+          self.rmdir_if_packaged('tests')
+          self.rmdir_if_packaged('lib/tests')
+          self.rmdir_if_packaged('lib/pkgconfig')
 
     def build(self):
-        cmake = self._configure_cmake()
-        if self.settings.compiler == 'gcc':
-            cmake.definitions["CMAKE_C_COMPILER"] = "gcc-{}".format(
-                self.settings.compiler.version)
-            cmake.definitions["CMAKE_CXX_COMPILER"] = "g++-{}".format(
-                self.settings.compiler.version)
+        with tools.vcvars(self.settings, only_diff=False): # https://github.com/conan-io/conan/issues/6577
+          cmake = self._configure_cmake()
+          if self.settings.compiler == 'gcc':
+              cmake.definitions["CMAKE_C_COMPILER"] = "gcc-{}".format(
+                  self.settings.compiler.version)
+              cmake.definitions["CMAKE_CXX_COMPILER"] = "g++-{}".format(
+                  self.settings.compiler.version)
 
-        #cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = 'conan_paths.cmake'
+          #cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = 'conan_paths.cmake'
 
-        # The CMakeLists.txt file must be in `source_folder`
-        cmake.configure(source_folder=".")
+          # The CMakeLists.txt file must be in `source_folder`
+          cmake.configure(source_folder=".")
 
-        cpu_count = tools.cpu_count()
-        self.output.info('Detected %s CPUs' % (cpu_count))
+          cpu_count = tools.cpu_count()
+          self.output.info('Detected %s CPUs' % (cpu_count))
 
-        # -j flag for parallel builds
-        cmake.build(args=["--", "-j%s" % cpu_count])
+          # -j flag for parallel builds
+          cmake.build(args=["--", "-j%s" % cpu_count])
 
-        if self._is_tests_enabled():
-          self.output.info('Running tests')
-          #cmake.build(args=["--target", "basis_run_all_tests", "--", "-j%s" % cpu_count])
-          #self.run('ctest --parallel %s' % (cpu_count))
-          # TODO: use cmake.test()
-          cmake.test(target="basis_run_unittests", output_on_failure=True)
+          if self._is_tests_enabled():
+            self.output.info('Running tests')
+            #cmake.build(args=["--target", "basis_run_all_tests", "--", "-j%s" % cpu_count])
+            #self.run('ctest --parallel %s' % (cpu_count))
+            cmake.test(target="basis_run_unittests", output_on_failure=True)
 
     # Importing files copies files from the local store to your project.
     def imports(self):
